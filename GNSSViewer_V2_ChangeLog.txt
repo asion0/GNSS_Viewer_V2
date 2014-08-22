@@ -1,0 +1,6 @@
+2013/06/06
+完成V8 Viewer大多數功能。待改進事項：
+1. 調整Scatter View Layout。
+2. 加入Glonass K-NUM顯示。
+3. 切換多頁資訊顯示。
+
