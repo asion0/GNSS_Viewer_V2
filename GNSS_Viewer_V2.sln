@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNSS_Viewer_V2", "GNSS_Viewer_V2.vcproj", "{7282594B-1D3E-494A-9B12-6F2F695A38D1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		GNSS_Create_Tag|Win32 = GNSS_Create_Tag|Win32
+		GNSS_General_Ericsson|Win32 = GNSS_General_Ericsson|Win32
+		GNSS_General_FKHL|Win32 = GNSS_General_FKHL|Win32
+		GNSS_General_OLinkStar|Win32 = GNSS_General_OLinkStar|Win32
+		GNSS_General_SWID|Win32 = GNSS_General_SWID|Win32
+		GNSS_General|Win32 = GNSS_General|Win32
+		GNSS_InternalUse|Win32 = GNSS_InternalUse|Win32
+		GNSS_NMEAPLAYER|Win32 = GNSS_NMEAPLAYER|Win32
+		GNSS_SUP800_General|Win32 = GNSS_SUP800_General|Win32
+		GNSS_SUP800|Win32 = GNSS_SUP800|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.Debug|Win32.Build.0 = Debug|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_Create_Tag|Win32.ActiveCfg = GNSS_Create_Tag|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_Create_Tag|Win32.Build.0 = GNSS_Create_Tag|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_Ericsson|Win32.ActiveCfg = GNSS_General_Ericsson|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_Ericsson|Win32.Build.0 = GNSS_General_Ericsson|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_FKHL|Win32.ActiveCfg = GNSS_General_FKHL|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_FKHL|Win32.Build.0 = GNSS_General_FKHL|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_OLinkStar|Win32.ActiveCfg = GNSS_General_OLinkStar|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_OLinkStar|Win32.Build.0 = GNSS_General_OLinkStar|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_SWID|Win32.ActiveCfg = GNSS_General_SWID|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_SWID|Win32.Build.0 = GNSS_General_SWID|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General|Win32.ActiveCfg = GNSS_General|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General|Win32.Build.0 = GNSS_General|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_InternalUse|Win32.ActiveCfg = GNSS_InternalUse|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_InternalUse|Win32.Build.0 = GNSS_InternalUse|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_NMEAPLAYER|Win32.ActiveCfg = GNSS_NMEAPLAYER|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_NMEAPLAYER|Win32.Build.0 = GNSS_NMEAPLAYER|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_SUP800_General|Win32.ActiveCfg = GNSS_SUP800_General|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_SUP800_General|Win32.Build.0 = GNSS_SUP800_General|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_SUP800|Win32.ActiveCfg = GNSS_SUP800|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_SUP800|Win32.Build.0 = GNSS_SUP800|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.Release|Win32.ActiveCfg = Release|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
