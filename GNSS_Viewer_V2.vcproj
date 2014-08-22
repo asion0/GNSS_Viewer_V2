@@ -376,7 +376,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="..\Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
+				CommandLine="Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 		<Configuration
