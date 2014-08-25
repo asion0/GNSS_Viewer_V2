@@ -39,8 +39,8 @@ END_MESSAGE_MAP()
 
 void CRawMeasmentOutputConvertDlg::OnBnClickedBrowse()
 {
-	CFileDialog dlgFile(TRUE, _T("dat"), NULL, 
-		OFN_HIDEREADONLY, _T("Binary Files (*.dat)|*.dat|ALL Files (*.*)|*.*||"), this);
+	CFileDialog dlgFile(TRUE, _T("*.*"), NULL, 
+		OFN_HIDEREADONLY, _T("ALL Files (*.*)|*.*||"), this);
 	
   	INT_PTR nResult = dlgFile.DoModal();
 	m_filePath = dlgFile.GetPathName();

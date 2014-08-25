@@ -908,13 +908,12 @@ END_MESSAGE_MAP()
 void CConfigPowerMode::OnBnClickedOk()
 {
 	CString txt;
-	GetDlgItem(IDC_POWER_MODE)->GetWindowText(txt);
-	m_nPowerMode = atoi(txt);
-	if(m_nPowerMode < 0 || m_nPowerMode > 255)
-	{
-		AfxMessageBox("Invalid value!");
-		return;
-	}
+	m_nPowerMode = ((CComboBox*)GetDlgItem(IDC_POWER_MODE))->GetCurSel();
+	//if(m_nPowerMode < 0 || m_nPowerMode > 255)
+	//{
+	//	AfxMessageBox("Invalid value!");
+	//	return;
+	//}
 	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();
 
 	OnOK();
@@ -931,10 +930,10 @@ BOOL CConfigPowerMode::OnInitDialog()
 
 void CConfigPowerMode::DoCommand()
 {
-	BinaryData cmd(4);
+	BinaryData cmd(3);
 	*cmd.GetBuffer(0) = 0x0C;
-	*cmd.GetBuffer(2) = (U08)m_nPowerMode;
-	*cmd.GetBuffer(3) = (U08)m_nAttribute;
+	*cmd.GetBuffer(1) = (U08)m_nPowerMode;
+	*cmd.GetBuffer(2) = (U08)m_nAttribute;
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure PowerSave Successful...";

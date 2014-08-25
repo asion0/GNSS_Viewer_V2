@@ -192,7 +192,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="..\Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
@@ -284,7 +284,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="..\Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
+				CommandLine="Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -468,7 +468,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="..\Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
+				CommandLine="Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -560,7 +560,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="..\Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
+				CommandLine="Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -652,7 +652,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="..\Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
+				CommandLine="Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -744,7 +744,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="..\Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
+				CommandLine="Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -836,7 +836,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="..\Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
+				CommandLine="Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -928,7 +928,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="..\Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
+				CommandLine="Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -1020,7 +1020,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="..\Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
+				CommandLine="Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -1112,7 +1112,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="..\Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
+				CommandLine="Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -2135,15 +2135,6 @@
 		</File>
 		<File
 			RelativePath=".\res\NewGNSS_Viewer.manifest"
-			>
-		</File>
-		<File
-			RelativePath=".\res\png1.png"
-			>
-		</File>
-		<File
-			RelativePath=".\PositionFinderDlg.htm"
-			DeploymentContent="true"
 			>
 		</File>
 	</Files>
