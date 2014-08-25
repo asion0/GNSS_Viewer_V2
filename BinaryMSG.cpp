@@ -325,6 +325,15 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 	U08 svs = src[6];
 	U08 *ptr = &src[7];
 	SV_CH_DATA_T sv;
+
+	if(!convertOnly)
+	{
+		memset(CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID));
+		memset(CGPSDlg::gpsDlg->m_bdgsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_bdgsaMsgCopy.SatelliteID));
+		memset(CGPSDlg::gpsDlg->m_glgsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_glgsaMsgCopy.SatelliteID));
+		memset(CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID));
+	}
+
 	for (int i=0; i<svs; ++i)
 	{
 		ptr = decode_1bytes(ptr, &sv.channel_id);
@@ -349,6 +358,11 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 				*pStr += "\r\n";
 			}
 			continue;
+		}
+
+		if(convertOnly)
+		{
+			return;
 		}
 
 		add2message(g_msgBuff, len);
@@ -405,17 +419,6 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 			galileo_c++;
 		}
 	}
-
-	if(convertOnly)
-	{
-		return;
-	}
-
-	memset(CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID));
-	memset(CGPSDlg::gpsDlg->m_bdgsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_bdgsaMsgCopy.SatelliteID));
-	memset(CGPSDlg::gpsDlg->m_glgsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_glgsaMsgCopy.SatelliteID));
-	memset(CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID));
-
 	
 	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfSate = gps_c;
 	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfMessage = (gps_c + 3) / 4;
@@ -546,18 +549,11 @@ void ShowReceiverNav(U08 *src, bool convertOnly, CString* pStr)
 	LLA_T lla;
 	CooCartesianToGeodetic(&pos, &lla);
 
-	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude = lla.lat * R2D;
-	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude_N_S = lla.lat >= 0 ? 'N' : 'S';
-	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude = lla.lon * R2D;
-	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude_E_W= lla.lon >= 0 ? 'E' : 'W';
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude = lla.lat * R2D * 100;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude_N_S = (lla.lat >= 0) ? 'N' : 'S';
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude = lla.lon * R2D * 100;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude_E_W = (lla.lon >= 0) ? 'E' : 'W';
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Altitude = lla.alt;
-
-	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Latitude = lla.lat * R2D;
-	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Latitude_N_S = lla.lat >= 0 ? 'N' : 'S';
-	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Longitude = lla.lon * R2D;
-	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Longitude_E_W= lla.lon >= 0 ? 'E' : 'W';
-
-	CGPSDlg::gpsDlg->m_gpggaMsgCopy.HDOP = receiver.hdop;
 
 	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.PDOP = receiver.pdop;
 	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.HDOP = receiver.hdop;
@@ -652,6 +648,7 @@ void ShowBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 	{
 		add2message(m_buff, msg_len);
 	}
+
 	msg_len = sprintf_s(m_buff,"$latitude=%.6f",flat);
 	if(convertOnly)
 	{
@@ -662,6 +659,7 @@ void ShowBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 	{
 		add2message(m_buff, msg_len);
 	}
+
 	msg_len = sprintf_s(m_buff,"$longutide=%.6f",flon);
 	if(convertOnly)
 	{
@@ -672,6 +670,7 @@ void ShowBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 	{
 		add2message(m_buff, msg_len);
 	}
+
 	msg_len = sprintf_s(m_buff,"$ellipsoid altitude=%.2f", (F32)alt_t / 100);
 	if(convertOnly)
 	{
@@ -682,6 +681,7 @@ void ShowBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 	{
 		add2message(m_buff, msg_len);
 	}
+
 	msg_len = sprintf_s(m_buff,"$sea level altitude=%.2f", (F32)alt);
 	if(convertOnly)
 	{

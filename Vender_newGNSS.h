@@ -116,13 +116,14 @@
 // .115 Add [Query SHA1 String] to General version.
 // .116 Add [Raw Measurement Binary Convert] in [Convert] menu.
 // .117 Fix Power Mode in [Configure Power Mode] can't change issue.
+// .118 Fix Fixed Raw Measurement output parsing issue.
 
 
 //#define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.117"
+#define APP_VERSION				"2.0.118"
 #define APP_TITLE				""
 #define GNSS_VIEWER				0
 #define GPS_VIEWER				0
