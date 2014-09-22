@@ -219,6 +219,7 @@ mt.dep
 vc90.idb
 *.intermediate.manifest
 *.res
+*.zip
 
 #svn folder
 .svn/
