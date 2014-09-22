@@ -105,7 +105,7 @@ END_MESSAGE_MAP()
 void CConfigSmoothMode::OnBnClickedOk()
 {
 	m_bEnable = ((CButton*)GetDlgItem(IDC_ENABLE))->GetCheck();
-	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();;
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();
 	OnOK();
 }
 
@@ -229,11 +229,11 @@ void CConfigSBAS::OnBnClickedOk()
 	m_bMSAS = ((CButton*)GetDlgItem(IDC_ENABLE_MSAS))->GetCheck();
 	m_bAll = ((CButton*)GetDlgItem(IDC_ENABLE_ALL))->GetCheck();
 
-
 	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();;
 
 	OnOK();
 }
+
 void CConfigSBAS::OnBnClickedEnableWaas()
 {
 	if(((CButton*)GetDlgItem(IDC_ENABLE_WAAS))->GetCheck())
@@ -383,7 +383,7 @@ void CConfigQZSS::OnBnClickedOk()
 	m_nTrackingChannel = atoi(txt);
 	if(m_nTrackingChannel < 0 || m_nTrackingChannel > 3)
 	{
-		AfxMessageBox("Number of tracking channels must be between 0 and 3!");
+		AfxMessageBox("Number of tracking channels must be between 0 to 3!");
 		return;
 	}
 

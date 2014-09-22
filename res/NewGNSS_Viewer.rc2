@@ -21,6 +21,7 @@
 // CBitmapButton skin
 // Using suffices "U", "D", "F" and "X" for up/down/focus/disabled
 SetOriginU              BITMAP                  "res\\SetOriginU.bmp"
+SetOriginX              BITMAP                  "res\\SetOriginX.bmp"
 SetOriginD              BITMAP                  "res\\SetOriginD.bmp"
 ClearU                  BITMAP                  "res\\ClearU.bmp"
 ClearD                  BITMAP                  "res\\ClearD.bmp"
@@ -82,11 +83,17 @@ IDB_SCALE_T             BITMAP                  "res\\ScaleT.bmp"
 IDB_TWODRMS_T           BITMAP                  "res\\TwoDRmsT.bmp"
 IDB_CEP50_T             BITMAP                  "res\\Cep50T.bmp"
 
+#ifndef _ANOTHER_BAR_STYLE_
 IDB_MESSAGE             BITMAP                  "res\\MessageBar.bmp"
 IDB_RESPONSE            BITMAP                  "res\\ResponseBar.bmp"
 IDB_COORBAR             BITMAP                  "res\\CoordinateBar.bmp"
 IDB_COMMAND             BITMAP                  "res\\CommandBar.bmp"
-
+#else
+IDB_MESSAGE             BITMAP                  "res\\MessageBar2.bmp"
+IDB_RESPONSE            BITMAP                  "res\\ResponseBar2.bmp"
+IDB_COORBAR             BITMAP                  "res\\CoordinateBar2.bmp"
+IDB_COMMAND             BITMAP                  "res\\CommandBar2.bmp"
+#endif
 IDB_WGS84X              BITMAP                  "res\\WGS84_X.bmp"
 IDB_WGS84Y              BITMAP                  "res\\WGS84_Y.bmp"
 IDB_WGS84Z              BITMAP                  "res\\WGS84_Z.bmp"
@@ -155,6 +162,7 @@ IDR_V8_AT_SREC_230400 SREC						"res\\loader_v8_add_tag_230400.srec"
 IDR_V8_AT_SREC_460800 SREC						"res\\loader_v8_add_tag_460800.srec"
 IDR_V8_AT_SREC_921600 SREC						"res\\loader_v8_add_tag_921600.srec"
 IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag.srec"
+IDR_INTERNAL_LOADER_SPECIAL        SREC			"res\\loader_v8_new.srec"
 
 /////////////////////////////////////////////////////////////////////////////
 //

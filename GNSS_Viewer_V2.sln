@@ -10,6 +10,7 @@ Global
 		GNSS_General_Ericsson|Win32 = GNSS_General_Ericsson|Win32
 		GNSS_General_FKHL|Win32 = GNSS_General_FKHL|Win32
 		GNSS_General_OLinkStar|Win32 = GNSS_General_OLinkStar|Win32
+		GNSS_General_SWID_NewLoader|Win32 = GNSS_General_SWID_NewLoader|Win32
 		GNSS_General_SWID|Win32 = GNSS_General_SWID|Win32
 		GNSS_General|Win32 = GNSS_General|Win32
 		GNSS_InternalUse|Win32 = GNSS_InternalUse|Win32
@@ -29,6 +30,8 @@ Global
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_FKHL|Win32.Build.0 = GNSS_General_FKHL|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_OLinkStar|Win32.ActiveCfg = GNSS_General_OLinkStar|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_OLinkStar|Win32.Build.0 = GNSS_General_OLinkStar|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_SWID_NewLoader|Win32.ActiveCfg = GNSS_General_SWID_NewLoader|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_SWID_NewLoader|Win32.Build.0 = GNSS_General_SWID_NewLoader|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_SWID|Win32.ActiveCfg = GNSS_General_SWID|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_SWID|Win32.Build.0 = GNSS_General_SWID|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General|Win32.ActiveCfg = GNSS_General|Win32

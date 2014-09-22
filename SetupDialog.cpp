@@ -57,7 +57,12 @@ void CSetupDialog::OnBnClickedOk()
 	setting->downloadTesting = ((CButton*)GetDlgItem(IDC_DOWNLOAD_TEST))->GetCheck();
 	setting->responseLog = ((CButton*)GetDlgItem(IDC_ENABLE_LOG))->GetCheck();
 	((CEdit*)GetDlgItem(IDC_LOG_PATH))->GetWindowText(setting->responseLogPath);
+	setting->specifyCenter = ((CButton*)GetDlgItem(IDC_SPY_CENTER))->GetCheck();
 
+	GetDlgItem(IDC_LON)->GetWindowText(s);
+	setting->scatterCenterLon = atof(s);
+	GetDlgItem(IDC_LAT)->GetWindowText(s);
+	setting->scatterCenterLat = atof(s);
 	OnOK();
 }
 
@@ -97,7 +102,12 @@ BOOL CSetupDialog::OnInitDialog()
 	((CButton*)GetDlgItem(IDC_DOWNLOAD_TEST))->SetCheck(setting->downloadTesting);
 	((CButton*)GetDlgItem(IDC_ENABLE_LOG))->SetCheck(setting->responseLog);
 	((CEdit*)GetDlgItem(IDC_LOG_PATH))->SetWindowText(setting->responseLogPath);
-	
+	((CButton*)GetDlgItem(IDC_SPY_CENTER))->SetCheck(setting->specifyCenter);
+	s.Format("%lf", setting->scatterCenterLon);
+	GetDlgItem(IDC_LON)->SetWindowText(s);
+	s.Format("%lf", setting->scatterCenterLat);
+	GetDlgItem(IDC_LAT)->SetWindowText(s);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }

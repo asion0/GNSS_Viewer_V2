@@ -64,6 +64,7 @@
 #include "BinaryChecksumCalDlg.h"
 #include "PanelBackground.h"
 #include "RawMeasmentOutputConvertDlg.h"
+#include "VerifyFwDlg.h"
 
 //extern Satellite satellites[MAX_SATELLITE];
 //extern Satellite satellites_gnss[MAX_SATELLITE];
@@ -985,6 +986,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_FILE_EXIT, OnFileExit)
 	ON_COMMAND(ID_FILE_SAVENMEA, OnFileSaveNmea)
 	ON_COMMAND(ID_FILE_BINARY, OnFileSaveBinary)
+	ON_COMMAND(ID_VERIFY_FIRMWARE, OnVerifyFirmware)
 	ON_COMMAND(ID_FILE_PLAYNMEA, OnFilePlayNmea)
 	ON_COMMAND(ID_GLONASS_CONFIGUREUSBDRIVER, &CGPSDlg::OnGlonassConfigureusbdriver)
 	ON_COMMAND(ID_HELP_ABOUT, OnHelpAbout)
@@ -1195,6 +1197,7 @@ void CGPSDlg::Initialization()
 	VERIFY(m_EarthSettingBtn.AutoLoad(IDC_EARTHSETTING, this));	
 	VERIFY(m_ScatterSettingBtn.AutoLoad(IDC_SCATTERSETTING, this));	
 
+	m_SetOriginBtn.EnableWindow(!g_setting.specifyCenter);
 	m_scale.ResetContent();
 	CString enuItems[] = { "0.1m", "0.2m", "0.5m", "1m", "2m", "3m", "5m", "10m", 
 				"20m", "30m", "40m", "50m", "100m", "150m", "200m", "300m", "" };
@@ -2772,6 +2775,11 @@ void CGPSDlg::OnFileSetup()
 	{
 		g_setting.Save();
 		m_nDownloadBaudIdx = g_setting.boostBaudIndex;
+		m_SetOriginBtn.EnableWindow(!g_setting.specifyCenter);
+		if(g_setting.specifyCenter)
+		{
+			g_scatterData.SetOrigin();
+		}
 	}
 }
 
@@ -3927,6 +3935,24 @@ void CGPSDlg::OnFileSaveBinary()
 	m_saveNmeaDlg->SetBinaryMode(true);
 }
 
+void CGPSDlg::OnVerifyFirmware()
+{
+	if(!CheckConnect())
+	{
+		return;
+	}
+
+	m_inputMode = 0;
+
+	CVerifyFwDlg dlg;
+	INT_PTR nResult = dlg.DoModal();	
+	if(nResult!=IDOK)
+	{
+		SetMode();  
+		CreateGPSThread();
+	}
+}
+
 void CGPSDlg::OnFilePlayNmea()
 {
 	OnBnClickedPlay();
@@ -4231,7 +4257,11 @@ void CGPSDlg::Config_silab_baudrate_flash(HANDLE *m_DeviceHandle)
 #endif
 void CGPSDlg::OnBinaryConfiguremessagetype()
 {
-	if(!CheckConnect())return;
+	if(!CheckConnect())
+	{
+		return;
+	}
+
 	m_inputMode = 0;	
 	CCfgMsg* dlg = new CCfgMsg;
 	dlg->msg_id = 0x9;
@@ -4706,6 +4736,7 @@ void CGPSDlg::Load_Menu()
 		{ !NMEA_INPUT, MF_STRING, ID_FILE_BINARY, "&Save Binary", NULL },
 		{ 1, MF_STRING, ID_FILE_CLEANNEMA, "&Clear Message Screen", NULL },
 		{ NMEA_INPUT, MF_STRING, ID_FILE_PLAYNMEA, "&Play NMEA", NULL },
+		{ IS_DEBUG, MF_STRING, ID_VERIFY_FIRMWARE, "&Verify Firmware", NULL },
 		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ IS_DEBUG, MF_STRING, ID_FILE_SETUP, "&Setup", NULL },
 		{ 1, MF_STRING, ID_FILE_EXIT, "&Exit", NULL },
@@ -5407,11 +5438,14 @@ void CGPSDlg::OnBnClickedDownload()
 			//m_DownloadMode = EnternalLoaderInBinCmd;
 		}
 	}
-
-	if(!theApp.CheckExternalSrec(externalSrecFile) && _ALWAYS_USE_EXTERNAL_SREC_)
+	else if(!theApp.CheckExternalSrec(externalSrecFile) && _ALWAYS_USE_EXTERNAL_SREC_)
 	{
 		::AfxMessageBox("No external loader exist!");
 		return;
+	}
+	else if(_USE_RESOURCE_LOADER_)
+	{
+		m_DownloadMode = InternalLoaderSpecial;
 	}
 
 	int dlBaudIdx = ((CComboBox*)GetDlgItem(IDC_DL_BAUDRATE))->GetCurSel();

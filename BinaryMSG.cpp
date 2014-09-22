@@ -795,6 +795,7 @@ void ShowBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 	{
 		add2message(m_buff, msg_len);
 	}
+
 	if(convertOnly)
 	{
 		return;
@@ -838,7 +839,7 @@ void ShowBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Day = utc.day;
 	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Hour = utc.hour;
 	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Min = utc.minute;
-	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Sec = i_sec*0.001f;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Sec = i_sec * 0.001f;
 
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude = flat;
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude_N_S = flat >= 0 ? 'N' : 'S';
@@ -855,7 +856,6 @@ void ShowBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 
 	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.PDOP = (F32)pdop/100;
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.HDOP = (F32)hdop/100;
-	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.HDOP = (F32)hdop/100;
 	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.VDOP = (F32)vdop/100;
 
 	CGPSDlg::gpsDlg->m_gprmcMsgCopy.SpeedKnots = (F32)(fv / 1.85567F);

@@ -208,6 +208,7 @@
 #define IDR_V8_AT_SREC_921600           459
 #define IDD_RAW_MEAS_OUT_CONV           459
 #define IDR_V8_AT_SREC                  460
+#define IDD_VERIFY_FW                   460
 #define IDD_CONFIG_1PPS_FREQ_OUTPUT     461
 #define IDD_CONFIG_NMEA_INTERVAL2_V8    462
 #define IDD_CONFIG_ERICSSON_INTERVAL    463
@@ -805,8 +806,23 @@
 #define IDC_TRACKED_NUM                 1339
 #define IDC_DATUM_LIST                  1339
 #define IDC_EARTHSETTING                1340
+#define IDC_SELECT                      1340
 #define IDC_SCATTERSETTING              1341
 #define IDC_EARTHSETTING2               1341
+#define ID_GO                           1341
+#define IDC_STATUS                      1342
+#define IDC_KERNELVER                   1343
+#define IDC_                            1344
+#define IDC_SWVER                       1344
+#define IDC_REV                         1345
+#define IDC_CRC                         1346
+#define IDC_FILEPATH                    1347
+#define IDC_FILEPATH2                   1348
+#define IDC_LON                         1348
+#define IDC_LAT                         1349
+#define IDC_SPY_CENTER                  1350
+#define IDR_INTERNAL_LOADER_SPECIAL     1351
+
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_BINARY_SYSTEMRESTART         32811
@@ -1037,14 +1053,15 @@
 #define ID_QUERY_SHA1                   33072
 #define ID_QUERY_CON_CAP                33073
 #define ID_RAW_MEAS_OUT_CONVERT         33074
+#define ID_VERIFY_FIRMWARE              33075
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        460
+#define _APS_NEXT_RESOURCE_VALUE        461
 #define _APS_NEXT_COMMAND_VALUE         33081
-#define _APS_NEXT_CONTROL_VALUE         1340
+#define _APS_NEXT_CONTROL_VALUE         1351
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

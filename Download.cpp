@@ -276,6 +276,8 @@ UINT CGPSDlg::GetSrecFromResource(int buad)
 		case InternalLoaderV8:
 			srecTable = v8SrecTable;
 			break;
+		case InternalLoaderSpecial:
+			return _RESOURCE_LOADER_ID_;
 		default:
 			ASSERT(FALSE);
 	}
@@ -530,6 +532,7 @@ bool CGPSDlg::FirmwareUpdate()
 			case ParallelDownloadType0:
 			case ParallelDownloadType1:
 			case InternalLoaderV8AddTag:
+			case InternalLoaderSpecial:
 				res = PlRomNoAllocV8(m_strDownloadImage);
 				break;
 			default:
@@ -623,7 +626,10 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, FILE *f,
 				buff[2] = checkSum;
 			}
 
-			if(EnternalLoaderInBinCmd==m_DownloadMode || EnternalLoader==m_DownloadMode || InternalLoaderV8==m_DownloadMode)
+			if( EnternalLoaderInBinCmd==m_DownloadMode || 
+				EnternalLoader==m_DownloadMode || 
+				InternalLoaderV8==m_DownloadMode ||
+				InternalLoaderSpecial==m_DownloadMode )
 			{
 				nBytesSent = SendToTargetNoAck((U08*)buff + headerSize, sentbytes);	 
 			}
@@ -694,8 +700,13 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, FILE *f,
 			buff[2] = checkSum;
 		}
 
-		if(EnternalLoaderInBinCmd==m_DownloadMode || EnternalLoader==m_DownloadMode || InternalLoaderV8==m_DownloadMode ||
-		   ParallelDownloadType0==m_DownloadMode || ParallelDownloadType1==m_DownloadMode || InternalLoaderV8AddTag==m_DownloadMode)
+		if( EnternalLoaderInBinCmd==m_DownloadMode || 
+			EnternalLoader==m_DownloadMode || 
+			InternalLoaderV8==m_DownloadMode ||
+			ParallelDownloadType0==m_DownloadMode || 
+			ParallelDownloadType1==m_DownloadMode || 
+			InternalLoaderV8AddTag==m_DownloadMode ||
+			InternalLoaderSpecial==m_DownloadMode )
 		{
 			nBytesSent = SendToTargetNoAck((U08*)buff + headerSize, sentbytes);	 
 		}
@@ -1307,6 +1318,7 @@ bool CGPSDlg::DownloadLoader()
 		case EnternalLoaderInBinCmd:
 		case InternalLoaderV8:
 		case InternalLoaderV8AddTag:
+		case InternalLoaderSpecial:
 			break;
 		default:
 			ASSERT(FALSE);
@@ -1380,7 +1392,8 @@ void CGPSDlg::Download()
 		return;
 	}
 
-	do {
+	do 
+	{
 		customerCrc = 0;
 		if(_CREATE_LICENSE_TAG_ && m_DownloadMode==InternalLoaderV8)
 		{
@@ -1419,6 +1432,7 @@ void CGPSDlg::Download()
 			case ParallelDownloadType0:
 			case ParallelDownloadType1:
 			case InternalLoaderV8AddTag:
+			case InternalLoaderSpecial:
 				BoostBaudrate(FALSE);
 			case EnternalLoaderInBinCmd:
 			{

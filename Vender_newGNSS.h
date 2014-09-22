@@ -117,13 +117,15 @@
 // .116 Add [Raw Measurement Binary Convert] in [Convert] menu.
 // .117 Fix Power Mode in [Configure Power Mode] can't change issue.
 // .118 Fix Fixed Raw Measurement output parsing issue.
+// .119 Add specify Scatter Center Point function in Setup.
+// .120 Add SWCFG_VENDOR_GNSS_SWID_NEW_DOWNLOAD.
 
 
 //#define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.118"
+#define APP_VERSION				"2.0.120"
 #define APP_TITLE				""
 #define GNSS_VIEWER				0
 #define GPS_VIEWER				0
@@ -211,9 +213,41 @@
 #define	MORE_ENU_SCALE			1
 #define	GPS_183_188				1
 #define	_MODULE_SUP_800_		0
+#define	_USE_RESOURCE_LOADER_	0
+#define	_RESOURCE_LOADER_ID_	0
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-#if defined(SWCFG_VENDOR_GNSS_SUP800_GENERAL)
+
+#if defined(SWCFG_VENDOR_GNSS_SWID_NEW_DOWNLOAD)
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef OPEN_PINNING_RESERVE
+ #undef BINARY_MESSAGE_INTERVAL
+ #undef _USE_RESOURCE_LOADER_
+ #undef _DIRECTLY_DOWNLOAD_
+ #undef _V8_SUPPORT
+ #undef _RESOURCE_LOADER_ID_
+
+ #define APP_CAPTION			"GNSS Viewer"
+ #define APP_TITLE				"Customer Release"
+ #define GNSS_VIEWER			1
+ #define IS_DEBUG				0
+ #define BAUDRATE				5
+ #define BAUDRATE_DEFAULT		7
+ #define TIMING_MODE			1
+ #define OPEN_PINNING_RESERVE	1
+ #define BINARY_MESSAGE_INTERVAL	1
+ #define _USE_RESOURCE_LOADER_	1
+ #define _DIRECTLY_DOWNLOAD_	1
+ #define _V8_SUPPORT			1
+ #define _RESOURCE_LOADER_ID_	1351
+
+#elif defined(SWCFG_VENDOR_GNSS_SUP800_GENERAL)
  #undef APP_CAPTION
  #undef APP_TITLE
  #undef GNSS_VIEWER

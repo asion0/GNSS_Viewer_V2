@@ -11,19 +11,27 @@ void ScatterData::SetOrigin()
 	float offset_y=0;	 
 	
 	_GETENUPOINTCS.Lock();
-	m_lon = lon_deg;
-	m_lat = lat_deg;
-	if(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude_N_S=='S' && m_lat>0)
-	 {
-			m_lat *= -1;	 
-	 }
+	if(g_setting.specifyCenter && IS_DEBUG)
+	{
+		m_lon = g_setting.scatterCenterLon;
+		m_lat = g_setting.scatterCenterLat;
+	}
+	else
+	{
+		m_lon = lon_deg;
+		m_lat = lat_deg;
+		if(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude_N_S=='S' && m_lat>0)
+		 {
+				m_lat *= -1;	 
+		 }
 
-	 if(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude_E_W=='W' && m_lon>0)
-	 {
-			m_lon *= -1;
-	 }
-	 offset_x  = current_x; 
-	 offset_y  = current_y;	
+		 if(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude_E_W=='W' && m_lon>0)
+		 {
+				m_lon *= -1;
+		 }
+		 offset_x  = current_x; 
+		 offset_y  = current_y;	
+	}
 	_GETENUPOINTCS.Unlock();
 	
 	_GET_ENU_POINT_CS.Lock();
@@ -64,12 +72,20 @@ void ScatterData::InitPos()
 {
 	long double lon, lat;
 	ini_h = CGPSDlg::gpsDlg->m_gpggaMsg.Altitude;
-	m_lon = int(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude / 100.0);
-	m_lon += double(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude - 
-		int(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude / 100.0) * 100.0) / 60;
-	m_lat = int(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude / 100);
-	m_lat += double(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude - 
-		int(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude/100)*100)/60;
+	if(g_setting.specifyCenter && IS_DEBUG)
+	{
+		m_lon = g_setting.scatterCenterLon;
+		m_lat = g_setting.scatterCenterLat;
+	}
+	else
+	{
+		m_lon = int(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude / 100.0);
+		m_lon += double(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude - 
+			int(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude / 100.0) * 100.0) / 60;
+		m_lat = int(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude / 100);
+		m_lat += double(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude - 
+			int(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude/100)*100)/60;
+	}
 
 	inimaplondeg = int(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude/100);
 	inimaplonmin = (int)CGPSDlg::gpsDlg->m_gpggaMsg.Longitude-
@@ -89,10 +105,17 @@ void ScatterData::InitPos()
 	lon = m_lon;
 	lat = m_lat;
 
-	if(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude_N_S == 'S')
-		m_lat *= -1;
-	if(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude_E_W == 'W')
-		m_lon *= -1;
+	if(g_setting.specifyCenter && IS_DEBUG)
+	{
+
+	}
+	else
+	{
+		if(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude_N_S == 'S')
+			m_lat *= -1;
+		if(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude_E_W == 'W')
+			m_lon *= -1;
+	}
 
 	SetRotationMatrix();
 	int_N = WGS84a / (sqrt(1-e*e*sin(m_lat)*sin(m_lat)));

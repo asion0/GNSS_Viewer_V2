@@ -388,7 +388,10 @@ double CRegistry::ReadFloat(CString strName, double fDefault)
 		KEY_READ, &hKey) != ERROR_SUCCESS) return fDefault;
 
 	if (::RegQueryValueEx(hKey, LPCTSTR(strName), NULL,
-		&dwType, (LPBYTE)&d, &dwSize) != ERROR_SUCCESS) d = fDefault;
+		&dwType, (LPBYTE)&d, &dwSize) != ERROR_SUCCESS) 
+	{
+		d = fDefault;
+	}
 	::RegCloseKey(hKey);	
 	return d;
 }

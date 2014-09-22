@@ -45,6 +45,10 @@ struct Setting
 			reg.WriteInt("setting_checkNmeaError", checkNmeaError);
 			reg.WriteInt("setting_responseLog", responseLog);
 			reg.WriteString("setting_responseLogPath", responseLogPath);
+
+			reg.WriteInt("setting_specifyCenter", specifyCenter);
+			reg.WriteFloat("setting_scatterCenterLon", scatterCenterLon);
+			reg.WriteFloat("setting_scatterCenterLat", scatterCenterLat);
 		}	
 	}
 
@@ -52,6 +56,9 @@ struct Setting
 	{
 		CRegistry reg;
 		reg.SetRootKey(HKEY_CURRENT_USER);
+		const double defaultCenterLon = 121.008756203;
+		const double defaultCenterLat = 24.784893606;
+
 		if(reg.SetKey("Software\\GNSSViewer\\GPS", true))
 		{
 			earthBitmap = reg.ReadInt("setting_earthBitmap", 0);
@@ -62,6 +69,10 @@ struct Setting
 			checkNmeaError = reg.ReadInt("setting_checkNmeaError", SHOW_ERROR_NMEA_NOTIFY);
 			responseLog = reg.ReadInt("setting_responseLog", FALSE);
 			responseLogPath = reg.ReadString("setting_responseLogPath", LogDefaultName);
+
+			specifyCenter = reg.ReadInt("setting_specifyCenter", FALSE);
+			scatterCenterLon = reg.ReadFloat("setting_scatterCenterLon", defaultCenterLon);
+			scatterCenterLat = reg.ReadFloat("setting_scatterCenterLat", defaultCenterLat);
 		}
 		else
 		{
@@ -73,6 +84,9 @@ struct Setting
 			checkNmeaError = SHOW_ERROR_NMEA_NOTIFY;
 			responseLog = FALSE;
 			responseLogPath = LogDefaultName;
+			specifyCenter = FALSE;
+			scatterCenterLon = defaultCenterLon;
+			scatterCenterLat = defaultCenterLat;
 		}
 		downloadTesting = FALSE;
 	}
@@ -86,6 +100,9 @@ struct Setting
 	BOOL downloadTesting;
 	BOOL responseLog;
 	CString responseLogPath;
+	BOOL specifyCenter;
+	double scatterCenterLon;
+	double scatterCenterLat;
 };
 
 typedef struct {

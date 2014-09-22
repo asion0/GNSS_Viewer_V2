@@ -121,6 +121,30 @@ BEGIN
     LTEXT           "Static",IDC_MESSAGE,7,100,402,9
 END
 
+IDD_VERIFY_FW DIALOGEX 0, 0, 457, 197
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Download and Verify!",ID_GO,7,153,114,14
+    PUSHBUTTON      "Select",IDC_SELECT,7,14,50,14
+    LTEXT           "",IDC_FILEPATH,52,37,398,11,0,WS_EX_CLIENTEDGE
+    LTEXT           "Baud Rate :",IDC_STATIC,7,76,39,8
+    LTEXT           "Kernel Version :",IDC_STATIC,7,90,51,8
+    LTEXT           "Software Version :",IDC_STATIC,7,106,60,8
+    LTEXT           "Revision :",IDC_STATIC,7,121,32,8
+    LTEXT           "CRC :",IDC_STATIC,7,137,20,8
+    LTEXT           "Static",IDC_STATUS,7,171,443,12
+    LTEXT           "",IDC_BAUDRATE,78,76,126,8
+    LTEXT           "",IDC_KERNELVER,78,90,126,8
+    LTEXT           "",IDC_SWVER,78,106,126,8
+    LTEXT           "",IDC_REV,78,121,126,8
+    LTEXT           "",IDC_CRC,78,137,126,8
+    LTEXT           "Path :",IDC_STATIC,7,39,20,8
+    LTEXT           "File Name :",IDC_STATIC,7,52,36,8
+    LTEXT           "",IDC_FILENAME,52,52,398,11,0,WS_EX_CLIENTEDGE
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -152,6 +176,14 @@ BEGIN
         RIGHTMARGIN, 409
         TOPMARGIN, 7
         BOTTOMMARGIN, 130
+    END
+
+    IDD_VERIFY_FW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 450
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 190
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -717,27 +749,32 @@ BEGIN
     CONTROL         "Enable RCV Status",IDC_RCV_STATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,82,130,10
 END
 
-IDD_SETUP DIALOGEX 0, 0, 316, 207
+IDD_SETUP DIALOGEX 0, 0, 316, 239
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Setup"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Accept",IDOK,205,186,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,259,186,50,14
+    DEFPUSHBUTTON   "Accept",IDOK,205,218,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,259,218,50,14
     EDITTEXT        IDC_BINSIZE_DELAY,85,20,62,14,ES_AUTOHSCROLL | ES_NUMBER
     LTEXT           "Delay before BINSIZE command",IDC_STATIC,7,22,77,8
     LTEXT           "ms",IDC_STATIC,154,22,10,8
-    LTEXT           "Default boost baud rate :",IDC_STATIC,7,45,90,8
-    COMBOBOX        IDC_BOOST_BAUDRATE,95,42,64,30,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Default boost baud rate :",IDC_STATIC,7,42,84,8
+    COMBOBOX        IDC_BOOST_BAUDRATE,95,39,64,30,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Enable auto query version",IDC_AUTO_QUERY_VERSION,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,66,152,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,62,152,10
     CONTROL         "Enable boost baud rate in Get/Set Ephemeris",IDC_BOOST_EPHEMERIS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,87,302,10
-    CONTROL         "Detect NMEA sentence error",IDC_CHECK_NMEA_ERR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,108,302,10
-    CONTROL         "Download Test",IDC_DOWNLOAD_TEST,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,131,63,10
-    EDITTEXT        IDC_LOG_PATH,87,149,202,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "...",IDC_BROWSE,293,149,16,14
-    CONTROL         "Log response to file",IDC_ENABLE_LOG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,152,79,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,82,302,10
+    CONTROL         "Detect NMEA sentence error",IDC_CHECK_NMEA_ERR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,102,302,10
+    CONTROL         "Download Test",IDC_DOWNLOAD_TEST,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,122,63,10
+    EDITTEXT        IDC_LOG_PATH,87,139,202,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BROWSE,293,139,16,14
+    CONTROL         "Log response to file",IDC_ENABLE_LOG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,142,79,10
+    CONTROL         "Specify the scatter center point",IDC_SPY_CENTER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,162,302,10
+    LTEXT           "Longitude :",IDC_STATIC,19,177,39,8
+    LTEXT           "Latitude :",IDC_STATIC,143,177,32,8
+    EDITTEXT        IDC_LON,59,174,72,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_LAT,176,174,72,14,ES_AUTOHSCROLL
 END
 
 IDD_CONFIG_SAGPS DIALOGEX 0, 0, 191, 137
@@ -2368,7 +2405,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 309
         TOPMARGIN, 7
-        BOTTOMMARGIN, 200
+        BOTTOMMARGIN, 232
     END
 
     IDD_CONFIG_SAGPS, DIALOG

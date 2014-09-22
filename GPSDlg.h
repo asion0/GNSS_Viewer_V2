@@ -324,6 +324,7 @@ protected:
 	afx_msg void OnBnClickedDownload();
 	afx_msg void OnFileSaveNmea();
 	afx_msg void OnFileSaveBinary();
+	afx_msg void OnVerifyFirmware();
 	afx_msg void OnFilePlayNmea();
 	afx_msg void OnConverterKml();
 	afx_msg void OnRawMeasurementOutputConvert();
@@ -870,6 +871,7 @@ public:
 		InternalLoaderV6GnssDelTag,
 		InternalLoaderV8AddTag,
 		CustomerDownload,
+		InternalLoaderSpecial,
 
 		HostBasedDownload,
 		HostBasedCmdOnly,
