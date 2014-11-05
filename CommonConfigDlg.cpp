@@ -13,7 +13,8 @@ CString configPrompt;
 
 UINT AFX_CDECL ConfigThread(LPVOID param)
 {
-	CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), configPrompt);
+	bool restoreConnect = (((int)(param))==0);
+	CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), configPrompt, restoreConnect);
 	return 0;
 }
 
@@ -1009,13 +1010,6 @@ END_MESSAGE_MAP()
 void CConfigDatumIndex::OnBnClickedOk()
 {
 	m_nDatumIndex = ((CComboBox*)GetDlgItem(IDC_DATUM_LIST))->GetCurSel();
-/*
-	if(m_nTrackedNumber!=0 && (m_nTrackedNumber < 6 || m_nTrackedNumber > 16))
-	{
-		AfxMessageBox("Invalid value!");
-		return;
-	}
-*/
 	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();
 
 	OnOK();
@@ -1051,4 +1045,365 @@ void CConfigDatumIndex::DoCommand()
 	configCmd.SetData(cmd);
 	configPrompt = "Configure DatumIndex successful...";
     AfxBeginThread(ConfigThread, 0);
+}
+
+
+// CConfigUartPassThrough 對話方塊
+IMPLEMENT_DYNAMIC(CConfigUartPassThrough, CCommonConfigDlg)
+
+CConfigUartPassThrough::CConfigUartPassThrough(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_SET_UART_PASS_THROUGH, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigUartPassThrough, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigUartPassThrough::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigUartPassThrough 訊息處理常式
+void CConfigUartPassThrough::OnBnClickedOk()
+{
+	m_nPassThrough = ((CButton*)GetDlgItem(IDC_PASS_THROUGH))->GetCheck();
+	OnOK();
+}
+
+BOOL CConfigUartPassThrough::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigUartPassThrough::DoCommand()
+{
+	BinaryData cmd(4);
+	*cmd.GetBuffer(0) = 0x7A;
+	*cmd.GetBuffer(1) = 0x08;
+	*cmd.GetBuffer(2) = 0x01;
+	*cmd.GetBuffer(3) = m_nPassThrough;
+
+	configCmd.SetData(cmd);
+	configPrompt = "Set UART pass-through successful...";
+    AfxBeginThread(ConfigThread, 0);
+}
+
+
+// CSUP800EraseUserDataDlg 對話方塊
+IMPLEMENT_DYNAMIC(CSUP800EraseUserDataDlg, CCommonConfigDlg)
+
+CSUP800EraseUserDataDlg::CSUP800EraseUserDataDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_SUP800_ERASE_DATA, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CSUP800EraseUserDataDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDC_ERASE, &CSUP800EraseUserDataDlg::OnBnClickedErase)
+END_MESSAGE_MAP()
+
+// CSUP800EraseUserDataDlg 訊息處理常式
+void CSUP800EraseUserDataDlg::OnBnClickedErase()
+{
+	m_nSector = ((CComboBox*)GetDlgItem(IDC_SECTOR))->GetCurSel();;
+
+	OnOK();
+}
+
+BOOL CSUP800EraseUserDataDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	CString str;
+	for(int i=0; i<32; ++i)
+	{
+		str.Format("%d", i);
+		((CComboBox*)GetDlgItem(IDC_SECTOR))->AddString(str);
+	}
+	((CComboBox*)GetDlgItem(IDC_SECTOR))->SetCurSel(0);
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CSUP800EraseUserDataDlg::DoCommand()
+{
+	BinaryData cmd(4);
+	*cmd.GetBuffer(0) = 0x7A;
+	*cmd.GetBuffer(1) = 0x09;
+	*cmd.GetBuffer(2) = 0x01;
+	*cmd.GetBuffer(3) = m_nSector;
+
+	configCmd.SetData(cmd);
+	configPrompt = "SUP800 erase user data successful...";
+    AfxBeginThread(ConfigThread, 0);
+}
+
+// CSUP800WriteUserDataDlg 對話方塊
+IMPLEMENT_DYNAMIC(CSUP800WriteUserDataDlg, CCommonConfigDlg)
+
+CSUP800WriteUserDataDlg::CSUP800WriteUserDataDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_SUP800_WRITE_DATA, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CSUP800WriteUserDataDlg, CCommonConfigDlg)
+	ON_EN_CHANGE(IDC_DATA, &CSUP800WriteUserDataDlg::OnEnChangeInput)
+	ON_BN_CLICKED(IDC_WRITE, &CSUP800WriteUserDataDlg::OnBnClickedWrite)
+	ON_BN_CLICKED(IDC_LOAD, &CSUP800WriteUserDataDlg::OnBnClickedLoad)
+END_MESSAGE_MAP()
+
+// CSUP800EraseUserDataDlg 訊息處理常式
+void CSUP800WriteUserDataDlg::OnBnClickedWrite()
+{
+	CString txt;
+
+	m_nSector = ((CComboBox*)GetDlgItem(IDC_SECTOR))->GetCurSel();;
+	GetDlgItem(IDC_OFFSET)->GetWindowText(txt);
+	m_nOffset = atoi(txt);
+
+	GetDlgItem(IDC_DATA)->GetWindowText(txt);
+	if(!Utility::ConvertHexToBinary(txt, m_binData))
+	{
+
+	}
+	
+	OnOK();
+}
+
+BOOL CSUP800WriteUserDataDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	CString str;
+	for(int i=0; i<32; ++i)
+	{
+		str.Format("%d", i);
+		((CComboBox*)GetDlgItem(IDC_SECTOR))->AddString(str);
+	}
+	((CComboBox*)GetDlgItem(IDC_SECTOR))->SetCurSel(0);
+	GetDlgItem(IDC_OFFSET)->SetWindowText("0");
+	GetDlgItem(IDC_DATA)->SetFont(&CGPSDlg::messageFont, TRUE);
+
+	
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CSUP800WriteUserDataDlg::DoCommand()
+{
+	BinaryData cmd(m_binData.Size() + 8);
+	*cmd.GetBuffer(0) = 0x7A;
+	*cmd.GetBuffer(1) = 0x09;
+	*cmd.GetBuffer(2) = 0x02;
+	*cmd.GetBuffer(3) = m_nSector;
+	*cmd.GetBuffer(4) = HIBYTE(m_nOffset);
+	*cmd.GetBuffer(5) = LOBYTE(m_nOffset);
+	*cmd.GetBuffer(6) = HIBYTE(m_binData.Size());
+	*cmd.GetBuffer(7) = LOBYTE(m_binData.Size());
+	memcpy(cmd.GetBuffer(8), m_binData.Ptr(), m_binData.Size());
+
+	configCmd.SetData(cmd);
+	configPrompt = "SUP800 write user data successful...";
+    AfxBeginThread(ConfigThread, 0);
+}
+
+void CSUP800WriteUserDataDlg::OnEnChangeInput()
+{
+	// TODO:  如果這是 RICHEDIT 控制項，控制項將不會
+	// 傳送此告知，除非您覆寫 CDialog::OnInitDialog()
+	// 函式和呼叫 CRichEditCtrl().SetEventMask()
+	// 讓具有 ENM_CHANGE 旗標 ORed 加入遮罩。
+ 	CString strInput;
+	GetDlgItem(IDC_DATA)->GetWindowText(strInput);
+	CWnd* pBtn = GetDlgItem(IDC_WRITE);
+
+	//GetDlgItem(IDC_CHECKSUM)->SetWindowText(strInput + "_");
+	BinaryData binData;
+	if(!Utility::ConvertHexToBinary(strInput, binData))
+	{
+		GetDlgItem(IDC_DATA_SIZE)->SetWindowText("Invalidate Format!");
+		pBtn->EnableWindow(FALSE);
+		return;
+	}
+
+	CString strOutput;
+	strOutput.Format("Size : %d", binData.Size());
+	GetDlgItem(IDC_DATA_SIZE)->SetWindowText(strOutput);
+
+	if(binData.Size()>0 && binData.Size()<=256)
+	{
+		pBtn->EnableWindow(TRUE);
+	}
+	else
+	{
+		pBtn->EnableWindow(FALSE);
+	}
+
+}
+
+void CSUP800WriteUserDataDlg::OnBnClickedLoad()
+{
+	CTime t = CTime::GetCurrentTime();
+	CString fileName;
+	fileName.Format("data.bin");
+
+	CFileDialog dlgFile(TRUE, NULL, fileName, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, 
+		_T("ALL Files (*.*)|*.*||"), this);
+	
+	dlgFile.GetOFN().lpstrFile = fileName.GetBuffer(MyMaxPath);
+	dlgFile.GetOFN().nMaxFile = MyMaxPath;
+	INT_PTR nResult = dlgFile.DoModal();
+	fileName.ReleaseBuffer();
+
+	if(nResult != IDOK)
+	{
+		return;
+	}
+
+	BinaryData binData;
+	int len = binData.ReadFromFile(fileName);
+	if(len == 0)
+	{
+		::AfxMessageBox("Load file fail!");
+		return;
+	}
+
+	CString strHex;
+	len = (binData.Size()>256) ? 256 : binData.Size();
+	bool b = Utility::ConvertBinaryToHex(binData, strHex, 0, len, 16);
+
+	GetDlgItem(IDC_DATA)->SetWindowText(strHex);
+	if(binData.Size()>256)
+	{
+		::AfxMessageBox("File size is more than 256 bytes, only use 256 bytes.");
+	}
+	OnEnChangeInput();
+
+}
+
+// CSUP800ReadUserDataDlg 對話方塊
+IMPLEMENT_DYNAMIC(CSUP800ReadUserDataDlg, CCommonConfigDlg)
+
+CSUP800ReadUserDataDlg::CSUP800ReadUserDataDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_SUP800_READ_DATA, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CSUP800ReadUserDataDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDC_READ, &CSUP800ReadUserDataDlg::OnBnClickedRead)
+	ON_BN_CLICKED(IDC_SAVE, &CSUP800ReadUserDataDlg::OnBnClickedSave)
+END_MESSAGE_MAP()
+
+// CSUP800ReadUserDataDlg 訊息處理常式
+void CSUP800ReadUserDataDlg::OnBnClickedRead()
+{
+	CString txt;
+	m_nSector = ((CComboBox*)GetDlgItem(IDC_SECTOR))->GetCurSel();;
+	GetDlgItem(IDC_OFFSET)->GetWindowText(txt);
+	m_nOffset = atoi(txt);	
+	GetDlgItem(IDC_DATA_SIZE)->GetWindowText(txt);
+	m_nDataSize = atoi(txt);	
+	
+	if( (m_nOffset<4096 && m_nOffset>=0) && 
+		(m_nDataSize>0 && m_nDataSize<=256) )
+	{
+		DoCommand();
+	}
+	else
+	{
+		AfxMessageBox("Invalid parameter!");
+	}
+	//OnOK();
+}
+
+void CSUP800ReadUserDataDlg::OnBnClickedSave()
+{
+	CTime t = CTime::GetCurrentTime();
+	CString fileName;
+	fileName.Format("data.bin");
+
+	CFileDialog dlgFile(FALSE, NULL, fileName, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, 
+		_T("ALL Files (*.*)|*.*||"), this);
+	
+	dlgFile.GetOFN().lpstrFile = fileName.GetBuffer(MyMaxPath);
+	dlgFile.GetOFN().nMaxFile = MyMaxPath;
+	INT_PTR nResult = dlgFile.DoModal();
+	fileName.ReleaseBuffer();
+
+	if(nResult != IDOK)
+	{
+		return;
+	}
+
+	CFile f;
+	if(!f.Open(fileName, CFile::modeWrite | CFile::modeCreate))
+	{
+		::AfxMessageBox("Save user data fail!");
+		return;
+	}
+	
+	CString txt;
+	GetDlgItem(IDC_DATA)->GetWindowText(txt);
+	BinaryData binData;
+	if(!txt.IsEmpty() && !Utility::ConvertHexToBinary(txt, binData))
+	{
+		::AfxMessageBox("Invalidate Format!");
+		return;
+	}
+	f.Write(binData.Ptr(), binData.Size());
+	f.Close();
+}
+
+BOOL CSUP800ReadUserDataDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	CString str;
+	for(int i=0; i<32; ++i)
+	{
+		str.Format("%d", i);
+		((CComboBox*)GetDlgItem(IDC_SECTOR))->AddString(str);
+	}
+	((CComboBox*)GetDlgItem(IDC_SECTOR))->SetCurSel(0);
+	GetDlgItem(IDC_OFFSET)->SetWindowText("0");
+	GetDlgItem(IDC_DATA_SIZE)->SetWindowText("1");
+	GetDlgItem(IDC_DATA)->SetFont(&CGPSDlg::messageFont, TRUE);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+
+
+void CSUP800ReadUserDataDlg::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(8);
+	*cmd.GetBuffer(0) = 0x7A;
+	*cmd.GetBuffer(1) = 0x09;
+	*cmd.GetBuffer(2) = 0x03;
+	*cmd.GetBuffer(3) = m_nSector;
+	*cmd.GetBuffer(4) = HIBYTE(m_nOffset);
+	*cmd.GetBuffer(5) = LOBYTE(m_nOffset);
+	*cmd.GetBuffer(6) = HIBYTE(m_nDataSize);
+	*cmd.GetBuffer(7) = LOBYTE(m_nDataSize);
+
+	configCmd.SetData(cmd);
+	configPrompt = "SUP800 read user data successful...";
+
+	//bool restoreConnect = (((int)(param))==0);
+	CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), configPrompt, false);
+	BinaryData ackCmd;
+	ackCmd.Alloc(1024);
+	CGPSDlg::CmdErrorCode er = CGPSDlg::gpsDlg->GetBinaryResponse(&ackCmd, 0x7A, 0x09, 2000, true, true);
+
+	if(er != CGPSDlg::Ack)
+	{
+		::AfxMessageBox("Read user data fail!");
+		return;
+	}
+
+	CString strHex;
+	bool b = Utility::ConvertBinaryToHex(ackCmd, strHex, 7, m_nDataSize, 16);
+	GetDlgItem(IDC_DATA)->SetWindowText(strHex);
+	GetDlgItem(IDC_SAVE)->EnableWindow(TRUE);
 }

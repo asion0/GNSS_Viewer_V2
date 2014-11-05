@@ -129,7 +129,6 @@ int CSerial::WaitingDataIn()
 			m_cancelTransmission = false;
 			return -1;
 		}
-		//Sleep(1);
 		ClearCommError(m_comDeviceHandle, &error, &comStatus);
 		//bytesInQueue = ComInitial();
 	};
@@ -196,10 +195,6 @@ DWORD CSerial::ReadData(void* buffer, DWORD bufferSize, bool once)
 		bufferIter += dwBytesRead;
 		totalSize += dwBytesRead;
 	} while(!once && totalSize < bufferSize);
-	//if(bufferSize>1 && totalSize!=0)
-	{
-	//	int a = 0;
-	}	
 	return totalSize;
 }
 

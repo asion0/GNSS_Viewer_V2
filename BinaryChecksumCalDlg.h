@@ -12,8 +12,6 @@ public:
 	BinaryChecksumCalDlg(CWnd* pParent = NULL);   // 標準建構函式
 	virtual ~BinaryChecksumCalDlg();
 
-	int FindNextNoneSpaceChar(LPCSTR pszInput, bool forward = true);
-	bool ConvertHexToBinary(LPCSTR pszInput, BinaryData& binData);
 // 對話方塊資料
 //	enum { IDD = IDD_BIN_CHECKSUM_CAL };
 

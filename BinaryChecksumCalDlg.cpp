@@ -64,7 +64,7 @@ void BinaryChecksumCalDlg::OnEnChangeInput()
 
 	//GetDlgItem(IDC_CHECKSUM)->SetWindowText(strInput + "_");
 	BinaryData binData;
-	if(!ConvertHexToBinary(strInput, binData))
+	if(!Utility::ConvertHexToBinary(strInput, binData))
 	{
 		GetDlgItem(IDC_BIN_SIZE)->SetWindowText("Invalidate Format!");
 		GetDlgItem(IDC_CHECKSUM)->SetWindowText("Invalidate Format!");
@@ -84,93 +84,7 @@ void BinaryChecksumCalDlg::OnEnChangeInput()
 	GetDlgItem(IDC_CHECKSUM)->SetWindowText(strOutput);
 }
 
-int BinaryChecksumCalDlg::FindNextNoneSpaceChar(LPCSTR pszInput, bool forward)
-{
-	int index = (forward) ? 0 : strlen(pszInput) - 1;
 
-	if(index < 0)
-	{
-		return index;
-	}
-
-	while(pszInput[index]==' ')
-	{
-		index += (forward) ? 1 : -1;
-	}
-	index += (forward) ? 0 : 1;
-
-	return index ;
-}	
-
-bool CheckHex(LPCSTR pszInput)
-{
-	for(const char* c=pszInput; *c!=0; ++c)
-	{
-		if(*c >= '0' && *c <= '9')
-			continue;
-		if(*c >= 'a' && *c <= 'f')
-			continue;
-		if(*c >= 'A' && *c <= 'F')
-			continue;
-		return false;
-	}
-	return true;
-}
-
-bool BinaryChecksumCalDlg::ConvertHexToBinary(LPCSTR pszInput, BinaryData& binData)
-{
-	CString strInput(pszInput);
-	if(strInput.GetLength()<2)
-	{
-		return false;
-	}
-	strInput.MakeLower();
-
-	int index = FindNextNoneSpaceChar(strInput);
-	//Trim the space character in head.
-	if(index > 0)
-	{
-		strInput = strInput.Right(strInput.GetLength() - index);
-	}
-
-	if(strInput.GetLength() == 0)
-	{
-		return false;
-	}
-
-	//Trim the space character in tail.
-	index = FindNextNoneSpaceChar(strInput, false);
-	if(index < strInput.GetLength())
-	{
-		strInput = strInput.Left(index);
-	}
-
-	int i = 0;	// size of output binary.
-	int n = 0;	// index of input string
-	BinaryData b(strlen(pszInput) / 2);
-
-	while(n < strInput.GetLength())
-	{
-		CString token = strInput.Tokenize(" ", n);
-		if(!CheckHex(token))
-		{
-			return false;
-		}
-		long data = strtol(token, NULL, 16);
-		if(data > 255)
-		{
-			return false;
-		}
-		*b.GetBuffer(i++) = (char)data;
-	}
-
-	if(i)
-	{
-		binData.Alloc(i);
-		memcpy(binData.GetBuffer(), b.Ptr(), i);
-	}
-	return true;
-}
 
 void BinaryChecksumCalDlg::OnBnClickedSend()
 {
@@ -185,7 +99,7 @@ void BinaryChecksumCalDlg::OnBnClickedSend()
 	GetDlgItem(IDC_CONTEXT)->GetWindowText(strInput);
 
 	BinaryData binData;
-	if(!ConvertHexToBinary(strInput, binData))
+	if(!Utility::ConvertHexToBinary(strInput, binData))
 	{
 		::AfxMessageBox("Invalidate Format!");
 		return;

@@ -4,6 +4,7 @@
 
 #define		UTILITY_MAX_PATH		(MAX_PATH * 4)
 
+class BinaryData;
 namespace Utility
 {
 	void Log(const char* str1, const char* str2, int n);
@@ -33,6 +34,9 @@ namespace Utility
 	int GetHexValue(char highByte, char lowByte);
 	int GetOctValue(char highByte, char lowByte);
 	CString ErrorString(DWORD err);
+	int FindNextNoneSpaceChar(LPCSTR pszInput, bool forward = true);
+	bool ConvertHexToBinary(LPCSTR pszInput, BinaryData& binData);
+	bool ConvertBinaryToHex(const BinaryData& binData, CString& strOutput, int startIndex, int maxCount, int lineCount);
 }
 
 class ScopeTimer
@@ -51,6 +55,7 @@ public:
 			Dump();
 		}
 	}
+
 	DWORD GetDuration()
 	{
 		endTickCount = ::GetTickCount();
@@ -210,6 +215,7 @@ public:
 			
 		return(dataPtr[iChar]);
 	}
+
 	BinaryData& operator=(const BinaryData& src)
 	{
 		dataSize = 0; 

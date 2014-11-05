@@ -1111,6 +1111,7 @@ U08 CGPSDlg::PlRomNoAllocV8(const CString& prom_path)
 //	sprintf_s(messages, sizeof(messages), "Waiting for Rom Writing...");
 //	m_psoftImgDlDlg->m_msg.SetWindowText(messages);	
 	
+	Sleep(500);	//for GPSDO
 	int result = RETURN_NO_ERROR;
 	if(RESEND_DOWNLOAD)
 	{

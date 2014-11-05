@@ -331,6 +331,7 @@ protected:
 	afx_msg void OnBnClickedScanall();
 	afx_msg void OnBnClickedScanport();
 	afx_msg void OnBnClickedScanbaudrate();
+	afx_msg void OnSetUartPassThrough();
 	afx_msg void OnBinaryConfiguremessagetype();
 	afx_msg void OnEphemerisGetephemeris();
 	afx_msg void OnEphemerisSetephemeris();
@@ -460,6 +461,11 @@ protected:
 	afx_msg void OnGetBeidouEphemeris();
 	afx_msg void OnSetBeidouEphemeris();
 
+	afx_msg void OnSup800EraseData();
+	afx_msg void OnSup800WriteData();
+	afx_msg void OnSup800ReadData();
+
+
     CBitmapButton m_ConnectBtn;
 	CBitmapButton m_PlayBtn;
 	CBitmapButton m_StopBtn;
@@ -503,12 +509,6 @@ protected:
 
 	void UpdateCooridate();
 private:
-	CFont m_textFont;
-	CFont m_infoFontS;
-	CFont m_infoFontL;
-	CFont comboFont;;	
-	CFont messageFont;;	
-
 	char m_currentDir[MyMaxPath];
 
 	CButton m_binarymsg;
@@ -526,6 +526,12 @@ private:
 	CClipboardListBox m_responseList;	
 	void ClearInformation(bool onlyQueryInfo = false);
 public:
+	static CFont m_textFont;
+	static CFont m_infoFontS;
+	static CFont m_infoFontL;
+	static CFont comboFont;;	
+	static CFont messageFont;
+
 	CMsgList m_nmeaList;
 	CFile m_ephmsFile;
 
@@ -722,7 +728,7 @@ public:
 	void SetNmeaWriting(bool b);
 	bool SetFirstDataIn(bool b);
 	void SendRestartCommand(int mode);		
-	void target_restart();
+//	void target_restart();
 	void target_only_restart(int mode);
 //	void Query_Target_Version(unsigned char* messages,int message_len);
 	bool TIMEOUT_METHOD_QUICK(time_t start,time_t end);
@@ -905,7 +911,7 @@ public:
 	};
 	U08 GetRestartMode() { return m_restartMode; }
 	void SetInputMode(U08 i) { m_inputMode = i; }
-	void ExecuteConfigureCommand(U08 *cmd, int size, LPCSTR msg);
+	void ExecuteConfigureCommand(U08 *cmd, int size, LPCSTR msg, bool restoreConnect = true);
 	void LogReadBatchControl();
 	void GetEphms(U08 SV, U08 continues = FALSE);	
 	void GetGlonassEphms(U08 SV, U08 continues = FALSE);
@@ -966,6 +972,8 @@ private:
 public:
 	CmdErrorCode ExcuteBinaryCommand(int cmdIdx, BinaryCommand* cmd, BinaryData* ackCmd, DWORD timeOut = 3000, bool silent = false);
 	CmdErrorCode ExcuteBinaryCommandNoWait(int cmdIdx, BinaryCommand* cmd);
+	CGPSDlg::CmdErrorCode GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U08 cAckSub, DWORD timeOut, bool silent, bool noWaitAck = false);
+
 	typedef CmdErrorCode (CGPSDlg::*QueryFunction)(CmdExeMode, void*);
 	void GenericQuery(QueryFunction pfn);
 	//Query Functions
@@ -1015,6 +1023,16 @@ public:
 	CmdErrorCode QueryRefTimeSyncToGpsTime(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySearchEngineSleepCriteria(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDatumIndex(CmdExeMode nMode, void* outputData);
+
+	CmdErrorCode QueryUartPass(CmdExeMode nMode, void* outputData);
+	CmdErrorCode GpsdoResetSlave(CmdExeMode nMode, void* outputData);
+	CmdErrorCode GpsdoEnterRom(CmdExeMode nMode, void* outputData);
+	CmdErrorCode GpsdoLeaveRom(CmdExeMode nMode, void* outputData);
+	CmdErrorCode GpsdoEnterDownload(CmdExeMode nMode, void* outputData);
+	CmdErrorCode GpsdoLeaveDownload(CmdExeMode nMode, void* outputData);
+	CmdErrorCode GpsdoEnterUart(CmdExeMode nMode, void* outputData);
+	CmdErrorCode GpsdoLeaveUart(CmdExeMode nMode, void* outputData);
+
 	CmdErrorCode QueryNavigationModeV8(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGnssBootStatus(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDrMultiHz(CmdExeMode nMode, void* outputData);
@@ -1120,6 +1138,24 @@ private:
 	{ GenericQuery(&CGPSDlg::QuerySearchEngineSleepCriteria); }
 	afx_msg void OnQueryDatumIndex()
 	{ GenericQuery(&CGPSDlg::QueryDatumIndex); }
+
+	afx_msg void OnQueryUartPass()
+	{ GenericQuery(&CGPSDlg::QueryUartPass); }
+	afx_msg void OnGpsdoResetSlave()
+	{ GenericQuery(&CGPSDlg::GpsdoResetSlave); }
+	afx_msg void OnGpsdoEnterRom()
+	{ GenericQuery(&CGPSDlg::GpsdoEnterRom); }
+	afx_msg void OnGpsdoLeaveRom()
+	{ GenericQuery(&CGPSDlg::GpsdoLeaveRom); }
+	afx_msg void OnGpsdoEnterDownload()
+	{ GenericQuery(&CGPSDlg::GpsdoEnterDownload); }
+	afx_msg void OnGpsdoLeaveDownload()
+	{ GenericQuery(&CGPSDlg::GpsdoLeaveDownload); }
+	afx_msg void OnGpsdoEnterUart()
+	{ GenericQuery(&CGPSDlg::GpsdoEnterUart); }
+	afx_msg void OnGpsdoLeaveUart()
+	{ GenericQuery(&CGPSDlg::GpsdoLeaveUart); }
+
 	afx_msg void OnQueryNavigationModeV8()
 	{ GenericQuery(&CGPSDlg::QueryNavigationModeV8); }
 	afx_msg void OnQueryGnssBootStatus()
@@ -1175,7 +1211,7 @@ private:
 		Gallilo = 4,
 	};
 
-	U32 GetClockOffsetByRegister();
+//	U32 GetClockOffsetByRegister();
 //	U08 query_clock_offset(S32 *clock_offset);
 	void Show_EarthChart(CDC *dc);
 	void DrawGnssSatellite(CDC* dc, int id, int centerX, int centerY);

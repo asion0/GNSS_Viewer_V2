@@ -159,6 +159,8 @@ static CommandEntry cmdTable[] =
 	{ 0x65, 0x04, 2, 0x65, 0x81 },
 	//QueryEricssonIntervalCmd,
 	{ 0x7A, 0x04, 3, 0x7A, 0x04 },
+	//QueryUartPassCmd,
+	{ 0x7A, 0x08, 3, 0x7A, 0x08 },
 	//QQueryBinaryMeasurementDataOutCmd,
 	{ 0x1F, 0xFF, 1, 0x89, 0x00 },
 	//QuerySerialNumberCmd,
@@ -171,6 +173,8 @@ static CommandEntry cmdTable[] =
 	{ 0x64, 0x1E, 2, 0x64, 0x8D },
 	//QueryGpsTimeCmd,
 	{ 0x64, 0x20, 2, 0x64, 0x8E },
+	//ReadSup800UserDataCmd,
+	{ 0x7A, 0x09, 8, 0x7A, 0x09 },
 };
 
 enum SqBinaryCmd
@@ -230,12 +234,14 @@ enum SqBinaryCmd
 	QueryCustomerIDCmd,
 	Query1ppsFreqencyOutputCmd,
 	QueryEricssonIntervalCmd,
+	QueryUartPassCmd,
 	QueryBinaryMeasurementDataOutCmd,
 	QuerySerialNumberCmd,
 	QueryDgpsCmd,
 	QuerySmoothModeCmd,
 	QueryTimeStampingCmd,
 	QueryGpsTimeCmd,
+	ReadSup800UserDataCmd,
 };
 
 bool CGPSDlg::SAVE_EPHEMRIS(U08* buff, U08 id)
@@ -295,18 +301,19 @@ bool CGPSDlg::SendToTarget(U08* message, U16 length, const char* Msg, bool quick
 		add_msgtolist("In : " + theApp.GetHexString(message, length));	
 	}
 
+	DWORD timeout = (quick) ? 2000 : 10000;
 	ClearQue();
 	m_serial->SendData(message, length);	
 	ScopeTimer t;
 	while(1)
 	{		
 		U08 buff[1024] = {0};
-		m_serial->GetBinary(buff, sizeof(buff));
+		m_serial->GetBinary(buff, sizeof(buff), timeout - t.GetDuration());
 
 		U08 len = buff[2] <<8 | buff[3];
 		int k1 = len + 5;
 		int k2 = len + 6;		
-		U08 ack = IsSuccessful(buff, k2, !quick);	
+		U08 ack = IsSuccessful(buff, k2, (Msg!=NULL));	
 		if(ack == 1)
 		{
 			if(m_bShowBinaryCmdData)
@@ -1202,7 +1209,7 @@ bool CGPSDlg::VerifyDataLogBuffer(U08 *buff, U08 *datalog, U08 *ptr_last, int si
 	//Utility::Log(__FUNCTION__, "[DataLog] VerifyDataLogBuffer isEnd :", (int)isEnd);
 	return isEnd;
 }
-
+/*
 U32 CGPSDlg::GetClockOffsetByRegister()
 {
 	U08 msg[5] ,checksum=0;
@@ -1247,7 +1254,7 @@ U32 CGPSDlg::GetClockOffsetByRegister()
 	}	
 	return data;
 }
-
+*/
 U08 CGPSDlg::MinihomerQuerytag()
 {
 	U08 msg[1] ,checksum=0;
@@ -2021,7 +2028,6 @@ void CGPSDlg::parse_rtoem_message(const char *buff,int len)
 	if (ptr == NULL) return;
 	temp.Format("%d",atoi(ptr));
 	m_odo_meter.SetWindowText(temp);
-	
 
 }
 
@@ -2126,7 +2132,8 @@ UINT Configurepositionrate(LPVOID param)
 		}
 		else
 		{
-			CGPSDlg::gpsDlg->target_restart();
+			CGPSDlg::gpsDlg->SendRestartCommand(1);
+			//CGPSDlg::gpsDlg->target_restart();
 		}
 	}
 
@@ -2166,7 +2173,8 @@ UINT ConfigureDrMultiHz(LPVOID param)
 		}
 		else
 		{
-			CGPSDlg::gpsDlg->target_restart();
+			CGPSDlg::gpsDlg->SendRestartCommand(1);
+			//CGPSDlg::gpsDlg->target_restart();
 		}
 	}
 
@@ -2489,7 +2497,6 @@ void CGPSDlg::Restart(U08* messages)
 	pic_earth->Invalidate(FALSE);
 	pic_scatter->Invalidate(FALSE);
 	
-//	Sleep(1000);
 	m_CloseBtn.ShowWindow(1);
 }
 
@@ -2501,54 +2508,6 @@ UINT RestartThread(LPVOID pParam)
 	BinaryCommand binCmd(binData);
 	CGPSDlg::gpsDlg->Restart(binCmd.GetBuffer());
 
-/*
-	int i;
-	U08 messages[22];
-	memset(messages, 0, 22);   		    
-	messages[0] = (U08)0xa0;
-	messages[1] = (U08)0xa1;
-	messages[2] = 0;
-	messages[3] = 15;
-	messages[4] = 1; //msgid
-	messages[5] = CGPSDlg::gpsDlg->startmode; //msgid
-	messages[6] = 0;
-	messages[7] = 0;	
-	messages[8] = 0;
-	messages[9] = 0;
-	messages[10]= 0;
-	messages[11]= 0;
-	messages[12]= 0;
-	messages[13]= 0;
-	messages[14]= 0;	
-	messages[15]= 0;
-	messages[16]= 0;	
-	messages[17]= 0;
-	messages[18]= 0;
-	//messages[5] = CGPSDlg::gpsDlg->startmode; //msgid
-	//messages[6] = CGPSDlg::gpsDlg->SRutcyear>>8 &0xff;
-	//messages[7] = CGPSDlg::gpsDlg->SRutcyear    &0xff;		
-	//messages[8] = CGPSDlg::gpsDlg->SRutcmonth;
-	//messages[9] = CGPSDlg::gpsDlg->SRutcday;
-	//messages[10]= CGPSDlg::gpsDlg->SRutchour;
-	//messages[11]= CGPSDlg::gpsDlg->SRutcmin;
-	//messages[12]= CGPSDlg::gpsDlg->SRutcsec;
-	//messages[13]= CGPSDlg::gpsDlg->SRlat>>8     &0xff;
-	//messages[14]= CGPSDlg::gpsDlg->SRlat        &0xff;		
-	//messages[15]= CGPSDlg::gpsDlg->SRlon>>8     &0xff;
-	//messages[16]= CGPSDlg::gpsDlg->SRlon        &0xff;		
-	//messages[17]= CGPSDlg::gpsDlg->SRalt>>8     &0xff;
-	//messages[18]= CGPSDlg::gpsDlg->SRalt        &0xff;		
-
-	U08 checksum = 0;
-	for(i=0;i<15;i++)
-		checksum^=messages[i+4];
-
-	messages[19]=checksum; //checksum right	    
-	messages[20]=(U08)0x0d;
-	messages[21]=(U08)0x0a;
-	CGPSDlg::gpsDlg->Restart(messages );
-*/
-	//AfxEndThread(0);	
 	return 0;
 }
 
@@ -2558,14 +2517,12 @@ void CGPSDlg::OnBnClickedColdstart()
 	{
 		return;
 	}
-
 	m_inputMode = 0;	
 	m_restartMode = 3;	
-
 	AfxBeginThread(RestartThread, 0);
-
 }
 
+/*
 void CGPSDlg::target_restart()
 {
 	SYSTEMTIME	now;		
@@ -2608,7 +2565,7 @@ void CGPSDlg::target_restart()
 	SetMode(); 
 	//CreateGPSThread();
 }
-
+*/
 UINT AFX_CDECL Configure1ppsPulseWidthThread(LPVOID param)
 {
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(CGPSDlg::gpsDlg->m_inputMsg, 14, "Configure 1PPS Pulse Width Successful");
@@ -2719,177 +2676,6 @@ void CGPSDlg::On1ppsTimingQuery1ppsPulseWidth()
 	//Utility::Log(__FUNCTION__, "start QuerySBAS thread", __LINE__);
 	AfxBeginThread(Query1ppsPulseWidth, 0);	
 }
-
-#if WITH_CONFIG_USB_BAUDRATE	
-/*
-void CGPSDlg::Config_silab_baudrate(HANDLE *m_DeviceHandle)
-{
-	BAUD_CONFIG_DATA m_DefaultBaudConfigData;	
-
-	m_DefaultBaudConfigData[0].BaudRate = 15000000;
-	m_DefaultBaudConfigData[0].BaudGen = 0xFFF0;
-	m_DefaultBaudConfigData[0].Prescaler = 1;
-	m_DefaultBaudConfigData[0].Timer0Reload = 0xFFFA;
-
-	m_DefaultBaudConfigData[1].BaudRate = 15000000;
-	m_DefaultBaudConfigData[1].BaudGen = 0xFFF0;
-	m_DefaultBaudConfigData[1].Prescaler = 1;
-	m_DefaultBaudConfigData[1].Timer0Reload = 0xFFFA;
-
-	m_DefaultBaudConfigData[2].BaudRate = 12000000;
-	m_DefaultBaudConfigData[2].BaudGen = 0xFFEC;
-	m_DefaultBaudConfigData[2].Prescaler = 1;
-	m_DefaultBaudConfigData[2].Timer0Reload = 0xFFF8;
-
-	m_DefaultBaudConfigData[3].BaudRate = 921600;
-	m_DefaultBaudConfigData[3].BaudGen = 0xFFE8;
-	m_DefaultBaudConfigData[3].Prescaler = 1;
-	m_DefaultBaudConfigData[3].Timer0Reload = 0xFFF6;
-
-	m_DefaultBaudConfigData[4].BaudRate = 576000;
-	m_DefaultBaudConfigData[4].BaudGen = 0xFFD6;
-	m_DefaultBaudConfigData[4].Prescaler = 1;
-	m_DefaultBaudConfigData[4].Timer0Reload = 0xFFF0;
-
-	m_DefaultBaudConfigData[5].BaudRate = 500000;
-	m_DefaultBaudConfigData[5].BaudGen = 0xFFD0;
-	m_DefaultBaudConfigData[5].Prescaler = 1;
-	m_DefaultBaudConfigData[5].Timer0Reload = 0xFFEE;
-
-	m_DefaultBaudConfigData[6].BaudRate = 460800;
-	m_DefaultBaudConfigData[6].BaudGen = 0xFFD1;
-	m_DefaultBaudConfigData[6].Prescaler = 1;
-	m_DefaultBaudConfigData[6].Timer0Reload = 0xFFEC;
-
-	m_DefaultBaudConfigData[7].BaudRate = 256000;
-	m_DefaultBaudConfigData[7].BaudGen = 0xFFA2;
-	m_DefaultBaudConfigData[7].Prescaler = 1;
-	m_DefaultBaudConfigData[7].Timer0Reload = 0xFFDC;
-
-	m_DefaultBaudConfigData[8].BaudRate = 250000;
-	m_DefaultBaudConfigData[8].BaudGen = 0xFFA0;
-	m_DefaultBaudConfigData[8].Prescaler = 1;
-	m_DefaultBaudConfigData[8].Timer0Reload = 0xFFDC;
-
-	m_DefaultBaudConfigData[9].BaudRate = 230400;
-	m_DefaultBaudConfigData[9].BaudGen = 0xFF98;
-	m_DefaultBaudConfigData[9].Prescaler = 1;
-	m_DefaultBaudConfigData[9].Timer0Reload = 0xFFD9;
-
-	m_DefaultBaudConfigData[10].BaudRate = 153600;
-	m_DefaultBaudConfigData[10].BaudGen = 0xFF64;
-	m_DefaultBaudConfigData[10].Prescaler = 1;
-	m_DefaultBaudConfigData[10].Timer0Reload = 0xFFC5;
-
-	m_DefaultBaudConfigData[11].BaudRate = 128000;
-	m_DefaultBaudConfigData[11].BaudGen = 0xFF44; //Originally FF45 in firmware, but changed to FF44 Sep 7 2004
-	m_DefaultBaudConfigData[11].Prescaler = 1;
-	m_DefaultBaudConfigData[11].Timer0Reload = 0xFFB9;
-
-	m_DefaultBaudConfigData[12].BaudRate = 115200;
-	m_DefaultBaudConfigData[12].BaudGen = 0xFF30;
-	m_DefaultBaudConfigData[12].Prescaler = 1;
-	m_DefaultBaudConfigData[12].Timer0Reload = 0xFFB2;
-
-	m_DefaultBaudConfigData[13].BaudRate = 76800;
-	m_DefaultBaudConfigData[13].BaudGen = 0xFEC8;
-	m_DefaultBaudConfigData[13].Prescaler = 1;
-	m_DefaultBaudConfigData[13].Timer0Reload = 0xFF8B;
-
-	m_DefaultBaudConfigData[14].BaudRate = 64000;
-	m_DefaultBaudConfigData[14].BaudGen = 0xFE89;
-	m_DefaultBaudConfigData[14].Prescaler = 1;
-	m_DefaultBaudConfigData[14].Timer0Reload = 0xFF73;
-
-	m_DefaultBaudConfigData[15].BaudRate = 57600;
-	m_DefaultBaudConfigData[15].BaudGen = 0xFE5F;
-	m_DefaultBaudConfigData[15].Prescaler = 1;
-	m_DefaultBaudConfigData[15].Timer0Reload = 0xFF63;
-
-	m_DefaultBaudConfigData[16].BaudRate = 56000;
-	m_DefaultBaudConfigData[16].BaudGen = 0xFE53;
-	m_DefaultBaudConfigData[16].Prescaler = 1;
-	m_DefaultBaudConfigData[16].Timer0Reload = 0xFF5F;
-
-	m_DefaultBaudConfigData[17].BaudRate = 51200;
-	m_DefaultBaudConfigData[17].BaudGen = 0xFE2B;
-	m_DefaultBaudConfigData[17].Prescaler = 1;
-	m_DefaultBaudConfigData[17].Timer0Reload = 0xFF50;
-
-	m_DefaultBaudConfigData[18].BaudRate = 38400;
-	m_DefaultBaudConfigData[18].BaudGen = 0xFD8F;
-	m_DefaultBaudConfigData[18].Prescaler = 1;
-	m_DefaultBaudConfigData[18].Timer0Reload = 0xFF15;
-
-	m_DefaultBaudConfigData[19].BaudRate = 28800;
-	m_DefaultBaudConfigData[19].BaudGen = 0xFCBF;
-	m_DefaultBaudConfigData[19].Prescaler = 1;
-	m_DefaultBaudConfigData[19].Timer0Reload = 0xFEC7;
-
-	m_DefaultBaudConfigData[20].BaudRate = 19200;
-	m_DefaultBaudConfigData[20].BaudGen = 0xFB1E;
-	m_DefaultBaudConfigData[20].Prescaler = 1;
-	m_DefaultBaudConfigData[20].Timer0Reload = 0xFE2B;
-
-	m_DefaultBaudConfigData[21].BaudRate = 16000;
-	m_DefaultBaudConfigData[21].BaudGen = 0xFA24;
-	m_DefaultBaudConfigData[21].Prescaler = 1;
-	m_DefaultBaudConfigData[21].Timer0Reload = 0xFDCD;
-
-	m_DefaultBaudConfigData[22].BaudRate = 14400;
-	m_DefaultBaudConfigData[22].BaudGen = 0xF97D;
-	m_DefaultBaudConfigData[22].Prescaler = 1;
-	m_DefaultBaudConfigData[22].Timer0Reload = 0xFD8E;
-
-	m_DefaultBaudConfigData[23].BaudRate = 9600;
-	m_DefaultBaudConfigData[23].BaudGen = 0xF63C;
-	m_DefaultBaudConfigData[23].Prescaler = 1;
-	m_DefaultBaudConfigData[23].Timer0Reload = 0xFC56;
-
-	m_DefaultBaudConfigData[24].BaudRate = 7200;
-	m_DefaultBaudConfigData[24].BaudGen = 0xF2FB;
-	m_DefaultBaudConfigData[24].Prescaler = 1;
-	m_DefaultBaudConfigData[24].Timer0Reload = 0xFB1E;
-
-	m_DefaultBaudConfigData[25].BaudRate = 4800;
-	m_DefaultBaudConfigData[25].BaudGen = 0xEC78;
-	m_DefaultBaudConfigData[25].Prescaler = 1;
-	m_DefaultBaudConfigData[25].Timer0Reload = 0xF8AD;
-
-	m_DefaultBaudConfigData[26].BaudRate = 4000;
-	m_DefaultBaudConfigData[26].BaudGen = 0xE890;
-	m_DefaultBaudConfigData[26].Prescaler = 1;
-	m_DefaultBaudConfigData[26].Timer0Reload = 0xF736;
-
-	m_DefaultBaudConfigData[27].BaudRate = 2400;
-	m_DefaultBaudConfigData[27].BaudGen = 0xD8F0;
-	m_DefaultBaudConfigData[27].Prescaler = 1;
-	m_DefaultBaudConfigData[27].Timer0Reload = 0xF15A;
-
-	m_DefaultBaudConfigData[28].BaudRate = 1800;
-	m_DefaultBaudConfigData[28].BaudGen = 0xCBEB;
-	m_DefaultBaudConfigData[28].Prescaler = 1;
-	m_DefaultBaudConfigData[28].Timer0Reload = 0xEC78;
-
-	m_DefaultBaudConfigData[29].BaudRate = 1200;
-	m_DefaultBaudConfigData[29].BaudGen = 0xB1E0;
-	m_DefaultBaudConfigData[29].Prescaler = 1;
-	m_DefaultBaudConfigData[29].Timer0Reload = 0xE2B4;
-
-	m_DefaultBaudConfigData[30].BaudRate = 600;
-	m_DefaultBaudConfigData[30].BaudGen = 0x63C0;
-	m_DefaultBaudConfigData[30].Prescaler = 1;
-	m_DefaultBaudConfigData[30].Timer0Reload = 0xC568;
-
-	m_DefaultBaudConfigData[31].BaudRate = 300;
-	m_DefaultBaudConfigData[31].BaudGen = 0xB1E0;
-	m_DefaultBaudConfigData[31].Prescaler = 4;
-	m_DefaultBaudConfigData[31].Timer0Reload = 0x8AD0;
-
-	CP210x_STATUS r = CP210x_SetBaudRateConfig(*m_DeviceHandle, m_DefaultBaudConfigData);
-}
-*/
-#endif 
 
 long int g_1ppsFrequencyOutput = 0;
 U08 g_1ppsFrequencyOutputAttr = 0;
@@ -3349,20 +3135,10 @@ void CGPSDlg::OnClockOffsetPredictOld()
 	CreateGPSThread();
 }
 
-CGPSDlg::CmdErrorCode CGPSDlg::ExcuteBinaryCommand(int cmdIdx, BinaryCommand* cmd, BinaryData* ackCmd, DWORD timeOut, bool silent)
+CGPSDlg::CmdErrorCode CGPSDlg::GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U08 cAckSub, DWORD timeOut, bool silent, bool noWaitAck)
 {
-	CommandEntry binMsg = cmdTable[cmdIdx];
-	U08* pCmd = cmd->GetBuffer();
-	int inSize = cmd->Size();
-	if(m_bShowBinaryCmdData)
-	{
-		add_msgtolist("In : " + theApp.GetHexString(pCmd, inSize));	
-	}
-	ackCmd->Alloc(1024);
-	m_serial->ClearQueue();
-	m_serial->SendData(pCmd, inSize);
 	ScopeTimer t;
-	bool alreadyAck = false;
+	bool alreadyAck = noWaitAck;
 	while(1)
 	{		
 		ackCmd->Clear();
@@ -3398,7 +3174,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::ExcuteBinaryCommand(int cmdIdx, BinaryCommand* cm
 			add_msgtolist("Received NACK...");
 			return NACK;
 		}
-		if( (*ackCmd)[4] == 0x83 )
+		if( (*ackCmd)[4] == 0x83)
 		{	//Get ACK
 			if(m_bShowBinaryCmdData)
 			{
@@ -3407,7 +3183,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::ExcuteBinaryCommand(int cmdIdx, BinaryCommand* cm
 			alreadyAck = true;
 			continue;
 		}
-		if(alreadyAck && Cal_Checksum((*ackCmd).GetBuffer()) && (*ackCmd)[4]==binMsg.cmdAck && binMsg.cmdAckSub==0x00)
+		if(alreadyAck && Cal_Checksum((*ackCmd).GetBuffer()) && (*ackCmd)[4]==cAck && cAckSub==0x00)
 		{
 			if(m_bShowBinaryCmdData)
 			{
@@ -3415,7 +3191,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::ExcuteBinaryCommand(int cmdIdx, BinaryCommand* cm
 			}
 			return Ack;
 		}
-		if(alreadyAck && Cal_Checksum((*ackCmd).GetBuffer()) && (*ackCmd)[4]==binMsg.cmdAck && (*ackCmd)[5]==binMsg.cmdAckSub)
+		if(alreadyAck && Cal_Checksum((*ackCmd).GetBuffer()) && (*ackCmd)[4]==cAck && (*ackCmd)[5]==cAckSub)
 		{
 			if(m_bShowBinaryCmdData)
 			{
@@ -3425,6 +3201,23 @@ CGPSDlg::CmdErrorCode CGPSDlg::ExcuteBinaryCommand(int cmdIdx, BinaryCommand* cm
 		}
 	}
 	return Timeout;
+
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::ExcuteBinaryCommand(int cmdIdx, BinaryCommand* cmd, BinaryData* ackCmd, DWORD timeOut, bool silent)
+{
+	CommandEntry binMsg = cmdTable[cmdIdx];
+	U08* pCmd = cmd->GetBuffer();
+	int inSize = cmd->Size();
+	if(m_bShowBinaryCmdData)
+	{
+		add_msgtolist("In : " + theApp.GetHexString(pCmd, inSize));	
+	}
+	ackCmd->Alloc(1024);
+	m_serial->ClearQueue();
+	m_serial->SendData(pCmd, inSize);
+
+	return GetBinaryResponse(ackCmd, binMsg.cmdAck, binMsg.cmdAckSub, timeOut, silent);
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::ExcuteBinaryCommandNoWait(int cmdIdx, BinaryCommand* cmd)
@@ -5689,6 +5482,126 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryDatumIndex(CmdExeMode nMode, void* outputDat
 	return Timeout;
 }
 
+CGPSDlg::CmdErrorCode CGPSDlg::GpsdoResetSlave(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(4);
+	cmd.SetU08(1, 0x7A);
+	cmd.SetU08(2, 0x08);
+	cmd.SetU08(3, 0x01);
+	cmd.SetU08(4, 0x04);
+
+	ClearQue();
+	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Reset Slave MCU Successful");	
+	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::GpsdoEnterRom(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(4);
+	cmd.SetU08(1, 0x7A);
+	cmd.SetU08(2, 0x08);
+	cmd.SetU08(3, 0x01);
+	cmd.SetU08(4, 0x0B);
+
+	ClearQue();
+	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Enter Slave ROM Download Successful");	
+	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::GpsdoLeaveRom(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(4);
+	cmd.SetU08(1, 0x7A);
+	cmd.SetU08(2, 0x08);
+	cmd.SetU08(3, 0x01);
+	cmd.SetU08(4, 0x0A);
+
+	ClearQue();
+	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Back To Normal Mode from ROM Download Successful");	
+	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::GpsdoEnterDownload(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(4);
+	cmd.SetU08(1, 0x7A);
+	cmd.SetU08(2, 0x08);
+	cmd.SetU08(3, 0x01);
+	cmd.SetU08(4, 0x03);
+
+	ClearQue();
+	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Enter Slave Download Successful");	
+	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::GpsdoLeaveDownload(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(4);
+	cmd.SetU08(1, 0x7A);
+	cmd.SetU08(2, 0x08);
+	cmd.SetU08(3, 0x01);
+	cmd.SetU08(4, 0x02);
+
+	ClearQue();
+	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Back To Normal Mode from Slave Download Successful");	
+	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::GpsdoEnterUart(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(4);
+	cmd.SetU08(1, 0x7A);
+	cmd.SetU08(2, 0x08);
+	cmd.SetU08(3, 0x01);
+	cmd.SetU08(4, 0x01);
+
+	ClearQue();
+	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Enter Slave UART Pass Through Successful");	
+	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::GpsdoLeaveUart(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(4);
+	cmd.SetU08(1, 0x7A);
+	cmd.SetU08(2, 0x08);
+	cmd.SetU08(3, 0x01);
+	cmd.SetU08(4, 0x00);
+
+	ClearQue();
+	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Back To Normal Mode from UART Passthrough Successful");	
+	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryUartPass(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(cmdTable[QueryUartPassCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryUartPassCmd].cmdId);
+	cmd.SetU08(2, cmdTable[QueryUartPassCmd].cmdSubId);
+	cmd.SetU08(3, 0x02);
+
+	BinaryData ackCmd;
+	if(!ExcuteBinaryCommand(QueryUartPassCmd, &cmd, &ackCmd))
+	{
+		CString strMsg = "Query UART pass-through Successful";
+		add_msgtolist(strMsg);
+		if(ackCmd[7] == 1)
+		{
+			strMsg.Format("UART pass-through : MASTER");
+		}
+		else if(ackCmd[7] == 0)
+		{
+			strMsg.Format("UART pass-through : SLAVE");
+		}
+		else
+		{
+			strMsg.Format("UART pass-through : %d", ackCmd[7]);
+		}
+		add_msgtolist(strMsg);
+	}
+	return Timeout;
+}
+
 CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssNavSol(CmdExeMode nMode, void* outputData)
 {	    
 	BinaryCommand cmd(cmdTable[QueryGnssNavSolCmd].cmdSize);
@@ -5856,6 +5769,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryBinaryMeasurementDataOut(CmdExeMode nMode, v
 	}
 	return Timeout;
 }
+
 
 UINT SetFacMsgThread(LPVOID pParam)
 {	
@@ -6270,8 +6184,31 @@ void CGPSDlg::OnBinaryConfigurepowermode()
 	DoCommonConfig(&dlg);
 }
 
+void CGPSDlg::OnSetUartPassThrough()
+{
+	CConfigUartPassThrough dlg;
+	DoCommonConfig(&dlg);
+}
 
+void CGPSDlg::OnSup800EraseData()
+{
+	CSUP800EraseUserDataDlg dlg;
+	DoCommonConfig(&dlg);
+}
 
+void CGPSDlg::OnSup800WriteData()
+{
+	CSUP800WriteUserDataDlg dlg;
+	DoCommonConfig(&dlg);
+
+}
+
+void CGPSDlg::OnSup800ReadData()
+{
+	CSUP800ReadUserDataDlg dlg;
+	DoCommonConfig(&dlg);
+
+}
 
 
 

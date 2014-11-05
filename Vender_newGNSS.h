@@ -119,13 +119,17 @@
 // .118 Fix Fixed Raw Measurement output parsing issue.
 // .119 Add specify Scatter Center Point function in Setup.
 // .120 Add SWCFG_VENDOR_GNSS_SWID_NEW_DOWNLOAD.
+// .121 Add Set / Query UART Pass-through in Venus8 Menu.
+// .122 Add GPSDO sub-menu in Venus8 Menu.
+// .123 Add GPSDO sub-menu in Venus8 Menu.
+// .124 Modify GPSDO sub-menu in Venus8 Menu.
 
 
 //#define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.120"
+#define APP_VERSION				"2.0.124"
 #define APP_TITLE				""
 #define GNSS_VIEWER				0
 #define GPS_VIEWER				0

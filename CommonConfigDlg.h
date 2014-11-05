@@ -380,3 +380,102 @@ protected:
 	
 	DECLARE_MESSAGE_MAP()
 };
+
+// CConfigUartPassThrough 對話方塊
+class CConfigUartPassThrough : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigUartPassThrough)
+public:
+	CConfigUartPassThrough(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigUartPassThrough() {};
+
+	virtual void DoCommand();
+
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
+
+protected:
+	U08 m_nPassThrough;
+	
+	DECLARE_MESSAGE_MAP()
+};
+
+// CSUP800EraseUserDataDlg 對話方塊
+class CSUP800EraseUserDataDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CSUP800EraseUserDataDlg)
+public:
+	CSUP800EraseUserDataDlg(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CSUP800EraseUserDataDlg() {};
+
+	virtual void DoCommand();
+
+	afx_msg void OnBnClickedErase();
+	virtual BOOL OnInitDialog();
+
+protected:
+	U08 m_nSector;
+	
+	DECLARE_MESSAGE_MAP()
+};
+
+
+// CSUP800WriteUserDataDlg 對話方塊
+class CSUP800WriteUserDataDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CSUP800WriteUserDataDlg)
+public:
+	CSUP800WriteUserDataDlg(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CSUP800WriteUserDataDlg() {};
+
+	virtual void DoCommand();
+
+	afx_msg void OnEnChangeInput();
+	afx_msg void OnBnClickedWrite();
+	afx_msg void OnBnClickedLoad();
+	virtual BOOL OnInitDialog();
+
+protected:
+	U08 m_nSector;
+	UINT16 m_nOffset;
+	BinaryData m_binData;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+
+// CSUP800ReadUserDataDlg 對話方塊
+class CSUP800ReadUserDataDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CSUP800ReadUserDataDlg)
+public:
+	CSUP800ReadUserDataDlg(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CSUP800ReadUserDataDlg() {};
+
+	virtual void DoCommand();
+
+	afx_msg void OnEnChangeInput();
+	afx_msg void OnBnClickedRead();
+	afx_msg void OnBnClickedSave();
+	virtual BOOL OnInitDialog();
+
+protected:
+	U08 m_nSector;
+	U16 m_nOffset;
+	U16 m_nDataSize;
+
+	void ReadUserData();
+	
+	DECLARE_MESSAGE_MAP()
+};
+
+
+
+
+
+
+
+
+
+
+

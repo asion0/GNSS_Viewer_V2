@@ -98,6 +98,11 @@ UINT CGPSDlg::UWM_PLAYNMEA_EVENT = 0;
 UINT CGPSDlg::UWM_SAVENMEA_EVENT = 0;
 UINT CGPSDlg::UWM_UPDATE_EVENT = 0;
 U08 CGPSDlg::m_inputMsg[200] = {0};
+CFont CGPSDlg::m_textFont;
+CFont CGPSDlg::m_infoFontS;
+CFont CGPSDlg::m_infoFontL;
+CFont CGPSDlg::comboFont;;	
+CFont CGPSDlg::messageFont;
 
 void add2message(char* buffer, int offset)
 {
@@ -919,6 +924,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_BINARY_CONFIGUREELEVATIONMASK, OnBinaryConfigureelevationmask)
 //	ON_COMMAND(ID_CFG_GL_ACQUISITION_MODE, &CGPSDlg::OnCfgGlonassAcquisitionMode)
 //	ON_COMMAND(ID_CONFIG_GNSS_SEL_FOR_NAV, &CGPSDlg::OnBinaryConfiguregnssselectionfornavigationsystem)
+
 	ON_COMMAND(ID_BINARY_CONFIGUREMESSAGETYPE, OnBinaryConfiguremessagetype)
 	ON_COMMAND(ID_BINARY_CONFIGUREMESSAGE_TYPE, OnBinaryConfiguremessageType)
 	ON_COMMAND(ID_BINARY_CONFIGUREMULTIPATH, OnBinaryConfiguremultipath)
@@ -1100,6 +1106,18 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_QUERY_SERIAL_NUMBER, OnQuerySerialNumber)
 	ON_COMMAND(ID_CONFIG_SERIAL_NUMBER, OnConfigureSerialNumber)
 	ON_COMMAND(ID_QUERY_DATUM_INDEX, OnQueryDatumIndex)
+	ON_COMMAND(ID_QUERY_UARTPASS, OnQueryUartPass)
+	ON_COMMAND(ID_GPSDO_RESET_SLAVE, OnGpsdoResetSlave)
+	ON_COMMAND(ID_GPSDO_ENTER_ROM, OnGpsdoEnterRom)
+	ON_COMMAND(ID_GPSDO_LEAVE_ROM, OnGpsdoLeaveRom)
+	ON_COMMAND(ID_GPSDO_ENTER_DWN, OnGpsdoEnterDownload)
+	ON_COMMAND(ID_GPSDO_LEAVE_DWN, OnGpsdoLeaveDownload)
+	ON_COMMAND(ID_GPSDO_ENTER_UART, OnGpsdoEnterUart)
+	ON_COMMAND(ID_GPSDO_LEAVE_UART, OnGpsdoLeaveUart)
+
+	ON_COMMAND(ID_SUP800_ERASE_DATA, OnSup800EraseData)	
+	ON_COMMAND(ID_SUP800_WRITE_DATA, OnSup800WriteData)	
+	ON_COMMAND(ID_SUP800_READ_DATA, OnSup800ReadData)	
 
 	ON_REGISTERED_MESSAGE(UWM_PLAYNMEA_EVENT, OnPlayNmeaEvent)
 	ON_REGISTERED_MESSAGE(UWM_SAVENMEA_EVENT, OnSaveNmeaEvent)
@@ -3442,12 +3460,15 @@ void CGPSDlg::OnDatalogClearControl()
 	}
 }
 
-void CGPSDlg::ExecuteConfigureCommand(U08 *cmd, int size, LPCSTR msg)
+void CGPSDlg::ExecuteConfigureCommand(U08 *cmd, int size, LPCSTR msg, bool restoreConnect/* = true*/)
 {
 	ClearQue();
-	SendToTarget(cmd, size, msg);	
-	SetMode();
-	CreateGPSThread();
+	SendToTarget(cmd, size, msg, true);
+	if(restoreConnect)
+	{
+		SetMode();
+		CreateGPSThread();
+	}
 }
 
 UINT LogConfigureControlThread(LPVOID pParam)
@@ -3755,10 +3776,6 @@ void CGPSDlg::OnBnClickedClear()
 
 UINT demoagps_thread(LPVOID param)
 {
-#ifdef _1104
-	CGPSDlg::gpsDlg->CheckEphAndDownload();
-	CGPSDlg::gpsDlg->target_only_restart(2);
-#else
 	if(CGPSDlg::gpsDlg->CheckEphAndDownload())
 	{
 		CGPSDlg::gpsDlg->target_only_restart(2);
@@ -3769,9 +3786,6 @@ UINT demoagps_thread(LPVOID param)
 		Sleep(200);
 		CGPSDlg::gpsDlg->CreateGPSThread();
 	}
-#endif
-	//CGPSDlg::gpsDlg->download_eph();
-	//CGPSDlg::gpsDlg->target_only_restart(2);
 
 	CGPSDlg::gpsDlg->m_bnt_warmstart.EnableWindow(1);
 	CGPSDlg::gpsDlg->m_btn_coldstart.EnableWindow(1);
@@ -4247,14 +4261,6 @@ U08 CGPSDlg::wait_res(char* res)
 	return false;
 }
 
-#if WITH_CONFIG_USB_BAUDRATE
-/*
-void CGPSDlg::Config_silab_baudrate_flash(HANDLE *m_DeviceHandle)
-{
-	CP210x_SetBaudRateConfig(*m_DeviceHandle, m_DefaultBaudConfigData);
-}
-*/
-#endif
 void CGPSDlg::OnBinaryConfiguremessagetype()
 {
 	if(!CheckConnect())
@@ -4851,12 +4857,37 @@ void CGPSDlg::Load_Menu()
 		CreateSubMenu(hMenu, menuItemBinary, "&Binary");
 	}
 
+	static MenuItemEntry GpsdoControlMenu[] =
+	{
+		{ 1, MF_STRING, ID_QUERY_UARTPASS, "Query UART Pass Through Status", NULL },
+		{ 1, MF_STRING, ID_GPSDO_RESET_SLAVE, "Reset Slave MCU(Master Only)", NULL },
+		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_STRING, ID_GPSDO_ENTER_ROM, "Enter Slave ROM Download(Master Only)", NULL },
+		{ 1, MF_STRING, ID_GPSDO_LEAVE_ROM, "Back To Normal Mode from ROM Download", NULL },
+		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_STRING, ID_GPSDO_ENTER_DWN, "Enter Slave Download(Master Only)", NULL },
+		{ 1, MF_STRING, ID_GPSDO_LEAVE_DWN, "Back To Normal Mode from Slave Download", NULL },
+		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_STRING, ID_GPSDO_ENTER_UART, "Enter Slave UART Pass Through(Master Only)", NULL },
+		{ 1, MF_STRING, ID_GPSDO_LEAVE_UART, "Back To Normal Mode from UART Pass through", NULL },
+		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 0, 0, 0, NULL, NULL }	//End of table
+	};
+	static MenuItemEntry Sup800Menu[] =
+	{
+		{ 1, MF_STRING, ID_SUP800_ERASE_DATA, "SUP800 Erase User Data", NULL },
+		{ 1, MF_STRING, ID_SUP800_WRITE_DATA, "SUP800 Write User Data", NULL },
+		{ 1, MF_STRING, ID_SUP800_READ_DATA, "SUP800 Read User Data", NULL },
+		{ 0, 0, 0, NULL, NULL }	//End of table
+	};	
 	//Venus 8 Menu
 	static MenuItemEntry menuItemVenus8[] =
 	{
 		{ 1, MF_STRING, ID_QUERY_BOOT_STATUS, "GNSS ROM Boot Status", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_CUSTOMER_ID, "Query Customer ID", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CONFIG_DOZE_MODE, "Configure GNSS Doze Mode", NULL },
+		{ IS_DEBUG, MF_POPUP, 0, "GPSDO Control", GpsdoControlMenu },
+		{ _V8_SUPPORT, MF_POPUP, 0, "SUP800 User Data Storage", Sup800Menu },
 
 		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
 		{ 1, MF_STRING, ID_BINARY_QUERYSBAS, "Query SBAS", NULL },
@@ -5602,7 +5633,6 @@ bool CGPSDlg::download_eph()
 
 		if(!pConnect->GetFile(remote_path,file_name,false))
 		{
-#ifndef _1104
 			int err = GetLastError();
 			if(err==12002)
 			{
@@ -5619,7 +5649,6 @@ bool CGPSDlg::download_eph()
 				AfxMessageBox("Eph.dat File Error...");
 				//OnAgps_Msg.fire(AGPS_EPH_FILE_ERROR);
 			}
-#endif
 			pConnect->Close();
 			return false;
 		}
@@ -5634,15 +5663,12 @@ bool CGPSDlg::download_eph()
 	}
 	catch (CInternetException* pEx)
 	{
-#ifndef _1104
 		TCHAR sz[1024];
 		pEx->GetErrorMessage(sz, 1024);
 		printf("ERROR!  %s\n", sz);
 		pEx->Delete();
 		AfxMessageBox(sz);
-#endif
 		return false;
-		//sess.Close();
 	}	
 }
 

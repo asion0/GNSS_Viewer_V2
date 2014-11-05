@@ -792,10 +792,14 @@
 #define IDC_SN                          1330
 #define IDC_FILENAME                    1331
 #define IDC_OVERDUE_SEC                 1331
+#define IDD_SET_UART_PASS_THROUGH       1331
 #define IDC_STOP_T                      1332
 #define IDC_LEAP_SECONDS                1332
+#define IDD_SUP800_ERASE_DATA           1332
 #define IDC_TIME_SYNC                   1333
+#define IDD_SUP800_WRITE_DATA           1333
 #define IDC_POWER_MODE                  1334
+#define IDD_SUP800_READ_DATA            1334
 #define IDC_GO                          1335
 #define IDC_PATH                        1336
 #define IDC_DOWNLOAD_TEST               1336
@@ -822,7 +826,16 @@
 #define IDC_LAT                         1349
 #define IDC_SPY_CENTER                  1350
 #define IDR_INTERNAL_LOADER_SPECIAL     1351
-
+#define IDC_PASS_THROUGH                1351
+#define IDC_SECTOR                      1352
+#define IDC_READ                        1353
+#define IDC_WRITE                       1354
+#define IDC_OFFSET                      1355
+#define IDC_DATA_SIZE                   1356
+#define IDC_DATA                        1357
+#define IDC_DATA_SIZE2                  1358
+#define IDC_SAVE                        1358
+#define IDC_LOAD                        1359
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_BINARY_SYSTEMRESTART         32811
@@ -1054,6 +1067,17 @@
 #define ID_QUERY_CON_CAP                33073
 #define ID_RAW_MEAS_OUT_CONVERT         33074
 #define ID_VERIFY_FIRMWARE              33075
+#define ID_GPSDO_ENTER_ROM              33076
+#define ID_GPSDO_LEAVE_ROM              33077
+#define ID_GPSDO_ENTER_DWN              33078
+#define ID_GPSDO_LEAVE_DWN              33079
+#define ID_GPSDO_ENTER_UART             33080
+#define ID_GPSDO_LEAVE_UART             33081
+#define ID_GPSDO_RESET_SLAVE            33082
+#define ID_QUERY_UARTPASS               33083
+#define ID_SUP800_ERASE_DATA            33084
+#define ID_SUP800_WRITE_DATA            33085
+#define ID_SUP800_READ_DATA             33086
 
 // Next default values for new objects
 // 
@@ -1061,7 +1085,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        461
 #define _APS_NEXT_COMMAND_VALUE         33081
-#define _APS_NEXT_CONTROL_VALUE         1351
+#define _APS_NEXT_CONTROL_VALUE         1360
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif
