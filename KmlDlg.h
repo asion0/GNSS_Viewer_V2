@@ -52,10 +52,7 @@ public:
 	//void WriteKMLini();
 	//void WriteKMLPath();
 	CFile Fnmea;
-	CFile Fsource;
-	bool IsFSourceOpen;
 	bool IsFlogOpen;
-//	bool inilog;
 	U08 NMEA_PROC(const char*,int);
 
 	GPGLL msg_gpgll;
@@ -72,7 +69,7 @@ public:
 
 	double lon, lat;
 	bool WriteToFile(U08 type);
-	void Convert();
+	void Convert(CFile& f);
 
 	int GET_NMEA_SENTENCE(CFile&, U08*);
 	CComboBox m_color;

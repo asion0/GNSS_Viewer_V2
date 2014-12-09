@@ -14,26 +14,14 @@
 #include "FTPDlg.h"
 #include "Registry.h"
 #include "Con_binary_msg_interval.h"
-
-#include <Dbt.h>
-#include <setupapi.h>
-
-
 #include "Login.h"
-//#include "SnrBarChart.h"
 #include "ClipboardListBox.h"
 #include "Label.h"
 #include "ColorStatic.h"
 #include "MsgList.h"
-//#include "Pic_Earth.h"
-//#include "Pic_Scatter.h"
-//#include "CigRgsDlg.h"
-//#include "GetRgsDlg.h"
-//#include "Config_Password.h"
-//#define LOG_FIFO_ONEWAY   0
-//#define LOG_FIFO_CIRCULAR 1
 
-//#define update_c				300
+#include <Dbt.h>
+#include <setupapi.h>
 
 #define RA   (6378137.0)   // semi-major earth axis(ellipsoid equatorial radius)
 #define RB   (6356752.0)   // semi-major earth axis(ellipsoid polar radius)
@@ -465,8 +453,9 @@ protected:
 	afx_msg void OnSup800WriteData();
 	afx_msg void OnSup800ReadData();
 
+	afx_msg void OnConfigureSignalDisturbanceStatus();
 
-    CBitmapButton m_ConnectBtn;
+	CBitmapButton m_ConnectBtn;
 	CBitmapButton m_PlayBtn;
 	CBitmapButton m_StopBtn;
 	CBitmapButton m_RecordBtn;
@@ -582,7 +571,7 @@ public:
 //	bool m_isPressNmeaCommend;
 //	bool m_isNmeaFileOpen;	
 //	bool Reconnect;
-	bool m_isNmeaWriting;
+	bool m_isNmeaUpdated;
 	//int  m_nmeaCount;	
 	
 	enum { NmeaBufferSize = 1024 };
@@ -725,7 +714,7 @@ public:
 	int GetScaleSel() { return m_scale.GetCurSel(); }
 	int GetMapScaleSel() { return m_mapscale.GetCurSel(); }
 	bool IsFixed() { return ::IsFixed(m_gpggaMsg.GPSQualityIndicator); }
-	void SetNmeaWriting(bool b);
+	void SetNmeaUpdated(bool b);
 	bool SetFirstDataIn(bool b);
 	void SendRestartCommand(int mode);		
 //	void target_restart();
@@ -1048,7 +1037,8 @@ public:
 	CmdErrorCode QuerySmoothMode(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryTimeStamping(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGpsTime(CmdExeMode nMode, void* outputData);
-
+	CmdErrorCode QuerySignalDisturbanceStatus(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QuerySignalDisturbanceData(CmdExeMode nMode, void* outputData);
 private:
 	afx_msg void OnQueryPositionRate()
 	{ GenericQuery(&CGPSDlg::QueryPositionRate); }
@@ -1186,6 +1176,12 @@ private:
 	{ GenericQuery(&CGPSDlg::QueryTimeStamping); }
 	afx_msg void OnQueryGpsTime()
 	{ GenericQuery(&CGPSDlg::QueryGpsTime); }
+
+	afx_msg void OnQuerySignalDisturbanceStatus()
+	{ GenericQuery(&CGPSDlg::QuerySignalDisturbanceStatus); }
+	afx_msg void OnQuerySignalDisturbanceData()
+	{ GenericQuery(&CGPSDlg::QuerySignalDisturbanceData); }
+
 
 	struct MenuItemEntry {
 		BOOL showOption;

@@ -801,6 +801,7 @@
 #define IDC_POWER_MODE                  1334
 #define IDD_SUP800_READ_DATA            1334
 #define IDC_GO                          1335
+#define IDD_CONFIG_SIG_DISTURB_DLG      1335
 #define IDC_PATH                        1336
 #define IDC_DOWNLOAD_TEST               1336
 #define IDC_LOG                         1337
@@ -836,6 +837,7 @@
 #define IDC_DATA_SIZE2                  1358
 #define IDC_SAVE                        1358
 #define IDC_LOAD                        1359
+#define IDC_OPERATION                   1360
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_BINARY_SYSTEMRESTART         32811
@@ -1078,14 +1080,17 @@
 #define ID_SUP800_ERASE_DATA            33084
 #define ID_SUP800_WRITE_DATA            33085
 #define ID_SUP800_READ_DATA             33086
+#define ID_QUERY_SIG_DISTUR_DATA        33087
+#define ID_QUERY_SIG_DISTUR_STATUS      33088
+#define ID_CONFIG_SIG_DISTUR_STATUS     33089
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        461
+#define _APS_NEXT_RESOURCE_VALUE        462
 #define _APS_NEXT_COMMAND_VALUE         33081
-#define _APS_NEXT_CONTROL_VALUE         1360
+#define _APS_NEXT_CONTROL_VALUE         1361
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

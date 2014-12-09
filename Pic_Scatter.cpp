@@ -4,7 +4,12 @@
 #include "UISetting.h"
 
 ScatterData g_scatterData;
-
+static void Log(CString f, int line, CString name = "", int data = 0)
+{
+	static char dbg_buf[64];
+	sprintf_s(dbg_buf, "%s(%d) %s - %d\r\n", f, line, name, data);
+	::OutputDebugString(dbg_buf);
+}
 void ScatterData::SetOrigin()
 {
 	float offset_x=0;
@@ -273,6 +278,7 @@ void CPic_Scatter::OnPaint()
 
 void CPic_Scatter::Refresh_ScatterChart(CDC *scatter_dc)
 {
+
 	CRect rcScatter;
 	GetClientRect(rcScatter);
 	CMemDC memDC(*scatter_dc, &rcScatter);
@@ -740,10 +746,7 @@ void CPic_Scatter::Show_ScatterChart(CDC *dc)
 	{
 		mapindex = CGPSDlg::gpsDlg->GetMapScaleSel();
 	}
-if(index==1)
-{
-	int a = 0;
-}
+
 	CPen pen;
 	pen.CreatePen(PS_SOLID,1,RGB(50, 50, 255));
 	CPen* oldPen = dc->SelectObject(&pen);
@@ -756,7 +759,6 @@ if(index==1)
 	font.CreatePointFont(90, _T("Arial"));
 	CFont* oldFont = dc->SelectObject(&font);
 	dc->SetTextColor(RGB(0,0,192));
-
 	if(g_scatterData.IniPos)
 	{	
 		g_scatterData.InitPos();
@@ -770,12 +772,12 @@ if(index==1)
 		long double map_y;
 		//double h = CGPSDlg::gpsDlg->m_gpggaMsg.Altitude;
 
-		double lon = int(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude/100);
-		lon+=double(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude-
-			int(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude/100)*100)/60;
-		double lat = int(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude/100);
-		lat+=double(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude-
-			int(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude/100)*100)/60;
+		double lon = int(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude  / 100);
+		lon += double(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude -
+			int(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude / 100) * 100) / 60;
+		double lat = int(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude / 100);
+		lat += double(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude -
+			int(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude / 100) * 100) / 60;
 
 		g_scatterData.SetMapLocation(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude, CGPSDlg::gpsDlg->m_gpggaMsg.Latitude);
 
@@ -789,7 +791,6 @@ if(index==1)
 		ScatterPoint LLApoint;		
 		LLApoint.x=(S16)map_x;
 		LLApoint.y=(S16)map_y;
-
 		g_scatterData.AddLLAPoint(&LLApoint);
 
 		g_scatterData._GETENUPOINTCS.Lock();									
@@ -797,15 +798,14 @@ if(index==1)
 		g_scatterData.lat_deg = lat;
 		g_scatterData._GETENUPOINTCS.Unlock();
 
-		map_x=lon-g_scatterData.inimaplon;				   
-		map_y=lat-g_scatterData.inimaplat;
-		map_x*=(3600*50/g_scatterData.m_llaScale);				
-		map_y*=(3600*50/g_scatterData.m_llaScale);			
-		map_x=ENUOrigin_X+map_x;
-		map_y=ENUOrigin_Y-map_y;
+		map_x = lon - g_scatterData.inimaplon;				   
+		map_y = lat - g_scatterData.inimaplat;
 
-		//pmlon = lon;
-		//pmlat = lat;		
+		map_x *= (3600 * 50 / g_scatterData.m_llaScale);				
+		map_y *= (3600 * 50 / g_scatterData.m_llaScale);			
+		map_x = ENUOrigin_X + map_x;
+		map_y = ENUOrigin_Y - map_y;
+	
 		if(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude_N_S == 'S')
 			if(lat>0)lat*=-1;
 		if(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude_E_W == 'W')

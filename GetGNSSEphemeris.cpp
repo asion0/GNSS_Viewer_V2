@@ -107,7 +107,7 @@ UINT GetEphmsAllThread(LPVOID pParam)
 			fe->Delete();
 			return -1;
 		}		
-		CGPSDlg::gpsDlg->GetGlonassEphms(SV_Glonass,TRUE);	
+		CGPSDlg::gpsDlg->GetGlonassEphms(SV_Glonass, TRUE);	
 	}
 //	AfxEndThread(0);
 	return 0;

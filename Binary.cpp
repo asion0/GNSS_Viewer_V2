@@ -175,6 +175,10 @@ static CommandEntry cmdTable[] =
 	{ 0x64, 0x20, 2, 0x64, 0x8E },
 	//ReadSup800UserDataCmd,
 	{ 0x7A, 0x09, 8, 0x7A, 0x09 },
+	//QuerySignalDisturbanceStatusCmd,
+	{ 0x64, 0x2B, 2, 0x64, 0x94 },
+	//QuerySignalDisturbanceDataCmd,
+	{ 0x64, 0x2C, 2, 0x64, 0x95 },
 };
 
 enum SqBinaryCmd
@@ -242,6 +246,8 @@ enum SqBinaryCmd
 	QueryTimeStampingCmd,
 	QueryGpsTimeCmd,
 	ReadSup800UserDataCmd,
+	QuerySignalDisturbanceStatusCmd,
+	QuerySignalDisturbanceDataCmd,
 };
 
 bool CGPSDlg::SAVE_EPHEMRIS(U08* buff, U08 id)
@@ -1506,7 +1512,7 @@ void CGPSDlg::MSG_PROC()
 				BinaryProc(buffer,length+1);
 				Copy_NMEA_Memery();		    
 				//_GETNMEA0183CS.Unlock();
-				SetNmeaWriting(true);
+				SetNmeaUpdated(true);
 			}
 			else
 			{
@@ -1531,7 +1537,7 @@ void CGPSDlg::MSG_PROC()
 				{		
 					Copy_NMEA_Memery();		    
 					//_GETNMEA0183CS.Unlock();
-					SetNmeaWriting(true);
+					SetNmeaUpdated(true);
 				}
 
 				if(MSG_ERROR==nmeaType && m_firstDataIn && g_setting.checkNmeaError)
@@ -5482,6 +5488,79 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryDatumIndex(CmdExeMode nMode, void* outputDat
 	return Timeout;
 }
 
+CGPSDlg::CmdErrorCode CGPSDlg::QuerySignalDisturbanceStatus(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(cmdTable[QuerySignalDisturbanceStatusCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QuerySignalDisturbanceStatusCmd].cmdId);
+	cmd.SetU08(2, cmdTable[QuerySignalDisturbanceStatusCmd].cmdSubId);
+
+	BinaryData ackCmd;
+	if(!ExcuteBinaryCommand(QuerySignalDisturbanceStatusCmd, &cmd, &ackCmd))
+	{
+		CString strMsg = "QuerySignalDisturbanceStatus Successful";
+		add_msgtolist(strMsg);
+		strMsg.Format("Operation Type : %d (%s)", ackCmd[6], (ackCmd[6]==0) ? "disable" : "Enable");
+		add_msgtolist(strMsg);
+	}
+	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QuerySignalDisturbanceData(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(cmdTable[QuerySignalDisturbanceDataCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QuerySignalDisturbanceDataCmd].cmdId);
+	cmd.SetU08(2, cmdTable[QuerySignalDisturbanceDataCmd].cmdSubId);
+
+	BinaryData ackCmd;
+	if(!ExcuteBinaryCommand(QuerySignalDisturbanceDataCmd, &cmd, &ackCmd))
+	{
+		const int FieldLen = 7;
+		int chCnt = (MAKEWORD(ackCmd[3], ackCmd[2]) - 2) / FieldLen;
+		CString strMsg = "QuerySignalDisturbanceData Successful";
+		add_msgtolist(strMsg);
+
+		strMsg = "NO. GNSS_TYPE PRN CN0  Total Unreliable_Count";
+		add_msgtolist(strMsg);
+		for(int i = 0; i < chCnt; ++i)
+		{
+			int a = 6 + i * FieldLen;
+			const char* type = NULL;
+			switch(ackCmd[a])
+			{
+			case 0:
+				type = "NONE";
+				break;
+			case 1:
+				type = "GPS";
+				break;
+			case 2:
+				type = "SBAS";
+				break;
+			case 3:
+				type = "GLONASS";
+				break;
+			case 4:
+				type = "GALILEO";
+				break;
+			case 5:
+				type = "QZSS";
+				break;
+			case 6:
+				type = "BD2";
+				break;
+			default:
+				type = "Unknown";
+				break;
+			}
+	
+			strMsg.Format("%3d  %8s %3d %3d %6d %6d", i, type, ackCmd[a + 1], ackCmd[a + 2], 
+				MAKEWORD(ackCmd[a + 4], ackCmd[a + 3]), MAKEWORD(ackCmd[a + 6], ackCmd[a + 5]));
+			add_msgtolist(strMsg);
+		}
+	}
+	return Timeout;
+}
+
 CGPSDlg::CmdErrorCode CGPSDlg::GpsdoResetSlave(CmdExeMode nMode, void* outputData)
 {	    
 	BinaryCommand cmd(4);
@@ -6200,18 +6279,20 @@ void CGPSDlg::OnSup800WriteData()
 {
 	CSUP800WriteUserDataDlg dlg;
 	DoCommonConfig(&dlg);
-
 }
 
 void CGPSDlg::OnSup800ReadData()
 {
 	CSUP800ReadUserDataDlg dlg;
 	DoCommonConfig(&dlg);
-
 }
 
 
-
+void CGPSDlg::OnConfigureSignalDisturbanceStatus()
+{
+	CConfigureSignalDisturbanceStatusDlg dlg;
+	DoCommonConfig(&dlg);
+}
 
 
 

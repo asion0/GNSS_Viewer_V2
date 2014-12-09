@@ -104,6 +104,22 @@ CFont CGPSDlg::m_infoFontL;
 CFont CGPSDlg::comboFont;;	
 CFont CGPSDlg::messageFont;
 
+static void Log(CString f, int line, CString name = "", int data = 0)
+{
+	return;
+	static char dbg_buf[64];
+	sprintf_s(dbg_buf, "%s(%d) %s - %d\r\n", f, line, name, data);
+	::OutputDebugString(dbg_buf);
+}
+
+static void Log2(CString f, int line, CString name = "", int data = 0)
+{
+	return;
+	static char dbg_buf[64];
+	sprintf_s(dbg_buf, "%s(%d) %s - %d\r\n", f, line, name, data);
+	::OutputDebugString(dbg_buf);
+}
+
 void add2message(char* buffer, int offset)
 {
 	//if(CSaveNmea::IsNmeaFileOpen())
@@ -266,7 +282,7 @@ void CGPSDlg::Copy_NMEA_Memery()
 	{
 		if(!copygsv_gnss || m_glgsvMsgCopy.NumOfMessage == m_glgsvMsgCopy.SequenceNum)
 		{
-			memcpy(&satecopy_gnss, &satellites_gnss ,sizeof(Satellite)*MAX_SATELLITE);
+			memcpy(&satecopy_gnss, &satellites_gnss, sizeof(Satellite)*MAX_SATELLITE);
 			copygsv_gnss = true;
 		}
 		else
@@ -283,7 +299,7 @@ void CGPSDlg::Copy_NMEA_Memery()
 	{
 		if(!copygsv_bd || m_bdgsvMsgCopy.NumOfMessage == m_bdgsvMsgCopy.SequenceNum)
 		{
-			memcpy(&satecopy_bd, &satellites_bd ,sizeof(Satellite)*MAX_SATELLITE);
+			memcpy(&satecopy_bd, &satellites_bd, sizeof(Satellite)*MAX_SATELLITE);
 			copygsv_bd = true;
 		}
 		else
@@ -300,7 +316,7 @@ void CGPSDlg::Copy_NMEA_Memery()
 	{
 		if(!copygsv_ga || m_gagsvMsgCopy.NumOfMessage == m_gagsvMsgCopy.SequenceNum)
 		{
-			memcpy(&satecopy_ga, &satellites_ga ,sizeof(Satellite)*MAX_SATELLITE);
+			memcpy(&satecopy_ga, &satellites_ga, sizeof(Satellite)*MAX_SATELLITE);
 			copygsv_ga = true;
 		}
 		else
@@ -369,7 +385,7 @@ void CGPSDlg::CopyNmeaToUse()
 	//if(m_gpggaMsg.GPSQualityIndicator == 0x31 || m_gpggaMsg.GPSQualityIndicator == 0x32)
 	if(::IsFixed(m_gpggaMsg.GPSQualityIndicator))
 	{
-		memcpy(&m_gpggaMsgBk,&m_gpggaMsgCopy1,sizeof(GPGGA));
+		memcpy(&m_gpggaMsgBk, &m_gpggaMsgCopy1, sizeof(GPGGA));
 	}
 }
 
@@ -632,7 +648,7 @@ UINT NMEA_Parsing_Thread(LPVOID pParam)
 		currentTick = ::GetTickCount();
 		if(needSleep)
 		{
-			CGPSDlg::gpsDlg->SetNmeaWriting(true);
+			CGPSDlg::gpsDlg->SetNmeaUpdated(true);
 			const int MaxSleepMs = 50;
 			int nDuration = 0;
 			needSleep = false;
@@ -645,7 +661,7 @@ UINT NMEA_Parsing_Thread(LPVOID pParam)
 				if(currentTick < (startTick + nGap))
 				{
 					Sleep((startTick + nGap) - currentTick);
-					startTick += nGap;
+					startTick = ::GetTickCount();
 				}
 				if(g_nmeaInputTerminate) 
 				{
@@ -670,6 +686,10 @@ UINT NMEA_Parsing_Thread(LPVOID pParam)
 
 		CGPSDlg::gpsDlg->m_playNmea->SetLineCount(++lineCount, current, total);
 		NmeaType nmeaType;
+		if(lineCount == 138)
+		{
+			int a = 0;
+		}
 		if(CGPSDlg::gpsDlg->NmeaProc(nmeaBuff, strlen(nmeaBuff), nmeaType))
 		{		
 			CGPSDlg::gpsDlg->Copy_NMEA_Memery();		    
@@ -685,7 +705,7 @@ UINT NMEA_Parsing_Thread(LPVOID pParam)
 	CGPSDlg::gpsDlg->m_isConnectOn = false;
 	CGPSDlg::gpsDlg->KillTimer(SHOW_STATUS_TIMER);
 	CGPSDlg::gpsDlg->SetInputMode(0);
-	CGPSDlg::gpsDlg->SetNmeaWriting(false);
+	CGPSDlg::gpsDlg->SetNmeaUpdated(false);
 	CGPSDlg::gpsDlg->m_nmeaPlayThread = NULL;
 	CGPSDlg::gpsDlg->m_nmeaPlayPause = false; 
 	return 0;
@@ -1119,6 +1139,10 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_SUP800_WRITE_DATA, OnSup800WriteData)	
 	ON_COMMAND(ID_SUP800_READ_DATA, OnSup800ReadData)	
 
+	ON_COMMAND(ID_QUERY_SIG_DISTUR_DATA, OnQuerySignalDisturbanceData)	
+	ON_COMMAND(ID_QUERY_SIG_DISTUR_STATUS, OnQuerySignalDisturbanceStatus)	
+	ON_COMMAND(ID_CONFIG_SIG_DISTUR_STATUS, OnConfigureSignalDisturbanceStatus)	
+
 	ON_REGISTERED_MESSAGE(UWM_PLAYNMEA_EVENT, OnPlayNmeaEvent)
 	ON_REGISTERED_MESSAGE(UWM_SAVENMEA_EVENT, OnSaveNmeaEvent)
 	ON_REGISTERED_MESSAGE(UWM_UPDATE_EVENT, OnUpdateEvent)
@@ -1233,6 +1257,8 @@ void CGPSDlg::Initialization()
 	SwitchToConnectedStatus(FALSE);
 	m_scale.SetCurSel(DefauleEnuScale);
 	m_mapscale.SetCurSel(0);
+
+
 	m_mapscale.ShowWindow(0);
 	m_coordinate.SetCurSel(0);	
 	m_StopBtn.EnableWindow(FALSE);
@@ -1330,7 +1356,7 @@ void CGPSDlg::Initialization()
 
 //	m_isNmeaFileOpen        = false;	
 //	m_isPressNmeaCommend    = false;
-	m_isNmeaWriting         = false;
+	m_isNmeaUpdated         = false;
 	m_isConnectOn = false;		
 	m_isFlogOpen            = false;
 	m_isPressCloseButton    = true;
@@ -1875,8 +1901,8 @@ void CGPSDlg::OnBnClickedPlay()
 	m_nmeaList.DeleteAllItems();   
 
 	g_scatterData.ClearData();
-	m_scale.SetCurSel(DefauleEnuScale);
-	m_mapscale.SetCurSel(0);
+	OnCbnCloseupEnuscale();
+	OnCbnCloseupMapscale();
 
 	m_ttffCount = 0;
 	m_initTtff = false;
@@ -1967,7 +1993,7 @@ void CGPSDlg::CreateGPSThread()
 
 void CGPSDlg::TerminateGPSThread()
 {
-	SetNmeaWriting(false);
+	SetNmeaUpdated(false);
 	m_isConnectOn = false;  
 	m_serial->CancelTransmission();
 	//Sleep(100);
@@ -2012,14 +2038,16 @@ void CGPSDlg::OnTimer(UINT nIDEvent)
 	}
 	else if(SHOW_STATUS_TIMER==nIDEvent)
 	{
+	
 		switch(m_inputMode)
 		{
 		case NMEA_Mode:
-			if(m_isNmeaWriting)	
+
+			if(m_isNmeaUpdated)	
 			{	
 				CopyNmeaToUse();
+		
 				ShowStatus();
-
 				ShowDate();			
 				ShowLongitudeLatitude();		
 				ShowAltitude();	
@@ -2033,7 +2061,7 @@ void CGPSDlg::OnTimer(UINT nIDEvent)
 #else
 				ShowPsti004001();	
 #endif
-				SetNmeaWriting(false);
+				SetNmeaUpdated(false);
 			}	
 			break;
 		case Binary_Mode:	
@@ -2044,7 +2072,6 @@ void CGPSDlg::OnTimer(UINT nIDEvent)
 			break;
 		}
 		pic_scatter->Invalidate(FALSE);
-
 		m_wgs84_x.Invalidate(FALSE);
 		m_wgs84_y.Invalidate(FALSE);
 		m_wgs84_z.Invalidate(FALSE);
@@ -2070,17 +2097,18 @@ void CGPSDlg::OnTimer(UINT nIDEvent)
 void CGPSDlg::UpdateCooridate()
 {
 	CString str;
+	
 	str.Format("%.3f", g_scatterData.X);
 	m_wgs84_x.SetWindowText(str);
-
-	str.Format("%.3f", g_scatterData.X);
-	m_wgs84_x.SetWindowText(str);
+//Log2(__FUNCTION__, __LINE__, "m_wgs84_x");
 
 	str.Format("%.3f", g_scatterData.Y);
 	m_wgs84_y.SetWindowText(str);
+//Log2(__FUNCTION__, __LINE__, "m_wgs84_y");
 
 	str.Format("%.3f", g_scatterData.Z);
 	m_wgs84_z.SetWindowText(str);
+//Log2(__FUNCTION__, __LINE__, "m_wgs84_z");
 
 	if(g_scatterData.IniPos)
 	{
@@ -4880,6 +4908,14 @@ void CGPSDlg::Load_Menu()
 		{ 1, MF_STRING, ID_SUP800_READ_DATA, "SUP800 Read User Data", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};	
+	static MenuItemEntry SignalDisturbanceMenu[] =
+	{
+		{ 1, MF_STRING, ID_QUERY_SIG_DISTUR_DATA, "Query Signal Disturbance Data", NULL },
+		{ 1, MF_STRING, ID_QUERY_SIG_DISTUR_STATUS, "Query Signal Disturbance Status", NULL },
+		{ 1, MF_STRING, ID_CONFIG_SIG_DISTUR_STATUS, "Configure Signal Disturbance Status", NULL },
+		{ 0, 0, 0, NULL, NULL }	//End of table
+	};
+
 	//Venus 8 Menu
 	static MenuItemEntry menuItemVenus8[] =
 	{
@@ -4888,6 +4924,7 @@ void CGPSDlg::Load_Menu()
 		{ IS_DEBUG, MF_STRING, ID_CONFIG_DOZE_MODE, "Configure GNSS Doze Mode", NULL },
 		{ IS_DEBUG, MF_POPUP, 0, "GPSDO Control", GpsdoControlMenu },
 		{ _V8_SUPPORT, MF_POPUP, 0, "SUP800 User Data Storage", Sup800Menu },
+		{ IS_DEBUG, MF_POPUP, 0, "Signal Disturbance Test", SignalDisturbanceMenu },
 
 		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
 		{ 1, MF_STRING, ID_BINARY_QUERYSBAS, "Query SBAS", NULL },
@@ -8366,13 +8403,13 @@ void CGPSDlg::OnTestExternalSrec()
 	CreateGPSThread();
 }
 
-void CGPSDlg::SetNmeaWriting(bool b)
+void CGPSDlg::SetNmeaUpdated(bool b)
 {
-//	if(!m_isNmeaWriting && b)
+//	if(!m_isNmeaUpdated && b)
 //	{
 //		PostMessage(UWM_FIRST_NMEA, 0, 0);
 //	}
-	m_isNmeaWriting = b;
+	m_isNmeaUpdated = b;
 }
 
 bool CGPSDlg::SetFirstDataIn(bool b)

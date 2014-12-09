@@ -368,6 +368,10 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 		add2message(g_msgBuff, len);
 		if(NMEA::Glonass == NMEA::GetGNSSSystem(sv.prn))
 		{
+			if(glonass_c==0)
+			{
+				memset(satellites_gnss, 0, sizeof(satellites_gnss));
+			}
 			if (sv.channel_status & 0x30)
 			{
 				CGPSDlg::gpsDlg->m_glgsaMsgCopy.SatelliteID[fixed_glonass_c] = sv.prn;
@@ -381,6 +385,10 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 		}
 		else if(NMEA::Gps == NMEA::GetGNSSSystem(sv.prn))
 		{
+			if(gps_c==0)
+			{
+				memset(satellites_gps, 0, sizeof(satellites_gnss));
+			}
 			if (sv.channel_status & 0x30)
 			{
 				CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID[fixed_gps_c] = sv.prn;
@@ -394,6 +402,10 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 		}
 		else if(NMEA::Beidou == NMEA::GetGNSSSystem(sv.prn))
 		{
+			if(beidou_c==0)
+			{
+				memset(satellites_bd, 0, sizeof(satellites_gnss));
+			}
 			if (sv.channel_status & 0x30)
 			{
 				CGPSDlg::gpsDlg->m_bdgsaMsgCopy.SatelliteID[fixed_beidou_c] = sv.prn;
@@ -407,15 +419,19 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 		}
 		else if(NMEA::Galileo == NMEA::GetGNSSSystem(sv.prn))
 		{
+			if(galileo_c==0)
+			{
+				memset(satellites_ga, 0, sizeof(satellites_gnss));
+			}
 			if (sv.channel_status & 0x30)
 			{
 				CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID[fixed_galileo_c] = sv.prn;
 				fixed_galileo_c++;
 			}
-			satellites_bd[galileo_c].SatelliteID = sv.prn;
-			satellites_bd[galileo_c].SNR = sv.cn0;
-			satellites_bd[galileo_c].Elevation = sv.elevation;
-			satellites_bd[galileo_c].Azimuth = sv.azimuth;
+			satellites_ga[galileo_c].SatelliteID = sv.prn;
+			satellites_ga[galileo_c].SNR = sv.cn0;
+			satellites_ga[galileo_c].Elevation = sv.elevation;
+			satellites_ga[galileo_c].Azimuth = sv.azimuth;
 			galileo_c++;
 		}
 	}

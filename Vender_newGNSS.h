@@ -123,13 +123,17 @@
 // .122 Add GPSDO sub-menu in Venus8 Menu.
 // .123 Add GPSDO sub-menu in Venus8 Menu.
 // .124 Modify GPSDO sub-menu in Venus8 Menu.
-
+// .125 Modify KML converter output default folder to same of source.
+// .125 Fixed binary output satellite prn duplicate issue.
+// .126 Add Signal Disturbance Test menu in [Venus 8] menu.
+// .127 Modify Signal Disturbance Test command.
+// .128 Fixed NMEA Player crash in XP when scatter starting draw point.
 
 //#define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.124"
+#define APP_VERSION				"2.0.128"
 #define APP_TITLE				""
 #define GNSS_VIEWER				0
 #define GPS_VIEWER				0

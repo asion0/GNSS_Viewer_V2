@@ -270,7 +270,12 @@ void CPlayNmea::Initialize(LPCSTR nmeaFile)
 
 int CPlayNmea::GetPlayInterval()
 {
-	return IntervalRate[m_playIntervalSlider.GetPos()];
+	int n = m_playIntervalSlider.GetPos();
+	if(n < 0 || n > 19)
+	{
+		ASSERT(FALSE);
+	}
+	return IntervalRate[n];
 }
 
 void CPlayNmea::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)

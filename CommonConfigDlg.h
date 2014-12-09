@@ -469,6 +469,26 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
+// CConfigureSignalDisturbanceStatusDlg 對話方塊
+class CConfigureSignalDisturbanceStatusDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigureSignalDisturbanceStatusDlg)
+public:
+	CConfigureSignalDisturbanceStatusDlg(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigureSignalDisturbanceStatusDlg() {};
+
+	virtual void DoCommand();
+
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
+
+protected:
+	U08 m_nOperationType;
+
+	void ReadUserData();
+	
+	DECLARE_MESSAGE_MAP()
+};
 
 
 

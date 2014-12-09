@@ -349,25 +349,26 @@ void CKmlDlg::convert_all_file()
 	int i;
 	CString temp;
 	CKmlDlg::kmlDlg->PostMessage(UWM_PROGRESS, 1, 0);	//Show progress
-	for(i=0;i<NumOfFile;i++)
+	for(i = 0; i < NumOfFile; ++i)
 	{
 		CFileException ef;
+		CFile f;
 		try
 		{		        
-			if(!Fsource.Open(FilePath[i],CFile::modeRead,&ef))
+			if(!f.Open(FilePath[i], CFile::modeRead,&ef))
 			{
 				ef.ReportError();
 				continue;
 			}
-			IsFSourceOpen = true;
 
-			kml_filename = FileName[i];
-			int find = kml_filename.Find(".");
+			kml_filename = FilePath[i];
+			int find = kml_filename.ReverseFind('.');
 			kml_filename = kml_filename.Mid(0,find);   
 
-			Convert();
-			
-			temp.Format("%s OK",FileName[i]);
+			Convert(f);
+			f.Close();
+
+			temp.Format("%s OK", FileName[i]);
 			m_check[i].SetWindowText(temp);
 			m_check[i].SetCheck(BST_CHECKED);	
 		}
@@ -503,13 +504,13 @@ U08 CKmlDlg::NMEA_PROC(const char* buffer, int offset)
 	return MsgType;	
 }
 
-void CKmlDlg::Convert()
+void CKmlDlg::Convert(CFile& f)
 {
 	int    nBytesRead;
 	UINT   retCode = 0;	
 	U08    nmea[200];
 	CString temp;
-	ULONGLONG  dwBytesRemaining = Fsource.GetLength();
+	ULONGLONG  dwBytesRemaining = f.GetLength();
 	U08 nmeaType;
 
 	int write_count = 0;
@@ -532,12 +533,12 @@ void CKmlDlg::Convert()
 	while(dwBytesRemaining)
 	{	
 		CString tmp_file ;
-		tmp_file.Format("%s%d%s",kml_filename,file_tail,".kml");
+		tmp_file.Format("%s%d%s", kml_filename,file_tail,".kml");
 		
-		kml.init(tmp_file,color);
+		kml.init(tmp_file, color);
 		while(dwBytesRemaining)
 		{
-			int progress = (int)(((double)(Fsource.GetLength() - dwBytesRemaining) / Fsource.GetLength()) * 1000);
+			int progress = (int)(((double)(f.GetLength() - dwBytesRemaining) / f.GetLength()) * 1000);
 			if(progress != lastProgress)
 			{
 				lastProgress = progress;
@@ -545,7 +546,7 @@ void CKmlDlg::Convert()
 			}
 
 			memset(nmea,0,200);		
-			nBytesRead = GET_NMEA_SENTENCE(Fsource,nmea);						
+			nBytesRead = GET_NMEA_SENTENCE(f, nmea);						
 			nmeaType = NMEA_PROC((const char*)nmea, nBytesRead - 1);			    	
 			dwBytesRemaining-=nBytesRead;	
 			if ((nmeaType==MSG_GGA || nmeaType==MSG_RMC) && WriteToFile(nmeaType)) 
@@ -564,11 +565,10 @@ void CKmlDlg::Convert()
 		lastProgress = 1000;
 
 	}	
-
-	Fsource.Close();
-	//Fnmea.Close();
-	IsFSourceOpen = false;	
-	if(!SetEvent(hReadEvent))	DWORD error = GetLastError();
+	if(!SetEvent(hReadEvent))	
+	{
+		DWORD error = GetLastError();
+	}
 }
 
 bool Is_Fixed(U16 ggaIndicator)

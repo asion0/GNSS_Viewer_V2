@@ -131,6 +131,7 @@ public:
 #endif
 		m_enuScale = enuTable[index];
 	}
+
 	void ChangeLLAScale(int index)
 	{
 		const int llaTable[] = { 1, 2, 3, 5, 10, 60, 120, 180, 300, 600 };
@@ -138,6 +139,7 @@ public:
 		mapoffset_y = 0;
 		m_llaScale = llaTable[index];
 	}
+
 	void SetMapLocation(double lon, double lat)
 	{
 		maplondeg_t = int(lon/100);

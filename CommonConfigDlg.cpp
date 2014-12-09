@@ -1407,3 +1407,44 @@ void CSUP800ReadUserDataDlg::DoCommand()
 	GetDlgItem(IDC_DATA)->SetWindowText(strHex);
 	GetDlgItem(IDC_SAVE)->EnableWindow(TRUE);
 }
+
+// CConfigureSignalDisturbanceStatusDlg 對話方塊
+IMPLEMENT_DYNAMIC(CConfigureSignalDisturbanceStatusDlg, CCommonConfigDlg)
+
+CConfigureSignalDisturbanceStatusDlg::CConfigureSignalDisturbanceStatusDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CONFIG_SIG_DISTURB_DLG, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigureSignalDisturbanceStatusDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigureSignalDisturbanceStatusDlg::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigureSignalDisturbanceStatusDlg 訊息處理常式
+BOOL CConfigureSignalDisturbanceStatusDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	((CComboBox*)GetDlgItem(IDC_OPERATION))->SetCurSel(0);
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigureSignalDisturbanceStatusDlg::OnBnClickedOk()
+{
+	m_nOperationType = ((CComboBox*)GetDlgItem(IDC_OPERATION))->GetCurSel();;
+	OnOK();
+}
+
+void CConfigureSignalDisturbanceStatusDlg::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(3);
+	*cmd.GetBuffer(0) = 0x64;
+	*cmd.GetBuffer(1) = 0x2A;
+	*cmd.GetBuffer(2) = m_nOperationType;
+
+	configCmd.SetData(cmd);
+	configPrompt = "ConfigureSignalDisturbanceStatus successful...";
+    AfxBeginThread(ConfigThread, 0);
+}
