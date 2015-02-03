@@ -278,6 +278,9 @@ UINT CGPSDlg::GetSrecFromResource(int buad)
 			break;
 		case InternalLoaderSpecial:
 			return _RESOURCE_LOADER_ID_;
+		case RomExternalDownload:
+			srecTable = v8AddTagSrecTable;
+			break;
 		default:
 			ASSERT(FALSE);
 	}
@@ -533,6 +536,7 @@ bool CGPSDlg::FirmwareUpdate()
 			case ParallelDownloadType1:
 			case InternalLoaderV8AddTag:
 			case InternalLoaderSpecial:
+			case RomExternalDownload:
 				res = PlRomNoAllocV8(m_strDownloadImage);
 				break;
 			default:
@@ -706,7 +710,8 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, FILE *f,
 			ParallelDownloadType0==m_DownloadMode || 
 			ParallelDownloadType1==m_DownloadMode || 
 			InternalLoaderV8AddTag==m_DownloadMode ||
-			InternalLoaderSpecial==m_DownloadMode )
+			InternalLoaderSpecial==m_DownloadMode ||
+			RomExternalDownload==m_DownloadMode)
 		{
 			nBytesSent = SendToTargetNoAck((U08*)buff + headerSize, sentbytes);	 
 		}
@@ -751,7 +756,38 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, FILE *f,
 			Sleep(1);
 		}
 	}	//End of while(lSize>0)
+#ifdef TEST_SREC
+	/*
+	char *dbgBuff = new char[8192 + 1];
+	lSize = (sData) ? fbinSize - BOOTLOADER_SIZE : fbinSize;
+	TotalByte = 0;
+	while(lSize>0)
+	{ 
+		sentbytes = (lSize >= nFlashBytes)?nFlashBytes :lSize;
+		TotalByte += sentbytes;	
+			
+		m_serial->GetBinaryBlockInSize(dbgBuff, sentbytes + 1, sentbytes);
+		int c = memcmp(dbgBuff, buff + 3, sentbytes);
+		if(0 != c)
+		{
+			char * p = dbgBuff;
+			char * q = (char*)(buff + 3);
+			for(int cc = 0; cc < sentbytes; ++cc)
+			{
+				if(*p != *q)
+				{
+					int a = 2;
+				}
+				++p;
+				++q;
+			}
+		}
 
+		lSize -= sentbytes;
+	}
+	delete []dbgBuff;
+	*/
+#endif
 	switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, 20000, notifyWnd))
 	{
 	case wlf_end:
@@ -1018,7 +1054,9 @@ U08 CGPSDlg::PlRomNoAllocV8(const CString& prom_path)
 		fread(&c, 1, 1, f);
 		mycheck = mycheck + (c & 0xff);
 	}
-
+#ifdef TEST_SREC
+	::AfxMessageBox("Test01");
+#endif
 	//舊版FW在Loader上傳完畢後會丟出END，但是新版改由Loader自己丟。所以使用舊版FW搭配新版LOADER，
 	//會收到兩次END
 	bool bResendbin = true;
@@ -1038,11 +1076,6 @@ U08 CGPSDlg::PlRomNoAllocV8(const CString& prom_path)
 			strBinsizeCmd.Format("BINSIZ2 = %d %d %u %u %u %u ", promLen, mycheck, m_nDownloadBaudIdx,
 									tagAddress, tagValue, checkCode);
 		}
-		//else if(??)
-		//{
-		//	checkCode = promLen + mycheck + m_nDownloadBaudIdx;
-		//	strBinsizeCmd.Format("BINSIZ3 = %d %d %u %u ", promLen, mycheck, m_nDownloadBaudIdx, checkCode);
-		//}
 		else
 		{
 			checkCode = promLen + mycheck;
@@ -1319,6 +1352,7 @@ bool CGPSDlg::DownloadLoader()
 		case EnternalLoaderInBinCmd:
 		case InternalLoaderV8:
 		case InternalLoaderV8AddTag:
+		case RomExternalDownload:
 		case InternalLoaderSpecial:
 			break;
 		default:
@@ -1390,6 +1424,7 @@ void CGPSDlg::Download()
 	{	//Password authentication failed!
 		SetMode();
 		CreateGPSThread();
+		m_gpsdoInProgress = false;
 		return;
 	}
 
@@ -1402,17 +1437,26 @@ void CGPSDlg::Download()
 		}
 
 		U16 crcCode = 0;
+		BOOL hasAckVersion = FALSE;
+		m_nDefaultTimeout = 1000;
+		if(Ack == QuerySoftwareCrcSystemCode(Return, &crcCode))
+		{
+			hasAckVersion = TRUE;
+		}
+		m_nDefaultTimeout = DefaultTimeOut;
+
 		if(m_DownloadMode != EnternalLoader && CUSTOMER_DOWNLOAD && m_customerId==OlinkStar)
 		{
-			if(Ack == QuerySoftwareCrcSystemCode(Return, &crcCode))
-			{
-				if(crcCode==0xD3CF || crcCode==0x00A0  || crcCode==0x0724 || crcCode==0x6469)
-				{	//The firmware which released in 2013/10/24, 2013/11/11, 2013/11/08, 2013/11/07 
-					//for OLinkStar should be added tag.
-					m_DownloadMode = InternalLoaderV8AddTag;
-					customerCrc = crcCode;
-				}
+			if(hasAckVersion && (crcCode==0xD3CF || crcCode==0x00A0  || crcCode==0x0724 || crcCode==0x6469))
+			{	//The firmware which released in 2013/10/24, 2013/11/11, 2013/11/08, 2013/11/07 
+				//for OLinkStar should be added tag.
+				m_DownloadMode = InternalLoaderV8AddTag;
+				customerCrc = crcCode;
 			}
+		}
+		else if(m_DownloadMode == InternalLoaderV8 && crcCode==0xe463)
+		{	//V8 ROM Code A use external loader
+			m_DownloadMode = RomExternalDownload;
 		}
 	//Test
 	//m_DownloadMode = InternalLoaderV8AddTag;
@@ -1433,6 +1477,7 @@ void CGPSDlg::Download()
 			case ParallelDownloadType0:
 			case ParallelDownloadType1:
 			case InternalLoaderV8AddTag:
+			case RomExternalDownload:
 			case InternalLoaderSpecial:
 				BoostBaudrate(FALSE);
 			case EnternalLoaderInBinCmd:
@@ -1448,6 +1493,7 @@ void CGPSDlg::Download()
 					BoostBaudrate(TRUE);
 					SetMode();
 					CreateGPSThread();
+					m_gpsdoInProgress = false;
 					return;
 				}
 				break;
@@ -1544,6 +1590,7 @@ void CGPSDlg::Download()
 
 		if(m_DownloadMode==HostBasedCmdOnly)
 		{
+			m_gpsdoInProgress = false;
 			return;
 		} 
 
@@ -1555,7 +1602,11 @@ void CGPSDlg::Download()
 				AfxBeginThread(ShowDownloadProgressThread, 0); 
 			}
 	//		Sleep(5000);
-			Sleep(g_setting.delayBeforeBinsize);
+			if(g_setting.delayBeforeBinsize)
+			{
+				Sleep(g_setting.delayBeforeBinsize);
+			}
+
 			isSuccessful = FirmwareUpdate();
 			if(isSuccessful)
 			{
@@ -1580,13 +1631,6 @@ void CGPSDlg::Download()
 			::AfxMessageBox("Download failed!");
 		}
 
-	#if (WITH_CONFIG_USB_BAUDRATE && GNSS_VIEWER)
-		if(m_rom_mode.GetCheck())
-		{
-			CP210x_SetBaudRateConfig(m_serial->GetHandle(), m_DefaultBaudConfigData);
-			m_rom_mode.SetCheck(0);
-		}
-	#endif
 		if(m_psoftImgDlDlg)
 		{
 			m_psoftImgDlDlg->SetFinish(true);	
@@ -1601,7 +1645,12 @@ void CGPSDlg::Download()
 			Sleep(3000);
 		}
 	} while(g_setting.downloadTesting);
-
+	if(m_gpsdoInProgress)
+	{
+		GpsdoLeaveDownload(Display, NULL);
+		this->SetBaudrate(5);
+		m_gpsdoInProgress = false;
+	}
 	SetMode();
 	m_firstDataIn = false;
 	ClearInformation();

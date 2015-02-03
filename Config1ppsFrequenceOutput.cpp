@@ -66,7 +66,7 @@ BOOL CConfig1ppsFrequenceOutput::OnInitDialog()
 
 	// TODO:  在此加入額外的初始化
 	GetDlgItem(IDC_OUTPUT)->SetWindowText("10000000");
-	((CComboBox*)GetDlgItem(IDC__ATTR))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX 屬性頁應傳回 FALSE
@@ -84,7 +84,7 @@ void CConfig1ppsFrequenceOutput::OnBnClickedOk()
 		return;
 	}
 	freqOutput = n;
-	freqOutputAttr = ((CComboBox*)GetDlgItem(IDC__ATTR))->GetCurSel();
+	freqOutputAttr = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
 
 	OnOK();
 }

@@ -31,20 +31,11 @@ UINT CigSrePorThread(LPVOID pParam)
 	messages[9]=(U08)0x0d;
 	messages[10]=(U08)0x0a;	
 	//for(int i=0;i<10;i++)	_cprintf("%x ",messages[i]);
-	CGPSDlg::gpsDlg->SendToTarget(messages, 11,"Configure Serial Port Successful...");	
-
-	
-	//switch(baudrate)
-	//{
-	//case 0:	baudrate = 2;break;
-	//case 1: baudrate = 3;break;
-	//case 2: baudrate = 5;break;
-	//case 3: baudrate = 6;break;
-	//case 4: baudrate = 7;break;
-	//case 5: baudrate = 8;break;
-	//default:             break;
-	//}
-	CGPSDlg::gpsDlg->SetBaudrate(baudrate);	
+	bool b = CGPSDlg::gpsDlg->SendToTarget(messages, 11, "Configure Serial Port Successful...");	
+	if(b)
+	{
+		CGPSDlg::gpsDlg->SetBaudrate(baudrate);	
+	}
 //	CP->Nmeamessage();
 	CGPSDlg::gpsDlg->SetMode();	
 	CGPSDlg::gpsDlg->CreateGPSThread();	

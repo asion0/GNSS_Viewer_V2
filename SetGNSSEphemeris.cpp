@@ -35,7 +35,7 @@ UINT SetEphmsAllThread(LPVOID pParam)
 	//pDlg_this->GPS_fileName.ReleaseBuffer();	
 	if (pDlg_this->isAlmanac)
 	{
-		CGPSDlg::gpsDlg->SetAlmanac(TRUE);	
+		CGPSDlg::gpsDlg->SetGpsAlmanac(TRUE);	
 	}else
 		CGPSDlg::gpsDlg->SetEphms(TRUE);	
 

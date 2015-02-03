@@ -29,6 +29,13 @@
 #define E2P  (0.006739596) // eccentricity squared: (RA*RA-RB*RB)/RB*RB
 #define ICD_PI           (3.1415926535898)  // ICD 200-c p.101 
 
+#define UWM_KERNEL_REBOOT	(WM_USER + 0x134)
+#define UWM_FIRST_NMEA		(WM_USER + 0x135)
+#define UWM_SHOW_TIME		(WM_USER + 0x136)
+#define UWM_UPDATE_UI		(WM_USER + 0x137)
+#define UWM_SHOW_RMC_TIME   (WM_USER + 0x138)
+#define UWM_GPSDO_HI_DOWNLOAD   (WM_USER + 0x139)
+
 enum DownloadErrocCode
 {
 	RETURN_NO_ERROR = 0,
@@ -352,7 +359,7 @@ protected:
 	afx_msg void OnBinaryConfigurepowermode();
 	afx_msg void OnBinaryConfiguremultipath();
 	afx_msg void OnWaasWaas();
-	afx_msg void OnEphemerisGetalmanac();
+	afx_msg void OnGetGpsAlmanac();
 	afx_msg void OnBinaryQuerybinarymsginterval();
 	afx_msg void OnBinaryResetodometer();
 	afx_msg void OnConfigure1ppstimingConfigure1ppstiming();
@@ -363,7 +370,7 @@ protected:
 	afx_msg void On1ppstimingMonitoring1pps();
 
 	afx_msg void On1ppstimingConfigureproprietarynmea();
-	afx_msg void OnEphemerisSetalmanac();
+	afx_msg void OnSetGpsAlmanac();
 	afx_msg void OnMinihomerActivate();
 	afx_msg LRESULT OnMyDeviceChange(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnKernelReboot(WPARAM wParam, LPARAM lParam);
@@ -372,13 +379,15 @@ protected:
 	afx_msg LRESULT OnUpdateEvent(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnFirstNmea(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnShowTime(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnShowRMCTime(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnUpdateUI(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnGpsdoHiDownload(WPARAM wParam, LPARAM lParam);
 
 	afx_msg void OnMinihomerSettagecco();
 	afx_msg void OnMinihomerQuerytag();
 
 	afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
-	afx_msg void OnGlonassConfigureusbdriver();
+//	afx_msg void OnGlonassConfigureusbdriver();
 	afx_msg void OnBnClickedRomMode();
 //	afx_msg void OnBinaryConfiguregnssselectionfornavigationsystem();
 	afx_msg void OnBnClickedKnumEnable();
@@ -386,8 +395,10 @@ protected:
 	afx_msg void OnBinaryConfigurenmeaoutput32953();
 	afx_msg void OnBinaryConfigurenmeatalkerid();
 //	afx_msg void OnCfgGlonassAcquisitionMode();
-	afx_msg void OnEphemerisGetglonassalmanac();
-	afx_msg void OnEphemerisSetglonassalmanac();
+	afx_msg void OnGetGlonassAlmanac();
+	afx_msg void OnSetGlonassAlmanac();
+	afx_msg void OnGetBeidouAlmanac();
+	afx_msg void OnSetBeidouAlmanac();
 	afx_msg void OnEphemerisGetgpsglonass();
 	afx_msg void OnEphemerisSetgpsglonass();
 	afx_msg void OnEphemerisGetgpsglonassalmanac();
@@ -454,6 +465,7 @@ protected:
 	afx_msg void OnSup800ReadData();
 
 	afx_msg void OnConfigureSignalDisturbanceStatus();
+	afx_msg void OnConfigureGpsUtcLeapSecondsInUtc();
 
 	CBitmapButton m_ConnectBtn;
 	CBitmapButton m_PlayBtn;
@@ -499,7 +511,7 @@ protected:
 	void UpdateCooridate();
 private:
 	char m_currentDir[MyMaxPath];
-
+	bool m_gpsdoInProgress;
 	CButton m_binarymsg;
 	CButton m_nmea0183msg;
 	CButton m_no_output;
@@ -514,6 +526,7 @@ private:
 	bool m_isFlogOpen;
 	CClipboardListBox m_responseList;	
 	void ClearInformation(bool onlyQueryInfo = false);
+	bool DoDownload(int dlBaudIdx);
 public:
 	static CFont m_textFont;
 	static CFont m_infoFontS;
@@ -738,8 +751,8 @@ public:
 //	int SendToTarget_datalog(U08* message,U16 length,char* Msg);
 	void cancel_log_read();
 	int cancel_readlog;
-	void UnlockSoarcomm();
-	void UnlockPolstar();
+//	void UnlockSoarcomm();
+//	void UnlockPolstar();
 //	bool IsFileExist(const char *file_path);
 //	void cartesian_to_geodetic( const POS_T* xyz_p, LLA_T* lla_p );
 //	U08 com_get_register();
@@ -782,8 +795,10 @@ public:
 	//void ShowBinaryOutput(unsigned char *buff,int len);
 
 	void close_minitor_1pps_window();
-	void GetAlmanac_new(CString m_almanac_filename,U08 sv,U08 continues);
-	void SetAlmanac(U08 continues);
+	//=============================================
+	void GetGpsAlmanac(CString m_almanac_filename,U08 sv,U08 continues);
+	void SetGpsAlmanac(U08 continues);
+
 	void GetAlmanac_tmp();
 	void activate_minihomer();
 	void set_minihomerkey(U08* key,int len);
@@ -811,6 +826,8 @@ public:
 
 	void SetGlonassAlmanac(U08 continues);
 	void GetGlonassAlmanac(CString m_almanac_filename,U08 sv,U08 continues);
+	void SetBeidouAlmanac(U08 continues);
+	void GetBeidouAlmanac(CString m_almanac_filename,U08 sv,U08 continues);
 
 	void SetBeidouEphms(U08 continues);	
 	void SetGlonassEphms(U08 continues);
@@ -873,6 +890,7 @@ public:
 		HostBasedBinOnly,
 		ParallelDownloadType0,
 		ParallelDownloadType1,
+		RomExternalDownload,
 	} m_DownloadMode;
 
 	int m_nDownloadBaudIdx;
@@ -966,6 +984,9 @@ public:
 	typedef CmdErrorCode (CGPSDlg::*QueryFunction)(CmdExeMode, void*);
 	void GenericQuery(QueryFunction pfn);
 	//Query Functions
+	enum { DefaultTimeOut = 3000 };
+	int m_nDefaultTimeout;
+
 	CmdErrorCode QueryPositionRate(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDatum(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySoftwareVersionRomCode(CmdExeMode nMode, void* outputData);
@@ -1019,6 +1040,7 @@ public:
 	CmdErrorCode GpsdoLeaveRom(CmdExeMode nMode, void* outputData);
 	CmdErrorCode GpsdoEnterDownload(CmdExeMode nMode, void* outputData);
 	CmdErrorCode GpsdoLeaveDownload(CmdExeMode nMode, void* outputData);
+	CmdErrorCode GpsdoEnterDownloadHigh(CmdExeMode nMode, void* outputData);
 	CmdErrorCode GpsdoEnterUart(CmdExeMode nMode, void* outputData);
 	CmdErrorCode GpsdoLeaveUart(CmdExeMode nMode, void* outputData);
 
@@ -1039,6 +1061,8 @@ public:
 	CmdErrorCode QueryGpsTime(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySignalDisturbanceStatus(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySignalDisturbanceData(CmdExeMode nMode, void* outputData);
+
+//	CmdErrorCode ConfigureGpsdoMasterSerialPortHigh(CmdExeMode nMode, void* outputData);
 private:
 	afx_msg void OnQueryPositionRate()
 	{ GenericQuery(&CGPSDlg::QueryPositionRate); }
@@ -1141,6 +1165,8 @@ private:
 	{ GenericQuery(&CGPSDlg::GpsdoEnterDownload); }
 	afx_msg void OnGpsdoLeaveDownload()
 	{ GenericQuery(&CGPSDlg::GpsdoLeaveDownload); }
+	afx_msg void OnGpsdoEnterDownloadHigh()
+	{ GenericQuery(&CGPSDlg::GpsdoEnterDownloadHigh); }
 	afx_msg void OnGpsdoEnterUart()
 	{ GenericQuery(&CGPSDlg::GpsdoEnterUart); }
 	afx_msg void OnGpsdoLeaveUart()

@@ -395,7 +395,6 @@
 #define IDC_ROM_MODE                    1097
 #define IDC_CHECK29                     1098
 #define IDC_POS_PINNING                 1098
-#define IDC_ROM_MODE2                   1098
 #define IDC_IN_LOADER                   1098
 #define IDC_CHECK30                     1099
 #define IDC_PINN_ATTRIBUTE              1099
@@ -701,6 +700,8 @@
 #define IDC_SPIN1                       1291
 #define IDC_ENABLE                      1291
 #define IDC_RECORD_T                    1291
+#define IDC_YEAR2                       1291
+#define IDC_LEAP_SEC                    1291
 #define IDC_SPIN2                       1292
 #define IDC_MONTHCALENDAR1              1292
 #define IDC_SPIN3                       1293
@@ -779,7 +780,6 @@
 #define IDC_INFORMATION_T               1324
 #define IDC_OUTPUT                      1324
 #define IDC_EARTH_T                     1325
-#define IDC__ATTR                       1325
 #define IDC_SCATTER_SNR_T               1326
 #define IDC_CHECK_NMEA_ERR              1326
 #define IDC_DOWNLOAD_T                  1327
@@ -838,6 +838,8 @@
 #define IDC_SAVE                        1358
 #define IDC_LOAD                        1359
 #define IDC_OPERATION                   1360
+#define IDD_CONFIG_GPS_LEAP_IN_UTC_DLG  1361
+#define IDC_INS_SEC                     1361
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_BINARY_SYSTEMRESTART         32811
@@ -909,7 +911,6 @@
 #define ID_CONFIGUREMULTI_DISABLE       32902
 #define ID_CONFIGUREMULTI_ENABLE        32903
 #define ID_DATALOG_LOGREADBATCH         32904
-#define ID_BINARY_QUERYDISTANCEANGLE    32905
 #define ID_BINARY_CONFIGUREPOSITIONPINNING 32906
 #define ID_BINARY_QUERYPOSITIONPINNING  32907
 #define ID_BINARY_CONFIGUREPINNINGPARAMETERS 32908
@@ -921,7 +922,7 @@
 #define ID_BINARY_QUERYNOISEPOWER       32914
 #define ID_BINARY_CONFIGUREMULTIPATH    32918
 #define ID_WAAS_WAAS                    32919
-#define ID_EPHEMERIS_GETALMANAC         32920
+#define ID_GET_GP_ALMANAC               32920
 #define ID_BINARY_QUERYBINARYMSGINTERVAL 32921
 #define ID_BINARY_CONFIGURE1PPSTIMING   32923
 #define ID_BINARY_QUERY1PPSTIMING       32924
@@ -939,7 +940,7 @@
 #define ID_QUERY1PPSTIMING_QUERYELEVATIONANDCNRMASK 32936
 #define ID_1PPSTIMING_MONITORING1PPS    32937
 #define ID_1PPSTIMING_CONFIGUREPROPRIETARYNMEA 32938
-#define ID_EPHEMERIS_SETALMANAC         32939
+#define ID_SET_GP_ALMANAC               32939
 #define ID_BINARY_QUERYDRINFO           32940
 #define ID_BINARY_QUERYDRHWPARAMETER    32941
 #define ID_MINIHOMER_ACTIVATE           32942
@@ -959,8 +960,8 @@
 #define ID_CONFIGUREGLONASSACQUISITIONMODE_ASCII 32957
 #define ID_GET_GLONASS_EPHEMERIS        32958
 #define ID_SET_GLONASS_EPHEMERIS        32959
-#define ID_EPHEMERIS_GETGLONASSALMANAC  32960
-#define ID_EPHEMERIS_SETGLONASSALMANAC  32961
+#define ID_GET_GL_ALMANAC               32960
+#define ID_SET_GL_ALMANAC               32961
 #define ID_EPHEMERIS_GETGPS             32963
 #define ID_EPHEMERIS_GETGPS32964        32964
 #define ID_EPHEMERIS_SETGPS             32965
@@ -1083,14 +1084,19 @@
 #define ID_QUERY_SIG_DISTUR_DATA        33087
 #define ID_QUERY_SIG_DISTUR_STATUS      33088
 #define ID_CONFIG_SIG_DISTUR_STATUS     33089
+#define ID_GET_BD_ALMANAC               33090
+#define ID_SET_BD_ALMANAC               33091
+#define ID_GPSDO_ENTER_DWN_H            33092
+#define ID_GPSDO_LEAVE_DWN_H            33093
+#define ID_CONFIG_GPS_LEAP_IN_UTC		33094
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        462
-#define _APS_NEXT_COMMAND_VALUE         33081
-#define _APS_NEXT_CONTROL_VALUE         1361
+#define _APS_NEXT_RESOURCE_VALUE        463
+#define _APS_NEXT_COMMAND_VALUE         40001
+#define _APS_NEXT_CONTROL_VALUE         1362
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

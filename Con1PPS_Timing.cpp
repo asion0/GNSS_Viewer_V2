@@ -76,7 +76,7 @@ void CCon1PPS_Timing::OnCbnSelchange1ppsMode()
 	}else if (sel_index==1)
 	{
 		m_lbl_set1.ShowWindow(1);
-	if(LG || TIMING_MODE)
+	if(TIMING_MODE)
 		m_lbl_set2.ShowWindow(1);
 	else	
 		m_lbl_set2.ShowWindow(0);
@@ -84,7 +84,7 @@ void CCon1PPS_Timing::OnCbnSelchange1ppsMode()
 		m_lbl_set3.ShowWindow(0);
 
 		m_set1.ShowWindow(1);
-		if (LG || TIMING_MODE)
+		if (TIMING_MODE)
 		{
 		m_set2.ShowWindow(1);
 		}
@@ -96,7 +96,7 @@ void CCon1PPS_Timing::OnCbnSelchange1ppsMode()
 		m_lbl_set1.SetWindowText("Survey Length");
 		temp.Format("%d",_1pps_timing.Survey_Length);
 		m_set1.SetWindowText(temp);
-#if (LG) || (TIMING_MODE)
+#if (TIMING_MODE)
 		m_lbl_set2.SetWindowText("Standard deviation");
 		temp.Format("%d",_1pps_timing.Standard_deviation);
 		m_set2.SetWindowText(temp);
@@ -133,7 +133,7 @@ void CCon1PPS_Timing::OnBnClickedOk()
 	{
 		m_set1.GetWindowText(temp);
 		_1pps_timing.Survey_Length = atoi(temp);
-#if (LG) || (TIMING_MODE)
+#if (TIMING_MODE)
 		m_set2.GetWindowText(temp);
 		_1pps_timing.Standard_deviation = atoi(temp);
 #endif

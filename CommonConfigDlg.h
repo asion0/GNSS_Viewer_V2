@@ -485,12 +485,32 @@ public:
 protected:
 	U08 m_nOperationType;
 
-	void ReadUserData();
-	
 	DECLARE_MESSAGE_MAP()
 };
 
+// CConfigureGpsUtcLeapSecondsInUtcDlg 對話方塊
+class CConfigureGpsUtcLeapSecondsInUtcDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigureGpsUtcLeapSecondsInUtcDlg)
+public:
+	CConfigureGpsUtcLeapSecondsInUtcDlg(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigureGpsUtcLeapSecondsInUtcDlg() {};
 
+	virtual void DoCommand();
+
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
+
+protected:
+	U16 m_nYear;
+	U08 m_nMonth;
+	S08 m_nLeapSeconds;
+	S08 m_nInsertSecond;
+	U08 m_attribute;
+
+
+	DECLARE_MESSAGE_MAP()
+};
 
 
 

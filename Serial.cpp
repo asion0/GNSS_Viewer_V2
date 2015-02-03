@@ -486,6 +486,31 @@ DWORD CSerial::GetBinaryBlock(void* buffer, DWORD bufferSize, DWORD blockSize)
 	return totalSize;
 }
 
+DWORD CSerial::GetBinaryBlockInSize(void* buffer, DWORD bufferSize, DWORD blockSize)
+{	
+	U08* bufferIter = (U08*)buffer;
+	DWORD totalSize = 0;
+	do
+	{ 
+		DWORD nBytesRead = ReadData(bufferIter, 1);
+		if(nBytesRead <= 0)
+		{
+			continue;
+		}
+
+		if(++totalSize == blockSize)
+		{
+			break;
+		}
+		if(totalSize >=  bufferSize - 1)
+		{	//add end of string (eos)
+			break;
+		}
+		bufferIter++;
+	} while(totalSize < bufferSize);
+	return totalSize;
+}
+
 DWORD CSerial::GetBinaryBlockInTime(void* buffer, DWORD bufferSize, DWORD timeout)
 {	
 	U08* bufferIter = (U08*)buffer;

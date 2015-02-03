@@ -71,9 +71,3 @@
 #include "Vender_newGNSS.h"
 #include "Global.h"
 
-
-#if WITH_CONFIG_USB_BAUDRATE
-#pragma comment(lib, "CP210xManufacturing.lib")
-#include "CP210xManufacturingDLL.h"
-#endif
-

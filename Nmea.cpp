@@ -262,7 +262,14 @@ bool NMEA::GGAProc(GPGGA& rgga, LPCSTR pt, int len)
 
 	rgga.Hour = ParamInt(pt, dot[0], dot[0]+3, 0);
 	rgga.Min = ParamInt(pt, dot[0]+2, dot[0]+5, 0);
-	rgga.Sec = ParamFloat(pt, dot[0]+4, dot[1], 0);
+	if(dot[1] - dot[0] == 7)
+	{
+		rgga.Sec = (float)ParamInt(pt, dot[0]+4, dot[1], 0);
+	}
+	else
+	{
+		rgga.Sec = ParamFloat(pt, dot[0]+4, dot[1], 0);
+	}
 	rgga.Latitude = ParamDouble(pt, dot[1], dot[2], 0.0F);
 	rgga.Latitude_N_S = (U08)ParamChar(pt, dot[2], dot[3], 0);
 	rgga.Longitude = ParamDouble(pt, dot[3], dot[4], 0.0F);
@@ -368,14 +375,21 @@ bool NMEA::RMCProc(GPRMC& rrmc, LPCSTR pt, int len)
 {	
 	int dot[MaxNmeaParam] = {0};	    
 	int dotPos = ScanDot(pt, len, dot);
-	if(dot[0] != 6 || pt[len - 3] != '*' || (dotPos+1) != 13)
+	if(dot[0] != 6 || pt[len - 3] != '*' || dotPos < 11)
 	{
 		return false;
 	}
-
+	
 	rrmc.Hour = ParamInt(pt, dot[0], dot[0]+3, 0);
 	rrmc.Min = ParamInt(pt, dot[0]+2, dot[0]+5, 0);
-	rrmc.Sec = ParamFloat(pt, dot[0]+4, dot[1], 0.0F);
+	if(dot[1] - dot[0] == 7)
+	{	//Short time format, no dot
+		rrmc.Sec = (float)ParamInt(pt, dot[0]+4, dot[1], 0);
+	}
+	else
+	{
+		rrmc.Sec = ParamFloat(pt, dot[0]+4, dot[1], 0.0F);
+	}
 
 	rrmc.Status = (U08)ParamChar(pt, dot[1], dot[2], 0);
 	rrmc.Latitude = ParamDouble(pt, dot[2], dot[3], 0.0F);
@@ -391,7 +405,10 @@ bool NMEA::RMCProc(GPRMC& rrmc, LPCSTR pt, int len)
 	
 	rrmc.MagVar = ParamFloat(pt, dot[9], dot[10], 0.0F);
 	rrmc.MagVarDir = (U08)ParamChar(pt, dot[10], dot[11], 0);
-	rrmc.ModeIndicator = (U08)ParamChar(pt, dot[11], dot[12], 0);
+	if(dotPos > 11)
+	{	//Some customer's NMEA doesn't have this field.
+		rrmc.ModeIndicator = (U08)ParamChar(pt, dot[11], dot[12], 0);
+	}
 	return true;
 }
 

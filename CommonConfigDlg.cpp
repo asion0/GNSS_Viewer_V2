@@ -658,7 +658,7 @@ BOOL ConfigRefTimeToGpsTimeDlg::OnInitDialog()
 	CComboBox* dayCombo = (CComboBox*)GetDlgItem(IDC_DAY);
 
 	((CButton*)GetDlgItem(IDC_ENABLE))->SetCheck(0);
-	GetDlgItem(IDC_YEAR)->SetWindowText("2013");
+	GetDlgItem(IDC_YEAR)->SetWindowText("2015");
 	monthCombo->SetCurSel(0);
 	dayCombo->SetCurSel(0);
 
@@ -1372,8 +1372,6 @@ BOOL CSUP800ReadUserDataDlg::OnInitDialog()
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
-
-
 void CSUP800ReadUserDataDlg::DoCommand()
 {
 	CWaitCursor wait;
@@ -1446,5 +1444,69 @@ void CConfigureSignalDisturbanceStatusDlg::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "ConfigureSignalDisturbanceStatus successful...";
+    AfxBeginThread(ConfigThread, 0);
+}
+
+// CConfigureGpsUtcLeapSecondsInUtcDlg 對話方塊
+IMPLEMENT_DYNAMIC(CConfigureGpsUtcLeapSecondsInUtcDlg, CCommonConfigDlg)
+
+CConfigureGpsUtcLeapSecondsInUtcDlg::CConfigureGpsUtcLeapSecondsInUtcDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CONFIG_GPS_LEAP_IN_UTC_DLG, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigureGpsUtcLeapSecondsInUtcDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigureGpsUtcLeapSecondsInUtcDlg::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigureSignalDisturbanceStatusDlg 訊息處理常式
+BOOL CConfigureGpsUtcLeapSecondsInUtcDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	GetDlgItem(IDC_YEAR)->SetWindowText("2015");
+	((CComboBox*)GetDlgItem(IDC_MONTH))->SetCurSel(0);
+	GetDlgItem(IDC_LEAP_SEC)->SetWindowText("17");
+	((CComboBox*)GetDlgItem(IDC_INS_SEC))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigureGpsUtcLeapSecondsInUtcDlg::OnBnClickedOk()
+{
+	CString txt;
+	GetDlgItem(IDC_YEAR)->GetWindowText(txt);
+	m_nYear = atoi(txt);
+
+	GetDlgItem(IDC_MONTH)->GetWindowText(txt);
+	m_nMonth = atoi(txt);
+
+	GetDlgItem(IDC_LEAP_SEC)->GetWindowText(txt);
+	m_nLeapSeconds = atoi(txt);
+
+	GetDlgItem(IDC_INS_SEC)->GetWindowText(txt);
+	m_nInsertSecond = atoi(txt);
+
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
+void CConfigureGpsUtcLeapSecondsInUtcDlg::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(8);
+	*cmd.GetBuffer(0) = 0x64;
+	*cmd.GetBuffer(1) = 0x2D;
+	*cmd.GetBuffer(2) = HIBYTE(m_nYear);
+	*cmd.GetBuffer(3) = LOBYTE(m_nYear);
+	*cmd.GetBuffer(4) = m_nMonth;
+	*cmd.GetBuffer(5) = m_nLeapSeconds;
+	*cmd.GetBuffer(6) = m_nInsertSecond;
+	*cmd.GetBuffer(7) = m_attribute;
+
+	configCmd.SetData(cmd);
+	configPrompt = "ConfigureGpsUtcLeapSecondsInUtc successful...";
     AfxBeginThread(ConfigThread, 0);
 }

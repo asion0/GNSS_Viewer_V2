@@ -14,13 +14,12 @@ public:
 // 對話方塊資料
 	enum { IDD = IDD_GET_GNSS_EPHEMERIS };
 
-	CEdit m_file_gps,m_file_glonass;
-	CComboBox m_sv_gps,m_sv_glonass;
-	CString GPS_fileName,Glonass_fileName;
-
+	CString GPS_fileName, Glonass_fileName;
 	U08 isAlmanac;
 
 protected:
+	CEdit m_file_gps, m_file_glonass;
+	CComboBox m_sv_gps, m_sv_glonass;
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
 
 	DECLARE_MESSAGE_MAP()

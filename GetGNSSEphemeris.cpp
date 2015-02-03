@@ -52,16 +52,9 @@ UINT GetEphmsAllThread(LPVOID pParam)
 	//pDlg_this->GPS_fileName.ReleaseBuffer();	
 	if (pDlg_this->isAlmanac)
 	{
-#if TMP_ALMANAC
-		CGPSDlg::gpsDlg->GetAlmanac_tmp();
-#else
-#if NEW_ALMANAC
-		CGPSDlg::gpsDlg->GetAlmanac_new(pDlg_this->GPS_fileName,SV_GPS,TRUE);
-#else
-		CGPSDlg::gpsDlg->GetAlmanac();
-#endif
-#endif
-	}else
+		CGPSDlg::gpsDlg->GetGpsAlmanac(pDlg_this->GPS_fileName,SV_GPS,TRUE);
+	}
+	else
 	{
 		
 		try
@@ -81,10 +74,7 @@ UINT GetEphmsAllThread(LPVOID pParam)
 		}	
 		CGPSDlg::gpsDlg->GetEphms(SV_GPS, TRUE);	
 	}
-	
 
-
-	//pDlg_this->Glonass_fileName.ReleaseBuffer();	
 	if (isAlmanac)
 	{
 		CGPSDlg::gpsDlg->GetGlonassAlmanac(glonass_file,SV_Glonass,TRUE);	
@@ -109,21 +99,21 @@ UINT GetEphmsAllThread(LPVOID pParam)
 		}		
 		CGPSDlg::gpsDlg->GetGlonassEphms(SV_Glonass, TRUE);	
 	}
-//	AfxEndThread(0);
 	return 0;
 }
 
 
 void CGetGNSSEphemeris::OnBnClickedOk()
 {
-	if(GPS_fileName=="" || Glonass_fileName==""){AfxMessageBox("Please create a new file to save Ephemeris data!");return;}
-
+	if(GPS_fileName=="" || Glonass_fileName=="")
+	{
+		AfxMessageBox("Please create a new file to save Ephemeris data!");
+		return;
+	}
 
 	SV_GPS = m_sv_gps.GetCurSel(); 
 	SV_Glonass = m_sv_glonass.GetCurSel(); 
-
 	AfxBeginThread(GetEphmsAllThread,0);
-
 	OnOK();
 }
 
@@ -149,6 +139,7 @@ void CGetGNSSEphemeris::OnBnClickedBtnBrowseGlonass()
 		Glonass_fileName = "Glonass_Almanac.log";
 	else
 		Glonass_fileName = "Glonass_Ephemeris.log";
+
 	CFileDialog dlgFile(false, _T("log"), Glonass_fileName, OFN_HIDEREADONLY, _T("ALL Files (*.*)|*.*||"), this);
 	INT_PTR nResult = dlgFile.DoModal();
 	Glonass_fileName = dlgFile.GetPathName();

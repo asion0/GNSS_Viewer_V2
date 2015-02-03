@@ -162,7 +162,7 @@ IDR_V8_AT_SREC_230400 SREC						"res\\loader_v8_add_tag_230400.srec"
 IDR_V8_AT_SREC_460800 SREC						"res\\loader_v8_add_tag_460800.srec"
 IDR_V8_AT_SREC_921600 SREC						"res\\loader_v8_add_tag_921600.srec"
 IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag.srec"
-IDR_INTERNAL_LOADER_SPECIAL        SREC			"res\\loader_v8_new.srec"
+IDR_INTERNAL_LOADER_SPECIAL     SREC			"res\\loader_v8_new.srec"
 
 /////////////////////////////////////////////////////////////////////////////
 //

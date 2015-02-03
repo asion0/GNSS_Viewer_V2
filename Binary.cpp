@@ -33,6 +33,7 @@
 #include "DrMultiHzDlg.h"
 #include "Config1ppsFrequenceOutput.h"
 #include "ConfigEricssonIntervalDlg.h"
+#include "GetAlmanac.h"
 #include "CommonConfigDlg.h"
 
 #include "GPSDlg.h"
@@ -645,112 +646,6 @@ U32 CGPSDlg::get_register_zero()
 void CGPSDlg::cancel_log_read()
 {
 	cancel_readlog = 1;
-}
-
-void CGPSDlg::UnlockSoarcomm()
-{
-#if(SOARCOMM)
-	//if(!CheckConnect())return;
-	////WaitEvent();
-	ClearQue();
-	U08 message[23];
-	U08 msg[16];
-	U08 buff[256];
-	char binmsg[100];
-	msg[0] = 0x45; //msgid
-	msg[1] = 's';
-	msg[2] = 'k';
-	msg[3] = 'y';
-	msg[4] = 't';
-	msg[5] = 'r';
-	msg[6] = 'a';
-	msg[7] = 'q';
-	msg[8] = 's';
-	msg[9] = 'o';
-	msg[10] = 'a';
-	msg[11] = 'r';
-	msg[12] = 'c';
-	msg[13] = 'o';
-	msg[14] = 'm';
-	msg[15] = 'm';
-	int msg_len = SetMessage(msg,sizeof(msg));
-
-	if(SendToTarget(CGPSDlg::m_inputMsg,msg_len,"") )
-	{
-		start = clock();
-		while(1)
-		{
-			m_serial->GetBinary(buff, sizeof(buff));
-			if (check_msg_valid(buff) == 0xd0)
-			{
-				if ( buff[5] == 0 )
-					sprintf_s(binmsg, sizeof(binmsg), "Datalog Unlock.");
-				else
-					sprintf_s(binmsg, sizeof(binmsg), "Datalog Lock.");
-				
-				add_msgtolist(binmsg);
-				break;
-			}
-			end=clock();	
-			if(TIMEOUT_METHOD(start,end))
-				break;		
-		}
-	}
-	//CreateGPSThread();
-#endif
-}
-
-void CGPSDlg::UnlockPolstar()
-{
-#ifdef POLSTAR
-	//if(!CheckConnect())return;
-	////WaitEvent();
-	ClearQue();
-	U08 message[22];
-	U08 msg[15];
-	U08 buff[256];
-	char binmsg[100];
-	msg[0] = 0x45; //msgid
-	msg[1] = 's';
-	msg[2] = 'k';
-	msg[3] = 'y';
-	msg[4] = 't';
-	msg[5] = 'r';
-	msg[6] = 'a';
-	msg[7] = 'q';
-	msg[8] = 'p';
-	msg[9] = 'o';
-	msg[10] = 'l';
-	msg[11] = 's';
-	msg[12] = 't';
-	msg[13] = 'a';
-	msg[14] = 'r';
-
-	int msg_len = SetMessage(msg,sizeof(msg));
-
-	if(SendToTarget(CGPSDlg::m_inputMsg,msg_len,"") )
-	{
-		start = clock();
-		while(1)
-		{
-			m_serial->GetBinary(buff, sizeof(buff));
-			if (check_msg_valid(buff) == 0xd0)
-			{
-				if ( buff[5] == 0 )
-					sprintf_s(binmsg, sizeof(binmsg), "Datalog Unlock.");
-				else
-					sprintf_s(binmsg, sizeof(binmsg), "Datalog Lock.");
-				
-				add_msgtolist(binmsg);
-				break;
-			}
-			end=clock();	
-			if(TIMEOUT_METHOD(start,end))
-				break;		
-		}
-	}
-	//CreateGPSThread();
-#endif
 }
 
 UINT reset_odometer_thread(LPVOID param)
@@ -1604,7 +1499,7 @@ bool CGPSDlg::QueryDataLogBoundary(U16 *end, U16 *total)
 	Utility::LogFatal(__FUNCTION__, "[DataLog] return false", __LINE__);
 	return false;
 }
-
+/*
 void CGPSDlg::GetAlmanac_tmp()
 {
 	int wait = 0;
@@ -1677,7 +1572,7 @@ void CGPSDlg::GetAlmanac_tmp()
 
 	//	return TRUE;	
 }
-/*
+
 U08 CGPSDlg::query_clock_offset(S32 *clock_offset)
 {
 	U08 buff[100];
@@ -1940,7 +1835,7 @@ void CGPSDlg::parse_sti_message(const char *buff,int len)
 #endif
 }
 
-#if (LG || TIMING_MODE)
+#if (TIMING_MODE)
 void CGPSDlg::parse_sti_0_message(const char *buff,int len) // for timing module
 {
 	int mode,survery_len;
@@ -2036,7 +1931,6 @@ void CGPSDlg::parse_rtoem_message(const char *buff,int len)
 	m_odo_meter.SetWindowText(temp);
 
 }
-
 
 void CGPSDlg::On1ppstimingMonitoring1pps()
 {
@@ -3762,7 +3656,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareCrcSystemCode(CmdExeMode nMode, void
 	cmd.SetU08(2, cmdTable[QuerySwCrcSysCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QuerySwCrcSysCmd, &cmd, &ackCmd))
+	if(!ExcuteBinaryCommand(QuerySwCrcSysCmd, &cmd, &ackCmd, m_nDefaultTimeout))
 	{
 		if(nMode==Return)
 		{
@@ -5561,13 +5455,24 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySignalDisturbanceData(CmdExeMode nMode, void
 	return Timeout;
 }
 
+//GPSDO command
+//bit 0 : Enter pass through mode
+//bit 1 : Disable GPS ISR(must reset master when leave)
+//bit 2 : Reset slave, master only
+//bit 3 : Drive slave CPU clock(must reset slave), master only
+//bit 4 : Boost baud rate to 460800
+#define GPSDO_PASS_THROUGH			(1 << 0)
+#define GPSDO_DISABLE_GPS_ISR		(1 << 1)
+#define GPSDO_RESET_SLAVE			(1 << 2)
+#define GPSDO_DRIVE_SLAVE			(1 << 3)
+#define GPSDO_BOOST_BAUDRATE		(1 << 4)
 CGPSDlg::CmdErrorCode CGPSDlg::GpsdoResetSlave(CmdExeMode nMode, void* outputData)
 {	    
 	BinaryCommand cmd(4);
 	cmd.SetU08(1, 0x7A);
 	cmd.SetU08(2, 0x08);
 	cmd.SetU08(3, 0x01);
-	cmd.SetU08(4, 0x04);
+	cmd.SetU08(4, GPSDO_RESET_SLAVE);
 
 	ClearQue();
 	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Reset Slave MCU Successful");	
@@ -5580,7 +5485,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::GpsdoEnterRom(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(1, 0x7A);
 	cmd.SetU08(2, 0x08);
 	cmd.SetU08(3, 0x01);
-	cmd.SetU08(4, 0x0B);
+	cmd.SetU08(4, (GPSDO_PASS_THROUGH | GPSDO_DISABLE_GPS_ISR | GPSDO_DRIVE_SLAVE));
 
 	ClearQue();
 	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Enter Slave ROM Download Successful");	
@@ -5593,7 +5498,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::GpsdoLeaveRom(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(1, 0x7A);
 	cmd.SetU08(2, 0x08);
 	cmd.SetU08(3, 0x01);
-	cmd.SetU08(4, 0x0A);
+	cmd.SetU08(4, GPSDO_DISABLE_GPS_ISR | GPSDO_DRIVE_SLAVE);
 
 	ClearQue();
 	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Back To Normal Mode from ROM Download Successful");	
@@ -5606,7 +5511,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::GpsdoEnterDownload(CmdExeMode nMode, void* output
 	cmd.SetU08(1, 0x7A);
 	cmd.SetU08(2, 0x08);
 	cmd.SetU08(3, 0x01);
-	cmd.SetU08(4, 0x03);
+	cmd.SetU08(4, GPSDO_PASS_THROUGH | GPSDO_DISABLE_GPS_ISR);
 
 	ClearQue();
 	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Enter Slave Download Successful");	
@@ -5619,12 +5524,41 @@ CGPSDlg::CmdErrorCode CGPSDlg::GpsdoLeaveDownload(CmdExeMode nMode, void* output
 	cmd.SetU08(1, 0x7A);
 	cmd.SetU08(2, 0x08);
 	cmd.SetU08(3, 0x01);
-	cmd.SetU08(4, 0x02);
+	cmd.SetU08(4, GPSDO_DISABLE_GPS_ISR);
 
 	ClearQue();
 	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Back To Normal Mode from Slave Download Successful");	
 	return Timeout;
 }
+
+CGPSDlg::CmdErrorCode CGPSDlg::GpsdoEnterDownloadHigh(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(4);
+	cmd.SetU08(1, 0x7A);
+	cmd.SetU08(2, 0x08);
+	cmd.SetU08(3, 0x01);
+	cmd.SetU08(4, GPSDO_PASS_THROUGH | GPSDO_DISABLE_GPS_ISR | GPSDO_BOOST_BAUDRATE);
+
+	ClearQue();
+	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Enter High-Speed Slave Download Successful");	
+	CGPSDlg::gpsDlg->SetBaudrate(7);		//460800 bps
+	PostMessage(UWM_GPSDO_HI_DOWNLOAD, 0, 0);
+	
+	return Timeout;
+}
+
+//CGPSDlg::CmdErrorCode CGPSDlg::ConfigureGpsdoMasterSerialPortHigh(CmdExeMode nMode, void* outputData)
+//{	    
+//	BinaryCommand cmd(4);
+//	cmd.SetU08(1, 0x05);
+//	cmd.SetU08(2, 0x02);
+//	cmd.SetU08(3, 0x07);
+//	cmd.SetU08(4, 0x02);
+//
+//	ClearQue();
+//	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Config GPSDO Serial dual high Successful");	
+//	return Timeout;
+//}
 
 CGPSDlg::CmdErrorCode CGPSDlg::GpsdoEnterUart(CmdExeMode nMode, void* outputData)
 {	    
@@ -5632,7 +5566,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::GpsdoEnterUart(CmdExeMode nMode, void* outputData
 	cmd.SetU08(1, 0x7A);
 	cmd.SetU08(2, 0x08);
 	cmd.SetU08(3, 0x01);
-	cmd.SetU08(4, 0x01);
+	cmd.SetU08(4, GPSDO_PASS_THROUGH);
 
 	ClearQue();
 	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Enter Slave UART Pass Through Successful");	
@@ -6107,11 +6041,715 @@ void CGPSDlg::OnConfigureSerialPort()
 	}
 }
 
+//===================================================
+void CGPSDlg::GetGpsAlmanac(CString m_almanac_filename,U08 sv,U08 continues)
+{
+	int wait = 0;
+	U08 msg[2];
+	char BINMSG[1024] = {0};
+
+	msg[0] = 0x50;
+	msg[1] = sv;
+	int res_len;
+	int len = SetMessage(msg,sizeof(msg));
+	FILE *f;
+
+	//WaitEvent();
+	ClearQue();
+	if(SendToTarget(m_inputMsg,len,"Get Almance start...") == 1)
+	{
+		if(WRL == NULL )
+		{
+			WRL = new CWaitReadLog;
+		}
+		AfxBeginThread(WaitLogRead,0);
+		WaitForSingleObject(waitlog,INFINITE);
+		WRL->SetWindowText("Wait for get almanac");
+		WRL->msg.SetWindowText("Please wait for get almanac!");
+
+		U08 NumsOfEphemeris = 0;
+
+		fopen_s(&f, m_almanac_filename, "wb+");
+		fclose(f);
+
+		while(1)
+		{	
+			wait++;
+			if(wait == 50 )
+			{ 
+				Sleep(500);
+				WRL->msg.SetWindowText("Retrieve almanac data is Failed!");
+				Sleep(500);
+				WRL->IsFinish = true;
+				add_msgtolist("Retrieve almanac Failed...");	
+				//goto TheLast;
+			}
+			U08 buff[1024] = {0};
+			res_len = m_serial->GetBinary(buff, sizeof(buff));
+
+			if(res_len==0x3b)
+			{
+				fopen_s(&f, m_almanac_filename, "ab");
+				fwrite(&buff[5], 1, res_len - 8, f);
+				fclose(f);
+			}
+			else
+			{
+				break;
+			}
+
+			NumsOfEphemeris = buff[7];
+			//	}
+			sprintf_s(BINMSG,"Retrieve Satellite ID # %d almanac",NumsOfEphemeris);
+			WRL->msg.SetWindowText(BINMSG);
+
+			if(NumsOfEphemeris==32)break;
+			//}
+		}	
+		Sleep(500);
+		WRL->msg.SetWindowText("Retrieve almanac data is completed!");
+		Sleep(500);
+		WRL->IsFinish = true;
+		add_msgtolist("Retrieve almanac Successful...");	
+		
+
+	}
+
+	if(!continues)
+	{
+		SetMode();  
+		CreateGPSThread();
+	}
+
+
+	//	return TRUE;	
+}
+
+UINT GetGpsAlmanacThread(LPVOID param)
+{
+	CGPSDlg::gpsDlg->GetGpsAlmanac(m_almanac_filename,m_almanac_no,FALSE);
+	return 0;
+}
+
+void CGPSDlg::OnGetGpsAlmanac()
+{
+	CGetAlmanac frm;
+	if(CheckConnect())	
+	{
+		if(frm.DoModal()==IDOK)
+		{
+			m_almanac_filename = frm.fileName;
+			m_almanac_no = frm.sv;
+			::AfxBeginThread(GetGpsAlmanacThread, 0);
+		}else
+		{
+			SetMode();  
+			CreateGPSThread();
+		}
+	}
+}
+
+UINT SetGpsAlmanacThread(LPVOID pParam)
+{	
+	CGPSDlg::gpsDlg->SetGpsAlmanac(FALSE);	
+	return 0;
+}
+
+void CGPSDlg::SetGpsAlmanac(U08 continues)	
+{	
+	U16 SVID;	
+
+	U08 messages[100];  
+	U08 msg[100];
+	BYTE buffer[0x1000];
+	ULONGLONG dwBytesRemaining = m_ephmsFile.GetLength();
+
+	if(dwBytesRemaining == 0)
+	{
+		m_ephmsFile.Close();	
+		if(!continues)
+		{
+			SetMode(); 
+			CreateGPSThread();	
+		}
+		return;
+	}
+
+	m_ephmsFile.Read(buffer,1);
+	int one_entry_size = buffer[0] + 3;	//Size 1 byte, satellite id 2 bytes.
+
+	if(dwBytesRemaining == 32 * one_entry_size)
+	{
+		m_ephmsFile.SeekToBegin();
+
+		while(1)
+		{
+			UINT nBytesRead = m_ephmsFile.Read(buffer,one_entry_size);	
+			//TRACE("nBytesRead=%d\r\n",nBytesRead);
+			if(nBytesRead<=0)
+				break;
+			memset(msg, 0, sizeof(msg));
+			memset(messages, 0, sizeof(messages));
+			msg[0] = 0x51;
+
+			memcpy(&msg[1],&buffer[1],one_entry_size-1);
+			SVID = buffer[1]<<8 | buffer[2];	
+
+			if(buffer[0] == 0) 
+			{
+				TRACE("SVID=%d,continue\r\n",SVID);
+				continue;
+			}
+
+			if(continues)
+			{
+				msg[one_entry_size] = 0;
+			}
+			else
+			{
+				if(SVID == 32)
+					msg[one_entry_size] = 1;
+				else
+					msg[one_entry_size] = 0;
+			}
+
+			int len = SetMessage2(messages, msg, one_entry_size + 1);
+			sprintf_s(m_nmeaBuffer, "Set SV#%d Almanac Successful...",SVID);
+			if(!SendToTargetNoWait(messages, len,m_nmeaBuffer))
+			{
+				sprintf_s(m_nmeaBuffer, "Set SV#%d Almanac Fail...",SVID);
+				add_msgtolist(m_nmeaBuffer);
+			}
+
+			//Sleep(10);
+		}
+	}
+	else
+	{
+		AfxMessageBox("The Almanac data Format of the file is wrong");
+		//return;
+	}	
+	m_ephmsFile.Close();	
+	if(!continues)
+	{
+		SetMode(); 
+		CreateGPSThread();	
+	}
+}
+
+void CGPSDlg::OnSetGpsAlmanac()
+{
+	if(!CheckConnect())
+	{
+		return;
+	}
+
+	m_inputMode  = 0;
+	CString fileName("GPS_Almanac.log");	
+	CFileDialog dlgFile(true, _T("log"), fileName, OFN_HIDEREADONLY, _T("Almanac Files (*.log)|*.log||"), this);
+	INT_PTR nResult = dlgFile.DoModal();
+	fileName = dlgFile.GetPathName();	
+	CFileException ef;
+	try
+	{
+		if(nResult == IDOK)
+		{  				
+			if(!m_ephmsFile.Open(fileName, CFile::modeRead, &ef))
+			{
+				ef.ReportError();
+				SetMode();
+				CreateGPSThread();
+				return;
+			}				
+			AfxBeginThread(SetGpsAlmanacThread, 0);			
+		}		
+		else
+		{
+			SetMode();
+			CreateGPSThread();
+		}
+	}
+	catch(CFileException *fe)
+	{
+		fe->ReportError();
+		fe->Delete();
+		return;
+	}	
+	fileName.ReleaseBuffer();		
+}
+
+//===================================================
+void CGPSDlg::GetGlonassAlmanac(CString m_almanac_filename,U08 sv,U08 continues)
+{
+	int wait = 0;
+	U08 msg[2];
+	char BINMSG[1024] = {0};
+
+	msg[0] = 0x5D;
+	msg[1] = sv;
+	int res_len;
+	int len = SetMessage(msg,sizeof(msg));
+	FILE *f = NULL;
+
+	//WaitEvent();
+	ClearQue();
+	if(SendToTarget(m_inputMsg,len,"Get Glonass Almance start...") == 1)
+	{
+		if(WRL == NULL )
+		{
+			WRL = new CWaitReadLog;
+		}
+		AfxBeginThread(WaitLogRead,0);
+		WaitForSingleObject(waitlog,INFINITE);
+		WRL->SetWindowText("Wait for get Glonass almanac");
+		WRL->msg.SetWindowText("Please wait for get Glonass almanac!");
+
+		U08 NumsOfEphemeris = 0;
+
+		fopen_s(&f, m_almanac_filename, "wb+");
+		fclose(f);
+
+		while(1)
+		{	
+			wait++;
+			if(wait == 50 ){ 
+				Sleep(500);
+				WRL->msg.SetWindowText("Retrieve Glonass almanac data is Failed!");
+				Sleep(500);
+				WRL->IsFinish = true;
+				add_msgtolist("Retrieve Glonass almanac Failed...");	
+				//goto TheLast;
+			}
+			U08 buff[1024] = {0};
+			res_len = m_serial->GetBinary(buff, sizeof(buff));
+
+			if(res_len==32)
+			{
+				fopen_s(&f, m_almanac_filename, "ab");
+				//fwrite(&buff[5],1,res_len-7,f);
+				fwrite(&buff[5],1,res_len-8,f);
+				fclose(f);
+			}
+			else
+			{
+				break;
+			}
+
+
+			NumsOfEphemeris = buff[5];
+			TRACE("NumsOfEphemeris=%d\r\n",NumsOfEphemeris);
+			//	}
+			sprintf_s(BINMSG, sizeof(BINMSG), "Retrieve Glonass Satellite ID # %d almanac", NumsOfEphemeris);
+			WRL->msg.SetWindowText(BINMSG);
+
+			if(NumsOfEphemeris==24)break;
+			//}
+		}	
+		Sleep(500);
+		WRL->msg.SetWindowText("Retrieve Glonass almanac data is completed!");
+		Sleep(500);
+		WRL->IsFinish = true;
+		add_msgtolist("Retrieve Glonass almanac Successful...");	
+
+	}
+
+	if(!continues)
+	{
+		SetMode();  
+		CreateGPSThread();
+	}
+
+	//	return TRUE;	
+
+
+}
+
+UINT GetGlonassAlmanacThread(LPVOID param)
+{
+	CGPSDlg::gpsDlg->GetGlonassAlmanac(m_almanac_filename,m_almanac_no,FALSE);
+	return 0;
+}
+
+void CGPSDlg::OnGetGlonassAlmanac()
+{
+	CGetAlmanac frm;
+	if(CheckConnect())	
+	{
+		frm.isGlonass = 1;
+		if(frm.DoModal()==IDOK)
+		{
+			m_almanac_filename = frm.fileName;
+			m_almanac_no = frm.sv;
+			::AfxBeginThread(GetGlonassAlmanacThread, 0);
+		}else
+		{
+			SetMode();  
+			CreateGPSThread();
+		}
+	}
+}
+
+UINT SetGlonassAlmanacThread(LPVOID pParam)
+{	
+	CGPSDlg::gpsDlg->SetGlonassAlmanac(FALSE);	
+	return 0;
+}
+
+
+void CGPSDlg::SetGlonassAlmanac(U08 continues)	
+{	
+	U16 SVID;	
+
+	U08 messages[100];  
+	U08 msg[100];
+	BYTE  buffer[0x1000];
+	ULONGLONG dwBytesRemaining = m_ephmsFile.GetLength();
+
+	if(dwBytesRemaining == 0)
+	{
+		m_ephmsFile.Close();	
+		if(!continues)
+		{
+		SetMode(); 
+		CreateGPSThread();
+		}	
+		return;
+	}
+
+	m_ephmsFile.Read(buffer,1);
+	int one_entry_size = 24;
+
+	if(dwBytesRemaining == 24 * one_entry_size)
+	{
+		m_ephmsFile.SeekToBegin();
+
+		while(1)
+		{
+			UINT nBytesRead = m_ephmsFile.Read(buffer,one_entry_size);	
+			//TRACE("nBytesRead=%d\r\n",nBytesRead);
+			if(nBytesRead<=0)
+				break;
+			memset(msg, 0, sizeof(msg));
+			memset(messages, 0, sizeof(messages));
+			msg[0] = 0x5E;
+
+			memcpy(&msg[1],buffer,one_entry_size);
+			SVID = buffer[0];	
+
+			if(buffer[0] == 0) 
+			{
+				TRACE("SVID=%d,continue\r\n",SVID);
+				continue;
+			}
+
+			if(continues)
+			{
+				msg[one_entry_size + 1] = 0;
+			}
+			else
+			{
+				msg[one_entry_size + 1] = (SVID == 24) ? 1 : 0;
+            }
+
+			int len = SetMessage2(messages, msg, one_entry_size + 2);
+			sprintf_s(m_nmeaBuffer, sizeof(m_nmeaBuffer), "Set SV#%d Glonass Almanac Successful...",SVID);
+			if(!SendToTargetNoWait(messages, len,m_nmeaBuffer))
+			{
+				sprintf_s(m_nmeaBuffer, sizeof(m_nmeaBuffer), "Set SV#%d Glonass Almanac Fail...",SVID);
+				add_msgtolist(m_nmeaBuffer);
+			}
+
+			//Sleep(10);
+		}
+	}
+	else
+	{
+		AfxMessageBox("The Glonass Almanac data Format of the file is wrong");
+		//return;
+	}	
+	m_ephmsFile.Close();	
+	if(!continues)
+	{
+	SetMode(); 
+	CreateGPSThread();
+	}	
+}
+
+void CGPSDlg::OnSetGlonassAlmanac()
+{
+	if(!CheckConnect())
+	{
+		return;
+	}
+
+	m_inputMode  = 0;
+	CString fileName("Glonass_Almanac.log");	
+	CFileDialog dlgFile(true, _T("log"), fileName, OFN_HIDEREADONLY, _T("Almanac Files (*.log)|*.log||"), this);
+	INT_PTR nResult = dlgFile.DoModal();
+	fileName = dlgFile.GetPathName();	
+	CFileException ef;
+	try
+	{
+		if(nResult == IDOK)
+		{  				
+			if(!m_ephmsFile.Open(fileName,CFile::modeRead,&ef))
+			{
+				ef.ReportError();
+				SetMode();
+				CreateGPSThread();
+				return;
+			}				
+			AfxBeginThread(SetGlonassAlmanacThread,0);			
+		}		
+		else
+		{
+			SetMode();
+			CreateGPSThread();
+		}
+	}
+	catch(CFileException *fe)
+	{
+		fe->ReportError();
+		fe->Delete();
+		return;
+	}	
+	fileName.ReleaseBuffer();		
+}
+
+
+//===================================================
+void CGPSDlg::GetBeidouAlmanac(CString m_almanac_filename, U08 sv, U08 continues)
+{
+	int wait = 0;
+	U08 msg[3];
+	char BINMSG[1024] = {0};
+
+	msg[0] = 0x67;
+	msg[1] = 0x04;
+	msg[2] = sv;
+	int res_len;
+	int len = SetMessage(msg, sizeof(msg));
+	FILE *f = NULL;
+
+	ClearQue();
+	if(SendToTarget(m_inputMsg, len, "Get Beidou Almance start...") == 1)
+	{
+		if(WRL == NULL )
+		{
+			WRL = new CWaitReadLog;
+		}
+		AfxBeginThread(WaitLogRead,0);
+		WaitForSingleObject(waitlog,INFINITE);
+		WRL->SetWindowText("Wait for get Beidou almanac");
+		WRL->msg.SetWindowText("Please wait for get Beidou almanac!");
+
+		U08 NumsOfEphemeris = 0;
+
+		fopen_s(&f, m_almanac_filename, "wb+");
+		fclose(f);
+
+		while(1)
+		{	
+			wait++;
+			if(wait == 50 )
+			{ 
+				Sleep(500);
+				WRL->msg.SetWindowText("Retrieve Beidou almanac data is Failed!");
+				Sleep(500);
+				WRL->IsFinish = true;
+				add_msgtolist("Retrieve Beidou almanac Failed...");	
+				//goto TheLast;
+			}
+			U08 buff[1024] = {0};
+			res_len = m_serial->GetBinary(buff, sizeof(buff));
+
+			if(res_len==60)
+			{
+				fopen_s(&f, m_almanac_filename, "ab");
+				fwrite(&buff[6],1,res_len-9,f);
+				fclose(f);
+			}
+			else
+			{
+				break;
+			}
+
+
+			NumsOfEphemeris = buff[8];
+			sprintf_s(BINMSG, sizeof(BINMSG), "Retrieve Beidou Satellite ID # %d almanac", NumsOfEphemeris);
+			WRL->msg.SetWindowText(BINMSG);
+
+			if(NumsOfEphemeris==37)
+				break;
+			//}
+		}	
+		Sleep(500);
+		WRL->msg.SetWindowText("Retrieve Beidou almanac data is completed!");
+		Sleep(500);
+		WRL->IsFinish = true;
+		add_msgtolist("Retrieve Beidou almanac Successful...");	
+
+	}
+
+	if(!continues)
+	{
+		SetMode();  
+		CreateGPSThread();
+	}
+}
+
+UINT GetBeidouAlmanacThread(LPVOID param)
+{
+	CGPSDlg::gpsDlg->GetBeidouAlmanac(m_almanac_filename, m_almanac_no, FALSE);
+	return 0;
+}
+
+void CGPSDlg::OnGetBeidouAlmanac()
+{
+	CGetAlmanac frm;
+	if(CheckConnect())	
+	{
+		frm.isGlonass = 2;
+		if(frm.DoModal()==IDOK)
+		{
+			m_almanac_filename = frm.fileName;
+			m_almanac_no = frm.sv;
+			::AfxBeginThread(GetBeidouAlmanacThread, 0);
+		}
+		else
+		{
+			SetMode();  
+			CreateGPSThread();
+		}
+	}
+}
+
+UINT SetBeidouAlmanacThread(LPVOID pParam)
+{	
+	CGPSDlg::gpsDlg->SetBeidouAlmanac(FALSE);	
+	return 0;
+}
+
+
+void CGPSDlg::SetBeidouAlmanac(U08 continues)	
+{	
+	BYTE buffer[1000];
+	ULONGLONG dwBytesRemaining = m_ephmsFile.GetLength();
+
+	if(dwBytesRemaining == 0)
+	{
+		m_ephmsFile.Close();	
+		if(!continues)
+		{
+			SetMode(); 
+			CreateGPSThread();
+		}	
+		return;
+	}
+
+	m_ephmsFile.Read(buffer, 1);
+	int one_entry_size = 51;
+
+	if(dwBytesRemaining == 37 * one_entry_size)
+	{
+		m_ephmsFile.SeekToBegin();
+		while(1)
+		{
+			UINT nBytesRead = m_ephmsFile.Read(buffer, one_entry_size);	
+			if(nBytesRead <= 0)
+			{
+				break;
+			}
+			U08 msg[53] = { 0 };	//id, sub-id, svid-h, svid-l, 48 bytes almanac, attributes
+			U08 messages[100] = { 0 };
+			msg[0] = 0x67;
+			msg[1] = 0x03;
+
+			memcpy(&msg[2], buffer + 1, one_entry_size - 1);
+			U16 SVID = buffer[2];	
+			if(SVID == 0) 
+			{
+				continue;
+			}
+
+			if(continues)
+			{
+				msg[one_entry_size] = 0;
+			}
+			else
+			{
+				msg[one_entry_size] = (SVID == 37) ? 1 : 0;
+            }
+
+			int len = SetMessage2(messages, msg, sizeof(msg));
+			sprintf_s(m_nmeaBuffer, sizeof(m_nmeaBuffer), "Set SV#%d Beidou Almanac Successful...", SVID);
+			if(!SendToTargetNoWait(messages, len, m_nmeaBuffer))
+			{
+				sprintf_s(m_nmeaBuffer, sizeof(m_nmeaBuffer), "Set SV#%d Beidou Almanac Fail...", SVID);
+				add_msgtolist(m_nmeaBuffer);
+			}
+		}
+	}
+	else
+	{
+		AfxMessageBox("The Beidou Almanac data Format of the file is wrong");
+		//return;
+	}	
+	m_ephmsFile.Close();	
+	if(!continues)
+	{
+		SetMode(); 
+		CreateGPSThread();
+	}	
+}
+
+void CGPSDlg::OnSetBeidouAlmanac()
+{
+	if(!CheckConnect())
+	{
+		return;
+	}
+
+	m_inputMode  = 0;
+	CString fileName("Beidou_Almanac.log");	
+	CFileDialog dlgFile(true, _T("log"), fileName, OFN_HIDEREADONLY, _T("Almanac Files (*.log)|*.log||"), this);
+	INT_PTR nResult = dlgFile.DoModal();
+	fileName = dlgFile.GetPathName();	
+	CFileException ef;
+	try
+	{
+		if(nResult == IDOK)
+		{  				
+			if(!m_ephmsFile.Open(fileName,CFile::modeRead,&ef))
+			{
+				ef.ReportError();
+				SetMode();
+				CreateGPSThread();
+				return;
+			}				
+			AfxBeginThread(SetBeidouAlmanacThread,0);			
+		}		
+		else
+		{
+			SetMode();
+			CreateGPSThread();
+		}
+	}
+	catch(CFileException *fe)
+	{
+		fe->ReportError();
+		fe->Delete();
+		return;
+	}	
+	fileName.ReleaseBuffer();		
+}
+//=======================================================
 UINT AFX_CDECL ConfigGnssDozeModeThread(LPVOID param)
 {
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(CGPSDlg::gpsDlg->m_inputMsg, 9, "ConfigGnssDozeMode Successful");
 	return 0;
 }
+
 
 void CGPSDlg::OnConfigGnssDozeMode()
 {
@@ -6287,14 +6925,17 @@ void CGPSDlg::OnSup800ReadData()
 	DoCommonConfig(&dlg);
 }
 
-
 void CGPSDlg::OnConfigureSignalDisturbanceStatus()
 {
 	CConfigureSignalDisturbanceStatusDlg dlg;
 	DoCommonConfig(&dlg);
 }
 
-
+void CGPSDlg::OnConfigureGpsUtcLeapSecondsInUtc()
+{
+	CConfigureGpsUtcLeapSecondsInUtcDlg dlg;
+	DoCommonConfig(&dlg);
+}
 
 
 

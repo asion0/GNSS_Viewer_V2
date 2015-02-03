@@ -63,6 +63,7 @@ public:
 	DWORD GetBinary(void* buffer, DWORD bufferSize, DWORD timeout = 10000);
 	//int getsbin( unsigned char *,int );	
 	DWORD GetBinaryBlock(void* buffer, DWORD bufferSize, DWORD blockSize);
+	DWORD GetBinaryBlockInSize(void* buffer, DWORD bufferSize, DWORD blockSize);
 
 	DWORD SendData(const void* buffer, DWORD bufferSize, bool blockTransfer = false, int delayDuration = 0);
 	

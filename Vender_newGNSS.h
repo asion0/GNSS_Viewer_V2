@@ -128,12 +128,17 @@
 // .126 Add Signal Disturbance Test menu in [Venus 8] menu.
 // .127 Modify Signal Disturbance Test command.
 // .128 Fixed NMEA Player crash in XP when scatter starting draw point.
+// .129 Support special NMEA(RMC and GGA), add [Query / Configure Interference Detect Control] to General.
+// .130 Support [Get / Set Beidou almanac].
+// .131 Never change baud rate when configure serial port fail.
+// .132 Fixed DataLog Decompress crash bug when date number < 10.
+// .133 Add [Configure GPS/UTC Leap Seconds in UTC] and download in external loader when boot in ROM code.
 
 //#define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.128"
+#define APP_VERSION				"2.0.133"
 #define APP_TITLE				""
 #define GNSS_VIEWER				0
 #define GPS_VIEWER				0
@@ -154,17 +159,15 @@
 //#define LIMIT_SCATTER_PLOT		1
 #define MAX_SCATTER_COUNT			100
 
-#define NOFIXED_CHECK				0
-#define DRAW_COURSE					0
+//#define NOFIXED_CHECK				0
+//#define DRAW_COURSE					0
 
-#define DATALOG_TRIP				0
+//#define DATALOG_TRIP				0
 #define ODOMETER_SUPPORT			0
 #define BINARY_MESSAGE_SUPPORT		0
 #define BINARY_MESSAGE_INTERVAL		0
 //#define BINARY_MESSAGE_NI			1
 
-#define NEW_ALMANAC				1		// normal almanac function
-#define TMP_ALMANAC				0		// for andrew used only
 #define ACTIVATE_MINIHOMER		0
 #define NMEA_INPUT				0
 
@@ -196,21 +199,21 @@
 //#define SJA						0
 #define OPEN_PINNING_RESERVE	0
 #define RESET_MOTION_SENSOR		0
-#define AVID					0
-#define NI						0
-#define SOARCOMM				0
-#define LG						0
-#define IQIBLA					0
+//#define AVID					0
+//#define NI						0
+//#define SOARCOMM				0
+//#define LG						0
+//#define IQIBLA					0
 #define _V8_SUPPORT				0
 #define GG12A					0
 //#define SUPPORT_CLEAR_LOGIN_PASSWORD	0
-#define WITH_CONFIG_USB_BAUDRATE	0
+//#define WITH_CONFIG_USB_BAUDRATE	0
 #define SHOW_CLOCK_OFFSET		0
 #define SHOW_NOISE				0
 #define DATA_POI				0
 #define TWIN_DATALOG			0
 //#define _UNIT_TESTING_			1
-#define _UNICORE_NMEA_			1
+//#define _UNICORE_NMEA_			1
 #define CUSTOMER_DOWNLOAD		0
 #define CUSTOMER_ID				Sktyraq
 #define NMEA_PRN_TYPE			0
@@ -500,63 +503,6 @@
  #define OPEN_PINNING_RESERVE	1
  #define BINARY_MESSAGE_INTERVAL	1
 
-#elif defined(SWCFG_VENDOR_GNSS_INTERNALUSE)
- #undef APP_CAPTION	
- #undef APP_TITLE	
- #undef GNSS_VIEWER
- #undef IS_DEBUG
- #undef BAUDRATE
- #undef BAUDRATE_DEFAULT
- #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- #undef BINARY_MESSAGE_INTERVAL
- #undef WITH_CONFIG_USB_BAUDRATE
-
- #define APP_CAPTION		"GNSS Viewer"
- #define APP_TITLE			"Internal Use"
- #define GNSS_VIEWER			1
- #define IS_DEBUG			1
- #define BAUDRATE			5
- #define BAUDRATE_DEFAULT		5
- #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- #define BINARY_MESSAGE_INTERVAL	1
- #define WITH_CONFIG_USB_BAUDRATE	1
-
-#elif defined(SWCFG_VENDOR_GPS_GENERAL)
- #undef APP_CAPTION	
- #undef APP_TITLE	
- #undef GPS_VIEWER
- #undef BAUDRATE
- #undef BAUDRATE_DEFAULT
- #undef OPEN_PINNING_RESERVE
- #undef BINARY_MESSAGE_INTERVAL
-
- #define APP_CAPTION			"GPS Viewer"
- #define APP_TITLE				"Customer Release"
- #define GPS_VIEWER				1
- #define BAUDRATE				5
- #define BAUDRATE_DEFAULT		5
- #define OPEN_PINNING_RESERVE	1
- #define BINARY_MESSAGE_INTERVAL	1
-
-#elif defined(SWCFG_VENDOR_GNSS_GENERAL)
- #undef APP_CAPTION	
- #undef APP_TITLE	
- #undef GNSS_VIEWER
- #undef BAUDRATE
- #undef BAUDRATE_DEFAULT
- #undef OPEN_PINNING_RESERVE
- #undef WITH_CONFIG_USB_BAUDRATE
-
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"Customer Release"
- #define GNSS_VIEWER			1
- #define BAUDRATE				5
- #define BAUDRATE_DEFAULT		5
- #define OPEN_PINNING_RESERVE	1
- #define WITH_CONFIG_USB_BAUDRATE	1
-
 #elif defined(SWCFG_VENDOR_GPS_V8)
  #undef APP_CAPTION	
  #undef APP_TITLE	
@@ -827,13 +773,11 @@
  #undef BAUDRATE_DEFAULT
  #undef SOFTWARE_FUNCTION
  #undef OPEN_PINNING_RESERVE
- #undef WITH_CONFIG_USB_BAUDRATE
 
  #define APP_TITLE				"Customer Release DR"
  #define BAUDRATE				5
  #define BAUDRATE_DEFAULT		5
  #define OPEN_PINNING_RESERVE	1
- #define WITH_CONFIG_USB_BAUDRATE	1
  #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 
 #else

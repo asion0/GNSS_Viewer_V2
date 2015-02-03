@@ -37,10 +37,19 @@ END_MESSAGE_MAP()
 
 void CGetAlmanac::OnBnClickedAlmanacBrowse()
 {
-	if (isGlonass)
-		fileName = "Glonass_Almanac.log";
-	else
+	if (isGlonass == 0)
+	{
 		fileName = "GPS_Almanac.log";
+	}
+	else if (isGlonass == 1)
+	{
+		fileName = "Glonass_Almanac.log";
+	}
+	else if (isGlonass == 2)
+	{
+		fileName = "Beidou_Almanac.log";
+	}
+
 	CFileDialog dlgFile(false, _T("log"), fileName, OFN_HIDEREADONLY, _T("ALL Files (*.*)|*.*||"), this);
 	INT_PTR nResult = dlgFile.DoModal();
 	fileName = dlgFile.GetPathName();
@@ -57,20 +66,24 @@ BOOL CGetAlmanac::OnInitDialog()
 	CString temp;
 	m_sv.ResetContent();
 	m_sv.AddString("All SVs");
-	if (isGlonass)
+	int svCount = 0;
+	if (isGlonass == 0)
 	{
-		for(int i=0;i<24;i++)
-		{
-			temp.Format("SV #%d",i+1);
-			m_sv.AddString(temp);
-		}
-	}else
+		svCount = 32;
+	}
+	else if (isGlonass == 1)
 	{
-		for(int i=0;i<32;i++)
-		{
-			temp.Format("SV #%d",i+1);
-			m_sv.AddString(temp);
-		}
+		svCount = 24;
+	}		
+	else if (isGlonass == 2)
+	{
+		svCount = 37;
+	}	
+
+	for(int i=0;i<svCount;i++)
+	{
+		temp.Format("SV #%d",i+1);
+		m_sv.AddString(temp);
 	}
 
 	m_sv.SetCurSel(0);
