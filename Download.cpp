@@ -291,6 +291,33 @@ UINT CGPSDlg::GetSrecFromResource(int buad)
 	return NULL;
 }
 
+DownloadErrocCode ProcessWlfResult(WlfResult w)
+{
+	DownloadErrocCode err = RETURN_ERROR;
+	switch(w)
+	{
+	case wlf_timeout:
+		AfxMessageBox("Timeout: GPS device no response.");						
+		break;
+	case wlf_error1:
+		AfxMessageBox("Error1 : Flash Wrong");	
+		break;
+	case wlf_error3:
+		AfxMessageBox("Error3 : Format Error!");					
+		break;
+	case wlf_error4:
+		AfxMessageBox("Error4 : Flash Test Failed!");				
+		break;
+	case wlf_error5:
+		AfxMessageBox("Error5 : srec timeout!");	
+		break;
+	default:
+		err = RETURN_NO_ERROR;
+		break;
+	}
+	return err;
+}
+
 WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)
 {
 	typedef struct _WlfEntry
@@ -440,42 +467,18 @@ U08 CGPSDlg::PlRomNoAlloc(const CString& prom_path)
 		m_serial->SendData((U08*)messages, (U16)strlen(messages)+1);	
 		Utility::Log(__FUNCTION__, messages, __LINE__);
 
-		switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, BinSizeTimeout, &m_responseList))
+		WlfResult wlf = WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, BinSizeTimeout, &m_responseList);
+		switch(wlf)
 		{
 		case wlf_ok:
 			bResendbin = false;
-			break;
-		case wlf_timeout:
-			Utility::LogFatal(__FUNCTION__, "wlf_timeout", __LINE__);
-			fclose(f);
-			AfxMessageBox("Timeout: GPS device no response.");						
-			return RETURN_ERROR;
-			break;
-		case wlf_error1:
-			AfxMessageBox("Flash Wrong");	
-			fclose(f);
-			return RETURN_ERROR;
-			break;
-		case wlf_error3:
-			AfxMessageBox("Format Error!");					
-			fclose(f);
-			return RETURN_ERROR;		        
-			break;
-		case wlf_error4:
-			AfxMessageBox("Flash Test Failed!");				
-			fclose(f);
-			return RETURN_ERROR;		        
-			break;
-		case wlf_error5:
-			AfxMessageBox("srec timeout!");	
-			fclose(f);
-			return RETURN_ERROR;		        
 			break;
 		case wlf_resendbin:
 			Utility::Log(__FUNCTION__, messages, __LINE__);
 			bResendbin = true;
 			break;
 		default:
+			ProcessWlfResult(wlf);
 			Utility::LogFatal(__FUNCTION__, messages, __LINE__);
 			fclose(f);
 			return RETURN_ERROR;		        
@@ -788,31 +791,26 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, FILE *f,
 	delete []dbgBuff;
 	*/
 #endif
-	switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, 20000, notifyWnd))
+	delete [] buff;
+
+	WlfResult wlf = WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, 20000, notifyWnd);
+	switch(wlf)
 	{
 	case wlf_end:
 		sprintf_s(messages, sizeof(messages), "The total bytes transferred = %d", TotalByte);
 		add_msgtolist(messages);
 		//msgWnd->SetWindowText(messages);	
 		break;
-	case wlf_timeout:
-		AfxMessageBox("Timeout: GPS device no response.");
-		return RETURN_ERROR;
-		break;
-	case wlf_error2:
-		AfxMessageBox("Checksum Wrong!");						
-		return RETURN_RETRY;
-		break;
 	case wlf_reset:
 		AfxMessageBox("Reset!");						
 		return RETURN_RETRY;
 		break;
 	default:
+		ProcessWlfResult(wlf);
 		Utility::LogFatal(__FUNCTION__, messages, __LINE__);
 		return RETURN_ERROR;
 		break;
 	}	
-	delete [] buff;
 	return RETURN_NO_ERROR;		
 }
 
@@ -876,42 +874,19 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 		sprintf_s(messages, sizeof(messages), "BINSIZE = %d Checksum = %d %lld %lld ", promLen, mycheck, promTag.tagAddress, check);
 		m_serial->SendData((U08*)messages, (U16)strlen(messages)+1);	
 		Utility::Log(__FUNCTION__, messages, __LINE__);
-		switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, BinSizeTimeout, &m_responseList))
+
+		WlfResult wlf = WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, BinSizeTimeout, &m_responseList);
+		switch(wlf)
 		{
 		case wlf_ok:
 			bResendbin = false;
-			break;
-		case wlf_timeout:
-			Utility::LogFatal(__FUNCTION__, "wlf_timeout", __LINE__);
-			fclose(f);
-			AfxMessageBox("Timeout: GPS device no response.");						
-			return RETURN_ERROR;
-			break;
-		case wlf_error1:
-			AfxMessageBox("Flash Wrong");	
-			fclose(f);
-			return RETURN_ERROR;
-			break;
-		case wlf_error3:
-			AfxMessageBox("Format Error!");					
-			fclose(f);
-			return RETURN_ERROR;		        
-			break;
-		case wlf_error4:
-			AfxMessageBox("Flash Test Failed!");				
-			fclose(f);
-			return RETURN_ERROR;		        
-			break;
-		case wlf_error5:
-			AfxMessageBox("srec timeout!");	
-			fclose(f);
-			return RETURN_ERROR;		        
 			break;
 		case wlf_resendbin:
 			Utility::Log(__FUNCTION__, messages, __LINE__);
 			bResendbin = true;
 			break;
 		default:
+			ProcessWlfResult(wlf);
 			Utility::LogFatal(__FUNCTION__, messages, __LINE__);
 			fclose(f);
 			return RETURN_ERROR;		        
@@ -953,42 +928,18 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 		m_serial->SendData((U08*)messages, (U16)strlen(messages)+1);	
 		Utility::Log(__FUNCTION__, messages, __LINE__);
 
-		switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, BinSizeTimeout, &m_responseList))
+		WlfResult wlf = WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, BinSizeTimeout, &m_responseList);
+		switch(wlf)
 		{
 		case wlf_ok:
 			bResendbin = false;
-			break;
-		case wlf_timeout:
-			Utility::LogFatal(__FUNCTION__, "wlf_timeout", __LINE__);
-			fclose(f);
-			AfxMessageBox("Timeout: GPS device no response.");						
-			return RETURN_ERROR;
-			break;
-		case wlf_error1:
-			AfxMessageBox("Flash Wrong");	
-			fclose(f);
-			return RETURN_ERROR;
-			break;
-		case wlf_error3:
-			AfxMessageBox("Format Error!");					
-			fclose(f);
-			return RETURN_ERROR;		        
-			break;
-		case wlf_error4:
-			AfxMessageBox("Flash Test Failed!");				
-			fclose(f);
-			return RETURN_ERROR;		        
-			break;
-		case wlf_error5:
-			AfxMessageBox("srec timeout!");	
-			fclose(f);
-			return RETURN_ERROR;		        
 			break;
 		case wlf_resendbin:
 			Utility::Log(__FUNCTION__, messages, __LINE__);
 			bResendbin = true;
 			break;
 		default:
+			ProcessWlfResult(wlf);
 			Utility::LogFatal(__FUNCTION__, messages, __LINE__);
 			fclose(f);
 			return RETURN_ERROR;		        
@@ -1089,7 +1040,8 @@ U08 CGPSDlg::PlRomNoAllocV8(const CString& prom_path)
 		{
 			//For Andrew Test EON Flash, wait for 1 minute.
 			//switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, 60 * 1000, &m_responseList))
-			switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, BinSizeTimeout, &m_responseList))
+			WlfResult wlf = WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, BinSizeTimeout, &m_responseList);
+			switch(wlf)
 			{
 			case wlf_end:
 				isEnd = true;
@@ -1098,38 +1050,13 @@ U08 CGPSDlg::PlRomNoAllocV8(const CString& prom_path)
 				bResendbin = false;
 				isEnd = false;
 				break;
-			case wlf_timeout:
-				Utility::LogFatal(__FUNCTION__, "wlf_timeout", __LINE__);
-				fclose(f);
-				AfxMessageBox("Timeout: GPS device no response.");						
-				return RETURN_ERROR;
-				break;
-			case wlf_error1:
-				AfxMessageBox("Flash Wrong!");	
-				fclose(f);
-				return RETURN_ERROR;
-				break;
-			case wlf_error3:
-				AfxMessageBox("Format Error!");					
-				fclose(f);
-				return RETURN_ERROR;		        
-				break;
-			case wlf_error4:
-				AfxMessageBox("Flash Test Failed!");				
-				fclose(f);
-				return RETURN_ERROR;		        
-				break;
-			case wlf_error5:
-				AfxMessageBox("srec timeout!");	
-				fclose(f);
-				return RETURN_ERROR;		        
-				break;
 			case wlf_resendbin:
 				Utility::Log(__FUNCTION__, messages, __LINE__);
 				bResendbin = true;
 				isEnd = false;
 				break;
 			default:
+				ProcessWlfResult(wlf);
 				Utility::LogFatal(__FUNCTION__, messages, __LINE__);
 				fclose(f);
 				return RETURN_ERROR;		        
@@ -1438,7 +1365,7 @@ void CGPSDlg::Download()
 
 		U16 crcCode = 0;
 		BOOL hasAckVersion = FALSE;
-		m_nDefaultTimeout = 1000;
+		m_nDefaultTimeout = 3000;
 		if(Ack == QuerySoftwareCrcSystemCode(Return, &crcCode))
 		{
 			hasAckVersion = TRUE;

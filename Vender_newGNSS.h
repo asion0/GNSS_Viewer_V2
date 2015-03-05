@@ -133,12 +133,15 @@
 // .131 Never change baud rate when configure serial port fail.
 // .132 Fixed DataLog Decompress crash bug when date number < 10.
 // .133 Add [Configure GPS/UTC Leap Seconds in UTC] and download in external loader when boot in ROM code.
+// .134 Extend timeout when query version before download.
+// .135 Disable check SAEE and Multi-Hz can't be both on.
+// .136 Add [Configure / Query Position Fix Navgation Mask] to Customer Release version.
 
 //#define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.133"
+#define APP_VERSION				"2.0.136"
 #define APP_TITLE				""
 #define GNSS_VIEWER				0
 #define GPS_VIEWER				0
@@ -226,7 +229,7 @@
 #define	_MODULE_SUP_800_		0
 #define	_USE_RESOURCE_LOADER_	0
 #define	_RESOURCE_LOADER_ID_	0
-
+#define CHECK_SAEE_MULTIHZ_ON	0		//Check SAEE and Multi-Hz can't both on.
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 #if defined(SWCFG_VENDOR_GNSS_SWID_NEW_DOWNLOAD)

@@ -1439,16 +1439,7 @@ void CGPSDlg::Initialization()
 
 	}
 
-#ifdef RTC_CHECK
-	//CBitmap bitmap;
-	//HBITMAP   hBmp   =   (HBITMAP)bitmap;
-	//bitmap.LoadBitmap(IDB_RTC);
-	//lbl_noise.SetBitmap((HBITMAP)bitmap);
-	m_noise.ShowWindow(1);
-	lbl_noise.ShowWindow(1);
-#endif
-
-	this->SetWindowText(theApp.GetTitle());
+	SetWindowText(theApp.GetTitle());
 
 	gpsSnrBar->SetGsvData(&m_gpgsvMsg); 
 	gpsSnrBar->SetGsaData(&m_gpgsaMsg); 
@@ -1485,12 +1476,6 @@ void CGPSDlg::Initialization()
 		}
 		m_BaudRateCombo.SetCurSel(1);
 	}
-
-//	if(!ECOMPASS_CALIBRATION)
-//	{
-//		GetDlgItem(IDC_ECOM_CALIB)->ShowWindow(SW_HIDE);
-//		GetDlgItem(IDC_ECOM_COUNTER)->ShowWindow(SW_HIDE);
-//	}
 
 #if GG12A
 	bdSnrBar->SetGsvData(NULL); 
@@ -4763,7 +4748,7 @@ void CGPSDlg::Load_Menu()
 		{ 1, MF_STRING, ID_BINARY_QUERY_ITF_DET_CTL, "Query Interference Detect Control", NULL },
 		{ IS_DEBUG, MF_STRING, ID_BINARY_QUERY_NMBI_OUT_DES, "Query NMEA/Binary Output Destination", NULL },
 		{ 1, MF_STRING, ID_BINARY_QUERY_PARAM_SEARCH_ENG_NUM, "Query Parameter Search Engine Number", NULL },
-		{ IS_DEBUG, MF_STRING, ID_QUERY_POS_FIX_NAV_MASK, "Query Position Fix Navgation Mask", NULL },
+		{ 1, MF_STRING, ID_QUERY_POS_FIX_NAV_MASK, "Query Position Fix Navgation Mask", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_REF_TIME_TO_GPS, "Query Ref Time Sync To GPS Time", NULL },
 		{ 1, MF_STRING, ID_QUERY_NAV_MODE_V8, "Query Navigation Mode", NULL },
 		{ 1, MF_STRING, ID_QUERY_GNSS_NAV_SOL, "Query GNSS Constellation Type", NULL },
@@ -4783,7 +4768,7 @@ void CGPSDlg::Load_Menu()
 		{ 1, MF_STRING, ID_BINARY_CONFIGURE_ITF_DET_CTL, "Configure Interference Detect Control", NULL },
 		{ IS_DEBUG, MF_STRING, ID_BINARY_CONFIGURE_NMBI_OUT_DES, "Configure NMEA/Binary Output Destination", NULL },
 		{ 1, MF_STRING, ID_CONFIGURE_PARAM_SEARCH_ENG_NUM, "Configure Parameter Search Engine Number", NULL },
-		{ IS_DEBUG, MF_STRING, ID_CONFIGURE_POS_FIX_NAV_MASK, "Configure Position Fix Navgation Mask", NULL },
+		{ 1, MF_STRING, ID_CONFIGURE_POS_FIX_NAV_MASK, "Configure Position Fix Navgation Mask", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CONFIG_REF_TIME_TO_GPS, "Configure Ref Time Sync To GPS Time", NULL },
 		{ 1, MF_STRING, ID_MULTIMODE_CONFIGUREMODE, "Configure Navigation Mode", NULL },
 		{ 1, MF_STRING, ID_CONFIG_GNSS_NAV_SOL, "Configure GNSS Constellation Type", NULL },
@@ -7599,6 +7584,7 @@ void CGPSDlg::RescaleDialog()
 	};
 
 	CRect rcWin, rcClient, rcNewSize;
+	//CSize szClient(872, 248);		//Mini version size
 	CSize szClient(1008, (NMEA_INPUT) ? 614 : 690);
 
 	GetWindowRect(rcWin);
@@ -7670,7 +7656,7 @@ void CGPSDlg::SwitchToConnectedStatus(BOOL bSwitch)
 
 bool CGPSDlg::CheckTimeOut(DWORD duration, DWORD timeOut, bool silent)
 {	
-	if(duration > timeOut )
+	if(duration > timeOut)
 	{	
 		if(!silent)
 		{

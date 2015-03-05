@@ -2095,6 +2095,7 @@ void CGPSDlg::OnBinaryConfigurepositionrate()
 
 	if(dlg->DoModal() == IDOK)
 	{
+#if (CHECK_SAEE_MULTIHZ_ON)
 		position_update_rate = dlg->rate;
 		position_update_attr = dlg->attr;
 		com_baudrate = m_serial->GetBaudRate();
@@ -2121,6 +2122,7 @@ void CGPSDlg::OnBinaryConfigurepositionrate()
 				}
 			}
 		}
+#endif
 		AfxBeginThread(Configurepositionrate, 0);
 	}
 	else
@@ -3656,7 +3658,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareCrcSystemCode(CmdExeMode nMode, void
 	cmd.SetU08(2, cmdTable[QuerySwCrcSysCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QuerySwCrcSysCmd, &cmd, &ackCmd, m_nDefaultTimeout))
+	if(!ExcuteBinaryCommand(QuerySwCrcSysCmd, &cmd, &ackCmd, m_nDefaultTimeout), (nMode==Return))
 	{
 		if(nMode==Return)
 		{

@@ -4,7 +4,6 @@
 #include "Serial.h"
 #include "Utility.h"
 
-
 int CSerial::BaudrateTable[] = {4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600};
 const int CSerial::BaudrateTableSize = sizeof(CSerial::BaudrateTable) / sizeof(CSerial::BaudrateTable[0]);
 const DWORD defaultSendUnit = 512;
@@ -30,13 +29,15 @@ CSerial::~CSerial()
 
 bool CSerial::Open(int port, int baudIndex)
 {
-	return OpenByBaudrate(port, BaudrateTable[baudIndex]);
+	CString comPort;
+	comPort.Format("COM%d", port);
+	return OpenByBaudrate(comPort, BaudrateTable[baudIndex]);
 }
 
-bool CSerial::OpenByBaudrate(int port, int baudrate)
+bool CSerial::OpenByBaudrate(LPCSTR comPort, int baudrate)
 {
 	CString portName;
-	portName.Format("\\\\.\\COM%d", port);
+	portName.Format("\\\\.\\%s", comPort);
 
 	m_comDeviceHandle = CreateFile(portName, GENERIC_READ | GENERIC_WRITE,
 			0, NULL, OPEN_EXISTING, 0, 0);
@@ -69,7 +70,9 @@ bool CSerial::OpenByBaudrate(int port, int baudrate)
 	m_OverlappedWrite.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
 	m_isOpened = true;
-	m_comPort = port;
+	CString t(comPort);
+	t = t.Right(t.GetLength() - 3);
+	m_comPort = atoi(t);
 	return true;
 }
 
@@ -511,39 +514,39 @@ DWORD CSerial::GetBinaryBlockInSize(void* buffer, DWORD bufferSize, DWORD blockS
 	return totalSize;
 }
 
-DWORD CSerial::GetBinaryBlockInTime(void* buffer, DWORD bufferSize, DWORD timeout)
-{	
-	U08* bufferIter = (U08*)buffer;
-	DWORD totalSize = 0;
-	const int tempBufferSize = 1024;
-	U08* tmpBuffer[tempBufferSize];
-	ScopeTimer t;
-	do
-	{
-		if(t.GetDuration() >= timeout)
-		{
-			return READ_ERROR;
-		}
-
-		memset(tmpBuffer, 0, tempBufferSize);
-		int readSize = ((totalSize + tempBufferSize) <= bufferSize) ? tempBufferSize : bufferSize - totalSize;
-		DWORD nBytesRead = ReadData(tmpBuffer, readSize);
-		if(nBytesRead == 0)
-		{
-			continue;
-		}
-
-		if(nBytesRead == READ_ERROR)
-		{
-			return READ_ERROR;
-		}
-
-		if((totalSize + nBytesRead) <= bufferSize)
-		{
-			memcpy(bufferIter, tmpBuffer, nBytesRead);
-			bufferIter += nBytesRead;
-			totalSize += nBytesRead;
-		}
-	} while(totalSize < bufferSize);
-	return totalSize;
-}
+//DWORD CSerial::GetBinaryBlockInTime(void* buffer, DWORD bufferSize, DWORD timeout)
+//{	
+//	U08* bufferIter = (U08*)buffer;
+//	DWORD totalSize = 0;
+//	const int tempBufferSize = 1024;
+//	U08* tmpBuffer[tempBufferSize];
+//	ScopeTimer t;
+//	do
+//	{
+//		if(t.GetDuration() >= timeout)
+//		{
+//			return READ_ERROR;
+//		}
+//
+//		memset(tmpBuffer, 0, tempBufferSize);
+//		int readSize = ((totalSize + tempBufferSize) <= bufferSize) ? tempBufferSize : bufferSize - totalSize;
+//		DWORD nBytesRead = ReadData(tmpBuffer, readSize);
+//		if(nBytesRead == 0)
+//		{
+//			continue;
+//		}
+//
+//		if(nBytesRead == READ_ERROR)
+//		{
+//			return READ_ERROR;
+//		}
+//
+//		if((totalSize + nBytesRead) <= bufferSize)
+//		{
+//			memcpy(bufferIter, tmpBuffer, nBytesRead);
+//			bufferIter += nBytesRead;
+//			totalSize += nBytesRead;
+//		}
+//	} while(totalSize < bufferSize);
+//	return totalSize;
+//}

@@ -333,6 +333,7 @@ BOOL CConfigSAEE::OnInitDialog()
 
 void CConfigSAEE::DoCommand()
 {
+#if (CHECK_SAEE_MULTIHZ_ON)
 	if(m_nEnable != 2)
 	{	//Enable SAEE must checke position update rate first.
 		U08 data = 0;
@@ -349,7 +350,7 @@ void CConfigSAEE::DoCommand()
 			}
 		}
 	}
-
+#endif
 	BinaryData cmd(4);
 	*cmd.GetBuffer(0) = 0x63;
 	*cmd.GetBuffer(1) = 0x01;
