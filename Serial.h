@@ -54,8 +54,19 @@ public:
 
 	DWORD SendData(const void* buffer, DWORD bufferSize, bool blockTransfer = false, int delayDuration = 0);
 	//DWORD GetBinaryBlockInTime(void* buffer, DWORD bufferSize, DWORD timeout);
+	static inline void AddDebugString(const char* dbg);
+	static void SaveDebugString(bool backup = false);
+	static void SetDebugModeOn(bool on = true) { debugModeOn = on; };
+	static void SetDebugName(LPCSTR name) { debugName = name; };
 
 protected:
+	static const int debugSize = 4 * 1024 * 1024;
+	static char debugBuffer[debugSize];
+	static char *debugPtr;
+	static bool debugModeOn;
+	static CString debugWorking;
+	static CString debugName;
+
 	HANDLE m_comDeviceHandle;
 	int m_comPort;
 	int m_baudRate;

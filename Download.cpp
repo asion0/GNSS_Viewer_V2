@@ -349,46 +349,73 @@ WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)
 	};
 
 	WlfResult nReturn = wlf_ok;
-	clock_t start = 0;
-	clock_t timeDuration = 0;
+	//clock_t start = 0;
+	//clock_t timeDuration = 0;
 
-	const int bufferSize = 256;
-	char buff[bufferSize] = {0};
-	char messages[100] = {0};
-
-	start = clock();
+	//const int bufferSize = 256;
+	//char buff[bufferSize] = {0};
+	//char messages[100] = {0};
+	CString strAckCmd;
+	ScopeTimer t;
+	//start = clock();
 	while(1)
 	{
-		timeDuration = clock() - start;	
-		if(timeDuration > 1000 && msgWnd != NULL)
-		{
-			msgWnd->PostMessage(UWM_SETTIMEOUT, timeDuration, 0);
+		//timeDuration = clock() - start;	
+		//if(timeDuration > 1000 && msgWnd != NULL)
+		//{
+		//	msgWnd->PostMessage(UWM_SETTIMEOUT, timeDuration, 0);
+		//}
+		//if(timeDuration > TimeoutLimit)
+		//{
+		//	nReturn = wlf_timeout;
+		//	break;
+		//}
+		if(t.GetDuration() > 1000 && msgWnd != NULL)
+		{	//Time Out
+			msgWnd->PostMessage(UWM_SETTIMEOUT, t.GetDuration(), 0);
 		}
-		if(timeDuration > TimeoutLimit)
+		if(t.GetDuration() > (DWORD)TimeoutLimit)
 		{
 			nReturn = wlf_timeout;
 			break;
 		}
 
-		memset(buff, 0, sizeof(buff));
-		serial->GetString(buff, sizeof(buff), TimeoutLimit - timeDuration);	     
-		Utility::Log(__FUNCTION__, buff, TimeoutLimit - timeDuration);
+		//memset(buff, 0, sizeof(buff));
+		strAckCmd.Empty();
+		//serial->GetString(buff, sizeof(buff), TimeoutLimit - timeDuration);	     
+		DWORD len = serial->GetString(strAckCmd.GetBuffer(1024), 1024, TimeoutLimit - t.GetDuration());
+		strAckCmd.ReleaseBuffer();
 
-		nReturn = wlf_None;
-		int tableSize = sizeof(feedbackTable) / sizeof(feedbackTable[0]);
-		while(buff[0] && tableSize--)
+		if(!ReadOK(len))
+		{	
+			continue;
+		}
+		//Utility::Log(__FUNCTION__, buff, TimeoutLimit - timeDuration);
+
+		if(len != 0)
 		{
-			if(0==strcmp(buff, feedbackTable[tableSize].string)) 
+			nReturn = wlf_None;
+			int tableSize = sizeof(feedbackTable) / sizeof(feedbackTable[0]);
+			//while(buff[0] && tableSize--)
+			while(tableSize--)
 			{
-				nReturn = feedbackTable[tableSize].result;
+				//if(0==strcmp(buff, feedbackTable[tableSize].string)) 
+				if(0==strAckCmd.Compare(feedbackTable[tableSize].string)) 
+				{
+					nReturn = feedbackTable[tableSize].result;
+					break;
+				}
+			}
+
+			if(wlf_None != nReturn)
+			{
 				break;
 			}
 		}
-		if(wlf_None != nReturn)
+		else
 		{
-			break;
+			Sleep(20);
 		}
-		Sleep(100);
 	}
 
 	if(nReturn > wlf_timeout)

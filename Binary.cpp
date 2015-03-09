@@ -2095,10 +2095,10 @@ void CGPSDlg::OnBinaryConfigurepositionrate()
 
 	if(dlg->DoModal() == IDOK)
 	{
-#if (CHECK_SAEE_MULTIHZ_ON)
 		position_update_rate = dlg->rate;
 		position_update_attr = dlg->attr;
 		com_baudrate = m_serial->GetBaudRate();
+#if (CHECK_SAEE_MULTIHZ_ON)
 		if(position_update_rate > 1)
 		{
 			U08 data = 0;
@@ -3658,7 +3658,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareCrcSystemCode(CmdExeMode nMode, void
 	cmd.SetU08(2, cmdTable[QuerySwCrcSysCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QuerySwCrcSysCmd, &cmd, &ackCmd, m_nDefaultTimeout), (nMode==Return))
+	if(!ExcuteBinaryCommand(QuerySwCrcSysCmd, &cmd, &ackCmd, m_nDefaultTimeout))
 	{
 		if(nMode==Return)
 		{
