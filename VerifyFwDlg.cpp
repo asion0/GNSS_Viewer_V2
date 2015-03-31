@@ -118,7 +118,7 @@ void CVerifyFwDlg::OnBnClickedSelect()
 		}
 		else
 		{
-			::AfxMessageBox("Can not pasing file name!");
+			::AfxMessageBox("Can not parsing file name!");
 			GetDlgItem(ID_GO)->EnableWindow(FALSE);
 		}
 	}

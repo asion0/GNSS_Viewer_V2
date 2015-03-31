@@ -70,7 +70,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="D:\Project\GitCodes\SkytraqGitHub\V8DownloadLoaderAddTag_25Q80DV\GNSS_ViewerD.exe"
+				OutputFile="D:\Project\GitCodes\SkytraqGitHub\V8IoTesterSrec2\GNSS_ViewerD.exe"
 				LinkIncremental="2"
 				GenerateManifest="false"
 				EnableUAC="false"
@@ -1361,6 +1361,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GpsdoDownload.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\HostBaseDownloadDlg.cpp"
 				>
 			</File>
@@ -1704,6 +1708,10 @@
 			</File>
 			<File
 				RelativePath=".\GetTimeCorrection.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GpsdoDownload.h"
 				>
 			</File>
 			<File

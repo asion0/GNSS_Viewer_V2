@@ -42,8 +42,12 @@ BOOL CExternalSrecDlg::OnInitDialog()
 	reg.SetRootKey(HKEY_CURRENT_USER);
 	if(reg.SetKey("Software\\GNSSViewer\\GPS",true))
 	{
-		CString strPath = reg.ReadString("extern_srec_path", "");
-		GetDlgItem(IDC_PATH)->SetWindowText(strPath);
+		CString str;
+		str = reg.ReadString("extern_srec_path", "");
+		GetDlgItem(IDC_PATH)->SetWindowText(str);
+		str = reg.ReadString("extern_srec_cmd", "");
+		GetDlgItem(IDC_CMD)->SetWindowText(str);
+
 		//GetDlgItem(IDC_PATH)->Invalidate();
 	}
 
@@ -92,8 +96,23 @@ UINT ConnectSrec(LPVOID pParam)
 
 void CExternalSrecDlg::OnBnClickedGo()
 {
+	CRegistry reg;
+
+	CString str;
+	GetDlgItem(IDC_CMD)->GetWindowText(str);
+
+	if(!str.IsEmpty())
+	{
+		reg.SetRootKey(HKEY_CURRENT_USER);
+		if(reg.SetKey("Software\\GNSSViewer\\GPS", false))
+		{
+			reg.WriteString("extern_srec_cmd", str);
+		}
+	}
+
 	CString externalSrecFile;
 	GetDlgItem(IDC_PATH)->GetWindowText(externalSrecFile);
+
 	if(!DownloadLoader(externalSrecFile))
 	{
 		//AfxMessageBox("");				
@@ -184,6 +203,9 @@ bool CExternalSrecDlg::DownloadLoader(CString externalSrecFile)
 		//Utility::LogFatal(__FUNCTION__, messages, __LINE__);
 		break;
 	}	
+
+	GetDlgItem(IDC_CMD)->GetWindowText(messages, sizeof(messages));
+	CGPSDlg::gpsDlg->m_serial->SendData((U08*)messages, (U16)strlen(messages) + 1);	
 
 	for(int i=0; i<100; ++i)
 	{

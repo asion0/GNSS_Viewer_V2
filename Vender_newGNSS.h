@@ -137,12 +137,14 @@
 // .135 Disable check SAEE and Multi-Hz can't be both on.
 // .136 Add [Configure / Query Position Fix Navgation Mask] to Customer Release version.
 // .137 Fix [Query CRC] fail issue and [Configure Position Update Rate] NACK issue.
+// .138 Add [GPSDO Download] panel.
+// .139 Fix DataLog read fail issue
 
 //#define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.137"
+#define APP_VERSION				"2.0.139"
 #define APP_TITLE				""
 #define GNSS_VIEWER				0
 #define GPS_VIEWER				0

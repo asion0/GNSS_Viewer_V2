@@ -158,8 +158,8 @@ int CSerial::WaitingDataIn()
 	DWORD error = 0;
 	COMSTAT comStatus = {0};
 	ClearCommError(m_comDeviceHandle, &error, &comStatus);
-	DWORD& bytesInQueue = comStatus.cbInQue;
-	while(bytesInQueue==0) 
+
+	while(comStatus.cbInQue==0) 
 	{
 		++loopcount;
 		if(loopcount == MaxQueueLoop)
@@ -175,7 +175,7 @@ int CSerial::WaitingDataIn()
 		Sleep(2);
 		ClearCommError(m_comDeviceHandle, &error, &comStatus);
 	};
-	return bytesInQueue;
+	return comStatus.cbInQue;
 }
 
 //Read data until buffer full, or com port is empty.
@@ -199,13 +199,12 @@ DWORD CSerial::ReadData(void* buffer, DWORD bufferSize, bool once)
 		}
 
 		if(READ_ERROR == dwBytesRead)
-		{
+		{	//User cancel
 			return READ_ERROR;
 		}
 
 		if(bufferSize < (totalSize + dwBytesRead)) 
 		{
-		
 			dwBytesRead = bufferSize - totalSize;
 		}
 

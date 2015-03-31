@@ -220,6 +220,7 @@
 #define IDD_CONFIG_LEAP_SECONDS         469
 #define IDD_CONFIG_PARAM_SRCH_ENG_SLP_CRT 470
 #define IDB_GA_ACT                      471
+#define IDD_GPSDO_DOWNLOAD              471
 #define IDB_GA_DIS                      472
 #define IDD_CONFIG_DATUM_INDEX          473
 #define IDB_EARTH1                      474
@@ -840,6 +841,11 @@
 #define IDC_OPERATION                   1360
 #define IDD_CONFIG_GPS_LEAP_IN_UTC_DLG  1361
 #define IDC_INS_SEC                     1361
+#define IDC_CMD                         1362
+#define IDC_MASTER_PATH                 1363
+#define IDC_SLAVE_PATH                  1364
+#define IDC_BROWSE_MASTER               1365
+#define IDC_BROWSE_SLAVE                1366
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_BINARY_SYSTEMRESTART         32811
@@ -1088,15 +1094,16 @@
 #define ID_SET_BD_ALMANAC               33091
 #define ID_GPSDO_ENTER_DWN_H            33092
 #define ID_GPSDO_LEAVE_DWN_H            33093
-#define ID_CONFIG_GPS_LEAP_IN_UTC		33094
+#define ID_CONFIG_GPS_LEAP_IN_UTC       33094
+#define ID_GPSDO_FW_DOWNLOAD            33095
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        463
+#define _APS_NEXT_RESOURCE_VALUE        472
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1362
+#define _APS_NEXT_CONTROL_VALUE         1367
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

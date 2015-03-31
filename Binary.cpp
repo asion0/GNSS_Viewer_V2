@@ -114,7 +114,7 @@ static CommandEntry cmdTable[] =
 	//QueryAgpsStatusCmd,
 	{ 0x34, 0xFF, 8, 0xB2, 0x00 },
 	//QueryDatalogLogStatusCmd,
-	{ 0x17, 0xFF, 8, 0x94, 0x00 },
+	{ 0x17, 0xFF, 1, 0x94, 0x00 },
 	//QueryRegisterCmd,
 	{ 0x71, 0xFF, 5, 0xC0, 0x00 },
 	//QueryPositionFixNavigationMaskCmd,
@@ -5516,8 +5516,8 @@ CGPSDlg::CmdErrorCode CGPSDlg::GpsdoEnterDownload(CmdExeMode nMode, void* output
 	cmd.SetU08(4, GPSDO_PASS_THROUGH | GPSDO_DISABLE_GPS_ISR);
 
 	ClearQue();
-	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Enter Slave Download Successful");	
-	return Timeout;
+	bool r = SendToTarget(cmd.GetBuffer(), cmd.Size(), "Enter Slave Download Successful");	
+	return (r) ? Ack : Timeout;
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::GpsdoLeaveDownload(CmdExeMode nMode, void* outputData)
@@ -5539,14 +5539,14 @@ CGPSDlg::CmdErrorCode CGPSDlg::GpsdoEnterDownloadHigh(CmdExeMode nMode, void* ou
 	cmd.SetU08(1, 0x7A);
 	cmd.SetU08(2, 0x08);
 	cmd.SetU08(3, 0x01);
-	cmd.SetU08(4, GPSDO_PASS_THROUGH | GPSDO_DISABLE_GPS_ISR | GPSDO_BOOST_BAUDRATE);
+	cmd.SetU08(4, GPSDO_PASS_THROUGH | GPSDO_DISABLE_GPS_ISR | GPSDO_DRIVE_SLAVE | GPSDO_BOOST_BAUDRATE);
 
 	ClearQue();
-	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Enter High-Speed Slave Download Successful");	
+	bool r = SendToTarget(cmd.GetBuffer(), cmd.Size(), "Enter High-Speed Slave Download Successful", false);	
 	CGPSDlg::gpsDlg->SetBaudrate(7);		//460800 bps
 	PostMessage(UWM_GPSDO_HI_DOWNLOAD, 0, 0);
 	
-	return Timeout;
+	return (r) ? Ack : Timeout;
 }
 
 //CGPSDlg::CmdErrorCode CGPSDlg::ConfigureGpsdoMasterSerialPortHigh(CmdExeMode nMode, void* outputData)
@@ -5598,6 +5598,11 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryUartPass(CmdExeMode nMode, void* outputData)
 	BinaryData ackCmd;
 	if(!ExcuteBinaryCommand(QueryUartPassCmd, &cmd, &ackCmd))
 	{
+		if(nMode==Return && outputData)
+		{
+			*((BYTE*)outputData) = ackCmd[7];
+			return Ack;
+		}
 		CString strMsg = "Query UART pass-through Successful";
 		add_msgtolist(strMsg);
 		if(ackCmd[7] == 1)
@@ -6752,7 +6757,6 @@ UINT AFX_CDECL ConfigGnssDozeModeThread(LPVOID param)
 	return 0;
 }
 
-
 void CGPSDlg::OnConfigGnssDozeMode()
 {
 	if(!CheckConnect())
@@ -6761,9 +6765,6 @@ void CGPSDlg::OnConfigGnssDozeMode()
 	}
 
 	m_inputMode = 0;
-//	CConfigPositionFixNavigationMask dlg;
-//	INT_PTR nResult = dlg.DoModal();
-//	if(nResult == IDOK) 
 	{
 		U08 msg[2] = {0};
 		msg[0] = 0x64;
@@ -6772,13 +6773,34 @@ void CGPSDlg::OnConfigGnssDozeMode()
 		int len = SetMessage(msg, sizeof(msg));
         AfxBeginThread(ConfigGnssDozeModeThread, 0);
 	}
-	//else
-	//{
-	//	SetMode();  
-	//	CreateGPSThread();
-	//}
 }
 
+#include "GpsdoDownload.h"
+UINT DownloadThread(LPVOID pParam);
+void CGPSDlg::OnGpsdoFirmwareDownload()
+{
+	if(!CheckConnect())
+	{
+		return;
+	}
+
+	m_inputMode = 0;
+	CGpsdoDownload dlg;
+	if(IDOK != dlg.DoModal())
+	{
+		SetMode();  
+		CreateGPSThread();
+		return;
+	}
+
+
+	m_nDownloadBaudIdx = 7;
+	m_nDownloadBufferIdx = 0;
+	m_DownloadMode = GpsdoMasterSlave;
+	m_strDownloadImage = dlg.m_strMasterPath;
+	m_strDownloadImage2 = dlg.m_strSlavePath;
+	::AfxBeginThread(DownloadThread, 0);
+}
 ///////////////////////////////////////////////////////////////////
 void CGPSDlg::DoCommonConfig(CCommonConfigDlg* dlg)
 {

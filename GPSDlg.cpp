@@ -1129,6 +1129,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_GPSDO_ENTER_DWN, OnGpsdoEnterDownload)
 	ON_COMMAND(ID_GPSDO_LEAVE_DWN, OnGpsdoLeaveDownload)
 	ON_COMMAND(ID_GPSDO_ENTER_DWN_H, OnGpsdoEnterDownloadHigh)
+	ON_COMMAND(ID_GPSDO_FW_DOWNLOAD, OnGpsdoFirmwareDownload)
 	//ON_COMMAND(ID_GPSDO_LEAVE_DWN_H, OnGpsdoLeaveDownload)
 	ON_COMMAND(ID_GPSDO_ENTER_UART, OnGpsdoEnterUart)
 	ON_COMMAND(ID_GPSDO_LEAVE_UART, OnGpsdoLeaveUart)
@@ -2810,9 +2811,8 @@ void CGPSDlg::DataLogDecompress(bool mode)
 	CSkyTraqKml1 kml2;
 #endif
 
-	CString filename = m_convertFile.GetFileName() + 'g';
-	//filename+="g";
-	fDecompress.Open(filename,CFile::modeReadWrite|CFile::modeCreate);
+	CString filename = m_convertFile.GetFilePath() + 'g';
+	fDecompress.Open(filename, CFile::modeReadWrite|CFile::modeCreate);
 
 	CString logg_filename = fDecompress.GetFilePath();
 	//filename+=".kml";	
@@ -2848,7 +2848,7 @@ void CGPSDlg::DataLogDecompress(bool mode)
 	{
 
 		CString tmp_file;
-		CString tmp_name = m_convertFile.GetFileName();
+		CString tmp_name = m_convertFile.GetFilePath();
 		int find = tmp_name.Find(".");
 #if TWIN_DATALOG
 		tmp_file.Format("%s%d_datalogger1%s",tmp_name.Mid(0,find),file_tail,".kml");
@@ -4695,7 +4695,8 @@ void CGPSDlg::Load_Menu()
 
 	static MenuItemEntry GpsdoControlMenu[] =
 	{
-		{ 1, MF_STRING, ID_GPSDO_ENTER_DWN_H, "High-Speed Slave Download(Master Only)!", NULL },
+		{ 1, MF_STRING, ID_GPSDO_FW_DOWNLOAD, "GPSDO Firmware Download", NULL },
+		//{ 1, MF_STRING, ID_GPSDO_ENTER_DWN_H, "High-Speed Slave Download(Master Only)!", NULL },
 		{ 1, MF_STRING, ID_QUERY_UARTPASS, "Query UART Pass Through Status", NULL },
 		{ 1, MF_STRING, ID_GPSDO_RESET_SLAVE, "Reset Slave MCU(Master Only)", NULL },
 		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
@@ -5356,10 +5357,16 @@ void CGPSDlg::OnFileCleannema()
 
 void CGPSDlg::OnBnClickedBrowse()
 {
-	CFileDialog fd(true,"*.bin",NULL,OFN_FILEMUSTEXIST| OFN_HIDEREADONLY,"*.bin|*.bin||");
+	CString strPath;
+	m_lbl_firmware_path.GetWindowText(strPath);
+	if(!Utility::IsFileExist(strPath))
+	{
+		strPath.Empty();
+	}
+	CFileDialog fd(true, "*.bin", strPath, OFN_FILEMUSTEXIST| OFN_HIDEREADONLY, "*.bin|*.bin||");
 	if(fd.DoModal() == IDOK)
 	{
-		CString strPath = fd.GetPathName();
+		strPath = fd.GetPathName();
 		m_lbl_firmware_path.SetWindowText(strPath);
 		m_lbl_firmware_path.Invalidate();
 

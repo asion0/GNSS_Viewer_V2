@@ -466,6 +466,7 @@ protected:
 
 	afx_msg void OnConfigureSignalDisturbanceStatus();
 	afx_msg void OnConfigureGpsUtcLeapSecondsInUtc();
+	afx_msg void OnGpsdoFirmwareDownload();
 
 	CBitmapButton m_ConnectBtn;
 	CBitmapButton m_PlayBtn;
@@ -884,6 +885,7 @@ public:
 		InternalLoaderV8AddTag,
 		CustomerDownload,
 		InternalLoaderSpecial,
+		GpsdoMasterSlave,
 
 		HostBasedDownload,
 		HostBasedCmdOnly,
@@ -896,6 +898,7 @@ public:
 	int m_nDownloadBaudIdx;
 	int m_nDownloadBufferIdx;
 	CString m_strDownloadImage;
+	CString m_strDownloadImage2;
 
 	void Download();
 	void SetBaudrate(int b);
@@ -961,7 +964,7 @@ private:
 	U08 PlRomNoAlloc(const CString& prom_path);
 	U08 PlRomNoAlloc2(const CString& prom_path);
 	U08 PlRomNoAllocV8(const CString& prom_path);
-	bool FirmwareUpdate();
+	bool FirmwareUpdate(const CString& strFwPath);
 	int SendRomBuffer3(const U08* sData, int sDataSize, FILE *f, int fbinSize, 
 						bool needSleep, CWnd* notifyWnd);
 	bool DownloadLoader();
