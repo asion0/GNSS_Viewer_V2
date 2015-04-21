@@ -5,7 +5,7 @@
 #include "WaitReadLog.h"
 #include "Redir.h"
 #include "MaskedBitmap.h" 
-#include "ConPowerMode.h"
+//#include "ConPowerMode.h"
 #include "Config_Password.h"
 #include "Monitor_1PPS.h"
 #include "PositionRateDlg.h"
@@ -16,9 +16,8 @@
 #include "Config1ppsPulseWidthDlg.h"
 #include "Con1PPS_PulseClkSource.h"
 #include "Timing_start.h"
-#include "ConfigNoisePowerControl.h"
 #include "Config_Proprietary.h"
-#include "Config_Powersaving_param.h"
+//#include "Config_Powersaving_param.h"
 #include "ConAntennaDetection.h"
 #include "Con1PPS_Nmea_Delay.h"
 #include "Con1PPS_OutputMode.h"
@@ -2695,33 +2694,6 @@ UINT AFX_CDECL ConfigureNoisePowerControlThread(LPVOID param)
 	return 0;
 }
 
-void CGPSDlg::OnConfigureNoisePowerControl()
-{
-	if(!CheckConnect())
-	{
-		return;
-	}
-
-	m_inputMode = 0;
-	CConfigNoisePowerControl dlg;
-	if(dlg.DoModal() == IDOK) 
-	{
-		U08 msg[4] = {0};
-		msg[0] = 0x64;
-		msg[1] = 0x08;
-		msg[2] = (U08)dlg.m_nMode;
-		msg[3] = (U08)dlg.m_nAttribute;
-
-		int len = SetMessage(msg, sizeof(msg));
-        AfxBeginThread(ConfigureNoisePowerControlThread, 0);
-	}
-	else
-	{
-		SetMode();  
-		CreateGPSThread();
-	}
-}
-
 U32 m_propri_enable;
 int m_propri_attr;
 UINT ConfigProprietaryMessageThread(LPVOID param)
@@ -2765,126 +2737,6 @@ void CGPSDlg::OnConfigProprietaryMessage()
 		SetMode();  
 		CreateGPSThread();
 	}
-}
-
-int m_powersaving_param[9],  m_powersaving_attr;
-UINT ConfigPowerSavingParametersThread(LPVOID param)
-{
-	U08 msg[21] = { 0 };
-
-	msg[0] = 0x64;
-	msg[1] = 0x0C;
-	msg[2] = m_powersaving_param[0]>>8 & 0xFF;
-	msg[3] = m_powersaving_param[0] & 0xFF;
-	msg[4] = m_powersaving_param[1]>>8 & 0xFF;
-	msg[5] = m_powersaving_param[1] & 0xFF;
-	msg[6] = m_powersaving_param[2]>>8 & 0xFF;
-	msg[7] = m_powersaving_param[2] & 0xFF;
-	msg[8] = m_powersaving_param[3]>>8 & 0xFF;
-	msg[9] = m_powersaving_param[3] & 0xFF;
-	msg[10] = m_powersaving_param[4]>>8 & 0xFF;
-	msg[11] = m_powersaving_param[4] & 0xFF;
-	msg[12] = m_powersaving_param[5]>>8 & 0xFF;
-	msg[13] = m_powersaving_param[5] & 0xFF;
-	msg[14] = m_powersaving_param[6]>>8 & 0xFF;
-	msg[15] = m_powersaving_param[6] & 0xFF;
-	msg[16] = m_powersaving_param[7]>>8 & 0xFF;
-	msg[17] = m_powersaving_param[7] & 0xFF;
-	msg[18] = m_powersaving_param[8]>>8 & 0xFF;
-	msg[19] = m_powersaving_param[8] & 0xFF;
-	msg[20] = m_powersaving_attr;
-
-	int len = CGPSDlg::gpsDlg->SetMessage(msg, sizeof(msg));
-	CGPSDlg::gpsDlg->ExecuteConfigureCommand(CGPSDlg::m_inputMsg, len, "Configure Power Saving Parameters Successful...");
-	return 0;	
-}
-
-UINT ConfigPowerSavingParametersRomThread(LPVOID param)
-{
-	U08 msg[21] = { 0 };
-
-	msg[0] = 0x64;
-	msg[1] = 0x0C;
-	msg[2] = m_powersaving_param[0]>>8 & 0xFF;
-	msg[3] = m_powersaving_param[0] & 0xFF;
-	msg[4] = m_powersaving_param[1]>>8 & 0xFF;
-	msg[5] = m_powersaving_param[1] & 0xFF;
-	msg[6] = m_powersaving_param[2]>>8 & 0xFF;
-	msg[7] = m_powersaving_param[2] & 0xFF;
-	msg[8] = m_powersaving_param[3]>>8 & 0xFF;
-	msg[9] = m_powersaving_param[3] & 0xFF;
-	msg[10] = m_powersaving_param[4]>>8 & 0xFF;
-	msg[11] = m_powersaving_param[4] & 0xFF;
-	msg[12] = m_powersaving_param[5]>>8 & 0xFF;
-	msg[13] = m_powersaving_param[5] & 0xFF;
-	msg[14] = m_powersaving_param[6]>>8 & 0xFF;
-	msg[15] = m_powersaving_param[6] & 0xFF;
-	msg[16] = m_powersaving_param[7]>>8 & 0xFF;
-	msg[17] = m_powersaving_param[7] & 0xFF;
-	msg[18] = m_powersaving_param[8]>>8 & 0xFF;
-	msg[19] = m_powersaving_param[8] & 0xFF;
-	msg[20] = m_powersaving_attr;
-
-	int len = CGPSDlg::gpsDlg->SetMessage(msg, sizeof(msg));
-	CGPSDlg::gpsDlg->ExecuteConfigureCommand(CGPSDlg::m_inputMsg, len, "Configure Power Saving Parameters Successful...");
-	return 0;	
-}
-
-void CGPSDlg::OnConfigPowerSavingParameters()
-{
-	if(!CheckConnect())	
-	{
-		return;
-	}
-
-	CConfig_Powersaving_param dlg;
-	if (dlg.DoModal()!=IDOK)
-	{
-		SetMode();  
-		CreateGPSThread();
-		return;
-	}
-
-	m_powersaving_param[0] = dlg.param[0];
-	m_powersaving_param[1] = dlg.param[1];
-	m_powersaving_param[2] = dlg.param[2];
-	m_powersaving_param[3] = dlg.param[3];
-	m_powersaving_param[4] = dlg.param[4];
-	m_powersaving_param[5] = dlg.param[5];
-	m_powersaving_param[6] = dlg.param[6];
-	m_powersaving_param[7] = dlg.param[7];
-	m_powersaving_param[8] = dlg.param[8];
-	m_powersaving_attr = dlg.attr;
-	AfxBeginThread(ConfigPowerSavingParametersThread, 0);
-}
-
-void CGPSDlg::OnConfigPowerSavingParametersRom()
-{
-	if(!CheckConnect())	
-	{
-		return;
-	}
-
-	CConfig_Powersaving_param dlg;
-	dlg.SetRomMode(true);
-	if (dlg.DoModal() != IDOK)
-	{
-		SetMode();  
-		CreateGPSThread();
-		return;
-	}
-
-	m_powersaving_param[0] = dlg.param[0];
-	m_powersaving_param[1] = dlg.param[1];
-	m_powersaving_param[2] = dlg.param[2];
-	m_powersaving_param[3] = dlg.param[3];
-	m_powersaving_param[4] = dlg.param[4];
-	m_powersaving_param[5] = dlg.param[5];
-	m_powersaving_param[6] = dlg.param[6];
-	m_powersaving_param[7] = dlg.param[7];
-	m_powersaving_param[8] = dlg.param[8];
-	m_powersaving_attr = dlg.attr;
-	AfxBeginThread(ConfigPowerSavingParametersRomThread, 0);
 }
 
 int m_antenna_control,m_antenna_attr;
@@ -4511,10 +4363,21 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryNoisePowerControl(CmdExeMode nMode, void* ou
 	BinaryData ackCmd;
 	if(!ExcuteBinaryCommand(QueryNoisePowerControlCmd, &cmd, &ackCmd))
 	{
-		CString strMsg = "Query Noise Power Control Successful...";
+		CString strMsg;
+		strMsg = "Query Noise Power Control Successful...";
 		add_msgtolist(strMsg);
 		strMsg.Format("Noise Power Control: %s", ((ackCmd[6]) ? "Dynamic" : "Static"));
 		add_msgtolist(strMsg);
+
+		WORD ackSize = MAKEWORD(ackCmd[3], ackCmd[2]);
+		if(ackSize == 8)
+		{
+			strMsg.Format("Default Noise Power Control: %d", ackCmd[7]);
+			add_msgtolist(strMsg);
+			U32 data = MAKELONG(MAKEWORD(ackCmd[11], ackCmd[10]), MAKEWORD(ackCmd[9], ackCmd[8]));
+			strMsg.Format("External Noise Power Value: %u", data);
+			add_msgtolist(strMsg);
+		};
 	}
 	return Timeout;
 }
@@ -6865,6 +6728,12 @@ void CGPSDlg::OnConfigDatumIndex()
 	DoCommonConfig(&dlg);
 }
 
+void CGPSDlg::OnConfigNoisePowerControl()
+{
+	//CConfigDatumIndex dlg;
+	//DoCommonConfig(&dlg);
+}
+
 void CGPSDlg::OnBinaryConfigureSBAS()
 {
 	CConfigSBAS dlg;
@@ -6909,7 +6778,7 @@ void CGPSDlg::OnConfigRefTimeSyncToGpsTime()
 
 void CGPSDlg::OnConfigQueryGnssNavSol()
 {
-	ConfigQueryGnssNavSolDlg dlg;
+	ConfigGnssConstellationTypeDlg dlg;
 	DoCommonConfig(&dlg);
 }
 
@@ -6924,13 +6793,13 @@ void CGPSDlg::OnBinaryConfigurepowermode()
 	CConfigPowerMode dlg;
 	DoCommonConfig(&dlg);
 }
-
+/*
 void CGPSDlg::OnSetUartPassThrough()
 {
 	CConfigUartPassThrough dlg;
 	DoCommonConfig(&dlg);
 }
-
+*/
 void CGPSDlg::OnSup800EraseData()
 {
 	CSUP800EraseUserDataDlg dlg;
@@ -6961,5 +6830,22 @@ void CGPSDlg::OnConfigureGpsUtcLeapSecondsInUtc()
 	DoCommonConfig(&dlg);
 }
 
+void CGPSDlg::OnConfigureNoisePowerControl()
+{
+	CConfigNoisePowerControlDlg dlg;
+	DoCommonConfig(&dlg);
+}
 
 
+void CGPSDlg::OnConfigPowerSavingParametersRom()
+{
+	ConfigPowerSavingParametersRomDlg dlg;
+	dlg.SetRomMode(true);
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigPowerSavingParameters()
+{
+	ConfigPowerSavingParametersRomDlg dlg;
+	DoCommonConfig(&dlg);
+}

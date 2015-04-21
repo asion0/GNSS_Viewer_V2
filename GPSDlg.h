@@ -326,7 +326,7 @@ protected:
 	afx_msg void OnBnClickedScanall();
 	afx_msg void OnBnClickedScanport();
 	afx_msg void OnBnClickedScanbaudrate();
-	afx_msg void OnSetUartPassThrough();
+//	afx_msg void OnSetUartPassThrough();
 	afx_msg void OnBinaryConfiguremessagetype();
 	afx_msg void OnEphemerisGetephemeris();
 	afx_msg void OnEphemerisSetephemeris();
@@ -437,6 +437,7 @@ protected:
 	afx_msg void OnConfigLeapSeconds();
 	afx_msg void OnConfigParamSearchEngineSleepCriteria();
 	afx_msg void OnConfigDatumIndex();
+	afx_msg void OnConfigNoisePowerControl();
 	afx_msg void OnConfigureNoisePowerControl();
 	afx_msg void OnConfigureInterferenceDetectControl();
 	afx_msg void OnConfigNMEABinaryOutputDestination();

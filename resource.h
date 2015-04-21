@@ -84,7 +84,7 @@
 #define IDB_NOISE                       300
 #define IDB_BITMAP15                    305
 #define IDB_CLOCK                       305
-#define IDD_CON_POWERMODE               306
+#define IDD_CONFIG_POWER_MODE           306
 #define IDD_CON_MULTIPATH               308
 #define IDD_CON_WAAS                    310
 #define IDD_CON_BINARY_MSG              312
@@ -113,7 +113,7 @@
 #define IDR_GNSS_PRELOADER_230400       350
 #define IDD_CON_PROPRIETARY             351
 #define IDR_GPS_PRELOADER_4800          351
-#define IDD_POWERSAVING_PARAM           352
+#define IDD_CONFIG_PWR_SVNG_PRM_ROM     352
 #define IDR_GPS_PRELOADER_9600          352
 #define IDD_CON_ANTENNA_DETECT          353
 #define IDR_GPS_PRELOADER_19200         353
@@ -174,7 +174,7 @@
 #define IDD_CONFIG_NMEA_INTERVAL_V8     419
 #define IDD_PARALLEL_DL                 420
 #define IDD_NMEA_CHECKSUM_CAL           421
-#define IDD_REF_TIME_TO_GPS_TIME        422
+#define IDD_CONFIG_REF_TIME_TO_GPS_TIME 422
 #define IDD_CONFIG_NAV_MODE_V8          423
 #define IDD_BIN_CHECKSUM_CAL            424
 #define IDR_V8_DL_SREC_115200           425
@@ -182,7 +182,7 @@
 #define IDR_V8_DL_SREC_460800           427
 #define IDD_CONFIG_DRUPDATERATE         428
 #define IDB_GPS_SNR_T                   429
-#define IDD_CONFIG_GNSS_NAV_SOL         429
+#define IDD_CONFIG_GNSS_CTLN_TPE        429
 #define IDB_BEIDOU_SNR_T                430
 #define IDB_GA_SNR_T                    431
 #define IDB_TTFF                        432
@@ -645,6 +645,8 @@
 #define IDC_NOISE_POWER_CTRL            1241
 #define IDC_MODE                        1242
 #define IDC_UART                        1243
+#define IDC_MODE2                       1243
+#define IDC_DEFAULT                     1243
 #define IDC_GET                         1244
 #define IDC_SET                         1245
 #define IDC_DATE_T                      1250
@@ -846,6 +848,7 @@
 #define IDC_SLAVE_PATH                  1364
 #define IDC_BROWSE_MASTER               1365
 #define IDC_BROWSE_SLAVE                1366
+#define IDC_VALUE                       1367
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_BINARY_SYSTEMRESTART         32811
@@ -1103,7 +1106,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        472
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1367
+#define _APS_NEXT_CONTROL_VALUE         1368
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

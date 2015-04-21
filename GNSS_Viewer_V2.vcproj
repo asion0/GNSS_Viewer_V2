@@ -2056,14 +2056,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\Config_Powersaving_param.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\Config_Powersaving_param.h"
-					>
-				</File>
-				<File
 					RelativePath=".\Config_Proprietary.cpp"
 					>
 				</File>
@@ -2085,14 +2077,6 @@
 				</File>
 				<File
 					RelativePath=".\ConfigNmeaIntervalDlg.h"
-					>
-				</File>
-				<File
-					RelativePath="ConfigNoisePowerControl.cpp"
-					>
-				</File>
-				<File
-					RelativePath="ConfigNoisePowerControl.h"
 					>
 				</File>
 				<File

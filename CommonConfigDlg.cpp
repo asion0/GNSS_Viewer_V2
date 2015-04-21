@@ -1,11 +1,7 @@
-ConfigQueryGnssNavSolDlg// CommonConfigDlg.cpp : 實作檔
-//
-
 #include "stdafx.h"
 #include "GPS.h"
 #include "GPSDlg.h"
 #include "CommonConfigDlg.h"
-
 
 // CCommonConfigDlg 對話方塊
 BinaryCommand configCmd;
@@ -22,16 +18,38 @@ IMPLEMENT_DYNAMIC(CCommonConfigDlg, CDialog)
 
 CCommonConfigDlg::CCommonConfigDlg(UINT nIDTemplate, CWnd* pParent /*=NULL*/)
 	: CDialog(nIDTemplate, pParent)
-{
 
+{
+	pCancelBtn = new CButton();
+	pAcceptBtn = new CButton();
 }
+
 
 CCommonConfigDlg::~CCommonConfigDlg()
 {
+	delete pCancelBtn;
+	delete pAcceptBtn;
 }
 
 BEGIN_MESSAGE_MAP(CCommonConfigDlg, CDialog)
 END_MESSAGE_MAP()
+
+BOOL CCommonConfigDlg::OnInitDialog()
+{
+	CDialog::OnInitDialog();
+
+	DWORD dwStyle = WS_CHILD | WS_TABSTOP | WS_VISIBLE | BS_PUSHBUTTON;
+	CRect	rcClient, rcCtrl;
+	GetClientRect(&rcClient);
+
+	rcCtrl.SetRect(rcClient.right - 112, rcClient.bottom - 36, rcClient.right - 16, rcClient.bottom - 8);
+	pCancelBtn->Create(_T("Cancel"), dwStyle, rcCtrl, this, IDCANCEL);
+
+	rcCtrl.SetRect(rcClient.right - 224, rcClient.bottom - 36, rcClient.right - 128, rcClient.bottom - 8);
+	pAcceptBtn->Create(_T("Accept"), dwStyle, rcCtrl, this, IDOK);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
 
 // CConfigDGPS 對話方塊
 IMPLEMENT_DYNAMIC(CConfigDGPS, CCommonConfigDlg)
@@ -47,6 +65,16 @@ BEGIN_MESSAGE_MAP(CConfigDGPS, CCommonConfigDlg)
 END_MESSAGE_MAP()
 
 // CConfigDGPS 訊息處理常式
+BOOL CConfigDGPS::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	GetDlgItem(IDC_OVERDUE_SEC)->SetWindowText("30");
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
 void CConfigDGPS::OnBnClickedOk()
 {
 	CString txt;
@@ -59,21 +87,11 @@ void CConfigDGPS::OnBnClickedOk()
 	}
 
 	m_bEnable = ((CButton*)GetDlgItem(IDC_ENABLE))->GetCheck();
-	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();;
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
 
 	OnOK();
 }
-
-BOOL CConfigDGPS::OnInitDialog()
-{
-	CCommonConfigDlg::OnInitDialog();
-
-	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);;
-	GetDlgItem(IDC_OVERDUE_SEC)->SetWindowText("30");
-
-	return TRUE;  // return TRUE unless you set the focus to a control
-}	
-
+	
 void CConfigDGPS::DoCommand()
 {
 	BinaryData cmd(6);
@@ -103,20 +121,22 @@ BEGIN_MESSAGE_MAP(CConfigSmoothMode, CCommonConfigDlg)
 END_MESSAGE_MAP()
 
 // CConfigDGPS 訊息處理常式
-void CConfigSmoothMode::OnBnClickedOk()
-{
-	m_bEnable = ((CButton*)GetDlgItem(IDC_ENABLE))->GetCheck();
-	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();
-	OnOK();
-}
-
 BOOL CConfigSmoothMode::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
 
-	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);;
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 }	
+
+void CConfigSmoothMode::OnBnClickedOk()
+{
+	m_bEnable = ((CButton*)GetDlgItem(IDC_ENABLE))->GetCheck();
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
 
 void CConfigSmoothMode::DoCommand()
 {
@@ -145,22 +165,24 @@ BEGIN_MESSAGE_MAP(CConfigTimeStamping, CCommonConfigDlg)
 END_MESSAGE_MAP()
 
 // CConfigDGPS 訊息處理常式
-void CConfigTimeStamping::OnBnClickedOk()
-{
-	m_bEnable = ((CButton*)GetDlgItem(IDC_ENABLE))->GetCheck();
-	m_bTiggerMode = ((CComboBox*)GetDlgItem(IDC_TIGGER_MODE))->GetCurSel();
-	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();
-	OnOK();
-}
-
 BOOL CConfigTimeStamping::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
 
-	((CComboBox*)GetDlgItem(IDC_TIGGER_MODE))->SetCurSel(0);;
-	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);;
+	((CComboBox*)GetDlgItem(IDC_TIGGER_MODE))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 }	
+
+void CConfigTimeStamping::OnBnClickedOk()
+{
+	m_bEnable = ((CButton*)GetDlgItem(IDC_ENABLE))->GetCheck();
+	m_bTiggerMode = ((CComboBox*)GetDlgItem(IDC_TIGGER_MODE))->GetCurSel();
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
 
 void CConfigTimeStamping::DoCommand()
 {
@@ -199,10 +221,21 @@ BEGIN_MESSAGE_MAP(CConfigSBAS, CCommonConfigDlg)
 	ON_BN_CLICKED(IDC_ENABLE_EGNOS, OnBnClickedEnableEgnos)
 	ON_BN_CLICKED(IDC_ENABLE_MSAS, OnBnClickedEnableMasa)
 	ON_BN_CLICKED(IDC_ENABLE_ALL, OnBnClickedEnableAll)
-
 END_MESSAGE_MAP()
 
 // CConfigSBAS 訊息處理常式
+BOOL CConfigSBAS::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	GetDlgItem(IDC_NUMBER_CHANNEL)->SetWindowText("0");
+	GetDlgItem(IDC_URAMASK)->SetWindowText("8");
+	((CComboBox*)GetDlgItem(IDC_ENABLE_NAV))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
 void CConfigSBAS::OnBnClickedOk()
 {
 	CString txt;
@@ -230,7 +263,7 @@ void CConfigSBAS::OnBnClickedOk()
 	m_bMSAS = ((CButton*)GetDlgItem(IDC_ENABLE_MSAS))->GetCheck();
 	m_bAll = ((CButton*)GetDlgItem(IDC_ENABLE_ALL))->GetCheck();
 
-	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();;
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
 
 	OnOK();
 }
@@ -269,18 +302,6 @@ void CConfigSBAS::OnBnClickedEnableAll()
 	}
 }
 
-BOOL CConfigSBAS::OnInitDialog()
-{
-	CCommonConfigDlg::OnInitDialog();
-
-	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);;
-	GetDlgItem(IDC_NUMBER_CHANNEL)->SetWindowText("0");
-	GetDlgItem(IDC_URAMASK)->SetWindowText("8");
-	((CComboBox*)GetDlgItem(IDC_ENABLE_NAV))->SetCurSel(0);
-
-	return TRUE;  // return TRUE unless you set the focus to a control
-}
-
 void CConfigSBAS::DoCommand()
 {
 	BinaryData cmd(9);
@@ -314,21 +335,23 @@ BEGIN_MESSAGE_MAP(CConfigSAEE, CCommonConfigDlg)
 END_MESSAGE_MAP()
 
 // CConfigSAEE 訊息處理常式
-void CConfigSAEE::OnBnClickedOk()
-{
-	m_nEnable = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
-	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();;
-	OnOK();
-}
-
 BOOL CConfigSAEE::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
 
-	((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);
-	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);;
 	GetDlgItem(IDC_WARNING)->SetWindowText("Warning :\r\nPlease disable multi-hz position update rate before enable SAEE.");
+	((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigSAEE::OnBnClickedOk()
+{
+	m_nEnable = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
 }
 
 void CConfigSAEE::DoCommand()
@@ -378,6 +401,16 @@ BEGIN_MESSAGE_MAP(CConfigQZSS, CCommonConfigDlg)
 END_MESSAGE_MAP()
 
 // CConfigQZSS 訊息處理常式
+BOOL CConfigQZSS::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	GetDlgItem(IDC_NUMBER_CHANNEL)->SetWindowText("1");
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
 void CConfigQZSS::OnBnClickedOk()
 {
 	CString txt;
@@ -390,19 +423,9 @@ void CConfigQZSS::OnBnClickedOk()
 	}
 
 	m_bEnable = ((CButton*)GetDlgItem(IDC_ENABLE_QZSS))->GetCheck();
-	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();;
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
 
 	OnOK();
-}
-
-BOOL CConfigQZSS::OnInitDialog()
-{
-	CCommonConfigDlg::OnInitDialog();
-
-	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);;
-	GetDlgItem(IDC_NUMBER_CHANNEL)->SetWindowText("1");
-
-	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
 void CConfigQZSS::DoCommand()
@@ -434,22 +457,22 @@ BEGIN_MESSAGE_MAP(CConfigInterferenceDetectControl, CCommonConfigDlg)
 END_MESSAGE_MAP()
 
 // CConfigInterferenceDetectControl 訊息處理常式
-void CConfigInterferenceDetectControl::OnBnClickedOk()
-{
-	m_nMode = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
-	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();
-
-	OnOK();
-}
-
 BOOL CConfigInterferenceDetectControl::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
 
-	((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);;
-	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);;
+	((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigInterferenceDetectControl::OnBnClickedOk()
+{
+	m_nMode = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
 }
 
 void CConfigInterferenceDetectControl::DoCommand()
@@ -481,6 +504,17 @@ BEGIN_MESSAGE_MAP(CConfigNMEABinaryOutputDestination, CCommonConfigDlg)
 END_MESSAGE_MAP()
 
 // CConfigNMEABinaryOutputDestination 訊息處理常式
+BOOL CConfigNMEABinaryOutputDestination::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	((CButton*)GetDlgItem(IDC_UART))->SetCheck(1);
+	((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
 void CConfigNMEABinaryOutputDestination::OnBnClickedOk()
 {
 	m_nMode = 0;
@@ -497,21 +531,9 @@ void CConfigNMEABinaryOutputDestination::OnBnClickedOk()
 	{
 		m_nMode |= 0x04;
 	}
-	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
 
 	OnOK();
-}
-
-BOOL CConfigNMEABinaryOutputDestination::OnInitDialog()
-{
-	CCommonConfigDlg::OnInitDialog();
-
-	// TODO:  在此加入額外的初始化
-	((CButton*)GetDlgItem(IDC_UART))->SetCheck(1);
-	((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);;
-	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);
-
-	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
 void CConfigNMEABinaryOutputDestination::DoCommand()
@@ -544,29 +566,30 @@ BEGIN_MESSAGE_MAP(CConfigParameterSearchEngineNumber, CCommonConfigDlg)
 END_MESSAGE_MAP()
 
 // CConfigParameterSearchEngineNumber 訊息處理常式
-void CConfigParameterSearchEngineNumber::OnBnClickedOk()
-{
-	m_nMode = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
-	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();
-
-	OnOK();
-}
-
 BOOL CConfigParameterSearchEngineNumber::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
 
 	((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);
-	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
 	OnCbnSelchangeMode();
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
+void CConfigParameterSearchEngineNumber::OnBnClickedOk()
+{
+	m_nMode = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
 void CConfigParameterSearchEngineNumber::OnCbnSelchangeMode()
 {
 	int nSel = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
-	const char* szTable[] = {"0 : ROM version decide by HW power-on latch.\r\n     FLASH version : by SW define.",
+	const char* szTable[] = { 
+		"0 : ROM version decide by HW power-on latch.\r\n     FLASH version : by SW define.",
 		"1 : Low",
 		"2 : Middle",
 		"3 : High",
@@ -603,24 +626,24 @@ BEGIN_MESSAGE_MAP(CConfigPositionFixNavigationMask, CCommonConfigDlg)
 END_MESSAGE_MAP()
 
 // CConfigPositionFixNavigationMask 訊息處理常式
-void CConfigPositionFixNavigationMask::OnBnClickedOk()
-{
-	m_nMask1 = ((CComboBox*)GetDlgItem(IDC_MASK1))->GetCurSel();
-	m_nMask2 = ((CComboBox*)GetDlgItem(IDC_MASK2))->GetCurSel();
-	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();
-
-	OnOK();
-}
-
 BOOL CConfigPositionFixNavigationMask::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
 
-	((CComboBox*)GetDlgItem(IDC_MASK1))->SetCurSel(0);;
-	((CComboBox*)GetDlgItem(IDC_MASK2))->SetCurSel(0);;
-	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);;
+	((CComboBox*)GetDlgItem(IDC_MASK1))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_MASK2))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigPositionFixNavigationMask::OnBnClickedOk()
+{
+	m_nMask1 = ((CComboBox*)GetDlgItem(IDC_MASK1))->GetCurSel();
+	m_nMask2 = ((CComboBox*)GetDlgItem(IDC_MASK2))->GetCurSel();
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
 }
 
 void CConfigPositionFixNavigationMask::DoCommand()
@@ -641,7 +664,7 @@ void CConfigPositionFixNavigationMask::DoCommand()
 IMPLEMENT_DYNAMIC(ConfigRefTimeToGpsTimeDlg, CCommonConfigDlg)
 
 ConfigRefTimeToGpsTimeDlg::ConfigRefTimeToGpsTimeDlg(CWnd* pParent /*=NULL*/)
-	: CCommonConfigDlg(IDD_REF_TIME_TO_GPS_TIME, pParent)
+	: CCommonConfigDlg(IDD_CONFIG_REF_TIME_TO_GPS_TIME, pParent)
 {
 
 }
@@ -697,21 +720,34 @@ void ConfigRefTimeToGpsTimeDlg::DoCommand()
     AfxBeginThread(ConfigThread, 0);
 }
 
-// ConfigQueryGnssNavSolDlg 對話方塊
-IMPLEMENT_DYNAMIC(ConfigQueryGnssNavSolDlg, CCommonConfigDlg)
+// ConfigGnssConstellationTypeDlg 對話方塊
+IMPLEMENT_DYNAMIC(ConfigGnssConstellationTypeDlg, CCommonConfigDlg)
 
-ConfigQueryGnssNavSolDlg::ConfigQueryGnssNavSolDlg(CWnd* pParent /*=NULL*/)
-	: CCommonConfigDlg(IDD_CONFIG_GNSS_NAV_SOL, pParent)
+ConfigGnssConstellationTypeDlg::ConfigGnssConstellationTypeDlg(CWnd* pParent /*=NULL*/)
+	: CCommonConfigDlg(IDD_CONFIG_GNSS_CTLN_TPE, pParent)
 {
 
 }
 
-BEGIN_MESSAGE_MAP(ConfigQueryGnssNavSolDlg, CCommonConfigDlg)
-	ON_BN_CLICKED(IDOK, &ConfigQueryGnssNavSolDlg::OnBnClickedOk)
+BEGIN_MESSAGE_MAP(ConfigGnssConstellationTypeDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &ConfigGnssConstellationTypeDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
 // ConfigRefTimeToGpsTimeDlg 訊息處理常式
-void ConfigQueryGnssNavSolDlg::OnBnClickedOk()
+BOOL ConfigGnssConstellationTypeDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	((CButton*)GetDlgItem(IDC_GPS))->SetCheck(1);
+	((CButton*)GetDlgItem(IDC_GLONASS))->SetCheck(0);
+	((CButton*)GetDlgItem(IDC_GALILEO))->SetCheck(0);
+	((CButton*)GetDlgItem(IDC_BEIDOU))->SetCheck(0);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void ConfigGnssConstellationTypeDlg::OnBnClickedOk()
 {
 	m_mode = 0;
 	if(((CButton*)GetDlgItem(IDC_GPS))->GetCheck())
@@ -730,27 +766,12 @@ void ConfigQueryGnssNavSolDlg::OnBnClickedOk()
 	{
 		m_mode |= 0x8;
 	}
-	m_attribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
 
 	OnOK();
 }
 
-BOOL ConfigQueryGnssNavSolDlg::OnInitDialog()
-{
-	CCommonConfigDlg::OnInitDialog();
-
-	((CButton*)GetDlgItem(IDC_GPS))->SetCheck(1);
-	((CButton*)GetDlgItem(IDC_GLONASS))->SetCheck(0);
-	((CButton*)GetDlgItem(IDC_GALILEO))->SetCheck(0);
-	((CButton*)GetDlgItem(IDC_BEIDOU))->SetCheck(0);
-
-	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);
-
-	return TRUE;  // return TRUE unless you set the focus to a control
-}
-
-
-void ConfigQueryGnssNavSolDlg::DoCommand()
+void ConfigGnssConstellationTypeDlg::DoCommand()
 {
 	BinaryData cmd(5);
 	*cmd.GetBuffer(0) = 0x64;
@@ -778,6 +799,21 @@ BEGIN_MESSAGE_MAP(ConfigBinaryMeasurementDataOutDlg, CCommonConfigDlg)
 END_MESSAGE_MAP()
 
 // ConfigRefTimeToGpsTimeDlg 訊息處理常式
+BOOL ConfigBinaryMeasurementDataOutDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+	((CComboBox*)GetDlgItem(IDC_OUTPUT_RATE))->SetCurSel(0);
+
+	((CButton*)GetDlgItem(IDC_MEAS_TIME))->SetCheck(1);
+	((CButton*)GetDlgItem(IDC_RAW_MEAS))->SetCheck(1);
+	((CButton*)GetDlgItem(IDC_SV_CH))->SetCheck(1);
+	((CButton*)GetDlgItem(IDC_RCV_STATE))->SetCheck(1);
+	((CButton*)GetDlgItem(IDC_GPS))->SetCheck(1);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
 void ConfigBinaryMeasurementDataOutDlg::OnBnClickedOk()
 {
 	m_rate = ((CComboBox*)GetDlgItem(IDC_OUTPUT_RATE))->GetCurSel();
@@ -803,25 +839,9 @@ void ConfigBinaryMeasurementDataOutDlg::OnBnClickedOk()
 	{
 		m_subFrame |= 0x8;
 	}
-	m_attribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
 
 	OnOK();
-}
-
-BOOL ConfigBinaryMeasurementDataOutDlg::OnInitDialog()
-{
-	CCommonConfigDlg::OnInitDialog();
-	((CComboBox*)GetDlgItem(IDC_OUTPUT_RATE))->SetCurSel(0);
-
-	((CButton*)GetDlgItem(IDC_MEAS_TIME))->SetCheck(1);
-	((CButton*)GetDlgItem(IDC_RAW_MEAS))->SetCheck(1);
-	((CButton*)GetDlgItem(IDC_SV_CH))->SetCheck(1);
-	((CButton*)GetDlgItem(IDC_RCV_STATE))->SetCheck(1);
-	((CButton*)GetDlgItem(IDC_GPS))->SetCheck(1);
-
-	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);
-
-	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
 void ConfigBinaryMeasurementDataOutDlg::DoCommand()
@@ -855,6 +875,15 @@ BEGIN_MESSAGE_MAP(CConfigLeapSeconds, CCommonConfigDlg)
 END_MESSAGE_MAP()
 
 // ConfigRefTimeToGpsTimeDlg 訊息處理常式
+BOOL CConfigLeapSeconds::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+	GetDlgItem(IDC_LEAP_SECONDS)->SetWindowText("0");
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
 void CConfigLeapSeconds::OnBnClickedOk()
 {
 	CString txt;
@@ -865,19 +894,9 @@ void CConfigLeapSeconds::OnBnClickedOk()
 		AfxMessageBox("Invalid value!");
 		return;
 	}
-	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
 
 	OnOK();
-}
-
-BOOL CConfigLeapSeconds::OnInitDialog()
-{
-	CCommonConfigDlg::OnInitDialog();
-	GetDlgItem(IDC_LEAP_SECONDS)->SetWindowText("0");
-
-	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);
-
-	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
 void CConfigLeapSeconds::DoCommand()
@@ -897,7 +916,7 @@ void CConfigLeapSeconds::DoCommand()
 IMPLEMENT_DYNAMIC(CConfigPowerMode, CCommonConfigDlg)
 
 CConfigPowerMode::CConfigPowerMode(CWnd* pParent /*=NULL*/)
-: CCommonConfigDlg(IDD_CON_POWERMODE, pParent)
+: CCommonConfigDlg(IDD_CONFIG_POWER_MODE, pParent)
 {
 
 }
@@ -907,27 +926,22 @@ BEGIN_MESSAGE_MAP(CConfigPowerMode, CCommonConfigDlg)
 END_MESSAGE_MAP()
 
 // ConfigRefTimeToGpsTimeDlg 訊息處理常式
-void CConfigPowerMode::OnBnClickedOk()
-{
-	CString txt;
-	m_nPowerMode = ((CComboBox*)GetDlgItem(IDC_POWER_MODE))->GetCurSel();
-	//if(m_nPowerMode < 0 || m_nPowerMode > 255)
-	//{
-	//	AfxMessageBox("Invalid value!");
-	//	return;
-	//}
-	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();
-
-	OnOK();
-}
-
 BOOL CConfigPowerMode::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
 	((CComboBox*)GetDlgItem(IDC_POWER_MODE))->SetCurSel(0);
-	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigPowerMode::OnBnClickedOk()
+{
+	CString txt;
+	m_nPowerMode = ((CComboBox*)GetDlgItem(IDC_POWER_MODE))->GetCurSel();
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
 }
 
 void CConfigPowerMode::DoCommand()
@@ -938,7 +952,7 @@ void CConfigPowerMode::DoCommand()
 	*cmd.GetBuffer(2) = (U08)m_nAttribute;
 
 	configCmd.SetData(cmd);
-	configPrompt = "Configure PowerSave Successful...";
+	configPrompt = "Configure PowerMode Successful...";
     AfxBeginThread(ConfigThread, 0);
 }
 
@@ -956,6 +970,15 @@ BEGIN_MESSAGE_MAP(CConfigParamSearchEngineSleepCRiteria, CCommonConfigDlg)
 END_MESSAGE_MAP()
 
 // CConfigParamSearchEngineSleepCRiteria 訊息處理常式
+BOOL CConfigParamSearchEngineSleepCRiteria::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+	GetDlgItem(IDC_TRACKED_NUM)->SetWindowText("10");
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
 void CConfigParamSearchEngineSleepCRiteria::OnBnClickedOk()
 {
 	CString txt;
@@ -966,19 +989,9 @@ void CConfigParamSearchEngineSleepCRiteria::OnBnClickedOk()
 		AfxMessageBox("Invalid value!");
 		return;
 	}
-	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
 
 	OnOK();
-}
-
-BOOL CConfigParamSearchEngineSleepCRiteria::OnInitDialog()
-{
-	CCommonConfigDlg::OnInitDialog();
-	GetDlgItem(IDC_TRACKED_NUM)->SetWindowText("10");
-
-	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);
-
-	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
 void CConfigParamSearchEngineSleepCRiteria::DoCommand()
@@ -1008,14 +1021,6 @@ BEGIN_MESSAGE_MAP(CConfigDatumIndex, CCommonConfigDlg)
 END_MESSAGE_MAP()
 
 // CConfigParamSearchEngineSleepCRiteria 訊息處理常式
-void CConfigDatumIndex::OnBnClickedOk()
-{
-	m_nDatumIndex = ((CComboBox*)GetDlgItem(IDC_DATUM_LIST))->GetCurSel();
-	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();
-
-	OnOK();
-}
-
 BOOL CConfigDatumIndex::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -1029,9 +1034,17 @@ BOOL CConfigDatumIndex::OnInitDialog()
 		cbDatum->AddString(DatumList[i]);
 	}
 	cbDatum->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
 
-	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);
 	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigDatumIndex::OnBnClickedOk()
+{
+	m_nDatumIndex = ((CComboBox*)GetDlgItem(IDC_DATUM_LIST))->GetCurSel();
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
 }
 
 void CConfigDatumIndex::DoCommand()
@@ -1048,48 +1061,6 @@ void CConfigDatumIndex::DoCommand()
     AfxBeginThread(ConfigThread, 0);
 }
 
-
-// CConfigUartPassThrough 對話方塊
-IMPLEMENT_DYNAMIC(CConfigUartPassThrough, CCommonConfigDlg)
-
-CConfigUartPassThrough::CConfigUartPassThrough(CWnd* pParent /*=NULL*/)
-: CCommonConfigDlg(IDD_SET_UART_PASS_THROUGH, pParent)
-{
-
-}
-
-BEGIN_MESSAGE_MAP(CConfigUartPassThrough, CCommonConfigDlg)
-	ON_BN_CLICKED(IDOK, &CConfigUartPassThrough::OnBnClickedOk)
-END_MESSAGE_MAP()
-
-// CConfigUartPassThrough 訊息處理常式
-void CConfigUartPassThrough::OnBnClickedOk()
-{
-	m_nPassThrough = ((CButton*)GetDlgItem(IDC_PASS_THROUGH))->GetCheck();
-	OnOK();
-}
-
-BOOL CConfigUartPassThrough::OnInitDialog()
-{
-	CCommonConfigDlg::OnInitDialog();
-
-	return TRUE;  // return TRUE unless you set the focus to a control
-}
-
-void CConfigUartPassThrough::DoCommand()
-{
-	BinaryData cmd(4);
-	*cmd.GetBuffer(0) = 0x7A;
-	*cmd.GetBuffer(1) = 0x08;
-	*cmd.GetBuffer(2) = 0x01;
-	*cmd.GetBuffer(3) = m_nPassThrough;
-
-	configCmd.SetData(cmd);
-	configPrompt = "Set UART pass-through successful...";
-    AfxBeginThread(ConfigThread, 0);
-}
-
-
 // CSUP800EraseUserDataDlg 對話方塊
 IMPLEMENT_DYNAMIC(CSUP800EraseUserDataDlg, CCommonConfigDlg)
 
@@ -1104,13 +1075,6 @@ BEGIN_MESSAGE_MAP(CSUP800EraseUserDataDlg, CCommonConfigDlg)
 END_MESSAGE_MAP()
 
 // CSUP800EraseUserDataDlg 訊息處理常式
-void CSUP800EraseUserDataDlg::OnBnClickedErase()
-{
-	m_nSector = ((CComboBox*)GetDlgItem(IDC_SECTOR))->GetCurSel();;
-
-	OnOK();
-}
-
 BOOL CSUP800EraseUserDataDlg::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -1123,6 +1087,13 @@ BOOL CSUP800EraseUserDataDlg::OnInitDialog()
 	}
 	((CComboBox*)GetDlgItem(IDC_SECTOR))->SetCurSel(0);
 	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CSUP800EraseUserDataDlg::OnBnClickedErase()
+{
+	m_nSector = ((CComboBox*)GetDlgItem(IDC_SECTOR))->GetCurSel();
+
+	OnOK();
 }
 
 void CSUP800EraseUserDataDlg::DoCommand()
@@ -1153,27 +1124,11 @@ BEGIN_MESSAGE_MAP(CSUP800WriteUserDataDlg, CCommonConfigDlg)
 	ON_BN_CLICKED(IDC_LOAD, &CSUP800WriteUserDataDlg::OnBnClickedLoad)
 END_MESSAGE_MAP()
 
-// CSUP800EraseUserDataDlg 訊息處理常式
-void CSUP800WriteUserDataDlg::OnBnClickedWrite()
-{
-	CString txt;
-
-	m_nSector = ((CComboBox*)GetDlgItem(IDC_SECTOR))->GetCurSel();;
-	GetDlgItem(IDC_OFFSET)->GetWindowText(txt);
-	m_nOffset = atoi(txt);
-
-	GetDlgItem(IDC_DATA)->GetWindowText(txt);
-	if(!Utility::ConvertHexToBinary(txt, m_binData))
-	{
-
-	}
-	
-	OnOK();
-}
-
+// CSUP800WriteUserDataDlg 訊息處理常式
 BOOL CSUP800WriteUserDataDlg::OnInitDialog()
 {
-	CCommonConfigDlg::OnInitDialog();
+	//CCommonConfigDlg::OnInitDialog();
+	CDialog::OnInitDialog();
 
 	CString str;
 	for(int i=0; i<32; ++i)
@@ -1184,9 +1139,25 @@ BOOL CSUP800WriteUserDataDlg::OnInitDialog()
 	((CComboBox*)GetDlgItem(IDC_SECTOR))->SetCurSel(0);
 	GetDlgItem(IDC_OFFSET)->SetWindowText("0");
 	GetDlgItem(IDC_DATA)->SetFont(&CGPSDlg::messageFont, TRUE);
-
 	
 	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CSUP800WriteUserDataDlg::OnBnClickedWrite()
+{
+	CString txt;
+
+	m_nSector = ((CComboBox*)GetDlgItem(IDC_SECTOR))->GetCurSel();
+	GetDlgItem(IDC_OFFSET)->GetWindowText(txt);
+	m_nOffset = atoi(txt);
+
+	GetDlgItem(IDC_DATA)->GetWindowText(txt);
+	if(!Utility::ConvertHexToBinary(txt, m_binData))
+	{
+
+	}
+	
+	OnOK();
 }
 
 void CSUP800WriteUserDataDlg::DoCommand()
@@ -1238,7 +1209,6 @@ void CSUP800WriteUserDataDlg::OnEnChangeInput()
 	{
 		pBtn->EnableWindow(FALSE);
 	}
-
 }
 
 void CSUP800WriteUserDataDlg::OnBnClickedLoad()
@@ -1278,7 +1248,6 @@ void CSUP800WriteUserDataDlg::OnBnClickedLoad()
 		::AfxMessageBox("File size is more than 256 bytes, only use 256 bytes.");
 	}
 	OnEnChangeInput();
-
 }
 
 // CSUP800ReadUserDataDlg 對話方塊
@@ -1296,10 +1265,29 @@ BEGIN_MESSAGE_MAP(CSUP800ReadUserDataDlg, CCommonConfigDlg)
 END_MESSAGE_MAP()
 
 // CSUP800ReadUserDataDlg 訊息處理常式
+BOOL CSUP800ReadUserDataDlg::OnInitDialog()
+{
+	//CCommonConfigDlg::OnInitDialog();
+	CDialog::OnInitDialog();
+
+	CString str;
+	for(int i=0; i<32; ++i)
+	{
+		str.Format("%d", i);
+		((CComboBox*)GetDlgItem(IDC_SECTOR))->AddString(str);
+	}
+	((CComboBox*)GetDlgItem(IDC_SECTOR))->SetCurSel(0);
+	GetDlgItem(IDC_OFFSET)->SetWindowText("0");
+	GetDlgItem(IDC_DATA_SIZE)->SetWindowText("1");
+	GetDlgItem(IDC_DATA)->SetFont(&CGPSDlg::messageFont, TRUE);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
 void CSUP800ReadUserDataDlg::OnBnClickedRead()
 {
 	CString txt;
-	m_nSector = ((CComboBox*)GetDlgItem(IDC_SECTOR))->GetCurSel();;
+	m_nSector = ((CComboBox*)GetDlgItem(IDC_SECTOR))->GetCurSel();
 	GetDlgItem(IDC_OFFSET)->GetWindowText(txt);
 	m_nOffset = atoi(txt);	
 	GetDlgItem(IDC_DATA_SIZE)->GetWindowText(txt);
@@ -1355,24 +1343,6 @@ void CSUP800ReadUserDataDlg::OnBnClickedSave()
 	f.Close();
 }
 
-BOOL CSUP800ReadUserDataDlg::OnInitDialog()
-{
-	CCommonConfigDlg::OnInitDialog();
-
-	CString str;
-	for(int i=0; i<32; ++i)
-	{
-		str.Format("%d", i);
-		((CComboBox*)GetDlgItem(IDC_SECTOR))->AddString(str);
-	}
-	((CComboBox*)GetDlgItem(IDC_SECTOR))->SetCurSel(0);
-	GetDlgItem(IDC_OFFSET)->SetWindowText("0");
-	GetDlgItem(IDC_DATA_SIZE)->SetWindowText("1");
-	GetDlgItem(IDC_DATA)->SetFont(&CGPSDlg::messageFont, TRUE);
-
-	return TRUE;  // return TRUE unless you set the focus to a control
-}
-
 void CSUP800ReadUserDataDlg::DoCommand()
 {
 	CWaitCursor wait;
@@ -1424,14 +1394,15 @@ END_MESSAGE_MAP()
 BOOL CConfigureSignalDisturbanceStatusDlg::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
-
 	((CComboBox*)GetDlgItem(IDC_OPERATION))->SetCurSel(0);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
 void CConfigureSignalDisturbanceStatusDlg::OnBnClickedOk()
 {
-	m_nOperationType = ((CComboBox*)GetDlgItem(IDC_OPERATION))->GetCurSel();;
+	m_nOperationType = ((CComboBox*)GetDlgItem(IDC_OPERATION))->GetCurSel();
+
 	OnOK();
 }
 
@@ -1471,6 +1442,7 @@ BOOL CConfigureGpsUtcLeapSecondsInUtcDlg::OnInitDialog()
 	GetDlgItem(IDC_LEAP_SEC)->SetWindowText("17");
 	((CComboBox*)GetDlgItem(IDC_INS_SEC))->SetCurSel(0);
 	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
@@ -1509,5 +1481,156 @@ void CConfigureGpsUtcLeapSecondsInUtcDlg::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "ConfigureGpsUtcLeapSecondsInUtc successful...";
+    AfxBeginThread(ConfigThread, 0);
+}
+
+// CConfigNoisePowerControlDlg 對話方塊
+IMPLEMENT_DYNAMIC(CConfigNoisePowerControlDlg, CCommonConfigDlg)
+
+CConfigNoisePowerControlDlg::CConfigNoisePowerControlDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CONFIG_NOISE_PWR_CTRL, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigNoisePowerControlDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigNoisePowerControlDlg::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigureSignalDisturbanceStatusDlg 訊息處理常式
+BOOL CConfigNoisePowerControlDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(1);
+	((CComboBox*)GetDlgItem(IDC_DEFAULT))->SetCurSel(1);
+	GetDlgItem(IDC_VALUE)->SetWindowText("2700000");
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigNoisePowerControlDlg::OnBnClickedOk()
+{
+	m_nMode = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
+	m_nDefault = ((CComboBox*)GetDlgItem(IDC_DEFAULT))->GetCurSel();
+
+	CString txt;
+	GetDlgItem(IDC_VALUE)->GetWindowText(txt);
+	m_nValue = atoi(txt);
+
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
+void CConfigNoisePowerControlDlg::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(9);
+	*cmd.GetBuffer(0) = 0x64;
+	*cmd.GetBuffer(1) = 0x08;
+	*cmd.GetBuffer(2) = m_nMode;
+	*cmd.GetBuffer(3) = m_nDefault;
+	*cmd.GetBuffer(4) = HIBYTE(HIWORD(m_nValue));
+	*cmd.GetBuffer(5) = LOBYTE(HIWORD(m_nValue));
+	*cmd.GetBuffer(6) = HIBYTE(LOWORD(m_nValue));
+	*cmd.GetBuffer(7) = LOBYTE(LOWORD(m_nValue));
+	*cmd.GetBuffer(8) = m_attribute;
+
+	configCmd.SetData(cmd);
+	configPrompt = "ConfigureNoisePower successful...";
+    AfxBeginThread(ConfigThread, 0);
+}
+
+// ConfigPowerSavingParametersRomDlg 對話方塊
+IMPLEMENT_DYNAMIC(ConfigPowerSavingParametersRomDlg, CCommonConfigDlg)
+
+ConfigPowerSavingParametersRomDlg::ConfigPowerSavingParametersRomDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CONFIG_PWR_SVNG_PRM_ROM, pParent)
+{
+	m_param[0] = 2;
+	m_param[1] = 9;
+	m_param[2] = 0;
+	m_param[3] = 4;
+	m_param[4] = 90;
+	m_param[5] = 20;
+	m_param[6] = 600;
+	m_param[7] = 180;
+	m_param[8] = 15;
+	m_bRomMode = false;
+}
+
+BEGIN_MESSAGE_MAP(ConfigPowerSavingParametersRomDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &ConfigPowerSavingParametersRomDlg::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// ConfigPowerSavingParametersRomDlg 訊息處理常式
+void ConfigPowerSavingParametersRomDlg::DoDataExchange(CDataExchange* pDX)
+{
+	DDX_Text(pDX, IDC_POWERSAVING_1, m_param[0]);
+	DDX_Text(pDX, IDC_POWERSAVING_2, m_param[1]);
+	DDX_Text(pDX, IDC_POWERSAVING_3, m_param[2]);
+	DDX_Text(pDX, IDC_POWERSAVING_4, m_param[3]);
+	DDX_Text(pDX, IDC_POWERSAVING_5, m_param[4]);
+	DDX_Text(pDX, IDC_POWERSAVING_6, m_param[5]);
+	DDX_Text(pDX, IDC_POWERSAVING_7, m_param[6]);
+	DDX_Text(pDX, IDC_POWERSAVING_8, m_param[7]);
+	DDX_Text(pDX, IDC_POWERSAVING_9, m_param[8]);
+
+	CDialog::DoDataExchange(pDX);
+}
+
+BOOL ConfigPowerSavingParametersRomDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+	if(m_bRomMode)
+	{
+		GetDlgItem(IDC_POWERSAVING_8)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_POWERSAVING_9)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STATIC_8)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STATIC_9)->ShowWindow(SW_HIDE);
+	}
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void ConfigPowerSavingParametersRomDlg::OnBnClickedOk()
+{
+	UpdateData();
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
+void ConfigPowerSavingParametersRomDlg::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(21);
+	*cmd.GetBuffer(0) = 0x64;
+	*cmd.GetBuffer(1) = 0x0C;
+	*cmd.GetBuffer(2) = m_param[0]>>8 & 0xFF;
+	*cmd.GetBuffer(3) = m_param[0] & 0xFF;
+	*cmd.GetBuffer(4) = m_param[1]>>8 & 0xFF;
+	*cmd.GetBuffer(5) = m_param[1] & 0xFF;
+	*cmd.GetBuffer(6) = m_param[2]>>8 & 0xFF;
+	*cmd.GetBuffer(7) = m_param[2] & 0xFF;
+	*cmd.GetBuffer(8) = m_param[3]>>8 & 0xFF;
+	*cmd.GetBuffer(9) = m_param[3] & 0xFF;
+	*cmd.GetBuffer(10) = m_param[4]>>8 & 0xFF;
+	*cmd.GetBuffer(11) = m_param[4] & 0xFF;
+	*cmd.GetBuffer(12) = m_param[5]>>8 & 0xFF;
+	*cmd.GetBuffer(13) = m_param[5] & 0xFF;
+	*cmd.GetBuffer(14) = m_param[6]>>8 & 0xFF;
+	*cmd.GetBuffer(15) = m_param[6] & 0xFF;
+	*cmd.GetBuffer(16) = m_param[7]>>8 & 0xFF;
+	*cmd.GetBuffer(17) = m_param[7] & 0xFF;
+	*cmd.GetBuffer(18) = m_param[8]>>8 & 0xFF;
+	*cmd.GetBuffer(19) = m_param[8] & 0xFF;
+	*cmd.GetBuffer(20) = m_attribute;
+
+	configCmd.SetData(cmd);
+	configPrompt = "ConfigPowerSavingParametersRom successful...";
     AfxBeginThread(ConfigThread, 0);
 }

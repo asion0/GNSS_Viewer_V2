@@ -139,12 +139,14 @@
 // .137 Fix [Query CRC] fail issue and [Configure Position Update Rate] NACK issue.
 // .138 Add [GPSDO Download] panel.
 // .139 Fix DataLog read fail issue
+// .140 Add [Noise Power Control] command in [Venus 8].
+// .141 Adjust all configure dialog in [Venus 8].
 
 //#define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.139"
+#define APP_VERSION				"2.0.141"
 #define APP_TITLE				""
 #define GNSS_VIEWER				0
 #define GPS_VIEWER				0

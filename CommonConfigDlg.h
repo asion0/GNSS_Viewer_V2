@@ -12,8 +12,11 @@ public:
 	virtual ~CCommonConfigDlg();
 
 	virtual void DoCommand() = 0;
-
+	virtual BOOL OnInitDialog();
 protected:
+	CButton *pCancelBtn;
+	CButton *pAcceptBtn;
+
 	DECLARE_MESSAGE_MAP()
 };
 
@@ -257,13 +260,13 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// ConfigQueryGnssNavSolDlg 對話方塊
-class ConfigQueryGnssNavSolDlg : public CCommonConfigDlg
+// ConfigGnssConstellationTypeDlg 對話方塊
+class ConfigGnssConstellationTypeDlg : public CCommonConfigDlg
 {
-	DECLARE_DYNAMIC(ConfigQueryGnssNavSolDlg)
+	DECLARE_DYNAMIC(ConfigGnssConstellationTypeDlg)
 public:
-	ConfigQueryGnssNavSolDlg(CWnd* pParent = NULL);   // 標準建構函式
-	virtual ~ConfigQueryGnssNavSolDlg() {};
+	ConfigGnssConstellationTypeDlg(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~ConfigGnssConstellationTypeDlg() {};
 
 	virtual void DoCommand();
 
@@ -382,6 +385,7 @@ protected:
 };
 
 // CConfigUartPassThrough 對話方塊
+/*
 class CConfigUartPassThrough : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigUartPassThrough)
@@ -399,7 +403,7 @@ protected:
 	
 	DECLARE_MESSAGE_MAP()
 };
-
+*/
 // CSUP800EraseUserDataDlg 對話方塊
 class CSUP800EraseUserDataDlg : public CCommonConfigDlg
 {
@@ -512,10 +516,51 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
+// CConfigNoisePowerControlDlg 對話方塊
+class CConfigNoisePowerControlDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigNoisePowerControlDlg)
+public:
+	CConfigNoisePowerControlDlg(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigNoisePowerControlDlg() {};
 
+	virtual void DoCommand();
 
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
 
+protected:
+	U08 m_nMode;
+	U08 m_nDefault;
+	U32 m_nValue;
+	U08 m_attribute;
 
+	DECLARE_MESSAGE_MAP()
+};
+
+// ConfigPowerSavingParametersRomDlg 對話方塊
+class ConfigPowerSavingParametersRomDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(ConfigPowerSavingParametersRomDlg)
+public:
+	ConfigPowerSavingParametersRomDlg(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~ConfigPowerSavingParametersRomDlg() {};
+
+	virtual void DoCommand();
+
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
+	void SetRomMode(bool b) { m_bRomMode = b; }
+
+protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+
+	bool m_bRomMode;
+	S16 m_param[9];
+	U08 m_attribute;
+
+	DECLARE_MESSAGE_MAP()
+};
 
 
 
