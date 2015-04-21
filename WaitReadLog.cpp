@@ -59,7 +59,7 @@ BOOL CWaitReadLog::OnInitDialog()
 
 void CWaitReadLog::OnBnClickedButton1()
 {
-	CGPSDlg::gpsDlg->cancel_log_read();
+	CGPSDlg::gpsDlg->CancelRead();
 	// TODO: 在此加入控制項告知處理常式程式碼
 }
 

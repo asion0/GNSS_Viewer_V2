@@ -909,7 +909,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_BN_CLICKED(IDC_SCANALL, OnBnClickedScanall)
 	ON_BN_CLICKED(IDC_SCANBAUDRATE, OnBnClickedScanbaudrate)
 	ON_BN_CLICKED(IDC_SCANPORT, OnBnClickedScanport)
-	ON_BN_CLICKED(IDC_SETORIGIN, OnBnClickedSetorigin)	
+	ON_BN_CLICKED(IDC_SETORIGIN, OnBnClickedSetOrigin)	
 //	ON_BN_CLICKED(IDC_SETORIGIN_USER, OnBnClickedSetoriginUser)
 	ON_BN_CLICKED(IDC_WARMSTART, OnBnClickedWarmstart)
 
@@ -963,7 +963,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_BINARY_GETRGISTER, OnBinaryGetrgister)
 	ON_COMMAND(ID_BINARY_POSITIONFINDER, OnBinaryPositionfinder)
 
-	ON_COMMAND(ID_BINARY_RESETODOMETER, OnBinaryResetodometer)
+	ON_COMMAND(ID_RESET_ODOMETER, OnResetOdometer)
 	ON_COMMAND(ID_BINARY_SYSTEMRESTART, OnBinarySystemRestart)
 	ON_COMMAND(ID_CONFIGURE1PPSTIMING_CONFIGURE1PPS, OnConfigure1ppstimingConfigure1pps)
 	ON_COMMAND(ID_CONFIGURE1PPSTIMING_CONFIGURE1PPSCABLEDELAY, OnConfigure1ppstimingConfigure1ppscabledelay)
@@ -1015,7 +1015,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_MINIHOMER_QUERYTAG, OnMinihomerQuerytag)
 	ON_COMMAND(ID_MINIHOMER_SETTAGECCO, OnMinihomerSettagecco)
 	ON_COMMAND(ID_MULTIMODE_CONFIGUREMODE, OnMultimodeConfiguremode)
-	ON_COMMAND(ID_QUERY1PPSTIMING_QUERYCABLEDELAY, OnQuery1ppstimingQuerycabledelay)
+	ON_COMMAND(ID_QUERY_CABLEDELAY, OnQueryCableDelay)
 
 	ON_COMMAND(ID_SETFACTORYDEFAULT_NOREBOOT, OnSetFactoryDefaultNoReboot)
 	ON_COMMAND(ID_SETFACTORYDEFAULT_REBOOT, OnSetFactoryDefaultReboot)
@@ -4353,7 +4353,7 @@ void CGPSDlg::GetEphms(U08 SV, U08 continues)
 
 			U08 buff[1024] = {0};
 			DWORD nSize = m_serial->GetBinaryBlock(buff, sizeof(buff), EphmsRecordSize);
-			if(SAVE_EPHEMRIS(buff, BINMSG_GET_EPHEMERIS))
+			if(SaveEphemeris(buff, BINMSG_GET_EPHEMERIS))
 			{
 				if(SV!=0)
 				{
@@ -4452,7 +4452,7 @@ void CGPSDlg::GetGlonassEphms(U08 SV,U08 continues)
 			}
 			U08 buff[1024] = {0};
 			m_serial->GetBinaryBlock(buff, sizeof(buff), EphmsRecordSize);
-			if(SAVE_EPHEMRIS(buff, 0x90))
+			if(SaveEphemeris(buff, 0x90))
 			{
 				if(SV!=0)
 				{
@@ -4683,7 +4683,7 @@ void CGPSDlg::Load_Menu()
 //		{ GG12A, MF_STRING, ID_CFG_GL_ACQUISITION_MODE, "Configure Glonass Acquisition Mode", NULL },
 		{ IS_DEBUG, MF_STRING, ID_BINARY_CONFIGUREREGISTER, "Configure Register", NULL },
 //		{ SJA, MF_STRING, ID_BINARY_POSITIONFINDER, "Configure Position Finder", NULL },
-		{ ODOMETER_SUPPORT, MF_STRING, ID_BINARY_RESETODOMETER, "Reset Odometer", NULL },
+		{ ODOMETER_SUPPORT, MF_STRING, ID_RESET_ODOMETER, "Reset Odometer", NULL },
 //		{ INTERFERENCE, MF_STRING, ID_BINARY_CONFIGUREJAMMINGINTERFERENCE, "Configure Jamming Interference", NULL },
 		{ PACIFIC, MF_STRING, ID_BINARY_CONFIGUREMESSAGE_TYPE, "Request Output Message", NULL },
 		{ RESET_MOTION_SENSOR, MF_STRING, ID_BINARY_RESETMOTIONSENSOR, "Reset Motion Sensor", NULL },
@@ -4811,7 +4811,7 @@ void CGPSDlg::Load_Menu()
 	{
 		{ 1, MF_STRING, ID_QUERY1PPSTIMING_QUERYTIMING, "Query Timing", NULL },
 //		{ 1, MF_STRING, ID_1PPSTIMING_QUERY1PPSNMEADELAY, "Query 1PPS NMEA Delay", NULL },
-		{ 1, MF_STRING, ID_QUERY1PPSTIMING_QUERYCABLEDELAY, "Query Cable Delay", NULL },
+		{ 1, MF_STRING, ID_QUERY_CABLEDELAY, "Query Cable Delay", NULL },
 		{ TIMING_MONITORING, MF_STRING, ID_1PPSTIMING_MONITORING1PPS, "Monitoring 1PPS", NULL },
 		{ 1, MF_STRING, ID_1PPSTIMING_QUERY1PPSPULSEWIDTH, "Query 1PPS Pulse Width", NULL },
 		{ 1, MF_STRING, ID_1PPSTIMING_QUERYPPSOUTPUTMODE, "Query PPS Output Mode", NULL },
@@ -4941,6 +4941,7 @@ void CGPSDlg::Load_Menu()
 		{ 1, MF_STRING, ID_MINIHOMER_QUERYTAG, "&Query Tag", NULL },
 		{ 0, 0, 0, NULL, NULL },
 	};
+
 	if(ACTIVATE_MINIHOMER)
 	{
 		CreateSubMenu(hMenu, menuItemminiHomer, "&miniHomer");
@@ -7832,4 +7833,196 @@ void CGPSDlg::NmeaOutput(LPCTSTR pt, int len)
 	//memcpy(msg, pt, len);
 	//msg[len] = 0;
 	m_nmeaList.AddTextAsync(pt);
+}
+
+void CGPSDlg::OnBnClickedSetOrigin()
+{
+	g_scatterData.SetOrigin();
+}
+
+
+//parsing the gps message
+void CGPSDlg::MSG_PROC()
+{	
+	int length = 0;	
+	static int message_mode =0;
+	ClearQue();
+	m_lastNmeaToken = MSG_Unknown;
+	m_serial->ClearQueue();
+	static U08 buffer[1024] = {0};
+	while(m_isConnectOn)
+	{	
+		length = m_serial->GetBinary(buffer, sizeof(buffer));
+		buffer[length + 1] = 0;
+
+		if(ReadOK(length))
+		{
+			//if(buffer[length - 2] != 0x0D || buffer[length - 1] != 0x0A)
+			//{
+			//	Sleep(1);
+			//}
+			bool ret = CSaveNmea::SaveBinary(buffer, length + 1);
+		}
+		else
+		{
+			Sleep(10);
+			continue;
+		}
+
+		switch(m_inputMode)
+		{
+		case NMEA_Mode:				
+			if(SetFirstDataIn(true))
+			{
+				NmeaOutput((LPCSTR)buffer, length);
+				continue;
+			}
+			if(buffer[0] == 0xA0 && buffer[1] == 0xA1)
+			{				
+				if(length > 4 && 0x83==buffer[4])	//Query ACK
+				{
+					if(m_bShowBinaryCmdData)
+					{
+						add_msgtolist("Ack : " + theApp.GetHexString(buffer, length));	
+					}	
+					continue;
+				}
+				if(length > 4 && 0x84==buffer[4])	//Query NACK
+				{
+					if(m_bShowBinaryCmdData)
+					{
+						add_msgtolist("Ack : " + theApp.GetHexString(buffer, length));	
+					}
+					continue;
+				}
+				if(length >= 21 && 0x80==buffer[4])	//Query Version Return
+				{
+					if(m_bShowBinaryCmdData)
+					{
+						add_msgtolist("Return : " + theApp.GetHexString(buffer, length));	
+					}
+					m_versionInfo.ReadFromMemory(buffer, length);
+					continue;
+				}
+				if(length >= 11 && 0x64==buffer[4] && 0x80==buffer[5])	//Query Version Return
+				{
+					if(m_bShowBinaryCmdData)
+					{
+						add_msgtolist("Return : " + theApp.GetHexString(buffer, length));	
+					}
+					m_bootInfo.ReadFromMemory(buffer, length);
+					continue;
+				}
+				if (message_mode==0)
+				{
+					m_nmeaList.ClearAllText();
+				} 
+				message_mode = 1;
+				
+				BinaryProc(buffer,length+1);
+				Copy_NMEA_Memery();		    
+				//_GETNMEA0183CS.Unlock();
+				SetNmeaUpdated(true);
+			}
+			else
+			{
+				if (message_mode==1)
+				{
+					//m_nmeaCount = 0;
+					//m_nmeaList.DeleteAllItems();
+					m_nmeaList.ClearAllText();
+				}
+				if(!m_isConnectOn)
+				{
+					break;
+				}
+				NmeaType nmeaType;
+				//Asion add for simulation Galileo
+				//if(buffer[1] == 'B' && buffer[2] == 'D')
+				//{
+				//	buffer[1] = 'G';
+				//	buffer[2] = 'A';
+				//}
+				if (NmeaProc((const char*)buffer, length, nmeaType))
+				{		
+					Copy_NMEA_Memery();		    
+					//_GETNMEA0183CS.Unlock();
+					SetNmeaUpdated(true);
+				}
+
+				if(MSG_ERROR==nmeaType && m_firstDataIn && g_setting.checkNmeaError)
+				{
+					add_msgtolist("Detect NMEA checksum error :");
+					add_msgtolist((const char*)buffer);
+				}
+				message_mode = 0;
+			}
+		    break;
+		case Binary_Mode:
+			BinaryProc(buffer,length);						
+			break;
+		default:
+			break;
+		}
+	}
+//End:
+	m_isConnectOn = false;	
+}
+
+bool CGPSDlg::QueryDataLogBoundary(U16 *end, U16 *total)
+{
+	int nackTimes = 0;
+
+	U08 cmd[1] = {0x17};	//query logstaus
+	U08 message[8] = {0};
+	int len = SetMessage2(message, cmd, sizeof(cmd));
+
+	for(int i=0; i<30; ++i)
+	{
+		if(!SendToTarget(message, len, "", true))
+		{
+			Utility::LogFatal(__FUNCTION__, "[DataLog] SendToTarget fail i = ", i);
+			continue;
+		}
+
+		while(1)
+		{
+			U08 buff[512] = {0};
+			m_serial->GetBinary(buff, sizeof(buff));
+			if(Cal_Checksum(buff) != BINMSG_REPLY_LOG_STATUS)
+			{
+				Utility::LogFatal(__FUNCTION__, "[DataLog] Cal_Checksum error", __LINE__);
+				continue;
+			}
+
+			U16 left;
+			memcpy(&left, &buff[9], sizeof(U16));
+			memcpy(total, &buff[11], sizeof(U16));
+			if(left == 0)
+			{
+				*end = *total - left;
+			}
+			else
+			{
+				*end = *total - left + 1;
+			}
+			return true;
+		}
+		Utility::LogFatal(__FUNCTION__, "[DataLog] impossible fail i = ", i);
+		break;
+	} //for(int i=0; i<30; ++i)
+	Utility::LogFatal(__FUNCTION__, "[DataLog] return false", __LINE__);
+	return false;
+}
+
+BOOL CGPSDlg::PreTranslateMessage(MSG* pMsg)
+{
+	m_tip.RelayEvent(pMsg);	
+
+	if(pMsg->message==WM_KEYDOWN && 
+		(pMsg->wParam==VK_ESCAPE || pMsg->wParam==VK_RETURN))
+	{
+		return TRUE;
+	}
+	return CDialog::PreTranslateMessage(pMsg);
 }

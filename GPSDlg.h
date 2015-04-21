@@ -265,7 +265,7 @@ protected:
 	afx_msg void OnCbnCloseupCoordinate();
 	afx_msg void OnCbnCloseupEnuscale();
 	afx_msg void OnCbnCloseupMapscale();
-	afx_msg void OnBnClickedSetorigin();
+	afx_msg void OnBnClickedSetOrigin();
 	//afx_msg void OnFileSaveNmea0183();
 	afx_msg void OnFileSavescatterdata();
 	afx_msg void OnFileSavepath();
@@ -366,7 +366,6 @@ protected:
 	afx_msg void OnConfigure1ppstimingConfigure1ppscabledelay();
 	afx_msg void OnConfigure1ppstimingConfigure1pps();
 	afx_msg void OnConfigElevationAndCnrMask();
-	afx_msg void OnQuery1ppstimingQuerycabledelay();
 	afx_msg void On1ppstimingMonitoring1pps();
 
 	afx_msg void On1ppstimingConfigureproprietarynmea();
@@ -437,7 +436,6 @@ protected:
 	afx_msg void OnConfigLeapSeconds();
 	afx_msg void OnConfigParamSearchEngineSleepCriteria();
 	afx_msg void OnConfigDatumIndex();
-	afx_msg void OnConfigNoisePowerControl();
 	afx_msg void OnConfigureNoisePowerControl();
 	afx_msg void OnConfigureInterferenceDetectControl();
 	afx_msg void OnConfigNMEABinaryOutputDestination();
@@ -626,7 +624,7 @@ public:
 	bool SendMsg();
 	bool SendToTarget(U08* ,U16 ,const char*, bool quick = false);
 	bool SendToTargetNoAck(U08*,U16);
-	bool SendToTargetNoShow(U08*,U16,char*);
+//	bool SendToTargetNoShow(U08*,U16,char*);
 	bool SendToTargetNoWait(U08*,U16,LPCSTR);
 	bool TIMEOUT_METHOD(time_t,time_t);
 //	bool chk_gp(char* buff,int size);
@@ -648,7 +646,7 @@ public:
 	void LogConfigure();
 	void MSG_PROC();
 	void QueryMsg(unsigned char*);
-	void Rad2Deg(double&);
+//	void Rad2Deg(double&);
 	void Restart(U08*);
 	void ScanGPS();
 	void ScanGPS1();
@@ -693,8 +691,8 @@ public:
 	void Terminate(void);
 	void TerminateGPSThread();
 	void WriteIni();
-	void WriteKMLPath(CFile& ,double ,double );
-	void WriteKMLini(CFile&  ,double ,double );	
+//	void WriteKMLPath(CFile& ,double ,double );
+//	void WriteKMLini(CFile&  ,double ,double );	
 //	void WritePOIPath(CFile& file ,vector<LLA_T> *lst );
 //	void close_nmea_file();
 	void ConvertGpsTimeToUtc(S16, D64, UTC_T*);	    
@@ -742,8 +740,8 @@ public:
 //	int check_msg_valid(U08 *buff);
 	void add_msgtolist(LPCTSTR msg);
 	bool SendToTargetBatch(U08* message,U16 length,char* Msg);
-	int SendToTargetEph(U08* message,U16 length,char* Msg,bool quick);
-	U32 get_register_zero();
+//	int SendToTargetEph(U08* message,U16 length,char* Msg,bool quick);
+//	U32 get_register_zero();
 	bool send_command_withackString(U08 *rs_buff,int size,char *res);
 	U08 wait_res(char* res);
 //	int Datalog_read_one_srec(U08* message,int sector_id,int sector_count);
@@ -751,8 +749,8 @@ public:
 //	void writelog(char *msg);
 	CEvent test_event;
 //	int SendToTarget_datalog(U08* message,U16 length,char* Msg);
-	void cancel_log_read();
-	int cancel_readlog;
+	void CancelRead();
+//	int cancel_readlog;
 //	void UnlockSoarcomm();
 //	void UnlockPolstar();
 //	bool IsFileExist(const char *file_path);
@@ -792,7 +790,7 @@ public:
 	void WaitReady();
 //	void SetPort_noAck(U08 port,int mode);
 	void Show_Noise();
-	void QueryRtc();
+//	void QueryRtc();
 	void GetAlmanac();
 	//void ShowBinaryOutput(unsigned char *buff,int len);
 
@@ -928,7 +926,7 @@ public:
 	void GetGlonassEphms(U08 SV, U08 continues = FALSE);
 	void GetBeidouEphms(U08 SV, U08 continues = FALSE);
 
-	bool SAVE_EPHEMRIS(U08* buff,U08 id);
+	bool SaveEphemeris(U08* buff,U08 id);
 	bool SaveEphemeris2(U08* buff, WORD id);
 	void Refresh_EarthChart(CDC *earth_dc);
 	//void Refresh_ScatterChart(CDC *scatter_dc);
@@ -1065,6 +1063,8 @@ public:
 	CmdErrorCode QueryGpsTime(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySignalDisturbanceStatus(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySignalDisturbanceData(CmdExeMode nMode, void* outputData);
+	CmdErrorCode ResetOdometer(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryCableDelay(CmdExeMode nMode, void* outputData);
 
 //	CmdErrorCode ConfigureGpsdoMasterSerialPortHigh(CmdExeMode nMode, void* outputData);
 private:
@@ -1211,6 +1211,11 @@ private:
 	{ GenericQuery(&CGPSDlg::QuerySignalDisturbanceStatus); }
 	afx_msg void OnQuerySignalDisturbanceData()
 	{ GenericQuery(&CGPSDlg::QuerySignalDisturbanceData); }
+	afx_msg void OnResetOdometer()
+	{ GenericQuery(&CGPSDlg::ResetOdometer); }
+	afx_msg void OnQueryCableDelay()
+	{ GenericQuery(&CGPSDlg::QueryCableDelay); }
+
 
 
 	struct MenuItemEntry {
@@ -1248,7 +1253,7 @@ private:
 	void parse_sti_04_001_message(const char *buff, int len) /* for timing module */;
 	void parse_sti_message(const char *buff,int len);
 	void parse_sti_0_message(const char *buff,int len) /* for timing module */;
-	void parse_rtoem_message(const char *buff, int len);
+//	void parse_rtoem_message(const char *buff, int len);
 	void parse_psti_50(const char *buff);
 	void parse_sti_20_message(const char *buff,int len) /* for timing module */;
 //	void Config_silab_baudrate(HANDLE *m_DeviceHandle);
