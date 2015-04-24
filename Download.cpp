@@ -74,10 +74,9 @@ int ParserBinFile(const char *filename, Param *p)
 
 U16 customerCrc = 0;
 UINT CGPSDlg::GetBinFromResource(int baud)
-//void CGPSDlg::GetBinFromResource(U08* &sData, long &bootLoaderSize)
 {
 	UINT* promTable = NULL;
-#if (GNSS_VIEWER && !GG12A)
+#if (!GG12A)
 	UINT glonassPromTable[] = { 
 				(IDR_GNSS_PRELOADER_4800),
 				(IDR_GNSS_PRELOADER_9600),
@@ -89,7 +88,7 @@ UINT CGPSDlg::GetBinFromResource(int baud)
 			};
 	promTable = glonassPromTable;
 #endif
-#if (GNSS_VIEWER && GG12A)
+#if (GG12A)
 	UINT gg12aPromTable[] = {
 				(IDR_GG12A_PRELOADER_4800),
 				(IDR_GG12A_PRELOADER_9600),
@@ -415,118 +414,6 @@ WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)
 	return nReturn;
 }
 
-U08 CGPSDlg::PlRomNoAlloc(const CString& prom_path)
-{
-	int buad = 0;
-	buad = BAUDRATE;
-
-	Param promTag;
-	int extraSize = ParserBinFile(prom_path, &promTag);
-	if(promTag.tagAddress==0)
-	{
-		promTag.tagAddress = 0x00077ffc;
-	}
-
-	U08 mycheck = 0;
-	char messages[100] = {0};
-
-	FILE *f = NULL;
-
-	if(0 != fopen_s(&f, prom_path, "rb"))
-	{
-		return RETURN_ERROR;
-	}
-
-	fseek(f, 0, SEEK_END);
-	long promLen = ftell(f);
-	promLen -= extraSize;
-
-	//Get preloader bin and it's size.
-	CString externalPreloaderPath;
-	BinaryData preLoader;
-	int bootLoaderSize = 0;
-	if(theApp.CheckExternalPreloader(externalPreloaderPath))
-	{
-		bootLoaderSize = preLoader.ReadFromFile(externalPreloaderPath);
-		ASSERT(bootLoaderSize!=0);
-	}
-	else
-	{
-		//bootLoaderSize = preLoader.ReadFromResource(GetBinFromResource(buad), "BIN");
-		bootLoaderSize = preLoader.ReadFromResource(GetBinFromResource(GetBaudrate()), "BIN");
-		ASSERT(bootLoaderSize!=0);
-	}
-	const U08* sData = preLoader.Ptr();
-
-//	GetBinFromResource(sData, bootLoaderSize);
-	int prom_size = promLen + BOOTLOADER_SIZE;
-
-	fseek(f, 0, SEEK_SET);
-
-	char c;
-	while(fread(&c,1,1,f)!=0)
-	{
-		mycheck = mycheck + c;
-	}
-
-	for(int i=0; i<bootLoaderSize; ++i)
-	{
-		mycheck += sData[i];
-	}
-
-	bool bResendbin = true;
-	while(bResendbin)
-	{
-		unsigned long long check = prom_size + mycheck + promTag.tagAddress;
-		sprintf_s(messages, sizeof(messages), "BINSIZE = %d Checksum = %d %lld %lld ", prom_size, mycheck, promTag.tagAddress, check);
-		m_serial->SendData((U08*)messages, (U16)strlen(messages)+1);	
-		Utility::Log(__FUNCTION__, messages, __LINE__);
-
-		WlfResult wlf = WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, BinSizeTimeout, &m_responseList);
-		switch(wlf)
-		{
-		case wlf_ok:
-			bResendbin = false;
-			break;
-		case wlf_resendbin:
-			Utility::Log(__FUNCTION__, messages, __LINE__);
-			bResendbin = true;
-			break;
-		default:
-			ProcessWlfResult(wlf);
-			Utility::LogFatal(__FUNCTION__, messages, __LINE__);
-			fclose(f);
-			return RETURN_ERROR;		        
-			break;
-		}	//switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, TIME_OUT_MS, &m_responseList))	
-	}	//while(bResendbin)
-// Alex wait
-	m_psoftImgDlDlg->PostMessageA(UWM_SETPROMPT_MSG, IDS_WAITROM_MSG);
-//	sprintf_s(messages, sizeof(messages), "Waiting for Rom Writing...");
-//	m_psoftImgDlDlg->m_msg.SetWindowText(messages);	
-	
-	int result = RETURN_NO_ERROR;
-	
-#if(RESEND_DOWNLOAD==1)
-	int retryCount = 3;
-	do
-	{
-		result = SendRomBuffer3(sData, bootLoaderSize, f, promLen, (buad >= 6), m_psoftImgDlDlg);
-	} while(result == RETURN_RETRY && (retryCount--) > 0);
-#else
-	result = SendRomBuffer(prom_buff, prom_size,(buad >= 6) ,&(m_psoftImgDlDlg->m_progress), &(m_psoftImgDlDlg->m_percent), &(m_psoftImgDlDlg->m_msg));
-#endif
-	fclose(f);
-	BoostBaudrate(TRUE);
-
-// Alex wait
-	m_psoftImgDlDlg->PostMessageA(UWM_SETPROMPT_MSG, IDS_ROMWRITINGOK_MSG);
-//	m_psoftImgDlDlg->m_msg.SetWindowText("Rom Writing is OK!");	
-
-	//free(prom_buff);
-	return RETURN_NO_ERROR;		
-}
-
 bool CGPSDlg::FirmwareUpdate(const CString& strFwPath)
 {
 	bool isSuccessful = false;
@@ -723,21 +610,20 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, FILE *f,
 			buff[2] = checkSum;
 		}
 
-		//if( EnternalLoaderInBinCmd==m_DownloadMode || 
-		//	EnternalLoader==m_DownloadMode || 
-		//	InternalLoaderV8==m_DownloadMode ||
-		//	ParallelDownloadType0==m_DownloadMode || 
-		//	ParallelDownloadType1==m_DownloadMode || 
-		//	InternalLoaderV8AddTag==m_DownloadMode ||
-		//	InternalLoaderSpecial==m_DownloadMode ||
-		//	RomExternalDownload==m_DownloadMode)
-		//{
+		if( InternalLoaderV6Gps==m_DownloadMode ||
+			InternalLoaderV6Gnss==m_DownloadMode ||
+			InternalLoaderV6Gg12a==m_DownloadMode ||
+			InternalLoaderV6GpsAddTag==m_DownloadMode ||
+			InternalLoaderV6GpsDelTag==m_DownloadMode ||
+			InternalLoaderV6GnssAddTag==m_DownloadMode ||
+			InternalLoaderV6GnssDelTag==m_DownloadMode )
+		{
+			nBytesSent = SendToTargetNoAck((U08*)buff, sentbytes + headerSize);	 
+		}
+		else
+		{
 			nBytesSent = SendToTargetNoAck((U08*)buff + headerSize, sentbytes);	 
-		//}
-		//else
-		//{
-		//	nBytesSent = SendToTargetNoAck((U08*)buff, sentbytes + headerSize);	 
-		//}
+		}
 
 		switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, TIME_OUT_MS, &m_responseList))
 		{
@@ -775,38 +661,6 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, FILE *f,
 			Sleep(1);
 		}
 	}	//End of while(lSize>0)
-#ifdef TEST_SREC
-	/*
-	char *dbgBuff = new char[8192 + 1];
-	lSize = (sData) ? fbinSize - BOOTLOADER_SIZE : fbinSize;
-	TotalByte = 0;
-	while(lSize>0)
-	{ 
-		sentbytes = (lSize >= nFlashBytes)?nFlashBytes :lSize;
-		TotalByte += sentbytes;	
-			
-		m_serial->GetBinaryBlockInSize(dbgBuff, sentbytes + 1, sentbytes);
-		int c = memcmp(dbgBuff, buff + 3, sentbytes);
-		if(0 != c)
-		{
-			char * p = dbgBuff;
-			char * q = (char*)(buff + 3);
-			for(int cc = 0; cc < sentbytes; ++cc)
-			{
-				if(*p != *q)
-				{
-					int a = 2;
-				}
-				++p;
-				++q;
-			}
-		}
-
-		lSize -= sentbytes;
-	}
-	delete []dbgBuff;
-	*/
-#endif
 	delete [] buff;
 
 	WlfResult wlf = WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, 20000, notifyWnd);
@@ -915,16 +769,13 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 	m_psoftImgDlDlg->PostMessage(UWM_SETPROMPT_MSG, IDS_WAITROM_MSG);
 	
 	int result = RETURN_NO_ERROR;
-#if(RESEND_DOWNLOAD==1)
 	int retryCount = 3;
 	do
 	{
 		fseek(f, BOOTLOADER_SIZE, SEEK_SET);
 		result = SendRomBuffer3(sData, bootLoaderSize, f, promLen, (buad >= 6), m_psoftImgDlDlg);
 	} while(result == RETURN_RETRY && (retryCount--) > 0);
-#else
-	result = SendRomBuffer(prom_buff, prom_size,(buad >= 6) ,&(m_psoftImgDlDlg->m_progress), &(m_psoftImgDlDlg->m_percent), &(m_psoftImgDlDlg->m_msg));
-#endif
+
 //---------------------------------------------------------------
 	mycheck = 0;
 	promLen = BOOTLOADER_SIZE;
@@ -968,17 +819,13 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 //	m_psoftImgDlDlg->m_msg.SetWindowText(messages);	
 	
 	result = RETURN_NO_ERROR;
-	
-#if(RESEND_DOWNLOAD==1)
 	retryCount = 3;
 	do
 	{
 		fseek(f, 0, SEEK_SET);
 		result = SendRomBuffer3(NULL, bootLoaderSize, f, promLen, (buad >= 6), m_psoftImgDlDlg);
 	} while(result == RETURN_RETRY && (retryCount--) > 0);
-#else
-	result = SendRomBuffer(prom_buff, prom_size,(buad >= 6) ,&(m_psoftImgDlDlg->m_progress), &(m_psoftImgDlDlg->m_percent), &(m_psoftImgDlDlg->m_msg));
-#endif
+
 
 //---------------------------------------------------------------
 	fclose(f);
@@ -1089,15 +936,13 @@ U08 CGPSDlg::PlRomNoAllocV8(const CString& prom_path)
 	
 	Sleep(500);	//for GPSDO
 	int result = RETURN_NO_ERROR;
-	if(RESEND_DOWNLOAD)
+	int retryCount = 1;
+	do
 	{
-		int retryCount = 1;
-		do
-		{
-			fseek(f, 0, SEEK_SET);
-			result = SendRomBuffer3(NULL, 0, f, promLen, false, m_psoftImgDlDlg);
-		} while(result == RETURN_RETRY && (retryCount--) > 0);
-	}
+		fseek(f, 0, SEEK_SET);
+		result = SendRomBuffer3(NULL, 0, f, promLen, false, m_psoftImgDlDlg);
+	} while(result == RETURN_RETRY && (retryCount--) > 0);
+
 	fclose(f);
 	m_psoftImgDlDlg->PostMessage(UWM_SETPROMPT_MSG, IDS_ROMWRITINGOK_MSG);
 	return result;		

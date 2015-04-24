@@ -1234,11 +1234,6 @@ void CGPSDlg::close_minitor_1pps_window()
 
 void CGPSDlg::parse_psti_50(const char *buff)		// gnss
 {
-	if(!GNSS_VIEWER)
-	{
-		return;
-	}
-
 	const char *ptr = buff;
 	U08 psti_num, seq_num;
 	U08 total_gnss;
@@ -1530,9 +1525,7 @@ void CGPSDlg::OnBnClickedHotstart()
 	//m_ttff.SetWindowText("0");
 	SetTTFF(0);
 
-#if GNSS_VIEWER
 	ClearGlonass();
-#endif
 }
 
 //warm start
@@ -1569,9 +1562,7 @@ void CGPSDlg::OnBnClickedWarmstart()
 		delete dlg;	dlg= NULL;	
 	}
 	DeleteNmeaMemery();
-#if GNSS_VIEWER
 	ClearGlonass();
-#endif
 }
 
 void CGPSDlg::target_only_restart(int mode)
@@ -1653,11 +1644,8 @@ void CGPSDlg::Restart(U08* messages)
 	ClearInformation();
 	m_initTtff = false;
 	m_ttffCount = 0;
-	//m_ttff.SetWindowText("0");
 	SetTTFF(0);
-#if GNSS_VIEWER
 	ClearGlonass();
-#endif
 
 	SetMode(); 
 	CreateGPSThread();	
@@ -3546,7 +3534,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryNoisePowerControl(CmdExeMode nMode, void* ou
 		WORD ackSize = MAKEWORD(ackCmd[3], ackCmd[2]);
 		if(ackSize == 8)
 		{
-			strMsg.Format("Default Noise Power Control: %d", ackCmd[7]);
+			strMsg.Format("Default Noise Power Control: %d(%s)", ackCmd[7], (ackCmd[7]) ? "external" : "defalut");
 			add_msgtolist(strMsg);
 			U32 data = MAKELONG(MAKEWORD(ackCmd[11], ackCmd[10]), MAKEWORD(ackCmd[9], ackCmd[8]));
 			strMsg.Format("External Noise Power Value: %u", data);
@@ -5839,7 +5827,6 @@ void CGPSDlg::DoCommonConfig(CCommonConfigDlg* dlg)
 	INT_PTR nResult = dlg->DoModal();
 	if(nResult == IDOK) 
 	{
-        //AfxBeginThread(ConfigureQZSSThread, 0);
 		dlg->DoCommand();
 	}
 	else
@@ -5986,7 +5973,6 @@ void CGPSDlg::OnConfigureNoisePowerControl()
 	CConfigNoisePowerControlDlg dlg;
 	DoCommonConfig(&dlg);
 }
-
 
 void CGPSDlg::OnConfigPowerSavingParametersRom()
 {

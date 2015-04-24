@@ -960,7 +960,7 @@ private:
 	};
 
 	UINT GetBinFromResource(int baud);
-	U08 PlRomNoAlloc(const CString& prom_path);
+	//U08 PlRomNoAlloc(const CString& prom_path);
 	U08 PlRomNoAlloc2(const CString& prom_path);
 	U08 PlRomNoAllocV8(const CString& prom_path);
 	bool FirmwareUpdate(const CString& strFwPath);

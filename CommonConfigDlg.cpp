@@ -24,7 +24,6 @@ CCommonConfigDlg::CCommonConfigDlg(UINT nIDTemplate, CWnd* pParent /*=NULL*/)
 	pAcceptBtn = new CButton();
 }
 
-
 CCommonConfigDlg::~CCommonConfigDlg()
 {
 	delete pCancelBtn;
@@ -1495,6 +1494,8 @@ CConfigNoisePowerControlDlg::CConfigNoisePowerControlDlg(CWnd* pParent /*=NULL*/
 
 BEGIN_MESSAGE_MAP(CConfigNoisePowerControlDlg, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigNoisePowerControlDlg::OnBnClickedOk)
+	ON_CBN_SELCHANGE(IDC_MODE, &CConfigNoisePowerControlDlg::OnCbnSelchangeMode)
+	ON_CBN_SELCHANGE(IDC_DEFAULT, &CConfigNoisePowerControlDlg::OnCbnSelchangeMode)
 END_MESSAGE_MAP()
 
 // CConfigureSignalDisturbanceStatusDlg 訊息處理常式
@@ -1502,11 +1503,11 @@ BOOL CConfigNoisePowerControlDlg::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
 
-	((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(1);
-	((CComboBox*)GetDlgItem(IDC_DEFAULT))->SetCurSel(1);
-	GetDlgItem(IDC_VALUE)->SetWindowText("2700000");
+	((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_DEFAULT))->SetCurSel(0);
+	GetDlgItem(IDC_VALUE)->SetWindowText("2500000");
 	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
-
+	OnCbnSelchangeMode();
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
@@ -1522,6 +1523,27 @@ void CConfigNoisePowerControlDlg::OnBnClickedOk()
 	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
 
 	OnOK();
+}
+
+void CConfigNoisePowerControlDlg::OnCbnSelchangeMode()
+{
+	m_nMode = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
+	m_nDefault = ((CComboBox*)GetDlgItem(IDC_DEFAULT))->GetCurSel();
+	if(m_nMode == 1)
+	{
+		GetDlgItem(IDC_DEFAULT)->EnableWindow(FALSE);
+		GetDlgItem(IDC_VALUE)->EnableWindow(FALSE);
+	}
+	else if(m_nMode == 0 && m_nDefault == 1)
+	{
+		GetDlgItem(IDC_DEFAULT)->EnableWindow(TRUE);
+		GetDlgItem(IDC_VALUE)->EnableWindow(TRUE);
+	}
+	else if(m_nMode == 0 && m_nDefault == 0)
+	{
+		GetDlgItem(IDC_DEFAULT)->EnableWindow(TRUE);
+		GetDlgItem(IDC_VALUE)->EnableWindow(FALSE);
+	}
 }
 
 void CConfigNoisePowerControlDlg::DoCommand()
@@ -1634,3 +1656,4 @@ void ConfigPowerSavingParametersRomDlg::DoCommand()
 	configPrompt = "ConfigPowerSavingParametersRom successful...";
     AfxBeginThread(ConfigThread, 0);
 }
+

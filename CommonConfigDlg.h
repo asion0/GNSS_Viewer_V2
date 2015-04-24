@@ -525,9 +525,10 @@ public:
 	virtual ~CConfigNoisePowerControlDlg() {};
 
 	virtual void DoCommand();
-
-	afx_msg void OnBnClickedOk();
 	virtual BOOL OnInitDialog();
+
+	afx_msg void OnCbnSelchangeMode();
+	afx_msg void OnBnClickedOk();
 
 protected:
 	U08 m_nMode;
