@@ -70,7 +70,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="D:\Project\GitCodes\SkytraqGitHub\V8IoTesterSrec2\GNSS_ViewerD.exe"
+				OutputFile="Exe\GNSS_ViewerD.exe"
 				LinkIncremental="2"
 				GenerateManifest="false"
 				EnableUAC="false"

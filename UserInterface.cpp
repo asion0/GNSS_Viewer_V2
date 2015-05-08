@@ -126,7 +126,7 @@ void CGPSDlg::Show_EarthChart(CDC *dc)
 	{
 		DrawEarthSate(dc, &gpUI, sate_gps, &m_gpgsvMsg, &m_gpgsaMsg, &m_gpggaMsg);
 	}
-#if GNSS_VIEWER
+
 	if(pic_earth->m_glCheck.GetCheck())
 	{
 		DrawEarthSate(dc, &glUI, sate_gnss, &m_glgsvMsg, &m_glgsaMsg, &m_gpggaMsg);
@@ -141,7 +141,7 @@ void CGPSDlg::Show_EarthChart(CDC *dc)
 	{
 		DrawEarthSate(dc, &gaUI, sate_ga, &m_gagsvMsg, &m_gagsaMsg, &m_gpggaMsg);
 	}
-#endif
+
 }
 
 
@@ -180,7 +180,6 @@ int CGPSDlg::CreateSubMenu(const HMENU hMenu, const MenuItemEntry* menuItemTable
 	return 0;
 }
 
-#if GNSS_VIEWER
 void CGPSDlg::DrawGnssSatellite(CDC* dc, int id, int centerX, int centerY)
 {
 	for(int i=0;i<m_glgsvMsg.NumOfSate;i++)
@@ -360,6 +359,6 @@ void CGPSDlg::DrawGaSatellite(CDC* dc, int id, int centerX, int centerY)
 		}
 	}	//for(int i=0;i<m_bdgsvMsg.NumOfSate;i++)
 }
-#endif
+
 
 

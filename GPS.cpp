@@ -3,17 +3,11 @@
 
 #include "stdafx.h"
 #include "GPS.h"
-
-#if defined(GNSS_VIEWER)
- #include "GPSDlg.h"
-#else
- #include "GPSDlg.h"
-#endif
+#include "GPSDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
-
 
 // CGPSApp
 BEGIN_MESSAGE_MAP(CGPSApp, CWinApp)

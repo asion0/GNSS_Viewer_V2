@@ -140,7 +140,7 @@
 // .138 Add [GPSDO Download] panel.
 // .139 Fix DataLog read fail issue
 // .140 Add [Noise Power Control] command in [Venus 8].
-// .141 Adjust all configure dialog in [Venus 8].
+// .141 Adjust all configure dialog in [Venus 8]. Fixed download V6 fail issue.
 
 //#define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
@@ -148,7 +148,6 @@
 #define APP_CAPTION				"GNSS Viewer"
 #define APP_VERSION				"2.0.141"
 #define APP_TITLE				""
-#define GNSS_VIEWER				0
 #define GPS_VIEWER				0
 
 //enum CustomerId	{
@@ -792,6 +791,3 @@
  #error Unknow SWCFG_VENDER_TYPE!!!
 #endif
 
-#if ((GNSS_VIEWER || GPS_VIEWER)==0)
- #error Unknow GNSS_VIEWER or GPS_VIEWER!!!
-#endif

@@ -1005,8 +1005,8 @@ bool CGPSDlg::DownloadLoader()
 		msg[6] = (U08)m_nDownloadBufferIdx;
 		int len = SetMessage(msg, sizeof(msg));
 
-		//bool b = SendToTarget(m_inputMsg, len, "Send upload loader Successful");
-		bool b = false;
+		bool b = SendToTarget(m_inputMsg, len, "Send upload loader Successful");
+		//bool b = false;
 		if(!b)
 		{
 			m_DownloadMode = EnternalLoader;

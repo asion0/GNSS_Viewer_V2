@@ -145,11 +145,7 @@ typedef struct UTC_TIME_T {
 } UtcTime;
 extern Setting g_setting;
 
-#if GNSS_VIEWER
- #define MAX_SATELLITE				32
-#else
- #define MAX_SATELLITE				16
-#endif
+#define MAX_SATELLITE				32
 #define MyMaxPath		(MAX_PATH * 8)
 #define BINMSG_ERROR                0
 
