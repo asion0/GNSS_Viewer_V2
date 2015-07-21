@@ -1809,6 +1809,10 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
+				RelativePath=".\res\exe1.bin"
+				>
+			</File>
+			<File
 				RelativePath=".\res\NewGNSS_Viewer.ico"
 				>
 			</File>
@@ -2227,6 +2231,10 @@
 		</File>
 		<File
 			RelativePath=".\res\Icon256.png"
+			>
+		</File>
+		<File
+			RelativePath=".\res\IQPlot.exe"
 			>
 		</File>
 		<File

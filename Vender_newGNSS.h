@@ -141,12 +141,20 @@
 // .139 Fix DataLog read fail issue
 // .140 Add [Noise Power Control] command in [Venus 8].
 // .141 Adjust all configure dialog in [Venus 8]. Fixed download V6 fail issue.
+// .142 Fix external download in binary command issue.
+// .143 Support 3D KML convert.
+// .144 Remove [Query / Configure Power Saving Parameters(Rom)] and modify [Query / Configure Power Saving Parameters]
+// .145 [Conveter/KML] support GNS message.
+// .146 Modify Antenna Detection command for fw spec.
+// .147 Add GAGAN option in [Query / Configure SBAS].
+// .148 Fixed GAGAN option error issue.
+// .149 20150720 Add iq plot functions.
 
 //#define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.141"
+#define APP_VERSION				"2.0.149"
 #define APP_TITLE				""
 #define GPS_VIEWER				0
 

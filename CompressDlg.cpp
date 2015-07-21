@@ -91,7 +91,7 @@ UINT ReadNMEA(LPVOID pParam)
 	{	
 		CString tmp_file ;
 		tmp_file.Format("%s%d%s", pComDlg->kml_file_name,file_tail, ".kml");
-		pComDlg->kml.init(tmp_file,0x0000ff);
+		pComDlg->kml.Init(tmp_file,0x0000ff);
 		while(dwBytesRemaining)
 		{
 			memset(nmea,0,200);		
@@ -109,7 +109,7 @@ UINT ReadNMEA(LPVOID pParam)
 				break;
 			}
 		}
-		pComDlg->kml.finish();
+		pComDlg->kml.Finish();
 	}	
 	//char title[]="    </coordinates>\r\n  </LineString>\r\n</Placemark>\r\n</kml>";
 	//pComDlg->Fnmea.Write(title,sizeof(title)-1);
@@ -290,14 +290,18 @@ int Abs(int x)
 
 void CCompressDlg::PosFixAlgorithm()
 {
-	if(!IsFlogOpen)return;
+	if(!IsFlogOpen)
+	{
+		return;
+	}
+
 	U16 X_DIFF , Y_DIFF, Z_DIFF;
 	if((msg_gpgga.GPSQualityIndicator==49 || msg_gpgga.GPSQualityIndicator==50) && X!=0 && Y!=0 && Z!=0)
 	{
 		LLA2ECEF();
-		lon = Rad2Deg(lon);
-		lat = Rad2Deg(lat);		
-		kml.push_one_point(lon, lat);
+		m_lon = Rad2Deg(m_lon);
+		m_lat = Rad2Deg(m_lat);		
+		kml.PushOnePoint(m_lon, m_lat, m_alt);
 
 		Current.TOW     = (U32)(msg_gpgga.Hour*3600 + msg_gpgga.Min*60 + msg_gpgga.Sec);
 		Current.WNO     = 120;
@@ -327,7 +331,7 @@ void CCompressDlg::PosFixAlgorithm()
 	        Last.ECEF_Y = Current.ECEF_Y;
 	        Last.ECEF_Z = Current.ECEF_Z;
 
-			kml.push_one_point(lon,lat);
+			kml.PushOnePoint(m_lon, m_lat, m_alt);
 		}
 		else
 		{				
@@ -422,21 +426,21 @@ void CCompressDlg::LLA2ECEF(void)
 {
 	h=msg_gpgga.GeoidalSeparation;
 
-	lon = int(msg_gpgga.Longitude/100);
-	lon+=double(msg_gpgga.Longitude-int(msg_gpgga.Longitude/100)*100)/60;
+	m_lon = int(msg_gpgga.Longitude/100);
+	m_lon += double(msg_gpgga.Longitude-int(msg_gpgga.Longitude/100)*100)/60;
 	if (msg_gpgga.Longitude_E_W == 'W')
-		lon *= -1;
-	lat = int(msg_gpgga.Latitude/100);
-	lat+=double(msg_gpgga.Latitude-int(msg_gpgga.Latitude/100)*100)/60;
+		m_lon *= -1;
+	m_lat = int(msg_gpgga.Latitude/100);
+	m_lat += double(msg_gpgga.Latitude-int(msg_gpgga.Latitude/100)*100)/60;
 	if (msg_gpgga.Latitude_N_S == 'S')
-		lat *= -1;
+		m_lat *= -1;
 
-	lon = Deg2Rad(lon);
-	lat = Deg2Rad(lat);
-	N=WGS84a/(sqrt(1-e*e*sin(lat)*sin(lat)));		
-	X=(N+h)*cos(lat)*cos(lon);
-	Y=(N+h)*cos(lat)*sin(lon);
-	Z=(N*(1-e*e)+h)*sin(lat);	
+	m_alt = msg_gpgga.Altitude;
 
-	//_cprintf("%f %f %f",X,Y,Z);
+	m_lon = Deg2Rad(m_lon);
+	m_lat = Deg2Rad(m_lat);
+	N=WGS84a/(sqrt(1-e*e*sin(m_lat)*sin(m_lat)));		
+	X=(N+h)*cos(m_lat)*cos(m_lon);
+	Y=(N+h)*cos(m_lat)*sin(m_lon);
+	Z=(N*(1-e*e)+h)*sin(m_lat);	
 }

@@ -140,6 +140,7 @@
 #define IDD_TIMING_START                365
 #define IDD_CON_1PPS_PULSE_CLK_SOURCE   366
 #define IDD_CONFIG_NOISE_PWR_CTRL       367
+#define IDD_IQ_PLOT                     368
 #define IDR_GNSS_SREC_4800              380
 #define IDR_GNSS_SREC_9600              381
 #define IDR_GNSS_SREC_19200             382
@@ -223,6 +224,8 @@
 #define IDD_GPSDO_DOWNLOAD              471
 #define IDB_GA_DIS                      472
 #define IDD_CONFIG_DATUM_INDEX          473
+#define IDR_EXEC1                       473
+#define IDR_IQPLOT                      473
 #define IDB_EARTH1                      474
 #define IDB_EARTH2                      475
 #define IDB_EARTH3                      476
@@ -321,7 +324,7 @@
 #define IDC_BTN3                        1058
 #define IDC_LIST3                       1058
 #define IDC_MESSAGE                     1058
-#define IDC_ENABLE_MSAS2                1058
+#define IDC_ENABLE_GAGAN                1058
 #define IDC_BTN4                        1059
 #define IDC_FIFOMODE                    1059
 #define IDC_KNUM_LIST                   1059
@@ -494,6 +497,8 @@
 #define IDC_1PPS_SET2                   1147
 #define IDC_CHECK76                     1147
 #define IDC_1PPS_SET3                   1148
+#define IDC_CHECK79                     1148
+#define IDC_3DKML                       1148
 #define IDC_STATIC_SET1                 1150
 #define IDC_STATIC_SET2                 1151
 #define IDC_STATIC_SET3                 1152
@@ -849,6 +854,9 @@
 #define IDC_BROWSE_MASTER               1365
 #define IDC_BROWSE_SLAVE                1366
 #define IDC_VALUE                       1367
+#define IDC_RATE                        1368
+#define IDC_SVID2                       1369
+#define IDC_SVID                        1369
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_BINARY_SYSTEMRESTART         32811
@@ -935,7 +943,7 @@
 #define ID_BINARY_QUERYBINARYMSGINTERVAL 32921
 #define ID_BINARY_CONFIGURE1PPSTIMING   32923
 #define ID_BINARY_QUERY1PPSTIMING       32924
-#define ID_RESET_ODOMETER				32925
+#define ID_RESET_ODOMETER               32925
 #define ID_BINARY_CONFIGURE1PPSCABLEDELAY 32926
 #define ID_BINARY_QUERY1PPSCABLEDELAY   32927
 #define ID_BINARY_CONFIGURE1PPSTIMING32928 32928
@@ -944,7 +952,7 @@
 #define ID_CONFIGURE1PPSTIMING_CONFIGURE1PPS 32931
 #define ID_CONFIG_ELEV_AND_CNR_MASK     32932
 #define ID_QUERY1PPSTIMING_QUERYTIMING  32933
-#define ID_QUERY_CABLEDELAY				32934
+#define ID_QUERY_CABLEDELAY             32934
 #define ID_QUERY1PPSTIMING_QUERY        32935
 #define ID_QUERY1PPSTIMING_QUERYELEVATIONANDCNRMASK 32936
 #define ID_1PPSTIMING_MONITORING1PPS    32937
@@ -1099,14 +1107,15 @@
 #define ID_GPSDO_LEAVE_DWN_H            33093
 #define ID_CONFIG_GPS_LEAP_IN_UTC       33094
 #define ID_GPSDO_FW_DOWNLOAD            33095
+#define ID_IQ_PLOT                      33096
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        472
+#define _APS_NEXT_RESOURCE_VALUE        474
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1368
+#define _APS_NEXT_CONTROL_VALUE         1369
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

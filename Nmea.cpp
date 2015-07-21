@@ -11,85 +11,7 @@ Satellite satellites_ga[MAX_SATELLITE];
 GnssData NMEA::gnssData;
 NMEA::NMEA_Type NMEA::nmeaType = NMEA::NtUnknown;
 bool NMEA::firstGsaIn = false;
-/*
-void GnssData::SetFixMode(U16 ggaQtyInd, U16 gpGsaMode, U16 glGsaMode, U16 bdGsaMode, U08 rmcModeInd)
-{
-	GnssDataCs.Lock();
 
-	fixMode = Unlocated;
-	U08 gpsInd = 0, gnssInd = 0;
-
-	if(ggaQtyInd > 0xFF)
-	{
-		gpsInd = ggaQtyInd >> 8;
-		gnssInd = ggaQtyInd & 0xFF;
-	}
-	else
-	{
-		gpsInd = ggaQtyInd & 0xFF;
-		gnssInd = 0;
-	}
-
-	if(gpsInd || gnssInd)
-	{		
-		if(gpsInd == 'E' || gnssInd == 'E')
-		{
-			fixMode = EstimatedMode;	
-		}
-		else if(gpsInd == 'D' || gnssInd == 'D')
-		{
-			fixMode = DgpsMode;	
-		}
-		else if(gpsInd == '3')
-		{
-		}
-		else if(gpsInd == '2')
-		{
-			fixMode = DgpsMode;		
-		}
-		else if(gpsInd == 'A' || gnssInd == 'A' || gpsInd == '1')
-		{				
-	
-			if(gpGsaMode == 2 || glGsaMode == 2 || bdGsaMode == 2)
-			{
-				fixMode = PositionFix2d;	
-			}
-			else if(gpGsaMode == 3 || glGsaMode == 3 || bdGsaMode == 3)
-			{
-				fixMode = PositionFix3d;	
-			}
-			else if(gpGsaMode == 4 || glGsaMode == 4 || bdGsaMode == 4)
-			{
-				fixMode = SurveyIn;	
-			}
-			else if(gpGsaMode == 5 || glGsaMode == 5 || bdGsaMode == 5)
-			{
-				fixMode = StaticMode;	
-			}
-		}
-	}
-	else if(rmcModeInd)
-	{		
-		if(rmcModeInd == 'N')
-		{
-				fixMode = DataNotValid;	
-		}
-		else if(rmcModeInd == 'A')
-		{
-				fixMode = AutonomousMode;	
-		}
-		else if(rmcModeInd == 'D')
-		{
-				fixMode = DgpsMode2;	
-		}
-		else if(rmcModeInd == 'E')
-		{
-				fixMode = EstimatedMode;	
-		}
-	}
-	GnssDataCs.Unlock();
-}
-*/
 int NMEA::LSB(char lsb)
 {
 	if(lsb>='0' && lsb<='9')
@@ -306,7 +228,7 @@ bool NMEA::GNSProc(GPGGA& rgga, LPCSTR pt, int len)
 	rgga.Longitude = ParamDouble(pt, dot[3], dot[4], 0.0F);
 	rgga.Longitude_E_W = (U08)ParamChar(pt, dot[4], dot[5], 0);
 	rgga.GPSQualityIndicator = (U16)ParamChar(pt, dot[5], dot[5]+2, 0) << 8;
-	rgga.GPSQualityIndicator += (U16)ParamChar(pt, dot[5]+1, dot[6], 0);
+	rgga.GPSQualityIndicator += (U16)ParamChar(pt, dot[5]+1, dot[5]+3, 0);
 
 	rgga.NumsOfSatellites = ParamInt(pt, dot[6], dot[7], 0);
 	rgga.HDOP = ParamFloat(pt, dot[7], dot[8], 0);
@@ -654,6 +576,7 @@ NmeaType NMEA::MessageType(LPCSTR pt, int len)
 		{ "$BDRMC,", MSG_RMC },
 		{ "$GARMC,", MSG_RMC },
 
+		{ "$GPGNS,", MSG_GNS },
 		{ "$GNGNS,", MSG_GNS },
 
 		{ "$GPVTG,", MSG_VTG },

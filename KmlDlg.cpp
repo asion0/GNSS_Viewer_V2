@@ -145,7 +145,7 @@ UINT ConvertToKml(LPVOID pParam)
 	//AfxEndThread(0);	
 	return 0;
 }
-
+/*
 UINT ContinueToConvert(LPVOID pParam)
 {
 	CKmlDlg::kmlDlg->SetConvertFinish(false);
@@ -168,7 +168,7 @@ UINT ContinueToConvert(LPVOID pParam)
 
 	return 0;
 }
-
+*/
 
 
 void CKmlDlg::OnBnClickedBplayer()
@@ -296,6 +296,7 @@ void CKmlDlg::GetAllDatFile()
 void CKmlDlg::OnBnClickedOk()
 {
 	memset(&msg_gpgga, 0, sizeof(GPGGA));
+	memset(&msg_gprmc, 0, sizeof(GPRMC));
 	isConvertFinish = false;
 
 	hReadEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -308,7 +309,7 @@ void CKmlDlg::OnBnClickedOk()
 	m_directory.GetWindowText(fileName);
 	if(fileName.IsEmpty())
 	{
-		int ret = AfxMessageBox("您尚未選擇任何txt檔", MB_YESNOCANCEL | MB_ICONQUESTION);		
+		AfxMessageBox("您尚未選擇任何txt檔", MB_YESNOCANCEL | MB_ICONQUESTION);		
 	}
 
 	if(m_selectall.GetCheck() == BST_UNCHECKED)
@@ -379,7 +380,6 @@ void CKmlDlg::convert_all_file()
 		}	
 	}
 	CKmlDlg::kmlDlg->PostMessage(UWM_PROGRESS, 0, 1000);	//Hide progress
-
 }
 
 void CKmlDlg::OnBnClickedCheck76()
@@ -498,6 +498,9 @@ U08 CKmlDlg::NMEA_PROC(const char* buffer, int offset)
 	case MSG_RMC:
 		nmea.ShowGPRMCmsg(msg_gprmc,buffer,offset);		
 		break;	
+	case MSG_GNS:		
+		nmea.ShowGNSmsg(msg_gpgga, buffer, offset);
+		break; 
 	default :
 		break;
 	}
@@ -506,27 +509,22 @@ U08 CKmlDlg::NMEA_PROC(const char* buffer, int offset)
 
 void CKmlDlg::Convert(CFile& f)
 {
-	int    nBytesRead;
-	UINT   retCode = 0;	
-	U08    nmea[200];
+	int nBytesRead;
+	UINT retCode = 0;	
+	U08 nmea[200];
 	CString temp;
 	ULONGLONG  dwBytesRemaining = f.GetLength();
 	U08 nmeaType;
 
 	int write_count = 0;
 	int file_tail = 0;
-	U32 color;
+	
 
-	int color_index = m_color.GetCurSel();
+	int b3d = ((CButton*)GetDlgItem(IDC_3DKML))->GetCheck();
+	int color_index = m_color.GetCurSel(); 
 	//Red;Yellow;Blue;Green;
-	if (color_index==0)
-		color = 0x0000ff;
-	else if (color_index == 1)
-		color = 0x00FFFF;
-	else if (color_index == 2)
-		color = 0xff0000;
-	else if (color_index == 3)
-		color = 0x00ff00;
+	const U32 colors[] = {0x0000ff, 0x00FFFF, 0xff0000, 0x00ff00};
+	U32 color = colors[color_index];
 	
 	ut = Unknown;
 	int lastProgress = 0;
@@ -535,7 +533,7 @@ void CKmlDlg::Convert(CFile& f)
 		CString tmp_file ;
 		tmp_file.Format("%s%d%s", kml_filename,file_tail,".kml");
 		
-		kml.init(tmp_file, color);
+		kml.Init(tmp_file, color, (b3d==1));
 		while(dwBytesRemaining)
 		{
 			int progress = (int)(((double)(f.GetLength() - dwBytesRemaining) / f.GetLength()) * 1000);
@@ -549,7 +547,7 @@ void CKmlDlg::Convert(CFile& f)
 			nBytesRead = GET_NMEA_SENTENCE(f, nmea);						
 			nmeaType = NMEA_PROC((const char*)nmea, nBytesRead - 1);			    	
 			dwBytesRemaining-=nBytesRead;	
-			if ((nmeaType==MSG_GGA || nmeaType==MSG_RMC) && WriteToFile(nmeaType)) 
+			if ((nmeaType==MSG_GGA || nmeaType==MSG_RMC || nmeaType==MSG_GNS) && WriteToFile(nmeaType)) 
 			{
 				write_count++;
 				if ( write_count > 65000)
@@ -560,7 +558,7 @@ void CKmlDlg::Convert(CFile& f)
 				}
 			}
 		}
-		kml.finish();
+		kml.Finish();
 		CKmlDlg::kmlDlg->PostMessage(UWM_PROGRESS, 1, 1000);
 		lastProgress = 1000;
 
@@ -624,16 +622,16 @@ bool CKmlDlg::WriteToFile(U08 type)
 			ut = UsingRMC;
 	}		
 
-	if(ut == UsingGGA && type==MSG_GGA && Is_Fixed(msg_gpgga.GPSQualityIndicator))
+	if(ut == UsingGGA && (type==MSG_GGA || type==MSG_GNS) && Is_Fixed(msg_gpgga.GPSQualityIndicator))
 	{
-		kml.push_one_point(GetLon(msg_gpgga.Longitude, msg_gpgga.Longitude_E_W), 
-			GetLat(msg_gpgga.Latitude, msg_gpgga.Latitude_N_S));
+		kml.PushOnePoint(GetLon(msg_gpgga.Longitude, msg_gpgga.Longitude_E_W), 
+			GetLat(msg_gpgga.Latitude, msg_gpgga.Latitude_N_S), msg_gpgga.Altitude);
 		return true;
 	}
 	else if (ut == UsingRMC && type==MSG_RMC && msg_gprmc.Status == 'A')
 	{
-		kml.push_one_point(GetLon(msg_gprmc.Longitude, msg_gprmc.Longitude_E_W), 
-			GetLat(msg_gprmc.Latitude, msg_gprmc.Latitude_N_S));
+		kml.PushOnePoint(GetLon(msg_gprmc.Longitude, msg_gprmc.Longitude_E_W), 
+			GetLat(msg_gprmc.Latitude, msg_gprmc.Latitude_N_S), msg_gpgga.Altitude);
 		return true;
 	}
 	return false;

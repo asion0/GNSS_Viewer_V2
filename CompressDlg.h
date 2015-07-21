@@ -15,7 +15,7 @@ public:
 	virtual ~CCompressDlg();
 
 	CString kml_file_name;
-	CSkyTraqKml1 kml;
+	CSkyTraqKml kml;
 // 對話方塊資料
 	enum { IDD = IDD_DLGCOMPRESS };
 
@@ -55,7 +55,8 @@ public:
 	void LLA2ECEF();
 	//void Deg2Rad(double& degree);
 	//void Rad2Deg(double& degree);
-	double h,lon,lat,X,Y,Z,N;
+	double h,X,Y,Z,N;
+	double m_lon, m_lat, m_alt;
 
 	char cPos[50];
 	virtual BOOL OnInitDialog();

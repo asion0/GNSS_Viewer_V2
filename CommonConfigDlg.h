@@ -96,6 +96,7 @@ public:
 	afx_msg void OnBnClickedEnableWaas();
 	afx_msg void OnBnClickedEnableEgnos();
 	afx_msg void OnBnClickedEnableMasa();
+	afx_msg void OnBnClickedEnableGagan();
 	afx_msg void OnBnClickedEnableAll();
 
 	virtual BOOL OnInitDialog();
@@ -109,6 +110,7 @@ protected:
 	BOOL m_bWAAS;
 	BOOL m_bEGNOS;
 	BOOL m_bMSAS;
+	BOOL m_bGAGAN;
 	BOOL m_bAll;
 	int m_nAttribute;
 
@@ -559,6 +561,29 @@ protected:
 	bool m_bRomMode;
 	S16 m_param[9];
 	U08 m_attribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CIqPlot 對話方塊
+class CIqPlot : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CIqPlot)
+public:
+	CIqPlot(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CIqPlot() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+	afx_msg void OnBnClickedSend();
+
+	virtual BOOL OnInitDialog();
+
+protected:
+	static U08 m_gnssType;
+	static U16 m_nmeaSvid;
+	static U08 m_rate;
+	static BOOL m_bEnable;
 
 	DECLARE_MESSAGE_MAP()
 };

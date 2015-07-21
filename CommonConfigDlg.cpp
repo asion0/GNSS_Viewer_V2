@@ -211,6 +211,7 @@ CConfigSBAS::CConfigSBAS(CWnd* pParent /*=NULL*/)
 	m_bWAAS = FALSE;
 	m_bEGNOS = FALSE;
 	m_bMSAS = FALSE;
+	m_bGAGAN = FALSE;
 	m_nAttribute = 0;
 }
 
@@ -219,6 +220,7 @@ BEGIN_MESSAGE_MAP(CConfigSBAS, CCommonConfigDlg)
 	ON_BN_CLICKED(IDC_ENABLE_WAAS, OnBnClickedEnableWaas)
 	ON_BN_CLICKED(IDC_ENABLE_EGNOS, OnBnClickedEnableEgnos)
 	ON_BN_CLICKED(IDC_ENABLE_MSAS, OnBnClickedEnableMasa)
+	ON_BN_CLICKED(IDC_ENABLE_GAGAN, OnBnClickedEnableGagan)
 	ON_BN_CLICKED(IDC_ENABLE_ALL, OnBnClickedEnableAll)
 END_MESSAGE_MAP()
 
@@ -260,6 +262,7 @@ void CConfigSBAS::OnBnClickedOk()
 	m_bWAAS = ((CButton*)GetDlgItem(IDC_ENABLE_WAAS))->GetCheck();
 	m_bEGNOS = ((CButton*)GetDlgItem(IDC_ENABLE_EGNOS))->GetCheck();
 	m_bMSAS = ((CButton*)GetDlgItem(IDC_ENABLE_MSAS))->GetCheck();
+	m_bGAGAN = ((CButton*)GetDlgItem(IDC_ENABLE_GAGAN))->GetCheck();
 	m_bAll = ((CButton*)GetDlgItem(IDC_ENABLE_ALL))->GetCheck();
 
 	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
@@ -291,6 +294,14 @@ void CConfigSBAS::OnBnClickedEnableMasa()
 	}
 }
 
+void CConfigSBAS::OnBnClickedEnableGagan()
+{
+	if(((CButton*)GetDlgItem(IDC_ENABLE_GAGAN))->GetCheck())
+	{
+		((CButton*)GetDlgItem(IDC_ENABLE_ALL))->SetCheck(FALSE);
+	}
+}
+
 void CConfigSBAS::OnBnClickedEnableAll()
 {
 	if(((CButton*)GetDlgItem(IDC_ENABLE_ALL))->GetCheck())
@@ -298,6 +309,7 @@ void CConfigSBAS::OnBnClickedEnableAll()
 		((CButton*)GetDlgItem(IDC_ENABLE_WAAS))->SetCheck(FALSE);
 		((CButton*)GetDlgItem(IDC_ENABLE_EGNOS))->SetCheck(FALSE);
 		((CButton*)GetDlgItem(IDC_ENABLE_MSAS))->SetCheck(FALSE);
+		((CButton*)GetDlgItem(IDC_ENABLE_GAGAN))->SetCheck(FALSE);
 	}
 }
 
@@ -311,7 +323,7 @@ void CConfigSBAS::DoCommand()
 	*cmd.GetBuffer(4) = (U08)m_nUraMask;
 	*cmd.GetBuffer(5) = (U08)m_bCorrection;
 	*cmd.GetBuffer(6) = (U08)m_nTrackingChannel;
-	*cmd.GetBuffer(7) = (U08)(m_bWAAS | (m_bEGNOS << 1) | (m_bMSAS << 2) | (m_bAll << 7));
+	*cmd.GetBuffer(7) = (U08)(m_bWAAS | (m_bEGNOS << 1) | (m_bMSAS << 2) | (m_bGAGAN << 3) | (m_bAll << 7));
 	*cmd.GetBuffer(8) = (U08)m_nAttribute;
 
 	configCmd.SetData(cmd);
@@ -1654,6 +1666,85 @@ void ConfigPowerSavingParametersRomDlg::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "ConfigPowerSavingParametersRom successful...";
+    AfxBeginThread(ConfigThread, 0);
+}
+// CIqPlot 對話方塊
+IMPLEMENT_DYNAMIC(CIqPlot, CCommonConfigDlg)
+
+U08 CIqPlot::m_gnssType = 1;
+U16 CIqPlot::m_nmeaSvid = 1;
+U08 CIqPlot::m_rate = 100;
+BOOL CIqPlot::m_bEnable = TRUE;
+
+CIqPlot::CIqPlot(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_IQ_PLOT, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CIqPlot, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CIqPlot::OnBnClickedOk)
+	ON_BN_CLICKED(IDC_SEND, &CIqPlot::OnBnClickedSend)
+END_MESSAGE_MAP()
+
+// CIqPlot 訊息處理常式
+BOOL CIqPlot::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	CString txt;
+	
+	((CComboBox*)GetDlgItem(IDC_TYPE))->SetCurSel(m_gnssType - 1);
+	txt.Format("%d", m_nmeaSvid);
+	GetDlgItem(IDC_SVID)->SetWindowText(txt);
+	txt.Format("%d", m_rate);
+	GetDlgItem(IDC_RATE)->SetWindowText(txt);
+	((CComboBox*)GetDlgItem(IDC_ENABLE))->SetCurSel(m_bEnable);
+
+	if(!Utility::IsProcessRunning(L"IQPlot.exe"))
+	{
+		txt = Utility::GetSpecialFolder(CSIDL_APPDATA);
+		txt += "\\GNSS_Viewer_V2";
+		::CreateDirectory(txt, NULL);
+		txt += "\\IQPlot.exe";
+		Utility::CopyResToFile(txt, IDR_IQPLOT, "EXEC");
+		Utility::ExecuteExeNoWait(txt);
+	}
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CIqPlot::OnBnClickedSend()
+{	
+}
+	
+void CIqPlot::OnBnClickedOk()
+{	
+	CString txt;
+	m_gnssType = ((CComboBox*)GetDlgItem(IDC_TYPE))->GetCurSel() + 1;
+	GetDlgItem(IDC_SVID)->GetWindowText(txt);
+	m_nmeaSvid = atoi(txt);
+	GetDlgItem(IDC_RATE)->GetWindowText(txt);
+	m_rate = atoi(txt);
+	m_bEnable = ((CComboBox*)GetDlgItem(IDC_ENABLE))->GetCurSel();
+
+	OnOK();
+}
+
+void CIqPlot::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(7);
+	*cmd.GetBuffer(0) = 0x64;
+	*cmd.GetBuffer(1) = 0x7C;
+	*cmd.GetBuffer(2) = m_gnssType;
+	*cmd.GetBuffer(3) = (U08)HIBYTE(m_nmeaSvid);
+	*cmd.GetBuffer(4) = (U08)LOBYTE(m_nmeaSvid);
+	*cmd.GetBuffer(5) = m_rate;
+	*cmd.GetBuffer(6) = m_bEnable;
+
+
+	configCmd.SetData(cmd);
+	configPrompt = "Config IQ successful...";
     AfxBeginThread(ConfigThread, 0);
 }
 

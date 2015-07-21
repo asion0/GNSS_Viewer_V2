@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "Utility.h"
-
+#include <tlhelp32.h>
 
 void Utility::Log(const char* str1, const char* str2, int n)
 {
@@ -315,6 +315,52 @@ DWORD Utility::ExecuteExternalFileW(LPCWSTR csCmdLine, CString& strResult)
 	while(STILL_ACTIVE==dwResult);
 
 	return dwResult;
+}
+
+BOOL Utility::ExecuteExeNoWait(LPCSTR csCmdLine)
+{
+	CStringW strCmdLine(csCmdLine);
+
+	SECURITY_ATTRIBUTES secattr; 
+	ZeroMemory(&secattr,sizeof(secattr));
+	secattr.nLength = sizeof(secattr);
+	secattr.bInheritHandle = TRUE;
+
+
+	STARTUPINFOW sInfo; 
+	ZeroMemory(&sInfo, sizeof(sInfo));
+	PROCESS_INFORMATION pInfo; 
+	ZeroMemory(&pInfo, sizeof(pInfo));
+
+	sInfo.cb = sizeof(sInfo);
+	sInfo.dwFlags = STARTF_USESTDHANDLES;
+	sInfo.hStdInput = NULL; 
+	sInfo.hStdOutput = NULL; 
+	sInfo.hStdError = NULL;
+
+	//Create the process here.
+	return CreateProcessW(0, (LPWSTR)(LPCWSTR)strCmdLine, 
+		0, 0, TRUE,
+		NORMAL_PRIORITY_CLASS|CREATE_NO_WINDOW, 0, 0,
+		&sInfo, &pInfo);
+}
+
+bool Utility::IsProcessRunning(LPWSTR processName)
+{
+	CStringW name(processName);
+    bool exists = false;
+    PROCESSENTRY32W entry;
+    entry.dwSize = sizeof(entry);
+
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+
+    if (Process32FirstW(snapshot, &entry))
+        while (Process32NextW(snapshot, &entry))
+			if (0==name.Compare(entry.szExeFile))
+                exists = true;
+
+    CloseHandle(snapshot);
+    return exists;
 }
 
 // delete directory
@@ -770,4 +816,20 @@ bool Utility::ConvertBinaryToHex(const BinaryData& binData, CString& strOutput, 
 		}
 	}
 	return true;
+}
+
+CString Utility::GetSpecialFolder(INT iFolder)	//CSIDL_APPDATA
+{
+	LPITEMIDLIST pidl;
+	SHGetSpecialFolderLocation(NULL, iFolder, &pidl);
+	CString strPath;
+	SHGetPathFromIDList(pidl, strPath.GetBufferSetLength(MAX_PATH));
+	strPath.ReleaseBuffer();
+
+	// Clean up
+	LPMALLOC pMalloc;
+	SHGetMalloc(&pMalloc);
+	pMalloc->Free(pidl);
+	pMalloc->Release();
+	return strPath;
 }

@@ -1,62 +1,36 @@
 #pragma once
 #include <vector>
 
-typedef struct {
+typedef struct 
+{
 	double lat;
 	double lon;
+	double alt;
 } LL1;
 
-class CSkyTraqKml1
+class CSkyTraqKml
 {
 public:
-	CSkyTraqKml1(void);
-	~CSkyTraqKml1(void);
+	CSkyTraqKml(void);
+	~CSkyTraqKml(void);
 
-	void init(const char *name, int path_color);
-	void set_filename(char *name);
-	void push_one_point(double lon, double lat);
-	void push_one_poi(double lon, double lat);
-	void finish();
+	//void SetFileName(const char *name);
+	void Init(const char *name, int path_color, bool kml3d = false);
+	void PushOnePoint(double lon, double lat, double alt);
+	void PushOnePoi(double lon, double lat, double alt);
+	void Finish();
 	
 private:
-	CFile FKml;
+	CFile kmlFile;
+	bool iniWriteKml;
+	bool convert3d;
+	int lineColor;
+
 	std::vector<LL1> lst_poi;
-	int line_color;
-	LL1 start_point,last_point;
-	bool iniWriteKml ;
-	void WriteKMLini(CFile& Fnmea, double lon,double lat);
-	void WriteKMLPath(CFile& Fnmea, double lon,double lat);
-	void WritePOIPath(CFile& Fnmea , std::vector<LL1> *lst);
-	void add_start_point(CFile& Fnmea);
-	void add_end_point(CFile& Fnmea);
-};
-
-struct LL2;
-class CSkyTraqKml2
-{
-public:
-	CSkyTraqKml2(void);
-	~CSkyTraqKml2(void);
-
-	void init(const char *name, int path_color);
-	void set_filename(char *name);
-	void push_one_point(LL2 *lla);
-	void push_one_poi(LL2 *lla);
-	void finish();
-
-private:
-	CFile FKml;
-	std::vector<LL2> lst_poi;
-	std::vector<LL2> points;
-	int line_color;
-	
-	void WriteKMLini(CFile& Fnmea);
-	void WriteKMLPath(CFile& Fnmea, double lat,double lon);
-	void WritePOIPath(CFile& Fnmea , std::vector<LL2> *lst);
-	void add_start_point(CFile& Fnmea, std::vector<LL2> *lst);
-	void add_end_point(CFile& Fnmea, std::vector<LL2> *lst);
-	void WritePointPath(CFile& Fnmea, std::vector<LL2> *lst);
-	void WritePointLine(CFile& Fnmea, std::vector<LL2> *lst);
-	void WritePointLineEnd(CFile& Fnmea);
-	void WriteKMLEnd(CFile& Fnmea);
+	LL1 start_point, last_point;
+	void WriteKMLini(CFile& kmlFile);
+	void WriteKMLPath(CFile& kmlFile, double lon, double lat, double alt);
+	void WritePOIPath(CFile& kmlFile , std::vector<LL1> *lst);
+	void AddStartPoint(CFile& kmlFile);
+	void AddEndPoint(CFile& kmlFile);
 };

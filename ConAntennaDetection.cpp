@@ -42,16 +42,19 @@ BOOL CConAntennaDetection::OnInitDialog()
 	CDialog::OnInitDialog();
 
 	// TODO:  在此加入額外的初始化
-
+	m_chk_short.ShowWindow(SW_HIDE);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CConAntennaDetection::OnBnClickedOk()
 {
-	if (m_chk_short.GetCheck() == 1)
-		antenna_control |= 0x01;
-	if (m_chk_antenna.GetCheck() == 1)
-		antenna_control |= 0x02;
+	//20150709 modify for fw spec, just ON/OFF.
+	//if (m_chk_short.GetCheck() == 1)
+	//	antenna_control |= 0x01;
+	//if (m_chk_antenna.GetCheck() == 1)
+	//	antenna_control |= 0x02;
+	antenna_control = m_chk_antenna.GetCheck();
+
 	OnOK();
 }

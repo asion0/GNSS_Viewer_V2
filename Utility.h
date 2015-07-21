@@ -20,6 +20,8 @@ namespace Utility
 	BOOL ReadUFileToUText(LPCTSTR pszFile, CStringW& strOutText, BOOL& bBigEndian);
 	BOOL WriteUTextToUBFile(LPCTSTR pszFile, LPCWSTR pszInputText, BOOL bBigEndian);
 	DWORD ExecuteExternalFileW(LPCWSTR csCmdLine, CString& strResult);
+	BOOL ExecuteExeNoWait(LPCSTR csCmdLine);
+	bool IsProcessRunning(LPWSTR processName);
 	BOOL DeleteDirectory(LPCTSTR pszSrcDir, BOOL bSilent, BOOL bConfirm);
 	BOOL CopyFiles(LPCTSTR pszSrcFiles, LPCTSTR pszDestFolder, LPCTSTR pszNewName, BOOL bSilent, BOOL bConfirm);
 	CString GetFilePath(LPCTSTR pszPathname);
@@ -37,6 +39,7 @@ namespace Utility
 	int FindNextNoneSpaceChar(LPCSTR pszInput, bool forward = true);
 	bool ConvertHexToBinary(LPCSTR pszInput, BinaryData& binData);
 	bool ConvertBinaryToHex(const BinaryData& binData, CString& strOutput, int startIndex, int maxCount, int lineCount);
+	CString GetSpecialFolder(INT iFolder);	//See define: CSIDL_APPDATA
 }
 
 class ScopeTimer

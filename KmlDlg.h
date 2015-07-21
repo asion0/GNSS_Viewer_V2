@@ -65,7 +65,7 @@ public:
 	NMEA nmea;
 
 	CString kml_filename;
-	CSkyTraqKml1 kml;
+	CSkyTraqKml kml;
 
 	double lon, lat;
 	bool WriteToFile(U08 type);

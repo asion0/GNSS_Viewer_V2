@@ -3,88 +3,89 @@
 #include "GPSDlg.h"
 
 using namespace std;
-CSkyTraqKml1::CSkyTraqKml1(void)
+CSkyTraqKml::CSkyTraqKml(void)
 {
-	
+	iniWriteKml = false;
 }
 
-CSkyTraqKml1::~CSkyTraqKml1(void)
+CSkyTraqKml::~CSkyTraqKml(void)
 {
+
 }
 
-void CSkyTraqKml1::set_filename( char *name )
+void CSkyTraqKml::Init(const char *name, int color, bool kml3d)
 {
-	FKml.Open(name,CFile::modeReadWrite|CFile::modeCreate);	
+	kmlFile.Open(name, CFile::modeReadWrite | CFile::modeCreate);	
+	lineColor = color;
+	iniWriteKml = true;
+	convert3d = kml3d;
 }
 
-void CSkyTraqKml1::push_one_point(double lon,double lat)
+void CSkyTraqKml::PushOnePoint(double lon, double lat, double alt)
 {
 	if(iniWriteKml)
 	{
 		start_point.lon = lon;
 		start_point.lat = lat;
-		WriteKMLini(FKml,lon, lat);
-		iniWriteKml= false;
+		start_point.alt = alt;
+		WriteKMLini(kmlFile);
+		iniWriteKml = false;
 	}
-	WriteKMLPath(FKml,lon, lat);
+	WriteKMLPath(kmlFile, lon, lat, alt);
 
 	last_point.lat = lat;
 	last_point.lon = lon;
+	last_point.alt = alt;
 }
 
-void CSkyTraqKml1::add_start_point(CFile& Fnmea )
-{	
-	char buff[1024];
-
-		
-	sprintf_s(buff, sizeof(buff), "<Placemark id=\"Start Point\">\r\n    <styleUrl>#POI_STYLE</styleUrl>\r\n    <name>Start Point</name>\r\n    <LookAt>\r\n");
-	Fnmea.Write(buff,(U16)strlen(buff));
-	sprintf_s(buff, sizeof(buff), "    <longitude>%.6f</longitude>\r\n    <latitude>%.6f</latitude>\r\n    </LookAt>\r\n        <Point>\r\n",start_point.lon,start_point.lat);
-	Fnmea.Write(buff,(U16)strlen(buff));
-	sprintf_s(buff, sizeof(buff), "        <coordinates>%.6f,%.6f</coordinates>\r\n    </Point>\r\n</Placemark>\r\n",start_point.lon,start_point.lat),
-		Fnmea.Write(buff, (U16)strlen(buff));
-
-	
-	//Fnmea.Write(buff,(U16)strlen(buff));
-}
-
-void CSkyTraqKml1::add_end_point(CFile& Fnmea )
-{	
-	char buff[1024];
-
-
-	sprintf_s(buff, sizeof(buff), "<Placemark id=\"End Point\">\r\n    <styleUrl>#POI_STYLE</styleUrl>\r\n    <name>End Point</name>\r\n    <LookAt>\r\n");
-	Fnmea.Write(buff,(U16)strlen(buff));
-	sprintf_s(buff, sizeof(buff), "    <longitude>%.6f</longitude>\r\n    <latitude>%.6f</latitude>\r\n    </LookAt>\r\n        <Point>\r\n",last_point.lon,last_point.lat);
-	Fnmea.Write(buff,(U16)strlen(buff));
-	sprintf_s(buff, sizeof(buff), "        <coordinates>%.6f,%.6f</coordinates>\r\n    </Point>\r\n</Placemark>\r\n",last_point.lon,last_point.lat),
-		Fnmea.Write(buff,(U16)strlen(buff));
-
-	//Fnmea.Write(buff,(U16)strlen(buff));
-}
-
-void CSkyTraqKml1::push_one_poi(double lon, double lat)
+void CSkyTraqKml::PushOnePoi(double lon, double lat, double alt)
 {
-	LL1 tmp_lla;
-	tmp_lla.lat = lat;
-	tmp_lla.lon = lon;
-	lst_poi.push_back(tmp_lla);
+	LL1 tmpLla;
+	tmpLla.lat = lat;
+	tmpLla.lon = lon;
+	tmpLla.alt = alt;
+	lst_poi.push_back(tmpLla);
 }
 
-void CSkyTraqKml1::finish()
-{
-	char title[500];
+void CSkyTraqKml::AddStartPoint(CFile& f)
+{	
+	CString str;
+	str = "<Placemark id=\"Start Point\">\r\n    <styleUrl>#POI_STYLE</styleUrl>\r\n    <name>Start Point</name>\r\n    <LookAt>\r\n";
+	f.Write(str, (U16)str.GetLength());
 
+	str.Format("    <longitude>%.6f</longitude>\r\n    <latitude>%.6f</latitude>\r\n    </LookAt>\r\n        <Point>\r\n", start_point.lon, start_point.lat);
+	f.Write(str, (U16)str.GetLength());
+
+	str.Format("        <coordinates>%.6f,%.6f</coordinates>\r\n    </Point>\r\n</Placemark>\r\n",start_point.lon,start_point.lat);
+	f.Write(str, (U16)str.GetLength());
+}
+
+void CSkyTraqKml::AddEndPoint(CFile& f)
+{	
+	CString str;
+	str = "<Placemark id=\"End Point\">\r\n    <styleUrl>#POI_STYLE</styleUrl>\r\n    <name>End Point</name>\r\n    <LookAt>\r\n";
+	f.Write(str, (U16)str.GetLength());
 	
-	if ( lst_poi.size() > 0 )
+	str.Format("    <longitude>%.6f</longitude>\r\n    <latitude>%.6f</latitude>\r\n    </LookAt>\r\n        <Point>\r\n", last_point.lon, last_point.lat);
+	f.Write(str, (U16)str.GetLength());
+
+	str.Format("        <coordinates>%.6f,%.6f</coordinates>\r\n    </Point>\r\n</Placemark>\r\n", last_point.lon, last_point.lat),
+	f.Write(str, (U16)str.GetLength());
+}
+
+
+void CSkyTraqKml::Finish()
+{
+	CString str;
+	if(lst_poi.size() > 0)
 	{
-		
-		strcpy_s(title, sizeof(title), "    </coordinates>\r\n  </LineString>\r\n</Placemark>\r\n");
-		FKml.Write(title,(U16)strlen(title));
+		str = "    </coordinates>\r\n  </LineString>\r\n</Placemark>\r\n";
+		kmlFile.Write(str, (U16)str.GetLength());
 
-		WritePOIPath(FKml,&lst_poi);
-		strcpy_s(title, sizeof(title), "</kml>");
-		FKml.Write(title,(U16)strlen(title));
+		WritePOIPath(kmlFile, &lst_poi);
+
+		str = "</kml>";
+		kmlFile.Write(str, (U16)str.GetLength());
 
 		lst_poi.clear();
 	}
@@ -92,325 +93,71 @@ void CSkyTraqKml1::finish()
 	{
 		if (!iniWriteKml)
 		{
-			strcpy_s(title, sizeof(title), "    </coordinates>\r\n  </LineString>\r\n</Placemark>\r\n");
-			FKml.Write(title,(U16)strlen(title));
+			str = "    </coordinates>\r\n  </LineString>\r\n</Placemark>\r\n";
+			kmlFile.Write(str, (U16)str.GetLength());
 		}
-		add_start_point(FKml);
-		add_end_point(FKml);
-
+		AddStartPoint(kmlFile);
+		AddEndPoint(kmlFile);
 
 		if (!iniWriteKml)
 		{
-			//strcpy_s(title, sizeof)title), "    </coordinates>\r\n  </LineString>\r\n</Placemark>\r\n</Folder>\r\n</kml>\r\n");
-			strcpy_s(title, sizeof(title), "</Folder>\r\n</kml>\r\n");
-			FKml.Write(title,(U16)strlen(title));
+			str = "</Folder>\r\n</kml>\r\n";
+			kmlFile.Write(str, (U16)str.GetLength());
 		}
-
 	}
-
-
-	FKml.Close();
+	kmlFile.Close();
 }
 
-void CSkyTraqKml1::WriteKMLini(CFile& Fnmea,double lon,double lat)
+void CSkyTraqKml::WriteKMLini(CFile& f)
 {
 	/*<?xml version="1.0" encoding="UTF-8"?>
 	<kml xmlns="http://earth.google.com/kml/2.1">*/
-	char title[1024];
-	CString temp;
-	strcpy_s(title, sizeof(title), "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<kml xmlns=\"http://earth.google.com/kml/2.1\">\r\n");
-	Fnmea.Write(title,(U16)strlen(title));
-
-
-	strcpy_s(title, sizeof(title), "<Style id=\"POI_STYLE\">\r\n    <IconStyle>\r\n    <color>ff00ff00</color>\r\n    <scale>1.1</scale>\r\n");
-	Fnmea.Write(title,(U16)strlen(title));
-	strcpy_s(title, sizeof(title), "    <Icon><href>http://maps.google.com/mapfiles/kml/pal3/icon21.png</href></Icon>\r\n    </IconStyle>\r\n</Style>\r\n");
-	Fnmea.Write(title,(U16)strlen(title));
-
-	strcpy_s(title,"<Folder id=\"Data logger\">\r\n    <name>Data logger</name>\r\n");
-	Fnmea.Write(title,(U16)strlen(title));
-
-	char title8[]="<Placemark id=\"logger\">\r\n  <styleUrl>#lineStyle</styleUrl>\r\n   <description>Plot Your Traveling Path</description>\r\n  <name>Trajectory</name>\r\n";
-	Fnmea.Write(title8,sizeof(title8)-1);	
-
-	//int color = 0xff0000;
-	temp.Format("%s%06x%s","    <visibility>1</visibility>\r\n  <open>0</open>\r\n    <Style>\r\n    <LineStyle>\r\n      <color>ff",line_color,"</color>\r\n    </LineStyle>\r\n    </Style>\r\n    <LineString>\r\n    <extrude>1</extrude>\r\n    <tessellate>1</tessellate>\r\n    <coordinates>\r\n");
-	//temp="    <visibility>1</visibility>\r\n  <open>0</open>\r\n    <Style>\r\n    <LineStyle>\r\n      <color>ff0000ff</color>\r\n    </LineStyle>\r\n    </Style>\r\n    <LineString>\r\n    <extrude>1</extrude>\r\n    <tessellate>1</tessellate>\r\n    <coordinates>\r\n";
-	Fnmea.Write(temp,temp.GetLength());
+	CString str;
+	str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<kml xmlns=\"http://earth.google.com/kml/2.1\">\r\n";
+	str += "<Style id=\"POI_STYLE\">\r\n    <IconStyle>\r\n    <color>ff00ff00</color>\r\n    <scale>1.1</scale>\r\n";
+	str += "    <Icon><href>http://maps.google.com/mapfiles/kml/pal3/icon21.png</href></Icon>\r\n    </IconStyle>\r\n</Style>\r\n";
+	str += "<Folder id=\"Data logger\">\r\n    <name>Data logger</name>\r\n";
+	str += "<Placemark id=\"logger\">\r\n  <styleUrl>#lineStyle</styleUrl>\r\n   <description>Plot Your Traveling Path</description>\r\n  <name>Trajectory</name>\r\n";
+	str += "    <visibility>1</visibility>\r\n  <open>0</open>\r\n    <Style>\r\n    <LineStyle>\r\n      <color>ff";
+	f.Write(str, (UINT)str.GetLength());
+	str.Format("%06x", lineColor);
+	f.Write(str, (UINT)str.GetLength());
+	str = "</color>\r\n    </LineStyle>\r\n    </Style>\r\n    <LineString>\r\n    <extrude>0</extrude>\r\n    <tessellate>1</tessellate>\r\n";
+	if(convert3d)
+	{
+		str += "    <altitudeMode>absolute</altitudeMode>\r\n";
+	}
+	str += "    <coordinates>\r\n";
+	f.Write(str, (UINT)str.GetLength());
 }
 
-void CSkyTraqKml1::WriteKMLPath(CFile& Fnmea,double lon,double lat)
+void CSkyTraqKml::WriteKMLPath(CFile& f, double lon, double lat, double alt)
 {
-	string temp;	
-	char CoordinateToString[50];
-	const char t[] = "      ";
-	Fnmea.Write(t, sizeof(t) - 1);
-	sprintf_s(CoordinateToString, sizeof(CoordinateToString), "%f", lon);
-	temp = CoordinateToString;
-	Fnmea.Write(CoordinateToString, (U16)temp.length());
-	const char title[] = ",";
-	Fnmea.Write(title, sizeof(title) - 1);
-	sprintf_s(CoordinateToString, sizeof(CoordinateToString), "%f", lat);
-	temp = CoordinateToString;
-	Fnmea.Write(CoordinateToString,(U16)temp.length());
-	const char title1[] = ",2\r\n";
-	Fnmea.Write(title1, sizeof(title1) - 1);
+	CString str;
+	str = "      ";
+	f.Write(str, str.GetLength());
+
+	
+	str.Format("%f,%f,%f\r\n", lon, lat, (convert3d) ? alt : 2);
+	f.Write(str, str.GetLength());
 }
 
-void CSkyTraqKml1::WritePOIPath(CFile& Fnmea ,vector<LL1> *lst )
+void CSkyTraqKml::WritePOIPath(CFile& f, vector<LL1> *lst)
 {
 	vector<LL1>::iterator iter;
 	int id = 1;
-	char buff[1024];
+	CString str;
 
 	for(iter=lst->begin(); iter != lst->end(); ++iter)
 	{
 		LL1 lla = *iter;
-		sprintf_s(buff, sizeof(buff), "<Placemark id=\"POI%d\">\r\n    <styleUrl>#POI_STYLE</styleUrl>\r\n    <name>POI%d</name>\r\n    <LookAt>\r\n",id,id++);
-		Fnmea.Write(buff, (U16)strlen(buff));
-		sprintf_s(buff, sizeof(buff), "    <longitude>%.6f</longitude>\r\n    <latitude>%.6f</latitude>\r\n    </LookAt>\r\n        <Point>\r\n",lla.lon,lla.lat);
-		Fnmea.Write(buff, (U16)strlen(buff));
-		sprintf_s(buff, sizeof(buff), "        <coordinates>%.6f,%.6f</coordinates>\r\n    </Point>\r\n</Placemark>\r\n",lla.lon,lla.lat),
-			Fnmea.Write(buff, (U16)strlen(buff));
+		str.Format("<Placemark id=\"POI%d\">\r\n    <styleUrl>#POI_STYLE</styleUrl>\r\n    <name>POI%d</name>\r\n    <LookAt>\r\n", id, id++);
+		f.Write(str, str.GetLength());
+		str.Format("    <longitude>%.6f</longitude>\r\n    <latitude>%.6f</latitude>\r\n    </LookAt>\r\n        <Point>\r\n",lla.lon, lla.lat);
+		f.Write(str, str.GetLength());
+		str.Format("        <coordinates>%.6f,%.6f</coordinates>\r\n    </Point>\r\n</Placemark>\r\n",lla.lon, lla.lat);
+		f.Write(str, str.GetLength());
 	}
-	strcpy_s(buff, sizeof(buff), "</Folder>\r\n");
-	Fnmea.Write(buff, (U16)strlen(buff));
-}
-
-void CSkyTraqKml1::init(const char *name, int path_color)
-{
-	FKml.Open(name,CFile::modeReadWrite|CFile::modeCreate);	
-	line_color = path_color;
-	iniWriteKml = TRUE;
-}
-
-//----------------------------------------------------------------------------
-CSkyTraqKml2::CSkyTraqKml2(void)
-{
-	
-}
-
-CSkyTraqKml2::~CSkyTraqKml2(void)
-{
-}
-
-void CSkyTraqKml2::set_filename( char *name )
-{
-	FKml.Open(name,CFile::modeReadWrite|CFile::modeCreate);	
-}
-
-void CSkyTraqKml2::push_one_point(LL2 *lla)
-{
-	//if(iniWriteKml)
-	//{
-	//	start_point.lon = lon;
-	//	start_point.lat = lat;
-	//	WriteKMLini(FKml,lon, lat);
-	//	iniWriteKml= false;
-	//}
-	//WriteKMLPath(FKml,lon, lat);
-
-	//last_point.lat = lat;
-	//last_point.lon = lon;
-
-	//LL tmp_lla;
-	//tmp_lla.lat = lat;tmp_lla.lon =lon;
-	points.push_back(*lla);
-}
-
-void CSkyTraqKml2::add_start_point(CFile& Fnmea ,vector<LL2> *lst)
-{	
-	char buff[1024];
-
-	LL2 lla = *(lst->begin());
-		
-	sprintf_s(buff, sizeof(buff), "<Placemark id=\"Start Point\">\r\n    <styleUrl>#POI_STYLE</styleUrl>\r\n    <name>Start Point</name>\r\n    <LookAt>\r\n");
-	Fnmea.Write(buff,(U16)strlen(buff));
-	sprintf_s(buff, sizeof(buff), "    <longitude>%.6f</longitude>\r\n    <latitude>%.6f</latitude>\r\n    </LookAt>\r\n        <Point>\r\n",lla.lon,lla.lat);
-	Fnmea.Write(buff,(U16)strlen(buff));
-	sprintf_s(buff, sizeof(buff), "        <coordinates>%.6f,%.6f</coordinates>\r\n    </Point>\r\n</Placemark>\r\n",lla.lon,lla.lat),
-	Fnmea.Write(buff,(U16)strlen(buff));
-
-	
-	//Fnmea.Write(buff,(U16)strlen(buff));
-}
-
-void CSkyTraqKml2::add_end_point(CFile& Fnmea ,vector<LL2> *lst )
-{	
-	char buff[1024];
-
-	LL2 lla = *(lst->end()-1);
-	sprintf_s(buff, sizeof(buff),"<Placemark id=\"End Point\">\r\n    <styleUrl>#POI_STYLE</styleUrl>\r\n    <name>End Point</name>\r\n    <LookAt>\r\n");
-	Fnmea.Write(buff,(U16)strlen(buff));
-	sprintf_s(buff, sizeof(buff),"    <longitude>%.6f</longitude>\r\n    <latitude>%.6f</latitude>\r\n    </LookAt>\r\n        <Point>\r\n",lla.lon,lla.lat);
-	Fnmea.Write(buff,(U16)strlen(buff));
-	sprintf_s(buff, sizeof(buff),"        <coordinates>%.6f,%.6f</coordinates>\r\n    </Point>\r\n</Placemark>\r\n",lla.lon,lla.lat),
-		Fnmea.Write(buff,(U16)strlen(buff));
-
-	//Fnmea.Write(buff,(U16)strlen(buff));
-}
-
-void CSkyTraqKml2::push_one_poi(LL2 *lla)
-{
-	//LL tmp_lla;
-	//tmp_lla.lat = lat;tmp_lla.lon =lon;
-	lst_poi.push_back(*lla);
-}
-
-void CSkyTraqKml2::WritePointLine(CFile& Fnmea ,vector<LL2> *lst)
-{
-	vector<LL2>::iterator iter;
-	int id = 1;
-//	char buff[1024];
-
-	
-	for(iter = lst->begin();iter != lst->end();iter++)
-	{
-		LL2 lla = *iter;
-
-		WriteKMLPath(FKml,lla.lat, lla.lon);
-	}
-}
-
-void CSkyTraqKml2::WritePointLineEnd(CFile& Fnmea )
-{
-	char title[500];
-	strcpy_s(title, sizeof(title), "    </coordinates>\r\n  </LineString>\r\n</Placemark>\r\n");
-	Fnmea.Write(title,(U16)strlen(title));
-}
-
-void CSkyTraqKml2::WriteKMLEnd(CFile& Fnmea )
-{
-	char title[500];
-	strcpy_s(title, sizeof(title),"</Folder>\r\n</Document>\r\n</kml>\r\n");
-	Fnmea.Write(title,(U16)strlen(title));
-}
-
-void CSkyTraqKml2::finish()
-{
-	if (points.size()<=0) return;
-
-	WriteKMLini(FKml);
-
-	WritePointLine(FKml,&points);
-
-	WritePointLineEnd(FKml);
-
-	add_start_point(FKml,&points);
-
-	if (points.size()>1)
-	{
-		add_end_point(FKml,&points);
-	}
-	
-	WritePointPath(FKml,&points);
-
-	if ( lst_poi.size() > 0 )
-	{
-		WritePOIPath(FKml,&lst_poi);
-		lst_poi.clear();
-	}
-
-	WriteKMLEnd(FKml);
-	points.clear();
-
-	FKml.Close();
-}
-
-void CSkyTraqKml2::WriteKMLini(CFile& Fnmea)
-{
-	/*<?xml version="1.0" encoding="UTF-8"?>
-	<kml xmlns="http://earth.google.com/kml/2.1">*/
-	char title[1024];
-	CString temp;
-	strcpy_s(title, sizeof(title), "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<kml xmlns=\"http://earth.google.com/kml/2.1\"><Document>\r\n");
-	Fnmea.Write(title,(U16)strlen(title));
-
-	strcpy_s(title, sizeof(title), "<Style id=\"POINT_STYLE\">\r\n    <IconStyle>\r\n    <color>ff0000ff</color>\r\n    <scale>1.0</scale>\r\n");
-	Fnmea.Write(title,(U16)strlen(title));
-	strcpy_s(title, sizeof(title), "    <Icon><href>http://www.markus-bader.de/MB-Freeware/gpsposicon_rect.png</href></Icon>\r\n    </IconStyle>\r\n</Style>\r\n");
-	Fnmea.Write(title,(U16)strlen(title));
-
-
-	strcpy_s(title, sizeof(title),"<Style id=\"POI_STYLE\">\r\n    <IconStyle>\r\n    <color>ff00ff00</color>\r\n    <scale>1.1</scale>\r\n");
-	Fnmea.Write(title,(U16)strlen(title));
-	strcpy_s(title, sizeof(title),"    <Icon><href>http://maps.google.com/mapfiles/kml/shapes/flag.png</href></Icon>\r\n    </IconStyle>\r\n</Style>\r\n");
-	Fnmea.Write(title,(U16)strlen(title));
-
-	strcpy_s(title, sizeof(title),"<Folder id=\"Data logger\">\r\n    <name>Data logger</name>\r\n");
-	Fnmea.Write(title,(U16)strlen(title));
-
-	char title8[]="<Placemark id=\"logger\">\r\n  <styleUrl>#lineStyle</styleUrl>\r\n   <description>Plot Your Traveling Path</description>\r\n  <name>Trajectory</name>\r\n";
-	Fnmea.Write(title8,sizeof(title8)-1);	
-
-	temp.Format("%s%06x%s","    <visibility>1</visibility>\r\n  <open>0</open>\r\n    <Style>\r\n    <LineStyle>\r\n      <color>ff",line_color,"</color>\r\n    </LineStyle>\r\n    </Style>\r\n    <LineString>\r\n    <extrude>1</extrude>\r\n    <tessellate>1</tessellate>\r\n    <coordinates>\r\n");
-	Fnmea.Write(temp,temp.GetLength());
-}
-
-void CSkyTraqKml2::WriteKMLPath(CFile& Fnmea,double lat,double lon)
-{
-	string temp;	
-	char CoordinateToString[50];
-	char t[]="      ";
-	Fnmea.Write(t,sizeof(t)-1);
-	sprintf_s(CoordinateToString, sizeof(CoordinateToString),"%f",lon);
-	temp=CoordinateToString;
-	Fnmea.Write(CoordinateToString,(U16)temp.length());
-	char title[]=",";
-	Fnmea.Write(title,sizeof(title)-1);
-	sprintf_s(CoordinateToString, sizeof(CoordinateToString),"%f",lat);
-	temp=CoordinateToString;
-	Fnmea.Write(CoordinateToString,(U16)temp.length());
-	char title1[]=",2\r\n";
-	Fnmea.Write(title1,sizeof(title1)-1);
-}
-
-void CSkyTraqKml2::WritePointPath(CFile& Fnmea ,vector<LL2> *lst )
-{
-
-	vector<LL2>::iterator iter;
-	int id = 1;
-	char buff[1024];
-
-	for(iter = lst->begin();iter != lst->end();iter++)
-	{
-		LL2 lla = *iter;
-		sprintf_s(buff, sizeof(buff), "<Placemark>\r\n    <styleUrl>#POINT_STYLE</styleUrl>\r\n");
-		Fnmea.Write(buff,(U16)strlen(buff));
-		sprintf_s(buff, sizeof(buff), "<description><![CDATA[<TABLE><TR><TD width=200>%02d:%02d:%.2f UTC<BR>speed:%.1f<BR>height:%.1f</TD></TR></TABLE>]]></description>\r\n    <LookAt>\r\n",lla.utc.hour,lla.utc.minute,lla.utc.sec,lla.speed,lla.alt);
-		Fnmea.Write(buff,(U16)strlen(buff));
-		sprintf_s(buff, sizeof(buff), "    <longitude>%.6f</longitude>\r\n    <latitude>%.6f</latitude>\r\n    </LookAt>\r\n        <Point>\r\n",lla.lon,lla.lat);
-		Fnmea.Write(buff,(U16)strlen(buff));
-		sprintf_s(buff, sizeof(buff), "        <coordinates>%.6f,%.6f</coordinates>\r\n    </Point>\r\n</Placemark>\r\n",lla.lon,lla.lat),
-		Fnmea.Write(buff,(U16)strlen(buff));
-	}
-}
-
-
-void CSkyTraqKml2::WritePOIPath(CFile& Fnmea ,vector<LL2> *lst )
-{
-
-	vector<LL2>::iterator iter;
-	int id = 1;
-	char buff[1024];
-
-	for(iter = lst->begin();iter != lst->end();iter++)
-	{
-		LL2 lla = *iter;
-		sprintf_s(buff, sizeof(buff), "<Placemark id=\"POI%d\">\r\n    <styleUrl>#POI_STYLE</styleUrl>\r\n    <name>POI%d</name>\r\n    <LookAt>\r\n",id,id++);
-		Fnmea.Write(buff,(U16)strlen(buff));
-		sprintf_s(buff, sizeof(buff), "    <longitude>%.6f</longitude>\r\n    <latitude>%.6f</latitude>\r\n    </LookAt>\r\n        <Point>\r\n",lla.lon,lla.lat);
-		Fnmea.Write(buff,(U16)strlen(buff));
-		sprintf_s(buff, sizeof(buff), "        <coordinates>%.6f,%.6f</coordinates>\r\n    </Point>\r\n</Placemark>\r\n",lla.lon,lla.lat),
-			Fnmea.Write(buff,(U16)strlen(buff));
-	}
-	strcpy_s(buff, sizeof(buff),"</Folder>\r\n");
-	Fnmea.Write(buff,(U16)strlen(buff));
-
-}
-
-void CSkyTraqKml2::init(const char *name,int path_color )
-{
-	FKml.Open(name,CFile::modeReadWrite|CFile::modeCreate);	
-	line_color = path_color;
+	str = "</Folder>\r\n";
+	f.Write(str, str.GetLength());
 }

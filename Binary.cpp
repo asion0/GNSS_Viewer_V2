@@ -2896,7 +2896,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryV8PowerSavingParameters(CmdExeMode nMode, vo
 		add_msgtolist(strMsg);
 		strMsg.Format("Cold start full power time:%d", MAKEWORD(ackCmd[19], ackCmd[18]));
 		add_msgtolist(strMsg);
-		strMsg.Format("Tunnel full power time:%d", MAKEWORD(ackCmd[21], ackCmd[20]));
+		strMsg.Format("Reserved:%d", MAKEWORD(ackCmd[21], ackCmd[20]));
 		add_msgtolist(strMsg);
 		strMsg.Format("SV no diff time:%d", MAKEWORD(ackCmd[23], ackCmd[22]));
 		add_msgtolist(strMsg);
@@ -3086,17 +3086,24 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryAntennaDetection(CmdExeMode nMode, void* out
 	{
 		CString strMsg = "Query Antenna Detection Successful...";
 		add_msgtolist(strMsg);
-
-		if(ackCmd[5] & 0x01)
-		{
-			add_msgtolist("Short Circuit Detection On");
-		}
-		else
-		{
-			add_msgtolist("Short Circuit Detection Off");
-		}
-
-		if(ackCmd[5] & 0x02)
+		//20150709 Modify for fw spec, just only ON/OFF.
+		//if(ackCmd[5] & 0x01)
+		//{
+		//	add_msgtolist("Short Circuit Detection On");
+		//}
+		//else
+		//{
+		//	add_msgtolist("Short Circuit Detection Off");
+		//}
+		//if(ackCmd[5] & 0x02)
+		//{
+		//	add_msgtolist("Antenna Detection On");
+		//}
+		//else
+		//{
+		//	add_msgtolist("Antenna Detection Off");
+		//}
+		if(ackCmd[5])
 		{
 			add_msgtolist("Antenna Detection On");
 		}
@@ -3315,14 +3322,21 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySbas(CmdExeMode nMode, void* outputData)
 		add_msgtolist(strMsg);
 		strMsg.Format("Number of tracking channels: %d", ackCmd[10]);
 		add_msgtolist(strMsg);
-		strMsg.Format("WAAS: %s", ((ackCmd[11] & 0x01) ? "Enable" : "Disable"));
-		add_msgtolist(strMsg);
-		strMsg.Format("EGNOS: %s", ((ackCmd[11] & 0x02) ? "Enable" : "Disable"));
-		add_msgtolist(strMsg);
-		strMsg.Format("MSAS: %s", ((ackCmd[11] & 0x04) ? "Enable" : "Disable"));
-		add_msgtolist(strMsg);
 		strMsg.Format("All: %s", ((ackCmd[11] & 0x80) ? "Enable" : "Disable"));
-		add_msgtolist(strMsg);	}
+		add_msgtolist(strMsg);	
+		if(!(ackCmd[11] & 0x80))
+		{
+			strMsg.Format("WAAS: %s", ((ackCmd[11] & 0x01) ? "Enable" : "Disable"));
+			add_msgtolist(strMsg);
+			strMsg.Format("EGNOS: %s", ((ackCmd[11] & 0x02) ? "Enable" : "Disable"));
+			add_msgtolist(strMsg);
+			strMsg.Format("MSAS: %s", ((ackCmd[11] & 0x04) ? "Enable" : "Disable"));
+			add_msgtolist(strMsg);
+			strMsg.Format("GAGAN: %s", ((ackCmd[11] & 0x08) ? "Enable" : "Disable"));
+			add_msgtolist(strMsg);
+
+		}
+	}
 	return Timeout;
 }
 
@@ -5984,5 +5998,11 @@ void CGPSDlg::OnConfigPowerSavingParametersRom()
 void CGPSDlg::OnConfigPowerSavingParameters()
 {
 	ConfigPowerSavingParametersRomDlg dlg;
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnIqPlot()
+{
+	CIqPlot dlg;
 	DoCommonConfig(&dlg);
 }

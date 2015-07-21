@@ -453,6 +453,7 @@ protected:
 	afx_msg void OnNmeaChecksumCalculator();
 	afx_msg void OnBinaryChecksumCalculator();
 	afx_msg void OnTestExternalSrec();
+	afx_msg void OnIqPlot();
 
 	afx_msg void OnGetGlonassEphemeris();
 	afx_msg void OnSetGlonassEphemeris();
