@@ -588,5 +588,104 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
+// CConfigGeofencing 對話方塊
+class CConfigGeofencing : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigGeofencing)
+public:
+	CConfigGeofencing(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigGeofencing() {};
 
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+	afx_msg void OnBnClickedAddPoint();
+	afx_msg void OnBnClickedAddPoints();
+	afx_msg void OnBnClickedClearAll();
+
+	virtual BOOL OnInitDialog();
+
+protected:
+	struct Point
+	{
+		double lon;
+		double lat;
+	};
+	CListBox m_points;	
+	vector<double> lons;
+	vector<double> lats;
+	U08 m_attribute;
+
+	bool AddPoint(const CString s);
+
+	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigRtkMode 對話方塊
+class CConfigRtkMode : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigRtkMode)
+public:
+	CConfigRtkMode(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigRtkMode() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+
+	virtual BOOL OnInitDialog();
+
+protected:
+	U08 m_mode;
+	U08 m_attribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigRtkMode 對話方塊
+class CConfigRtkParameters : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigRtkParameters)
+public:
+	CConfigRtkParameters(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigRtkParameters() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+
+	virtual BOOL OnInitDialog();
+
+protected:
+	U16 m_param01;
+	U16 m_param02;
+	U16 m_param03;
+	U16 m_param04;
+	U32 m_param05;
+	U32 m_param06;
+	U32 m_param07;
+	U32 m_param08;
+	U08 m_param09;
+	U08 m_param10;
+	U08 m_attribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigRtkReset 對話方塊
+class CConfigRtkReset : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigRtkReset)
+public:
+	CConfigRtkReset(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigRtkReset() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+
+	virtual BOOL OnInitDialog();
+
+protected:
+	U16 m_mode;
+
+	DECLARE_MESSAGE_MAP()
+};
 

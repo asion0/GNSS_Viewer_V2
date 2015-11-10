@@ -190,6 +190,14 @@ IDR_GPS_PRELOADER_38400 BIN							"res\\plprom_38400.bin"
 IDR_GPS_PRELOADER_57600 BIN							"res\\plprom_57600.bin"
 IDR_GPS_PRELOADER_115200 BIN						"res\\plprom_115200.bin"
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// Upgrade PROM
+//
+#if defined(UPGRADE_DOWNLOAD)
+IDR_UPGRADE_DOWNLOAD_PROM BIN						"res\\STI_02.00.74-01.07.27_V8_Glonass_GPS_Takuji_Hostlogger_T_CRC_b02c_9600_20150615.bin"
+
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 //

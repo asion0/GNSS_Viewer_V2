@@ -53,21 +53,6 @@
 #include <afxinet.h>
 
 #include "StBaseType.h"
-
-#define MAX_WAIT_TIME		      INFINITE
-#define TIME_OUT_MS               10000
-#define TIME_OUT_QUICK_MS         1000
-#define SCAN_TIME_OUT_MS          2000
-#define DOWNLOAD_TIME_OUT_LOOP    10
-#define BUF_SIZE 4096
-
-#define PI          3.141592653589793
-#define WGS84a      6378137.0
-#define WGS84b      6356752.314
-#define e           0.0818191913
-
-#define BOOTLOADER_SIZE		0x10000
-
 #include "Vender_newGNSS.h"
 #include "Global.h"
 

@@ -13,7 +13,8 @@ IMPLEMENT_DYNAMIC(CGpsdoDownload, CDialog)
 CGpsdoDownload::CGpsdoDownload(CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_GPSDO_DOWNLOAD, pParent)
 {
-
+	m_slaveSourceBaud = 1;
+	m_slaveTargetBaud = 1;
 }
 
 CGpsdoDownload::~CGpsdoDownload()
@@ -52,6 +53,7 @@ void CGpsdoDownload::OnBnClickedBrowseSlave()
 	{
 		m_strSlavePath = fd.GetPathName();
 		GetDlgItem(IDC_SLAVE_PATH)->SetWindowText(m_strSlavePath);
+		AutoDetectBaudRate(m_strSlavePath, IDC_SLAVE_T);
 	}
 	SaveSetting();
 }
@@ -66,7 +68,8 @@ void CGpsdoDownload::SaveSetting()
 	{
 		reg.WriteString("gpsdo_fw_dn_master_path", m_strMasterPath);
 		reg.WriteString("gpsdo_fw_dn_slave_path", m_strSlavePath);
-		//reg.WriteInt("fw_baudrate", m_nBaudrateIdx);
+		reg.WriteInt("gpsdo_slaveSourceBaud", m_slaveSourceBaud);
+		reg.WriteInt("gpsdo_slaveTargetBaud", m_slaveTargetBaud);
 	}
 }
 
@@ -78,6 +81,8 @@ void CGpsdoDownload::LoadSetting()
 	{
 		m_strMasterPath = reg.ReadString("gpsdo_fw_dn_master_path", "");
 		m_strSlavePath = reg.ReadString("gpsdo_fw_dn_slave_path", "");
+		m_slaveSourceBaud = reg.ReadInt("gpsdo_slaveSourceBaud", 1);
+		m_slaveTargetBaud = reg.ReadInt("gpsdo_slaveTargetBaud", 1);
 	}
 }
 
@@ -88,8 +93,53 @@ BOOL CGpsdoDownload::OnInitDialog()
 	LoadSetting();
 	GetDlgItem(IDC_MASTER_PATH)->SetWindowText(m_strMasterPath);
 	GetDlgItem(IDC_SLAVE_PATH)->SetWindowText(m_strSlavePath);
-
+	((CComboBox*)GetDlgItem(IDC_SLAVE_C))->SetCurSel(m_slaveSourceBaud);
+	((CComboBox*)GetDlgItem(IDC_SLAVE_T))->SetCurSel(m_slaveTargetBaud);
+	//AutoDetectBaudRate(m_strSlavePath, IDC_SLAVE_T);
 	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CGpsdoDownload::AutoDetectBaudRate(CString path, UINT uid)
+{
+	CComboBox* combo = (CComboBox*)GetDlgItem(uid);
+	CString s = Utility::GetFileName(m_strSlavePath);
+
+	if(s.Find("4800") > 0)
+	{
+		combo->SetCurSel(0);
+	}
+	else if(s.Find("9600") > 0)
+	{
+		combo->SetCurSel(1);
+	}
+	else if(s.Find("19200") > 0)
+	{
+		combo->SetCurSel(2);
+	}
+	else if(s.Find("38400") > 0)
+	{
+		combo->SetCurSel(3);
+	}
+	else if(s.Find("57600") > 0)
+	{
+		combo->SetCurSel(4);
+	}
+	else if(s.Find("115200") > 0)
+	{
+		combo->SetCurSel(5);
+	}
+	else if(s.Find("230400") > 0)
+	{
+		combo->SetCurSel(6);
+	}
+	else if(s.Find("460800") > 0)
+	{
+		combo->SetCurSel(7);
+	}
+	else if(s.Find("921600") > 0)
+	{
+		combo->SetCurSel(8);
+	}
 }
 
 void CGpsdoDownload::OnClose()
@@ -100,5 +150,14 @@ void CGpsdoDownload::OnClose()
 
 void CGpsdoDownload::OnBnClickedDownload()
 {
+	if(!Utility::IsFileExist(m_strMasterPath) || !Utility::IsFileExist(m_strSlavePath))
+	{
+		AfxMessageBox("Firmware bin file is not exist!");
+	}
+
+	m_slaveSourceBaud = ((CComboBox*)GetDlgItem(IDC_SLAVE_C))->GetCurSel();
+	m_slaveTargetBaud = ((CComboBox*)GetDlgItem(IDC_SLAVE_T))->GetCurSel();
+	SaveSetting();
+
 	OnOK();
 }

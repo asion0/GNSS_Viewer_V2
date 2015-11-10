@@ -5,7 +5,7 @@
 #include "NMEA.h"
 #include "GPSDlg.h"
 
-const float R2D = 57.2957795131F;
+const double R2D = 57.2957795131;
 const COLORREF g_panelBkColor = RGB(250, 250, 250);
 Setting g_setting;
 
@@ -92,10 +92,10 @@ bool IsFixed(U16 ggaIndicator)
 		gnssInd = 0xFF;
 	}
 
-	return (gpsInd == '1' || gpsInd == '2' || gpsInd=='6' || 
+	return (gpsInd == '1' || gpsInd == '2' || gpsInd=='4' || gpsInd=='5' || gpsInd=='6' || 
 			gpsInd == 'A' || gpsInd == 'D' || gpsInd == 'E' ||
 			gnssInd == '1' || gnssInd == '2' || gnssInd=='6' || 
-			gnssInd == 'A' || gnssInd == 'D' || gnssInd == 'E');
+			gnssInd == 'A' || gnssInd == 'D' || gnssInd == 'F' || gnssInd == 'R' || gnssInd == 'E');
 }
 
 bool CheckInUse(int id, GPGSA* gsa)
@@ -176,18 +176,16 @@ float FixedPointToSingle(U32 FixedPointValue, int NumberOfFractionalBits)
 
 void COO_geodetic_to_cartesian( const LLA_T* lla_p, POS_T* xyz_p )
 {
-	D64 N; // radius of curvature in prime vertical
-	D64 s_phi, c_phi;
 	D64 temp;
+	D64 s_phi = sin(lla_p->lat);
+	D64 c_phi = cos(lla_p->lat);
 
-	s_phi = sin(lla_p->lat);
-	c_phi = cos(lla_p->lat);
-
-	N = RA / sqrt( 1 - E2*s_phi*s_phi );
+	// radius of curvature in prime vertical
+	D64 N = WGS84_RA / sqrt( 1 - WGS84_E2 * s_phi * s_phi );
 
 	xyz_p->px = (temp = (N + lla_p->alt)*c_phi)*cos(lla_p->lon);
 	xyz_p->py = temp * sin(lla_p->lon);
-	xyz_p->pz = (N * (1 - E2) + lla_p->alt)*s_phi;	
+	xyz_p->pz = (N * (1 - WGS84_E2) + lla_p->alt) * s_phi;	
 }
 
 const S16 DefaultLeapSeconds = 16;	//Updated in 2014/01/28
@@ -609,84 +607,100 @@ void UtcConvertUtcToGpsTime( const UtcTime *utc_time_p, S16 *wn_p, D64 *tow_p )
 	*wn_p = (S16)(total_int_sec / 604800L);
 	*tow_p = (D64)( total_int_sec - (*wn_p)*604800L + tow_frac );  
 }
-//---------------------------------------------------------
-/*
-static const S16 Day_of_year_table[] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
-static const S16 Day_of_leap_year_table[] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
-const S16 INIT_UTC_YEAR = 1980;             // GPS Time start at 1980 Jan. 5/6 mid-night
-const S16 DAYS_PER_YEAR = 365;
-const S16 DAYS_PER_4_YEARS = ( 365*4 + 1 ); // plus one day for leap year
-const S32 SECS_PER_YEAR      = 31536000;
-const S32 SECS_PER_LEAP_YEAR = 31622400;
-static S16 Geo_year = 0;
-static S16 Geo_day_of_year = 0;
-static void convert_day_and_tod_2_utc( S32 total_utc_day, S32 sec_of_day, D64 tow_frac, UTC_TIME_T *utc_time_p )
+
+QualityMode GetGnssQualityMode(U32 qualityIndicator, U08 gpMode, U08 glMode, U08 gaMode, U08 bdMode)
 {
-  S16 i;
-  S32 passed_leap_days, passed_utc_years, day_of_utc_year, leap_days_of_passed_utc_years;
-  const S16* month_tbl_p = Day_of_year_table; // default is not the leap year
-
-  passed_leap_days = 1 + ( (total_utc_day + 5 - Day_of_leap_year_table[2] ) / DAYS_PER_4_YEARS );
-  passed_utc_years = (total_utc_day + 5 - passed_leap_days) / 365;
-  leap_days_of_passed_utc_years = (passed_utc_years + 3) / 4;
-
-  day_of_utc_year = total_utc_day + 5 - passed_utc_years*DAYS_PER_YEAR
-                    - leap_days_of_passed_utc_years;
-  utc_time_p->day_of_year = day_of_utc_year + 1;
-  utc_time_p->year = INIT_UTC_YEAR + passed_utc_years;
-
-  Geo_day_of_year = utc_time_p->day_of_year;
-  Geo_year = utc_time_p->year;
-
-  if( (utc_time_p->year & 3) == 0 )
-    month_tbl_p = Day_of_leap_year_table; // this year is leap year
-
-  for( i = 1 ; i < 13 ; i++ )
-    if( day_of_utc_year < month_tbl_p[i] )
-      break;
-
-  utc_time_p->month = i;
-  utc_time_p->day   = day_of_utc_year - month_tbl_p[i-1] + 1; // + 1 : because of having sec_of_day
-
-  utc_time_p->hour = sec_of_day / 3600;
-  if( utc_time_p->hour > 23 )
-    utc_time_p->hour = 23;
-
-  utc_time_p->minute = (sec_of_day - utc_time_p->hour*3600) / 60;
-  if( utc_time_p->minute > 59 )
-    utc_time_p->minute = 59;
-
-  utc_time_p->sec = (F32)(sec_of_day - utc_time_p->hour*3600L - utc_time_p->minute*60L) + (F32)tow_frac;
-
-  //prevent round error
-  D64 ori_sec = utc_time_p->sec;
-  if(utc_time_p->sec >= 60.0f)
+	QualityMode mode = Unlocated;
+	U08 gpInd = 0, glInd = 0;
+	U08 gaInd = 0, bdInd = 0;
+	if(qualityIndicator > 0xFFFFFF)
   {
-    utc_time_p->sec = 59.999995f;
+		gpInd = HIBYTE(HIWORD(qualityIndicator));
+		glInd = LOBYTE(HIWORD(qualityIndicator));
+		gaInd = HIBYTE(LOWORD(qualityIndicator));
+		bdInd = LOBYTE(LOWORD(qualityIndicator));
   }
-
+	else if(qualityIndicator > 0xFFFF)
+	{
+		gpInd = LOBYTE(HIWORD(qualityIndicator));
+		glInd = HIBYTE(LOWORD(qualityIndicator));
+		gaInd = LOBYTE(LOWORD(qualityIndicator));
+		bdInd = 0;
 }
-
-void UTC_convert_gps_to_utc_time_by_default_parameters( S16 wn, D64 tow, UtcTime *utc_time_p )
+	else if(qualityIndicator > 0xFF)
 {
-  D64 tE = wn*604800 + tow;   // GPS time as estimated by the user.
-  D64 double_total_utc_sec;
-  S32 int_total_utc_sec;
 
-  D64 tow_frac;
-  S32 total_utc_day;
-  S32 sec_of_day;
+		gpInd = HIBYTE(LOWORD(qualityIndicator));
+		glInd = LOBYTE(LOWORD(qualityIndicator));
+		gaInd = 0;
+		bdInd = 0;
+	}
+	else
+	{
+		gpInd = LOBYTE(LOWORD(qualityIndicator));
+		glInd = 0;
+		gaInd = 0;
+		bdInd = 0;
+	}
 
-  double_total_utc_sec = tE;
-  if( wn != 0 )  // to avoid negative double_total_utc_sec value
+	if(gpInd || glInd || gaInd || bdInd)
   {
-    double_total_utc_sec = tE - DefaultLeapSeconds;//DEFAULT_LEAP_SECOND;
+		if(gpInd=='E' || glInd=='E'|| gaInd=='E'|| bdInd=='E')
+		{
+			mode = EstimatedMode;
   }
-  int_total_utc_sec = (S32)double_total_utc_sec;
-  tow_frac = double_total_utc_sec - (D64)int_total_utc_sec;
-  total_utc_day = int_total_utc_sec / 86400L;
-  sec_of_day = int_total_utc_sec - 86400L*total_utc_day;
+		else if(gpInd=='D' || glInd=='D' || gaInd=='D' || bdInd=='D')
+		{
+			mode = DgpsMode;
+		}
+		else if(gpInd=='2')
+		{
+			mode = DgpsMode;
+		}
+		else if(gpInd=='3')
+		{
+			mode = PpsMode;
+		}
+		else if(gpInd=='4')
+		{
+			mode = FixRTK;
+		}
+		else if(gpInd=='5')
+		{
+			mode = FloatRTK;
+		}
+		else if(gpInd == 'A' || glInd == 'A' || gaInd == 'A' || bdInd == 'A' || gpInd == '1')
+		{
 
-  convert_day_and_tod_2_utc( total_utc_day, sec_of_day, tow_frac, utc_time_p );
+			if(gpMode==2 || glMode==2 || bdMode==2)
+			{
+				mode = PositionFix2d;
+			}
+			else if(gpMode==3 || glMode==3 || bdMode==3)
+			{
+				mode = PositionFix3d;
+			}
+			else if(gpMode==4 || glMode==4 || bdMode==4)
+			{
+				mode = SurveyIn;
+			}
+			else if(gpMode==5 || glMode==5 || bdMode==5)
+			{
+				mode = StaticMode;
+			}
+		}
+		else if(gpInd=='N')
+		{
+			mode = DataNotValid;
+		}
+		else if(gpInd=='R')
+		{
+			mode = FixRTK;
+		}
+		else if(gpInd=='F')
+		{
+			mode = FloatRTK;
+		}
+	}
+	return mode;
 }
-*/

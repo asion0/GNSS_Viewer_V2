@@ -10,51 +10,45 @@ static void Log(CString f, int line, CString name = "", int data = 0)
 	sprintf_s(dbg_buf, "%s(%d) %s - %d\r\n", f, line, name, data);
 	::OutputDebugString(dbg_buf);
 }
+
 void ScatterData::SetOrigin()
 {
-	float offset_x=0;
-	float offset_y=0;	 
+	double offset_x = 0;
+	double offset_y = 0;	 
 	
-	_GETENUPOINTCS.Lock();
+	LockEnuData();
 	if(g_setting.specifyCenter && IS_DEBUG)
-	{
+	{	//Only Internal Use version support specify center.
 		m_lon = g_setting.scatterCenterLon;
 		m_lat = g_setting.scatterCenterLat;
+		if(g_setting.specifyCenterAlt)
+		{
+			ini_h = g_setting.scatterCenterAlt;
+		}
 	}
 	else
 	{
 		m_lon = lon_deg;
 		m_lat = lat_deg;
-		if(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude_N_S=='S' && m_lat>0)
-		 {
-				m_lat *= -1;	 
-		 }
-
-		 if(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude_E_W=='W' && m_lon>0)
-		 {
-				m_lon *= -1;
-		 }
-		 offset_x  = current_x; 
-		 offset_y  = current_y;	
+		offset_x  = current_x; 
+		offset_y  = current_y;	
 	}
-	_GETENUPOINTCS.Unlock();
 	
-	_GET_ENU_POINT_CS.Lock();
-	vector<float>::iterator enu_x_it;	
-	vector<float>::iterator enu_y_it;	
-
-	for(enu_x_it = enu_x.begin(), enu_y_it = enu_y.begin(); enu_x_it!=enu_x.end(); ++enu_x_it, ++enu_y_it)
+	vector<double>::iterator enu_x_it, enu_y_it;
+	for(enu_x_it = enu_x.begin(), enu_y_it = enu_y.begin(); 
+		enu_x_it != enu_x.end(); 
+		++enu_x_it, ++enu_y_it)
 	{				
 		*enu_x_it -= offset_x / 1000.0F;	
 		*enu_y_it -= offset_y / 1000.0F;		
 	}		
-	_GET_ENU_POINT_CS.Unlock();
+	UnlockEnuData();
 
 	SetRotationMatrix();		
-	int_N = WGS84a / (sqrt(1 - e * e * sin(m_lat) * sin(m_lat)));		
+	int_N = WGS84_RA / (sqrt(1 - WGS84_E2 * sin(m_lat) * sin(m_lat)));		
     WGS84_X = (int_N + ini_h) * cos(m_lat) * cos(m_lon);
 	WGS84_Y = (int_N + ini_h) * cos(m_lat) * sin(m_lon);
-	WGS84_Z = (int_N * (1 - e * e) + ini_h) * sin(m_lat);	
+	WGS84_Z = (int_N * (1 - WGS84_E2) + ini_h) * sin(m_lat);	
 }
 
 void ScatterData::SetRotationMatrix()
@@ -76,11 +70,15 @@ void ScatterData::SetRotationMatrix()
 void ScatterData::InitPos()
 {
 	long double lon, lat;
-	ini_h = CGPSDlg::gpsDlg->m_gpggaMsg.Altitude;
+	ini_h = CGPSDlg::gpsDlg->m_gpggaMsg.Altitude + CGPSDlg::gpsDlg->m_gpggaMsg.GeoidalSeparation;
 	if(g_setting.specifyCenter && IS_DEBUG)
 	{
 		m_lon = g_setting.scatterCenterLon;
 		m_lat = g_setting.scatterCenterLat;
+		if(g_setting.specifyCenterAlt)
+		{
+			ini_h = g_setting.scatterCenterAlt;
+		}
 	}
 	else
 	{
@@ -123,10 +121,10 @@ void ScatterData::InitPos()
 	}
 
 	SetRotationMatrix();
-	int_N = WGS84a / (sqrt(1-e*e*sin(m_lat)*sin(m_lat)));
+	int_N = WGS84_RA / (sqrt(1-WGS84_E2*sin(m_lat)*sin(m_lat)));
 	WGS84_X = (int_N+ini_h)*cos(m_lat)*cos(m_lon);
 	WGS84_Y = (int_N+ini_h)*cos(m_lat)*sin(m_lon);
-	WGS84_Z = (int_N*(1-e*e)+ini_h)*sin(m_lat);			
+	WGS84_Z = (int_N*(1-WGS84_E2)+ini_h)*sin(m_lat);			
 
 	IniPos = false;
 	m_isGetMapPos = true;
@@ -135,48 +133,47 @@ void ScatterData::InitPos()
 
 void ScatterData::AddLLAPoint(ScatterPoint* llaPoint)
 {
-	_GET_LLA_POINT_CS.Lock();
+	LockLlaData();
 	llaPointSet.push_back(*llaPoint);	
 	
 	if((int)llaPointSet.size() > MAX_SCATTER_COUNT)
 	{
 		llaPointSet.erase(llaPointSet.begin());
 	}
-	_GET_LLA_POINT_CS.Unlock();	
+	UnlockLlaData();	
 }
 
 void ScatterData::SetENU(double lon, double lat, double h)
 {
-	double N = WGS84a/(sqrt(1-e*e*sin(lat)*sin(lat)));		
-	X =(long double)((N+h)*cos(lat)*cos(lon));
-	Y =(long double)((N+h)*cos(lat)*sin(lon));
-	Z =(long double)((N*(1-e*e)+h)*sin(lat));
+	double N = WGS84_RA/(sqrt(1 - WGS84_E2 * sin(lat) * sin(lat)));		
+	wgs84_X =(long double)((N + h)*cos(lat)*cos(lon));
+	wgs84_Y =(long double)((N + h)*cos(lat)*sin(lon));
+	wgs84_Z =(long double)((N * (1 - WGS84_E2) + h)*sin(lat));
 
-	ENU(0,0)=(float)(X-WGS84_X);
-	ENU(1,0)=(float)(Y-WGS84_Y);
-	ENU(2,0)=(float)(Z-WGS84_Z);
+	POS_T pt = { 0 };
+	LLA_T lla = { lat, lon, (F32)h };
+	COO_geodetic_to_cartesian(&lla, &pt);
+
+	ENU(0, 0) = (float)(pt.px - WGS84_X);
+	ENU(1, 0) = (float)(pt.py - WGS84_Y);
+	ENU(2, 0) = (float)(pt.pz - WGS84_Z);
 	ENU = _WGS842NEU * ENU;			
-	_GETENUPOINTCS.Lock();				
+
+	LockEnuData();				
 	current_x = ENU(0,0);
 	current_y = ENU(1,0);
-	_GETENUPOINTCS.Unlock();
-
-	_GET_ENU_POINT_CS.Lock();
-
-	int count = enu_x.size();
 	enu_x.push_back(ENU(0,0)/1000);
 	enu_y.push_back(ENU(1,0)/1000);
 	enu_x_mean  = 0;
 	enu_y_mean  = 0;
 
-	if(count >= MAX_SCATTER_COUNT)
+	if(enu_x.size() >= MAX_SCATTER_COUNT)
 	{
 		enu_x.erase(enu_x.begin());
 		enu_y.erase(enu_y.begin());
 	}
 
-	vector<float>::iterator enu_x_it;	
-	vector<float>::iterator enu_y_it;	
+	vector<double>::iterator enu_x_it, enu_y_it;	
 	for(enu_x_it = enu_x.begin(); enu_x_it != enu_x.end(); ++enu_x_it)
 	{				
 		enu_x_mean += *enu_x_it;
@@ -203,7 +200,7 @@ void ScatterData::SetENU(double lon, double lat, double h)
 	rms_y = sqrt(sum_error_y/enu_y.size());
 	TwoDrms = (sqrt( rms_x*rms_x + rms_y*rms_y ))*1000;
 	CEP =1.1774*((rms_x+rms_y)/2)*1000;
-	_GET_ENU_POINT_CS.Unlock();
+	UnlockEnuData();
 }
 
 #define ScatterXScale		50
@@ -278,7 +275,6 @@ void CPic_Scatter::OnPaint()
 
 void CPic_Scatter::Refresh_ScatterChart(CDC *scatter_dc)
 {
-
 	CRect rcScatter;
 	GetClientRect(rcScatter);
 	CMemDC memDC(*scatter_dc, &rcScatter);
@@ -346,14 +342,13 @@ void CPic_Scatter::Create_scatterplot(CDC *dc)
 		double penBlueColor = 0.0;
 		double add = 200.0 / g_scatterData.enu_x.size();
 
-		g_scatterData._GET_ENU_POINT_CS.Lock();
-
-		vector<float>::iterator enu_x_it;	
-		vector<float>::iterator enu_y_it;	
+		g_scatterData.LockEnuData();
+		vector<double>::iterator enu_x_it, enu_y_it;	
 		for(enu_x_it = g_scatterData.enu_x.begin(), enu_y_it = g_scatterData.enu_y.begin(); 
-			enu_x_it != g_scatterData.enu_x.end(); ++enu_x_it, ++enu_y_it)
+			enu_x_it != g_scatterData.enu_x.end(); 
+			++enu_x_it, ++enu_y_it)
 		{		
-			float x, y;
+			double x, y;
 			x = *enu_x_it * 1000.0F;	    
 			y = *enu_y_it * 1000.0F;				
 			x = (x * 50 / g_scatterData.m_enuScale) + plot_cross_x;    
@@ -362,13 +357,13 @@ void CPic_Scatter::Create_scatterplot(CDC *dc)
 			dc->SelectObject(&pen);
 			if(x > plot_x1 && x < plot_x2 && y > plot_y1 && y < plot_y2)
 			{
-				dc->Ellipse((int)(x - PointSize),(int)(y - PointSize),(int)(x + PointSize), (int)(y + PointSize));
+				dc->Ellipse((int)(x - PointSize) + 1, (int)(y - PointSize) + 1, (int)(x + PointSize) + 1, (int)(y + PointSize) + 1);
 			}
 			pen.DeleteObject();
 			//penRedColor -= add;
 			//penBlueColor += add;
 		}		
-		g_scatterData._GET_ENU_POINT_CS.Unlock();
+		g_scatterData.UnlockEnuData();
 
 		int j = 0;
 		//int index = m_scale.GetCurSel();	
@@ -394,10 +389,10 @@ void CPic_Scatter::Create_scatterplot(CDC *dc)
 			}
 			else
 			{
-				str.Format("%.1f", (g_scatterData.m_enuScale * (i-2)));
+				str.Format("%.2f", (g_scatterData.m_enuScale * (i-2)));
 			}
 			//dc->TextOut(x-5, y+3, IntToStr);
-			dc->DrawText(str, CRect(x - 25, y + 3, x + 27, y + 23), DT_VCENTER | DT_CENTER);
+			dc->DrawText(str, CRect(x - 25, y + 3, x + 30, y + 23), DT_VCENTER | DT_CENTER);
 
 			x = VScatterScale[i].x;
 			y = VScatterScale[i].y;
@@ -410,10 +405,10 @@ void CPic_Scatter::Create_scatterplot(CDC *dc)
 			}
 			else
 			{
-				str.Format("%.1f", (g_scatterData.m_enuScale * j));
+				str.Format("%.2f", (g_scatterData.m_enuScale * j));
 			}
 
-			dc->DrawText(str, CRect(x-30, y-10, x-9, y-10+fontSize.cy), DT_VCENTER | DT_RIGHT);
+			dc->DrawText(str, CRect(x-33, y-10, x-8, y-10+fontSize.cy), DT_VCENTER | DT_RIGHT);
 			j--;
 		}
 		dc->DrawText("(m)", CRect(plot_x2-23, plot_y2+16, plot_x2+23, plot_y2+46), DT_VCENTER | DT_CENTER);
@@ -427,7 +422,7 @@ void CPic_Scatter::Create_scatterplot(CDC *dc)
 
 		ScatterPoint llapoint;
 
-		g_scatterData._GET_LLA_POINT_CS.Lock();
+		g_scatterData.LockLlaData();
 		vector<ScatterPoint>::const_iterator llaPointSetIter;
 		for(llaPointSetIter = g_scatterData.GetLLAPoint().begin(); 
 			llaPointSetIter != g_scatterData.GetLLAPoint().end(); ++llaPointSetIter)
@@ -442,11 +437,11 @@ void CPic_Scatter::Create_scatterplot(CDC *dc)
 			if(x > plot_x1 && x < plot_x2 && 
 				y > plot_y1 && y < plot_y2)
 			{
-				dc->Ellipse((int)(x - PointSize), (int)(y - PointSize),
-					(int)(x + PointSize), (int)(y + PointSize));
+				dc->Ellipse((int)(x - PointSize) + 1, (int)(y - PointSize) + 1,
+					(int)(x + PointSize) + 1, (int)(y + PointSize) + 1);
 			}
 		}
-		g_scatterData._GET_LLA_POINT_CS.Unlock();
+		g_scatterData.UnlockLlaData();
 
 
 		int index = CGPSDlg::gpsDlg->GetMapScaleSel();
@@ -716,11 +711,68 @@ void CPic_Scatter::Create_scatterplot(CDC *dc)
 			}
 		}
 	}
+
+	if(IS_DEBUG)
+	{
+		DrawScatterInfo(dc);
+	}
 	dc->SelectObject(oldPen);
 	dc->SelectObject(oldBrush);
 	dc->SelectObject(oldFont);
 }
 
+void CPic_Scatter::DrawScatterInfo(CDC *dc)
+{
+	CString txt;
+	
+	dc->SetTextColor(RGB(30, 30, 30));
+	const int txt1X = 52, txt1Y = 2;
+	const int txt2X = 150, txt2Y = 2;
+	const int txtW = 106, txtH = 13;
+
+
+	txt.Format("2D RMS : %.4f", g_scatterData.TwoDrms);
+	dc->DrawText(txt, CRect(txt1X, txt1Y, txt1X + txtW, txt1Y + txtH), DT_TOP | DT_LEFT);
+	txt.Format("CEP 50%% : %.4f", g_scatterData.CEP);
+	dc->DrawText(txt, CRect(txt2X, txt2Y, txt2X + txtW, txt2Y + txtH), DT_TOP | DT_LEFT);
+
+}
+
+void CPic_Scatter::DrawScatterAltitude(CDC *dc, double initH , double h)
+{	
+	UISetting* s = &gpUI;
+
+	CPen *oldPen = dc->SelectObject(&(s->inUseSnrBarPen));
+	CBrush br(s->inUseSnrBarPenColor);
+	//CBrush *oldBrush = dc->SelectObject(&br);
+	//CBrush *oldBrush = dc->SelectObject(&(gpUI.noUseSnrBarBrush));
+
+	dc->MoveTo(247, 21); dc->LineTo(256, 21);
+	dc->MoveTo(248, 71); dc->LineTo(257, 71);
+	dc->MoveTo(247, 121); dc->LineTo(262, 121);
+	dc->MoveTo(248, 171); dc->LineTo(257, 171);
+	dc->MoveTo(247, 220); dc->LineTo(256, 220);
+
+	//dc->FillRect(CRect(249, 21, 254, 221), &(s->inUseSnrBarBrush));	//h == (initH + 2 * g_scatterData.m_enuScale)
+	//dc->FillRect(CRect(249, 121, 254, 221), &(s->inUseSnrBarBrush));	//h == initH
+	//dc->FillRect(CRect(249, 220, 254, 221), &(s->inUseSnrBarBrush));	//h == (initH - 2 * g_scatterData.m_enuScale)
+//g_scatterData.m_enuScale;
+	dc->FillRect(CRect(249, 21, 254, 221), &br);	//h == (initH + 2 * g_scatterData.m_enuScale)
+	double h1 = initH + 2 * g_scatterData.m_enuScale;
+	const int barHeight = 200;
+	int bar = (int)(barHeight * (h1 - h) / (4 * g_scatterData.m_enuScale));
+	if(bar < 0)
+	{
+		bar = 0;
+	}
+	if(bar <= barHeight)
+	{
+		dc->FillRect(CRect(249, 21 + bar, 254, 221), &(s->inUseSnrBarBrush));	//h == (initH - 2 * g_scatterData.m_enuScale)
+	}
+
+	//dc->SelectObject(oldBrush);
+	dc->SelectObject(oldPen);
+}
 
 void CPic_Scatter::Show_ScatterChart(CDC *dc)
 {
@@ -768,8 +820,7 @@ void CPic_Scatter::Show_ScatterChart(CDC *dc)
 		int ENUOrigin_X = plot_cross_x;
 		int ENUOrigin_Y = plot_cross_y;	
 
-		long double map_x;
-		long double map_y;
+
 		//double h = CGPSDlg::gpsDlg->m_gpggaMsg.Altitude;
 
 		double lon = int(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude  / 100);
@@ -778,11 +829,14 @@ void CPic_Scatter::Show_ScatterChart(CDC *dc)
 		double lat = int(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude / 100);
 		lat += double(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude -
 			int(CGPSDlg::gpsDlg->m_gpggaMsg.Latitude / 100) * 100) / 60;
+		double alt = CGPSDlg::gpsDlg->m_gpggaMsg.Altitude + CGPSDlg::gpsDlg->m_gpggaMsg.GeoidalSeparation;
 
 		g_scatterData.SetMapLocation(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude, CGPSDlg::gpsDlg->m_gpggaMsg.Latitude);
 
-		map_x=lon-g_scatterData.inimaplon;				   
-		map_y=lat-g_scatterData.inimaplat;				
+		//long double map_x;
+		//long double map_y;		
+		double map_x = lon-g_scatterData.inimaplon;				   
+		double map_y = lat-g_scatterData.inimaplat;				
 		map_x*=(3600*50);				
 		map_y*=(3600*50);			
 		map_x=ENUOrigin_X+map_x;
@@ -793,10 +847,10 @@ void CPic_Scatter::Show_ScatterChart(CDC *dc)
 		LLApoint.y=(S16)map_y;
 		g_scatterData.AddLLAPoint(&LLApoint);
 
-		g_scatterData._GETENUPOINTCS.Lock();									
+		g_scatterData.LockEnuData();									
 		g_scatterData.lon_deg = lon;
 		g_scatterData.lat_deg = lat;
-		g_scatterData._GETENUPOINTCS.Unlock();
+		g_scatterData.UnlockEnuData();
 
 		map_x = lon - g_scatterData.inimaplon;				   
 		map_y = lat - g_scatterData.inimaplat;
@@ -813,25 +867,36 @@ void CPic_Scatter::Show_ScatterChart(CDC *dc)
 
 		lon = Deg2Rad(lon);
 		lat = Deg2Rad(lat);
-		g_scatterData.SetENU(lon, lat, CGPSDlg::gpsDlg->m_gpggaMsg.Altitude);
+		g_scatterData.SetENU(lon, lat, alt);
 
-		float plot_x = (g_scatterData.ENU(0,0)*50/g_scatterData.m_enuScale)+ENUOrigin_X;
-		float plot_y = ENUOrigin_Y-(g_scatterData.ENU(1,0)*50/g_scatterData.m_enuScale);
+		double plot_x = (g_scatterData.ENU(0,0)*50/g_scatterData.m_enuScale)+ENUOrigin_X;
+		double plot_y = ENUOrigin_Y-(g_scatterData.ENU(1,0)*50/g_scatterData.m_enuScale);
 
 		if(coor==0)
 		{
 			if(plot_x>plot_x1 && plot_x<plot_x2 && plot_y>plot_y1 && plot_y<plot_y2)			   	
-				dc->Ellipse((int)(plot_x-PointSize),(int)(plot_y-PointSize),(int)(plot_x+PointSize),(int)(plot_y+PointSize));
-
+				dc->Ellipse((int)(plot_x-PointSize) + 1, (int)(plot_y-PointSize) + 1, (int)(plot_x+PointSize) + 1, (int)(plot_y+PointSize) + 1);
 		}
 		else
 		{
 			if(map_x>plot_x1 && map_x<plot_x2 && map_y>plot_y1 && map_y<plot_y2)
 			{
-				dc->Ellipse((int)(map_x-PointSize),(int)(map_y-PointSize),(int)(map_x+PointSize),(int)(map_y+PointSize));
+				dc->Ellipse((int)(map_x-PointSize) + 1, (int)(map_y-PointSize) + 1, (int)(map_x+PointSize) + 1, (int)(map_y+PointSize) + 1);
 			}
 		}
+
+		if(IS_DEBUG)
+		{
+			DrawScatterInfo(dc);
+			DrawScatterAltitude(dc, g_scatterData.ini_h, alt);
 	}
+
+		//CString s;
+		//s.Format("iniH : Alt - %8.2f : %8.2f\r\n", g_scatterData.ini_h, alt);
+		//::OutputDebugString(s);
+
+	}
+
 	dc->SelectObject(oldPen);
 	dc->SelectObject(oldBrush);
 	dc->SelectObject(oldFont);

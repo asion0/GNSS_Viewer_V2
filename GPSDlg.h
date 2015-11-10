@@ -22,11 +22,22 @@
 
 #include <Dbt.h>
 #include <setupapi.h>
+//#define WGS84a      6378137.0
+//#define WGS84b      6356752.314
 
-#define RA   (6378137.0)   // semi-major earth axis(ellipsoid equatorial radius)
-#define RB   (6356752.0)   // semi-major earth axis(ellipsoid polar radius)
-#define E2   (0.006694478) // eccentricity squared: (RA*RA-RB*RB)/RA*RA    
-#define E2P  (0.006739596) // eccentricity squared: (RA*RA-RB*RB)/RB*RB
+//#define RA   (6378137.0)   // semi-major earth axis(ellipsoid equatorial radius)
+//#define RB   (6356752.0)   // semi-major earth axis(ellipsoid polar radius)
+//#define E2   (0.006694478) // eccentricity squared: (RA*RA-RB*RB)/RA*RA    
+//#define E2P  (0.006739596) // eccentricity squared: (RA*RA-RB*RB)/RB*RB
+
+#define WGS84_RA    (6378137.0)                   // semi-major earth axis(ellipsoid equatorial radius)
+#define WGS84_INV_F (298.257223563)               // inverse flattening of WGS-84
+#define WGS84_F     (1.0/WGS84_INV_F)             // inverse flattening of WGS-84
+#define WGS84_RB    (WGS84_RA*(1.0-WGS84_F))      // semi-major earth axis(ellipsoid polar radius)
+#define WGS84_E2    (2.0*WGS84_F-WGS84_F*WGS84_F) // eccentricity squared: (RA*RA-RB*RB)/RA*RA
+#define WGS84_E2P   (WGS84_E2/(1.0-WGS84_E2))     // eccentricity squared: (RA*RA-RB*RB)/RB*RB
+
+
 #define ICD_PI           (3.1415926535898)  // ICD 200-c p.101 
 
 #define UWM_KERNEL_REBOOT	(WM_USER + 0x134)
@@ -209,7 +220,7 @@ public:
 
 	enum { IDD = IDD_GPS_DIALOG };
 #if MORE_ENU_SCALE
-	enum { DefauleEnuScale = 3 };
+	enum { DefauleEnuScale = 5 };
 #else
 	enum { DefauleEnuScale = 0 };
 #endif
@@ -248,6 +259,8 @@ protected:
 	CEdit m_cep;
 	CEdit m_clock_offset;
 	CEdit m_noise;
+	CEdit m_centerAlt;
+	CEdit m_scatterAlt;
 
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 	virtual BOOL OnInitDialog();
@@ -362,8 +375,8 @@ protected:
 	afx_msg void OnGetGpsAlmanac();
 	afx_msg void OnBinaryQuerybinarymsginterval();
 	afx_msg void OnBinaryResetodometer();
-	afx_msg void OnConfigure1ppstimingConfigure1ppstiming();
-	afx_msg void OnConfigure1ppstimingConfigure1ppscabledelay();
+	afx_msg void OnConfigure1ppsTiming();
+	afx_msg void OnConfigure1ppsCableDelay();
 	afx_msg void OnConfigure1ppstimingConfigure1pps();
 	afx_msg void OnConfigElevationAndCnrMask();
 	afx_msg void On1ppstimingMonitoring1pps();
@@ -454,6 +467,7 @@ protected:
 	afx_msg void OnBinaryChecksumCalculator();
 	afx_msg void OnTestExternalSrec();
 	afx_msg void OnIqPlot();
+	afx_msg void OnUpgradeDownload();
 
 	afx_msg void OnGetGlonassEphemeris();
 	afx_msg void OnSetGlonassEphemeris();
@@ -463,6 +477,11 @@ protected:
 	afx_msg void OnSup800EraseData();
 	afx_msg void OnSup800WriteData();
 	afx_msg void OnSup800ReadData();
+
+	afx_msg void OnConfigGeofence();
+	afx_msg void OnConfigRtkMode();
+	afx_msg void OnConfigRtkParameters();
+	afx_msg void OnRtkReset();
 
 	afx_msg void OnConfigureSignalDisturbanceStatus();
 	afx_msg void OnConfigureGpsUtcLeapSecondsInUtc();
@@ -528,6 +547,7 @@ private:
 	CClipboardListBox m_responseList;	
 	void ClearInformation(bool onlyQueryInfo = false);
 	bool DoDownload(int dlBaudIdx);
+	bool DoDownload(int dlBaudIdx, UINT rid);
 public:
 	static CFont m_textFont;
 	static CFont m_infoFontS;
@@ -893,14 +913,20 @@ public:
 		ParallelDownloadType0,
 		ParallelDownloadType1,
 		RomExternalDownload,
+		CustomerUpgrade
 	} m_DownloadMode;
 
 	int m_nDownloadBaudIdx;
 	int m_nDownloadBufferIdx;
+	UINT m_nDownloadResource;
 	CString m_strDownloadImage;
 	CString m_strDownloadImage2;
+	int m_nSlaveSourceBaud;
+	int m_nSlaveTargetBaud;
 
-	void Download();
+	bool Download();
+	bool Download2();
+	bool Download3();
 	void SetBaudrate(int b);
 	BOOL GetShowBinaryCmdData() { return m_bShowBinaryCmdData; }
 	void BoostBaudrate(BOOL bRestore, BoostMode mode = ChangeToTemp, bool isForce = false);
@@ -921,7 +947,7 @@ public:
 	};
 	U08 GetRestartMode() { return m_restartMode; }
 	void SetInputMode(U08 i) { m_inputMode = i; }
-	void ExecuteConfigureCommand(U08 *cmd, int size, LPCSTR msg, bool restoreConnect = true);
+	bool ExecuteConfigureCommand(U08 *cmd, int size, LPCSTR msg, bool restoreConnect = true);
 	void LogReadBatchControl();
 	void GetEphms(U08 SV, U08 continues = FALSE);	
 	void GetGlonassEphms(U08 SV, U08 continues = FALSE);
@@ -964,8 +990,11 @@ private:
 	//U08 PlRomNoAlloc(const CString& prom_path);
 	U08 PlRomNoAlloc2(const CString& prom_path);
 	U08 PlRomNoAllocV8(const CString& prom_path);
+	U08 PlRomCustomerUpgrade(UINT rid);
 	bool FirmwareUpdate(const CString& strFwPath);
 	int SendRomBuffer3(const U08* sData, int sDataSize, FILE *f, int fbinSize, 
+						bool needSleep, CWnd* notifyWnd);
+	int SendRomBufferCustomerUpgrade(const U08* sData, int sDataSize, BinaryData &f, int fbinSize, 
 						bool needSleep, CWnd* notifyWnd);
 	bool DownloadLoader();
 	UINT GetSrecFromResource(int baud);
@@ -980,14 +1009,13 @@ private:
 	DataLogType GetDataLogType(U16 word);
 	//For Common Binary Clasases
 public:
-	CmdErrorCode ExcuteBinaryCommand(int cmdIdx, BinaryCommand* cmd, BinaryData* ackCmd, DWORD timeOut = 3000, bool silent = false);
+	CmdErrorCode ExcuteBinaryCommand(int cmdIdx, BinaryCommand* cmd, BinaryData* ackCmd, DWORD timeOut = g_setting.defaultTimeout, bool silent = false);
 	CmdErrorCode ExcuteBinaryCommandNoWait(int cmdIdx, BinaryCommand* cmd);
 	CGPSDlg::CmdErrorCode GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U08 cAckSub, DWORD timeOut, bool silent, bool noWaitAck = false);
 
 	typedef CmdErrorCode (CGPSDlg::*QueryFunction)(CmdExeMode, void*);
 	void GenericQuery(QueryFunction pfn);
 	//Query Functions
-	enum { DefaultTimeOut = 3000 };
 	int m_nDefaultTimeout;
 
 	CmdErrorCode QueryPositionRate(CmdExeMode nMode, void* outputData);
@@ -1066,6 +1094,10 @@ public:
 	CmdErrorCode QuerySignalDisturbanceData(CmdExeMode nMode, void* outputData);
 	CmdErrorCode ResetOdometer(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryCableDelay(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryGeofence(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryGeofenceResult(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryRtkMode(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryRtkParameters(CmdExeMode nMode, void* outputData);
 
 //	CmdErrorCode ConfigureGpsdoMasterSerialPortHigh(CmdExeMode nMode, void* outputData);
 private:
@@ -1216,7 +1248,14 @@ private:
 	{ GenericQuery(&CGPSDlg::ResetOdometer); }
 	afx_msg void OnQueryCableDelay()
 	{ GenericQuery(&CGPSDlg::QueryCableDelay); }
-
+	afx_msg void OnQueryGeofence()
+	{ GenericQuery(&CGPSDlg::QueryGeofence); }
+	afx_msg void OnQueryGeofenceResult()
+	{ GenericQuery(&CGPSDlg::QueryGeofenceResult); }
+	afx_msg void OnQueryRtkMode()
+	{ GenericQuery(&CGPSDlg::QueryRtkMode); }
+	afx_msg void OnQueryRtkParameters()
+	{ GenericQuery(&CGPSDlg::QueryRtkParameters); }
 
 
 	struct MenuItemEntry {

@@ -178,6 +178,14 @@ static CommandEntry cmdTable[] =
 	{ 0x64, 0x2C, 2, 0x64, 0x95 },
 	//QueryCableDelayCmd,
 	{ 0x46, 0xFF, 1, 0xBB, 0x00 },
+	//QueryGeofenceCmd,
+	{ 0x64, 0x30, 2, 0x64, 0x96 },
+	//QueryGeofenceResultCmd,
+	{ 0x64, 0x31, 2, 0x64, 0x97 },
+	//QueryRtkModeCmd,
+	{ 0x6A, 0x02, 2, 0x6A, 0x80 },
+	//QueryRtkParametersCmd,
+	{ 0x6A, 0x04, 2, 0x6A, 0x81 },
 };
 
 enum SqBinaryCmd
@@ -248,6 +256,10 @@ enum SqBinaryCmd
 	QuerySignalDisturbanceStatusCmd,
 	QuerySignalDisturbanceDataCmd,
 	QueryCableDelayCmd,
+	QueryGeofenceCmd,
+	QueryGeofenceResultCmd,
+	QueryRtkModeCmd,
+	QueryRtkParametersCmd
 };
 
 bool CGPSDlg::SaveEphemeris(U08* buff, U08 id)
@@ -2505,7 +2517,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySha1String(CmdExeMode nMode, void* outputDat
 		return Timeout;
 	}
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QuerySha1StringCmd, &cmd, &ackCmd, 3000))
+	if(!ExcuteBinaryCommand(QuerySha1StringCmd, &cmd, &ackCmd))
 	{
 		CString strMsg, strSha;
 		const int Sha1Length = 32;
@@ -2531,7 +2543,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryConstellationCapability(CmdExeMode nMode, vo
 		return Timeout;
 	}
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryConstellationCapabilityCmd, &cmd, &ackCmd, 3000))
+	if(!ExcuteBinaryCommand(QueryConstellationCapabilityCmd, &cmd, &ackCmd))
 	{
 		CString strMsg;
 		U16 mode = MAKEWORD(ackCmd[7], ackCmd[6]);
@@ -2598,7 +2610,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryVersionExtension(CmdExeMode nMode, void* out
 		return Timeout;
 	}
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryVersionExtensionCmd, &cmd, &ackCmd, 3000))
+	if(!ExcuteBinaryCommand(QueryVersionExtensionCmd, &cmd, &ackCmd))
 	{
 		CString strMsg, strSha;
 		const int Sha1Length = 32;
@@ -2631,7 +2643,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareVersionSystemCode(CmdExeMode nMode, 
 		return Timeout;
 	}
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QuerySwVerSysCmd, &cmd, &ackCmd, 3000))
+	if(!ExcuteBinaryCommand(QuerySwVerSysCmd, &cmd, &ackCmd))
 	{
 		CString strExt;
 		if(Ack==QueryVersionExtension(Return, &strExt))
@@ -2978,11 +2990,11 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryTiming(CmdExeMode nMode, void* outputData)
 		else if(t.Timing_mode==2)
 		{
 			add_msgtolist("Timing Mode: Static Mode");
-			strMsg.Format("Saved Latitude: %.6f",t.latitude);
+			strMsg.Format("Saved Latitude: %12.9lf",t.latitude);
 			add_msgtolist(strMsg);
-			strMsg.Format("Saved Longitude: %.6f",t.longitude);
+			strMsg.Format("Saved Longitude: %12.9lf",t.longitude);
 			add_msgtolist(strMsg);
-			strMsg.Format("Saved Altitude: %.6f",t.altitude);
+			strMsg.Format("Saved Altitude: %3.2f",t.altitude);
 			add_msgtolist(strMsg);
 		}
 
@@ -4169,7 +4181,13 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryNmeaIntervalV8(CmdExeMode nMode, void* outpu
 			strMsg.Format("GST Interval : %d second(s)", ackCmd[17]);
 			add_msgtolist(strMsg);
 		}
-
+		if(ackCmd[6]==0 && ackCmd[7]==0 && ackCmd[8]==0 && ackCmd[9]==0 && ackCmd[10]==0 && 
+			ackCmd[11]==0 && ackCmd[12]==0 && ackCmd[13]==0 && ackCmd[14]==0 && ackCmd[15]==0 && 
+			ackCmd[16]==0 && ackCmd[17]==0)
+		{
+			strMsg.Format("All message intervals are zero");
+			add_msgtolist(strMsg);
+		}
 	}
 	return Timeout;
 }
@@ -4261,7 +4279,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySerialNumber(CmdExeMode nMode, void* outputD
 	BinaryData ackCmd;
 	if(!ExcuteBinaryCommand(QuerySerialNumberCmd, &cmd, &ackCmd))
 	{
-		CString strMsg = "Query Serial Number Successful";
+		CString strMsg = "Query Serial Number successful";
 		add_msgtolist(strMsg);
 		if(ackCmd[7] > 0)	//Has Serial Number
 		{
@@ -4279,6 +4297,148 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySerialNumber(CmdExeMode nMode, void* outputD
 			strMsg.Format("No valid serial number.");
 			add_msgtolist(strMsg);
 		}
+	}
+	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryGeofenceResult(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryGeofenceResultCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryGeofenceResultCmd].cmdId);
+	cmd.SetU08(2, cmdTable[QueryGeofenceResultCmd].cmdSubId);
+
+	BinaryData ackCmd;
+	if(!ExcuteBinaryCommand(QueryGeofenceResultCmd, &cmd, &ackCmd))
+	{
+		CString strMsg;
+		strMsg = "Query geofencing result successful...";
+		add_msgtolist(strMsg);
+
+		const U08* ptr = ackCmd.Ptr(7);
+		double d1 = ConvertLeonDouble(ptr);
+		ptr = ackCmd.Ptr(15);
+		double d2 = ConvertLeonDouble(ptr);
+		if(INVERT_LON_LAT)
+		{
+			strMsg.Format("Geofencing in %12.9lf, %12.9lf", d1, d2);
+		}
+		else
+		{
+			strMsg.Format("Geofencing in %12.9lf, %12.9lf", d2, d1);
+		}
+		add_msgtolist(strMsg);
+
+		strMsg.Format("Geofencing result : %d", ackCmd[6]);
+		add_msgtolist(strMsg);
+	}
+	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryGeofence(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryGeofenceCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryGeofenceCmd].cmdId);
+	cmd.SetU08(2, cmdTable[QueryGeofenceCmd].cmdSubId);
+
+	BinaryData ackCmd;
+	if(!ExcuteBinaryCommand(QueryGeofenceCmd, &cmd, &ackCmd))
+	{
+		CString strMsg;
+		strMsg = "Query geofencing data successful...";
+		add_msgtolist(strMsg);
+		
+		U08 size = ackCmd[6];
+		if(size == 0)
+		{
+			strMsg.Format("No geofencing data");
+			add_msgtolist(strMsg);
+		}
+
+		const U08* ptr = ackCmd.Ptr(7);
+		for(int i = 0; i < size; ++i)
+		{
+			U08 temp1[8] = {0};
+			U08 temp2[8] = {0};
+			for(int j = 0; j < 8; ++j)
+			{
+				temp1[7 - j] = *ptr++;
+			}
+			for(int j = 0; j < 8; ++j)
+			{
+				temp2[7 - j] = *ptr++;
+			}
+			if(INVERT_LON_LAT)
+			{
+				strMsg.Format("%12.9lf, %12.9lf", *((double*)temp1), *((double*)temp2));
+			}
+			else
+			{
+				strMsg.Format("%12.9lf, %12.9lf", *((double*)temp2), *((double*)temp1));
+			}
+			add_msgtolist(strMsg);
+		}
+	}
+	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkMode(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryRtkModeCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryRtkModeCmd].cmdId);
+	cmd.SetU08(2, cmdTable[QueryRtkModeCmd].cmdSubId);
+
+	BinaryData ackCmd;
+	if(!ExcuteBinaryCommand(QueryRtkModeCmd, &cmd, &ackCmd))
+	{
+		CString strMsg;
+		strMsg = "Query RTK mode successful...";
+		add_msgtolist(strMsg);
+
+		if(ackCmd[6])
+		{
+			strMsg.Format("RTK base mode");
+		}
+		else
+		{
+			strMsg.Format("RTK rover mode");
+		}
+		add_msgtolist(strMsg);
+	}
+	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkParameters(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryRtkParametersCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryRtkParametersCmd].cmdId);
+	cmd.SetU08(2, cmdTable[QueryRtkParametersCmd].cmdSubId);
+
+	BinaryData ackCmd;
+	if(!ExcuteBinaryCommand(QueryRtkParametersCmd, &cmd, &ackCmd))
+	{
+		CString strMsg;
+		strMsg = "Query RTK parameters successful...";
+		add_msgtolist(strMsg);
+		strMsg.Format("Fix Ratio Scale : %d", MAKEWORD(ackCmd[7], ackCmd[6]));
+		add_msgtolist(strMsg);
+		strMsg.Format("Elevation Mask : 0x%04X", MAKEWORD(ackCmd[9], ackCmd[8]));
+		add_msgtolist(strMsg);
+		strMsg.Format("CNR mask : 0x%04X", MAKEWORD(ackCmd[11], ackCmd[10]));
+		add_msgtolist(strMsg);
+		strMsg.Format("Geo CNR Mask : 0x%04X", MAKEWORD(ackCmd[13], ackCmd[12]));
+		add_msgtolist(strMsg);
+		strMsg.Format("GPS PRN Mask : 0x%08X", MAKELONG(MAKEWORD(ackCmd[17], ackCmd[16]), MAKEWORD(ackCmd[15], ackCmd[14])));
+		add_msgtolist(strMsg);
+		strMsg.Format("Galileo PRN Mask : 0x%08X", MAKELONG(MAKEWORD(ackCmd[21], ackCmd[20]), MAKEWORD(ackCmd[19], ackCmd[18])));
+		add_msgtolist(strMsg);
+		strMsg.Format("Glonass PRN Mask : 0x%08X", MAKELONG(MAKEWORD(ackCmd[25], ackCmd[24]), MAKEWORD(ackCmd[23], ackCmd[22])));
+		add_msgtolist(strMsg);
+		strMsg.Format("Beidou2 PRN Mask 1~32 : 0x%08X", MAKELONG(MAKEWORD(ackCmd[29], ackCmd[28]), MAKEWORD(ackCmd[27], ackCmd[26])));
+		add_msgtolist(strMsg);
+		strMsg.Format("Beidou2 PRN Mask 33~40 : 0x%02X", ackCmd[30]);
+		add_msgtolist(strMsg);
+		strMsg.Format("QZSS PRN mask : 0x%02X", ackCmd[31]);
+		add_msgtolist(strMsg);
 	}
 	return Timeout;
 }
@@ -5827,6 +5987,9 @@ void CGPSDlg::OnGpsdoFirmwareDownload()
 	m_DownloadMode = GpsdoMasterSlave;
 	m_strDownloadImage = dlg.m_strMasterPath;
 	m_strDownloadImage2 = dlg.m_strSlavePath;
+	m_nSlaveSourceBaud = dlg.m_slaveSourceBaud;
+	m_nSlaveTargetBaud = dlg.m_slaveTargetBaud;
+
 	::AfxBeginThread(DownloadThread, 0);
 }
 
@@ -6004,5 +6167,29 @@ void CGPSDlg::OnConfigPowerSavingParameters()
 void CGPSDlg::OnIqPlot()
 {
 	CIqPlot dlg;
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigGeofence()
+{
+	CConfigGeofencing dlg;
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigRtkMode()
+{
+	CConfigRtkMode dlg;
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigRtkParameters()
+{
+	CConfigRtkParameters dlg;
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnRtkReset()
+{
+	CConfigRtkReset dlg;
 	DoCommonConfig(&dlg);
 }

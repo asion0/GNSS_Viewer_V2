@@ -301,7 +301,9 @@ void CCompressDlg::PosFixAlgorithm()
 		LLA2ECEF();
 		m_lon = Rad2Deg(m_lon);
 		m_lat = Rad2Deg(m_lat);		
-		kml.PushOnePoint(m_lon, m_lat, m_alt);
+		CString timeStr;
+		timeStr.Format("%02d:%02d:%05.2f", msg_gpgga.Hour, msg_gpgga.Min, msg_gpgga.Sec);
+		kml.PushOnePoint(m_lon, m_lat, m_alt, timeStr, GetGnssQualityMode(msg_gpgga.GPSQualityIndicator));
 
 		Current.TOW     = (U32)(msg_gpgga.Hour*3600 + msg_gpgga.Min*60 + msg_gpgga.Sec);
 		Current.WNO     = 120;
@@ -323,7 +325,6 @@ void CCompressDlg::PosFixAlgorithm()
 		Current.DECEF_Z = (S16)(Current.ECEF_Z - Last.ECEF_Z);
         if(inilog)
 		{		
-			//WriteKMLini();
 			FULL_DATA();
 			inilog = false;
 			Last.TOW = Current.TOW;
@@ -331,7 +332,7 @@ void CCompressDlg::PosFixAlgorithm()
 	        Last.ECEF_Y = Current.ECEF_Y;
 	        Last.ECEF_Z = Current.ECEF_Z;
 
-			kml.PushOnePoint(m_lon, m_lat, m_alt);
+			kml.PushOnePoint(m_lon, m_lat, m_alt, timeStr, GetGnssQualityMode(msg_gpgga.GPSQualityIndicator));
 		}
 		else
 		{				
@@ -439,8 +440,8 @@ void CCompressDlg::LLA2ECEF(void)
 
 	m_lon = Deg2Rad(m_lon);
 	m_lat = Deg2Rad(m_lat);
-	N=WGS84a/(sqrt(1-e*e*sin(m_lat)*sin(m_lat)));		
+	N=WGS84_RA/(sqrt(1-WGS84_E2*sin(m_lat)*sin(m_lat)));		
 	X=(N+h)*cos(m_lat)*cos(m_lon);
 	Y=(N+h)*cos(m_lat)*sin(m_lon);
-	Z=(N*(1-e*e)+h)*sin(m_lat);	
+	Z=(N*(1-WGS84_E2)+h)*sin(m_lat);	
 }

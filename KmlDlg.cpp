@@ -521,6 +521,8 @@ void CKmlDlg::Convert(CFile& f)
 	
 
 	int b3d = ((CButton*)GetDlgItem(IDC_3DKML))->GetCheck();
+	int bPointList = ((CButton*)GetDlgItem(IDC_POINTLIST))->GetCheck();
+	int bNoPointText = ((CButton*)GetDlgItem(IDC_NO_TITLE))->GetCheck();
 	int color_index = m_color.GetCurSel(); 
 	//Red;Yellow;Blue;Green;
 	const U32 colors[] = {0x0000ff, 0x00FFFF, 0xff0000, 0x00ff00};
@@ -533,7 +535,7 @@ void CKmlDlg::Convert(CFile& f)
 		CString tmp_file ;
 		tmp_file.Format("%s%d%s", kml_filename,file_tail,".kml");
 		
-		kml.Init(tmp_file, color, (b3d==1));
+		kml.Init(tmp_file, color, (b3d==1), (bPointList==1), (bNoPointText==1));
 		while(dwBytesRemaining)
 		{
 			int progress = (int)(((double)(f.GetLength() - dwBytesRemaining) / f.GetLength()) * 1000);
@@ -569,27 +571,6 @@ void CKmlDlg::Convert(CFile& f)
 	}
 }
 
-bool Is_Fixed(U16 ggaIndicator)
-{
-	U08 gpsInd, gnssInd;
-
-	if(ggaIndicator > 0xFF)
-	{
-		gpsInd = ggaIndicator >> 8;
-		gnssInd = ggaIndicator & 0xFF;
-	}
-	else
-	{
-		gpsInd = ggaIndicator & 0xFF;
-		gnssInd = 0xFF;
-	}
-
-	return (gpsInd == 49 || gpsInd == 50 || gpsInd==54 || 
-			gpsInd == 'A' || gpsInd == 'D' || gpsInd == 'E' ||
-			gnssInd == 49 || gnssInd == 50 || gnssInd==54 || 
-			gnssInd == 'A' || gnssInd == 'D' || gnssInd == 'E');
-}
-
 double GetLon(D64 longitude, char ew)
 {
 	double lon = (int)(longitude / 100);	
@@ -616,22 +597,28 @@ bool CKmlDlg::WriteToFile(U08 type)
 {	
 	if(ut == Unknown)
 	{
-		if(Is_Fixed(msg_gpgga.GPSQualityIndicator))
+		if(IsFixed(msg_gpgga.GPSQualityIndicator))
 			ut = UsingGGA;
-		if (msg_gprmc.Status == 'A')
+		//if (msg_gprmc.Status == 'A')
+		if (IsFixed(msg_gprmc.Status))
 			ut = UsingRMC;
 	}		
 
-	if(ut == UsingGGA && (type==MSG_GGA || type==MSG_GNS) && Is_Fixed(msg_gpgga.GPSQualityIndicator))
+	if(ut == UsingGGA && (type==MSG_GGA || type==MSG_GNS) && IsFixed(msg_gpgga.GPSQualityIndicator))
 	{
+		CString timeStr;
+		timeStr.Format("%02d:%02d:%05.2f", msg_gpgga.Hour, msg_gpgga.Min, msg_gpgga.Sec);
 		kml.PushOnePoint(GetLon(msg_gpgga.Longitude, msg_gpgga.Longitude_E_W), 
-			GetLat(msg_gpgga.Latitude, msg_gpgga.Latitude_N_S), msg_gpgga.Altitude);
+			GetLat(msg_gpgga.Latitude, msg_gpgga.Latitude_N_S), msg_gpgga.Altitude, timeStr, GetGnssQualityMode(msg_gpgga.GPSQualityIndicator));
 		return true;
 	}
+	//else if (ut == UsingRMC && type==MSG_RMC && )
 	else if (ut == UsingRMC && type==MSG_RMC && msg_gprmc.Status == 'A')
 	{
+		CString timeStr;
+		timeStr.Format("%02d:%02d:%05.2f", msg_gprmc.Hour, msg_gprmc.Min, msg_gprmc.Sec);
 		kml.PushOnePoint(GetLon(msg_gprmc.Longitude, msg_gprmc.Longitude_E_W), 
-			GetLat(msg_gprmc.Latitude, msg_gprmc.Latitude_N_S), msg_gpgga.Altitude);
+			GetLat(msg_gprmc.Latitude, msg_gprmc.Latitude_N_S), msg_gpgga.Altitude, timeStr, GetGnssQualityMode(msg_gprmc.ModeIndicator));
 		return true;
 	}
 	return false;

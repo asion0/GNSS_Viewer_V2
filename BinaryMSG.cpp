@@ -143,23 +143,62 @@ void CooCartesianToGeodetic(const POS_T* xyz_p, LLA_T* lla_p)
 	{
 		lla_p->lat = (xyz_p->pz >= 0)?(ICD_PI/2.0):(-ICD_PI/2.0);
 		lla_p->lon = 0.0;
-		lla_p->alt = (F32)(fabs(xyz_p->pz) - RB);
+		lla_p->alt = (F32)(fabs(xyz_p->pz) - WGS84_RB);
 		return;
 	}
 
-	theta = atan2( ( xyz_p->pz*RA ), ( p*RB ) );
+	theta = atan2( ( xyz_p->pz*WGS84_RA ), ( p*WGS84_RB ) );
 	s_theta = sin(theta);
 	c_theta = cos(theta);    
 
-	temp = ( xyz_p->pz + E2P*RB*s_theta*s_theta*s_theta ); 
-	phi = atan2( temp, ( p - E2*RA*c_theta*c_theta*c_theta ) );
+	temp = ( xyz_p->pz + WGS84_E2P*WGS84_RB*s_theta*s_theta*s_theta ); 
+	phi = atan2( temp, ( p - WGS84_E2*WGS84_RA*c_theta*c_theta*c_theta ) );
 
 	s_phi = sin(phi);
 	c_phi = cos(phi);
 
 	lla_p->lat = phi;    
 	lla_p->lon = atan2( xyz_p->py, xyz_p->px );
-	lla_p->alt = (F32)( (p / c_phi) - ( RA / sqrt(1.0 - E2*s_phi*s_phi ) ) );
+	lla_p->alt = (F32)( (p / c_phi) - ( WGS84_RA / sqrt(1.0 - WGS84_E2*s_phi*s_phi ) ) );
+}
+
+
+
+static  void ecef2lla(const POS_T* xyz_p, LLA_T* lla_p)
+{
+
+	double ja = 6378137; // radius
+	double je = 8.1819190842622E-2;  // eccentricity
+
+	double asq = pow(ja,2);
+	double esq = pow(je,2);
+
+	double x = xyz_p->px;
+	double y = xyz_p->py;
+	double z = xyz_p->pz;
+
+  double jb = sqrt( asq * (1-esq) );
+  double bsq = pow(jb,2);
+  double ep = sqrt( (asq - bsq)/bsq);
+  double jp = sqrt( pow(x,2) + pow(y,2) );
+  double th = atan2(ja*z, jb*jp);
+
+  double lon = atan2(y,x);
+  double lat = atan2( (z + pow(ep,2)*jb*pow(sin(th),3) ), (jp - esq*ja*pow(cos(th),3)) );
+  double N = ja/( sqrt(1-esq*pow(sin(lat),2)) );
+  double alt = jp / cos(lat) - N;
+
+  // mod lat to 0-2pi
+  if(lon < 0 || lon > (2 * PI))
+  {
+	  lon -= lon / (2 * PI);
+  }
+  //lon = lon % (2*PI);
+
+  // correction for altitude near poles left out.
+  lla_p->lat = lat;
+  lla_p->lon = lon;
+  lla_p->alt = (F32)alt;
 }
 
 U08 *decode_4bytes(U08 *src,U32 *dst)
@@ -565,9 +604,18 @@ void ShowReceiverNav(U08 *src, bool convertOnly, CString* pStr)
 	LLA_T lla;
 	CooCartesianToGeodetic(&pos, &lla);
 
-	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude = lla.lat * R2D * 100;
+	lla.lat *= R2D;
+	lla.lon *= R2D;
+	double lat_d = (S16)fabs(lla.lat );
+	double lon_d = (S16)fabs(lla.lon );
+	double lat_m = fmod( fabs(lla.lat), 1.0) * 60.0;
+	double lon_m = fmod( fabs(lla.lon), 1.0) * 60.0;
+
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude = lat_d * 100.0 + lat_m;
+	//CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude = lla.lat * R2D;
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude_N_S = (lla.lat >= 0) ? 'N' : 'S';
-	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude = lla.lon * R2D * 100;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude = lon_d * 100.0 + lon_m;
+	//CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude = lla.lon * R2D;
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude_E_W = (lla.lon >= 0) ? 'E' : 'W';
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Altitude = lla.alt;
 
@@ -615,9 +663,9 @@ void ShowBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 	S32 vy = src[55]<<24 | src[56]<<16 | src[57]<<8 | src[58];
 	S32 vz = src[59]<<24 | src[60]<<16 | src[61]<<8 | src[62];
 
-	D64 fx = vx / 100;
-	D64 fy = vy / 100;
-	D64 fz = vz / 100;
+	D64 fx = (D64)vx / 100;
+	D64 fy = (D64)vy / 100;
+	D64 fz = (D64)vz / 100;
 
 	D64 fv = sqrt(fx * fx + fy * fy + fz * fz);
 

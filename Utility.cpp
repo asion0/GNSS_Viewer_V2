@@ -363,6 +363,21 @@ bool Utility::IsProcessRunning(LPWSTR processName)
     return exists;
 }
 
+bool Utility::IsNamedPipeUsing(LPCTSTR name)
+{
+	CString pipeName;
+	pipeName.Format("//./pipe/%s", name);
+	//HANDLE h = CreateFile("//./pipe/SkytraqIQPlotPipe", GENERIC_WRITE,
+	HANDLE h = CreateFile(pipeName, GENERIC_WRITE,
+		FILE_SHARE_READ | FILE_SHARE_WRITE , NULL, OPEN_EXISTING,
+		FILE_ATTRIBUTE_NORMAL, NULL);
+	if(h != INVALID_HANDLE_VALUE)
+	{
+		::CloseHandle(h);
+	}
+    return (h != INVALID_HANDLE_VALUE);
+}
+
 // delete directory
 BOOL Utility::DeleteDirectory(LPCTSTR pszSrcDir, BOOL bSilent, BOOL bConfirm)
 {
@@ -482,6 +497,29 @@ CString Utility::GetFilePath(LPCTSTR pszPathname)
 	else	//No slash but has colon, the device letter is the path
 	{	
 		strRet = strRet.Left(2);
+	}
+	return strRet;
+}
+
+CString Utility::GetFileName(LPCTSTR pszPathname)
+{
+	CString strRet(pszPathname);
+	int nSlash1 = strRet.ReverseFind(_T('\\'));
+	int nSlash2 = strRet.ReverseFind(_T('/'));
+	int nSlash = max(nSlash1, nSlash2);
+	BOOL bColon = (strRet.GetLength()>=2)? strRet.GetAt(1)==_T(':') :FALSE;
+	if(-1 == nSlash && !bColon)	//No slash and no colon, it's mean no path
+	{
+		return strRet;
+	}
+	else if(nSlash>0)	//Has slash, before slash is the path.
+	{
+		
+		strRet = strRet.Right(strRet.GetLength() - nSlash - 1);
+	}
+	else	//No slash but has colon, the device letter is the path
+	{	
+		strRet = strRet.Left(strRet.GetLength() - 3);
 	}
 	return strRet;
 }
@@ -832,4 +870,13 @@ CString Utility::GetSpecialFolder(INT iFolder)	//CSIDL_APPDATA
 	pMalloc->Free(pidl);
 	pMalloc->Release();
 	return strPath;
+}
+
+CString Utility::GetNameAttachPid(LPCSTR name)
+{
+	DWORD pid = GetCurrentProcessId();
+	CString r;
+	r.Format("%s%08X", name, pid);
+	//r.Format("%s", name);
+	return r;
 }

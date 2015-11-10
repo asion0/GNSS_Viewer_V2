@@ -22,9 +22,11 @@ namespace Utility
 	DWORD ExecuteExternalFileW(LPCWSTR csCmdLine, CString& strResult);
 	BOOL ExecuteExeNoWait(LPCSTR csCmdLine);
 	bool IsProcessRunning(LPWSTR processName);
+	bool IsNamedPipeUsing(LPCTSTR name);
 	BOOL DeleteDirectory(LPCTSTR pszSrcDir, BOOL bSilent, BOOL bConfirm);
 	BOOL CopyFiles(LPCTSTR pszSrcFiles, LPCTSTR pszDestFolder, LPCTSTR pszNewName, BOOL bSilent, BOOL bConfirm);
 	CString GetFilePath(LPCTSTR pszPathname);
+	CString GetFileName(LPCTSTR pszPathname);
 	BOOL RenameFile(LPCTSTR pszSrcFile, LPCTSTR pszNewName, BOOL bSilent, BOOL bConfirm);
 	CString GetFileExt(LPCTSTR pszPathname);
 	BOOL CopyResToFile(LPCTSTR szDesFileName, DWORD dRes, LPCTSTR szType);
@@ -40,6 +42,7 @@ namespace Utility
 	bool ConvertHexToBinary(LPCSTR pszInput, BinaryData& binData);
 	bool ConvertBinaryToHex(const BinaryData& binData, CString& strOutput, int startIndex, int maxCount, int lineCount);
 	CString GetSpecialFolder(INT iFolder);	//See define: CSIDL_APPDATA
+	CString GetNameAttachPid(LPCSTR name);
 }
 
 class ScopeTimer
@@ -84,29 +87,34 @@ class BinaryData
 private:
 	U08* dataPtr;
 	int dataSize;
+	int iter;
 public:
 	BinaryData() 
 	{ 
 		dataSize = 0; 
 		dataPtr = NULL; 
+		iter = 0;
 	};
 
 	BinaryData(LPCSTR filepath) 
 	{ 
 		dataSize = 0; 
 		dataPtr = NULL;
+		iter = 0;
 		ReadFromFile(filepath);
 	};
 
 	BinaryData(U08 *data, int size) 
 	{ 
 		ReadFromMemory(data, size);
+		iter = 0;
 	};
 
 	BinaryData(const BinaryData& src) 
 	{ 
 		dataSize = 0; 
 		dataPtr = NULL;
+		iter = 0;
 
 		if(src.Ptr())
 		{
@@ -119,6 +127,8 @@ public:
 	{ 
 		dataSize = 0; 
 		dataPtr = NULL;
+		iter = 0;
+
 		ReadFromResource(id, type);	
 	};
 
@@ -126,6 +136,7 @@ public:
 	{ 
 		dataSize = 0; 
 		dataPtr = NULL;
+		iter = 0;
 		Alloc(size);
 	};
 
@@ -139,6 +150,7 @@ public:
 		delete [] dataPtr;
 		dataPtr = NULL;
 		dataSize = 0;
+		iter = 0;
 	}
 
 	void Alloc(int size)
@@ -229,8 +241,26 @@ public:
 			Alloc(src.Size());
 			memcpy(dataPtr, src.Ptr(), dataSize);
 		}
+		iter = src.iter;
 
 		return(*this);
+	}
+
+	void Seek(int i)
+	{
+		iter = i;
+	}
+
+	int Read(U08* ptr, int size)
+	{
+		if(size + iter > dataSize)
+		{
+			size = dataSize - iter;
+		}
+
+		memcpy(ptr, dataPtr + iter, size);
+		iter += size;
+		return size;
 	}
 
 	int Size() const { return dataSize; }

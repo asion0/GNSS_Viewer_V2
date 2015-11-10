@@ -228,10 +228,12 @@
 #define IDR_IQPLOT                      473
 #define IDB_EARTH1                      474
 #define IDB_EARTH2                      475
+#define IDD_GEOFENCE                    475
 #define IDB_EARTH3                      476
 #define IDB_EARTH4                      477
 #define IDB_EARTH5                      478
 #define IDB_EARTH6                      479
+#define IDR_UPGRADE_DOWNLOAD_PROM       480
 #define IDC_CONNECT                     1000
 #define IDC_CLOSE                       1001
 #define IDC_SETORIGIN                   1002
@@ -258,8 +260,11 @@
 #define IDC_PDOP                        1013
 #define IDC_POWERSAVING_9               1013
 #define IDC_SPEED                       1014
+#define IDC_EDIT15                      1014
+#define IDC_PARAM10                     1014
 #define IDC_ALTITUDE                    1015
 #define IDC_RECORD2                     1016
+#define IDC_CENTER_ALT                  1016
 #define IDC_2DRMS                       1017
 #define IDC_CEP50                       1018
 #define IDC_CLEAR                       1019
@@ -267,6 +272,8 @@
 #define IDC_NOISE_T                     1020
 #define IDC_GPGLL                       1020
 #define IDC_GPGSA                       1021
+#define IDC_CENTER_ALT2                 1021
+#define IDC_SCATTER_ALT                 1021
 #define IDC_GPVTG                       1022
 #define IDC_SETORIGIN_USER              1022
 #define IDC_GPGSV                       1023
@@ -278,6 +285,7 @@
 #define IDC_GPZDA                       1026
 #define IDC_LIST1                       1026
 #define IDC_LIST                        1026
+#define IDC_POINTS                      1026
 #define IDC_PROGRESS1                   1027
 #define IDC_LODER                       1028
 #define IDC_ROMWRITER                   1029
@@ -289,6 +297,7 @@
 #define IDC_RESPONSE                    1034
 #define IDC_NMEA_OUTPUT                 1035
 #define IDC_SRMODE                      1035
+#define IDC_ADD2                        1035
 #define IDC_BIN_OUTPUT                  1036
 #define IDC_SRYEAR                      1036
 #define IDC_SCANALL                     1037
@@ -499,7 +508,11 @@
 #define IDC_1PPS_SET3                   1148
 #define IDC_CHECK79                     1148
 #define IDC_3DKML                       1148
+#define IDC_3DKML2                      1149
+#define IDC_POINTLIST                   1149
 #define IDC_STATIC_SET1                 1150
+#define IDC_POINTLIST2                  1150
+#define IDC_NO_TITLE                    1150
 #define IDC_STATIC_SET2                 1151
 #define IDC_STATIC_SET3                 1152
 #define IDC_STATIC_SET4                 1153
@@ -836,6 +849,8 @@
 #define IDC_SPY_CENTER                  1350
 #define IDR_INTERNAL_LOADER_SPECIAL     1351
 #define IDC_PASS_THROUGH                1351
+#define IDC_LAT2                        1351
+#define IDC_ALT                         1351
 #define IDC_SECTOR                      1352
 #define IDC_READ                        1353
 #define IDC_WRITE                       1354
@@ -849,14 +864,37 @@
 #define IDD_CONFIG_GPS_LEAP_IN_UTC_DLG  1361
 #define IDC_INS_SEC                     1361
 #define IDC_CMD                         1362
+#define IDD_RTK_MODE                    1362
 #define IDC_MASTER_PATH                 1363
+#define IDD_RTK_PARAM                   1363
 #define IDC_SLAVE_PATH                  1364
+#define IDD_RTK_RESET                   1364
 #define IDC_BROWSE_MASTER               1365
 #define IDC_BROWSE_SLAVE                1366
 #define IDC_VALUE                       1367
 #define IDC_RATE                        1368
 #define IDC_SVID2                       1369
 #define IDC_SVID                        1369
+#define IDC_SLAVE_C                     1369
+#define IDC_SLAVE_T                     1370
+#define IDC_ADD1                        1371
+#define IDC_POINT_LIST                  1373
+#define IDC_COOR_TEXT1                  1374
+#define IDC_COOR_TEXT2                  1375
+#define IDC_POINTS_TEXT                 1376
+#define IDC_TIMEOUT                     1377
+#define IDC_SPY_ALT                     1378
+#define IDC_TIMEOUT2                    1379
+#define IDC_SCATTER_COUNT               1379
+#define IDC_PARAM01                     1379
+#define IDC_PARAM02                     1380
+#define IDC_PARAM03                     1381
+#define IDC_PARAM04                     1382
+#define IDC_PARAM05                     1383
+#define IDC_PARAM06                     1384
+#define IDC_PARAM07                     1385
+#define IDC_PARAM08                     1386
+#define IDC_PARAM09                     1387
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_BINARY_SYSTEMRESTART         32811
@@ -1108,14 +1146,23 @@
 #define ID_CONFIG_GPS_LEAP_IN_UTC       33094
 #define ID_GPSDO_FW_DOWNLOAD            33095
 #define ID_IQ_PLOT                      33096
+#define ID_UPGRADE_DOWNLOAD             33097
+#define ID_CONFIG_GEOFENCE              33098
+#define ID_QUERY_GEOFENCE               33099
+#define ID_QUERY_GEOFENCE_RESULT        33100
+#define ID_CONFIG_RTK_MODE              33101
+#define ID_QUERY_RTK_MODE               33102
+#define ID_CONFIG_RTK_PARAM             33103
+#define ID_QUERY_RTK_PARAM              33104
+#define ID_RTK_RESET					33105 
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        474
+#define _APS_NEXT_RESOURCE_VALUE        477
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1369
+#define _APS_NEXT_CONTROL_VALUE         1388
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

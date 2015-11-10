@@ -15,10 +15,13 @@ public:
 	//enum { IDD = IDD_GPSDO_DOWNLOAD };
 	CString m_strMasterPath;
 	CString m_strSlavePath;
+	int m_slaveSourceBaud;
+	int m_slaveTargetBaud;
 
 protected:
 	void SaveSetting();
 	void LoadSetting();
+	void AutoDetectBaudRate(CString path, UINT uid);
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV ¤ä´©
 

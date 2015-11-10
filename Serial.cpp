@@ -399,10 +399,11 @@ BufferContentType CheckBufferContent(U08 current, U08 previous, U08 bufferStart,
 
 DWORD CSerial::GetBinary(void *buffer, DWORD bufferSize, DWORD timeout)
 {	
+	//timeout = 0xFFFFFFFF;
 	U08* bufferIter = (U08*)buffer;
 	DWORD totalSize = 0;
-	DWORD failCount = 10;
 	ScopeTimer t;
+	bool cmdHeaderCome = false;
 	while(totalSize < bufferSize - 1)
 	{ 
 		if(t.GetDuration() > timeout)
@@ -448,7 +449,7 @@ DWORD CSerial::GetBinary(void *buffer, DWORD bufferSize, DWORD timeout)
 
 			if(totalSize > 0)
 			{	//not first char.
-				if(*bufferIter==0xa1 && *(bufferIter-1)==0xa0)
+				if(!cmdHeaderCome && *bufferIter==0xa1 && *(bufferIter-1)==0xa0)
 				{
 					bufferIter -= totalSize;
 					*bufferIter = 0xa0; 
@@ -456,6 +457,7 @@ DWORD CSerial::GetBinary(void *buffer, DWORD bufferSize, DWORD timeout)
 					*bufferIter = 0xa1; 
 					++bufferIter;
 					totalSize = 2;
+					cmdHeaderCome = true;
 					continue;
 				}
 				else if(*bufferIter==0x0a && *(bufferIter-1)==0x0d)
@@ -471,6 +473,7 @@ DWORD CSerial::GetBinary(void *buffer, DWORD bufferSize, DWORD timeout)
 							*(bufferIter+1) = 0;
 							return totalSize + 1;
 						}
+						cmdHeaderCome = false;
 					}
 					else
 					{

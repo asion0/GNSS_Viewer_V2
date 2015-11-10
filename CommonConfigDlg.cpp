@@ -139,7 +139,7 @@ void CConfigSmoothMode::OnBnClickedOk()
 
 void CConfigSmoothMode::DoCommand()
 {
-	BinaryData cmd(5);
+	BinaryData cmd(4);
 	*cmd.GetBuffer(0) = 0x69;
 	*cmd.GetBuffer(1) = 0x03;
 	*cmd.GetBuffer(2) = (U08)m_bEnable;
@@ -1374,7 +1374,7 @@ void CSUP800ReadUserDataDlg::DoCommand()
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), configPrompt, false);
 	BinaryData ackCmd;
 	ackCmd.Alloc(1024);
-	CGPSDlg::CmdErrorCode er = CGPSDlg::gpsDlg->GetBinaryResponse(&ackCmd, 0x7A, 0x09, 2000, true, true);
+	CGPSDlg::CmdErrorCode er = CGPSDlg::gpsDlg->GetBinaryResponse(&ackCmd, 0x7A, 0x09, g_setting.defaultTimeout, true, true);
 
 	if(er != CGPSDlg::Ack)
 	{
@@ -1668,6 +1668,7 @@ void ConfigPowerSavingParametersRomDlg::DoCommand()
 	configPrompt = "ConfigPowerSavingParametersRom successful...";
     AfxBeginThread(ConfigThread, 0);
 }
+
 // CIqPlot 對話方塊
 IMPLEMENT_DYNAMIC(CIqPlot, CCommonConfigDlg)
 
@@ -1701,13 +1702,17 @@ BOOL CIqPlot::OnInitDialog()
 	GetDlgItem(IDC_RATE)->SetWindowText(txt);
 	((CComboBox*)GetDlgItem(IDC_ENABLE))->SetCurSel(m_bEnable);
 
-	if(!Utility::IsProcessRunning(L"IQPlot.exe"))
+	//if(!Utility::IsProcessRunning(L"IQPlot.exe"))
+	CString pipeName = Utility::GetNameAttachPid("SkytraqIQPlotPipe");
+	if(!Utility::IsNamedPipeUsing(pipeName))
 	{
 		txt = Utility::GetSpecialFolder(CSIDL_APPDATA);
 		txt += "\\GNSS_Viewer_V2";
 		::CreateDirectory(txt, NULL);
 		txt += "\\IQPlot.exe";
 		Utility::CopyResToFile(txt, IDR_IQPLOT, "EXEC");
+		txt += " ";
+		txt += pipeName;
 		Utility::ExecuteExeNoWait(txt);
 	}
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -1748,3 +1753,407 @@ void CIqPlot::DoCommand()
     AfxBeginThread(ConfigThread, 0);
 }
 
+// CConfigGeofencing 對話方塊
+IMPLEMENT_DYNAMIC(CConfigGeofencing, CCommonConfigDlg)
+
+CConfigGeofencing::CConfigGeofencing(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_GEOFENCE, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigGeofencing, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigGeofencing::OnBnClickedOk)
+	ON_BN_CLICKED(IDC_ADD1, &CConfigGeofencing::OnBnClickedAddPoint)
+	ON_BN_CLICKED(IDC_ADD2, &CConfigGeofencing::OnBnClickedAddPoints)
+	ON_BN_CLICKED(IDC_CLOCK, &CConfigGeofencing::OnBnClickedClearAll)
+END_MESSAGE_MAP()
+
+void CConfigGeofencing::DoDataExchange(CDataExchange* pDX)
+{
+	CDialog::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_POINTS, m_points);
+}
+
+// CConfigGeofencing 訊息處理常式
+
+BOOL CConfigGeofencing::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	CString txt;
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+	if(INVERT_LON_LAT)
+	{
+		GetDlgItem(IDC_COOR_TEXT1)->SetWindowText("Latitude");
+		GetDlgItem(IDC_COOR_TEXT2)->SetWindowText("Longitude");
+		GetDlgItem(IDC_POINTS_TEXT)->SetWindowText("2. Add multiple coordinates, separated by commas and rows(Ctrl + Enter).\r\ne.g.:\r\n24.784915663,121.008697445\r\n24.784965052,121.008810556\r\n24.784854644,121.008853770\r\n24.784811388,121.008751459");
+	}
+	else
+	{
+		GetDlgItem(IDC_COOR_TEXT1)->SetWindowText("Longitude");
+		GetDlgItem(IDC_COOR_TEXT2)->SetWindowText("Latitude");
+		GetDlgItem(IDC_POINTS_TEXT)->SetWindowText("2. Add multiple coordinates, separated by commas and rows(Ctrl + Enter).\r\ne.g.:\r\n121.008697445,24.784915663\r\n121.008810556,24.784965052\r\n121.008853770,24.784854644\r\n121.008751459,24.784811388");
+	}
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigGeofencing::OnBnClickedAddPoint()
+{
+	CString s, item;
+	double d1, d2;
+	GetDlgItem(IDC_LON)->GetWindowText(s);
+	d1 = atof(s);
+	GetDlgItem(IDC_LAT)->GetWindowText(s);
+	d2 = atof(s);
+	item.Format("%12.9lf,%12.9lf", d1, d2);
+	AddPoint(item);
+}
+
+void CConfigGeofencing::OnBnClickedAddPoints()
+{	
+	CString s, item;
+	double d1, d2;
+	GetDlgItem(IDC_POINT_LIST)->GetWindowText(s);
+
+	int start = 0;
+	CString tok;
+	do
+	{
+		tok = s.Tokenize(",\r\n", start);
+		if(tok.IsEmpty())
+		{	//break when empty line
+			break;
+		}
+		d1 = atof(tok);
+		if(start != -1)
+		{
+			tok = s.Tokenize(",\r\n", start);
+			d2 = atof(tok);
+		}
+		else
+		{	
+			d2 = 0;
+		}
+
+		item.Format("%12.9lf,%12.9lf", d1, d2);
+
+		if(!AddPoint(item))
+			return;
+	} while (start != -1);
+}
+
+bool CConfigGeofencing::AddPoint(const CString s)
+{
+	const int MaxCount = 10;
+	if(m_points.GetCount() == MaxCount)
+	{
+		CString msg;
+		msg.Format("It can not be set more than %d points", MaxCount);
+		::AfxMessageBox(msg);
+		return false;
+	}
+	m_points.AddString(s);
+	return true;
+}
+
+void CConfigGeofencing::OnBnClickedClearAll()
+{
+	m_points.ResetContent();
+}
+
+void CConfigGeofencing::OnBnClickedOk()
+{	
+	CString txt;
+	int count = m_points.GetCount();
+	if(count < 3)
+	{
+		txt.Format("It can not be set less than 3 points");
+		::AfxMessageBox(txt);
+		return;
+	}
+
+	lons.clear();
+	lats.clear();
+	double d;
+	int sp = 0;
+	for(int i = 0; i < count; ++i)
+	{
+		m_points.GetText(i, txt);
+		sp = txt.Find(',');
+		d = atof(txt.Left(sp));
+		if(INVERT_LON_LAT)
+		{
+			lats.push_back(d);
+		}
+		else
+		{
+			lons.push_back(d);
+		}
+
+		d = atof(txt.Right(txt.GetLength() - sp - 1));
+		if(INVERT_LON_LAT)
+		{
+			lons.push_back(d);
+		}
+		else
+		{
+			lats.push_back(d);
+		}	
+	}
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
+void CConfigGeofencing::DoCommand()
+{
+	CWaitCursor wait;
+	U08 size = (U08)lons.size();
+	U08 temp[8];
+	BinaryData cmd(4 + 16 * size);
+	*cmd.GetBuffer(0) = 0x64;
+	*cmd.GetBuffer(1) = 0x2F;
+	*cmd.GetBuffer(2) = m_attribute;
+	*cmd.GetBuffer(3) = size;
+
+	for(U08 i = 0; i < size; ++i)
+	{
+		memcpy(temp, &(lats[i]), sizeof(temp));
+		U08* dptr = temp + 7;
+		int p = i * 16 + 4;
+		*cmd.GetBuffer(p++) = *dptr--;
+		*cmd.GetBuffer(p++) = *dptr--;
+		*cmd.GetBuffer(p++) = *dptr--;
+		*cmd.GetBuffer(p++) = *dptr--;
+		*cmd.GetBuffer(p++) = *dptr--;
+		*cmd.GetBuffer(p++) = *dptr--;
+		*cmd.GetBuffer(p++) = *dptr--;
+		*cmd.GetBuffer(p++) = *dptr--;
+
+		memcpy(temp, &(lons[i]), sizeof(temp));
+		dptr = temp + 7;
+		*cmd.GetBuffer(p++) = *dptr--;
+		*cmd.GetBuffer(p++) = *dptr--;
+		*cmd.GetBuffer(p++) = *dptr--;
+		*cmd.GetBuffer(p++) = *dptr--;
+		*cmd.GetBuffer(p++) = *dptr--;
+		*cmd.GetBuffer(p++) = *dptr--;
+		*cmd.GetBuffer(p++) = *dptr--;
+		*cmd.GetBuffer(p++) = *dptr--;
+	}
+
+	configCmd.SetData(cmd);
+	configPrompt = "Configure geo-fencing data successful...";
+    AfxBeginThread(ConfigThread, 0);
+}
+
+// CConfigRtkMode 對話方塊
+IMPLEMENT_DYNAMIC(CConfigRtkMode, CCommonConfigDlg)
+
+CConfigRtkMode::CConfigRtkMode(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_RTK_MODE, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigRtkMode, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigRtkMode::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigRtkMode 訊息處理常式
+
+BOOL CConfigRtkMode::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigRtkMode::OnBnClickedOk()
+{	
+	m_mode = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
+void CConfigRtkMode::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(4);
+	*cmd.GetBuffer(0) = 0x6A;
+	*cmd.GetBuffer(1) = 0x01;
+	*cmd.GetBuffer(2) = (U08)m_mode;
+	*cmd.GetBuffer(3) = (U08)m_attribute;
+
+	configCmd.SetData(cmd);
+	configPrompt = "Configure RTK mode successful...";
+    AfxBeginThread(ConfigThread, 0);
+}
+
+// CConfigRtkParameters 對話方塊
+IMPLEMENT_DYNAMIC(CConfigRtkParameters, CCommonConfigDlg)
+
+CConfigRtkParameters::CConfigRtkParameters(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_RTK_PARAM, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigRtkParameters, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigRtkParameters::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigRtkParameters 訊息處理常式
+
+BOOL CConfigRtkParameters::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	((CEdit*)GetDlgItem(IDC_PARAM01))->SetWindowText("300");
+	((CEdit*)GetDlgItem(IDC_PARAM01))->SetLimitText(5);
+	((CEdit*)GetDlgItem(IDC_PARAM02))->SetWindowText("000F");
+	((CEdit*)GetDlgItem(IDC_PARAM02))->SetLimitText(4);
+	((CEdit*)GetDlgItem(IDC_PARAM03))->SetWindowText("0023");
+	((CEdit*)GetDlgItem(IDC_PARAM03))->SetLimitText(4);
+	((CEdit*)GetDlgItem(IDC_PARAM04))->SetWindowText("0028");
+	((CEdit*)GetDlgItem(IDC_PARAM04))->SetLimitText(4);
+	((CEdit*)GetDlgItem(IDC_PARAM05))->SetWindowText("00000000");
+	((CEdit*)GetDlgItem(IDC_PARAM05))->SetLimitText(8);
+	((CEdit*)GetDlgItem(IDC_PARAM06))->SetWindowText("00000000");
+	((CEdit*)GetDlgItem(IDC_PARAM06))->SetLimitText(8);
+	((CEdit*)GetDlgItem(IDC_PARAM07))->SetWindowText("00000000");
+	((CEdit*)GetDlgItem(IDC_PARAM07))->SetLimitText(8);
+	((CEdit*)GetDlgItem(IDC_PARAM08))->SetWindowText("00000000");
+	((CEdit*)GetDlgItem(IDC_PARAM08))->SetLimitText(8);
+	((CEdit*)GetDlgItem(IDC_PARAM09))->SetWindowText("00");
+	((CEdit*)GetDlgItem(IDC_PARAM09))->SetLimitText(2);
+	((CEdit*)GetDlgItem(IDC_PARAM10))->SetWindowText("00");
+	((CEdit*)GetDlgItem(IDC_PARAM10))->SetLimitText(2);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigRtkParameters::OnBnClickedOk()
+{	
+	CString txt;
+	((CEdit*)GetDlgItem(IDC_PARAM01))->GetWindowText(txt);
+	m_param01 = (U16)atoi(txt);
+	((CEdit*)GetDlgItem(IDC_PARAM02))->GetWindowText(txt);
+	m_param02 = (U16)ConvertCharToU32(txt);
+	((CEdit*)GetDlgItem(IDC_PARAM03))->GetWindowText(txt);
+	m_param03 = (U16)ConvertCharToU32(txt);
+	((CEdit*)GetDlgItem(IDC_PARAM04))->GetWindowText(txt);
+	m_param04 = (U16)ConvertCharToU32(txt);
+	((CEdit*)GetDlgItem(IDC_PARAM05))->GetWindowText(txt);
+	m_param05 = ConvertCharToU32(txt);
+	((CEdit*)GetDlgItem(IDC_PARAM06))->GetWindowText(txt);
+	m_param06 = ConvertCharToU32(txt);
+	((CEdit*)GetDlgItem(IDC_PARAM07))->GetWindowText(txt);
+	m_param07 = ConvertCharToU32(txt);
+	((CEdit*)GetDlgItem(IDC_PARAM08))->GetWindowText(txt);
+	m_param08 = ConvertCharToU32(txt);
+	((CEdit*)GetDlgItem(IDC_PARAM09))->GetWindowText(txt);
+	m_param09 = (U08)ConvertCharToU32(txt);
+	((CEdit*)GetDlgItem(IDC_PARAM10))->GetWindowText(txt);
+	m_param10 = (U08)ConvertCharToU32(txt);
+
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
+void CConfigRtkParameters::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(67);
+	*cmd.GetBuffer(0) = 0x6A;
+	*cmd.GetBuffer(1) = 0x03;
+	*cmd.GetBuffer(2) = (U08)HIBYTE(m_param01);
+	*cmd.GetBuffer(3) = (U08)LOBYTE(m_param01);
+
+	*cmd.GetBuffer(4) = (U08)HIBYTE(m_param02);
+	*cmd.GetBuffer(5) = (U08)LOBYTE(m_param02);
+
+	*cmd.GetBuffer(6) = (U08)HIBYTE(m_param03);
+	*cmd.GetBuffer(7) = (U08)LOBYTE(m_param03);
+
+	*cmd.GetBuffer(8) = (U08)HIBYTE(m_param04);
+	*cmd.GetBuffer(9) = (U08)LOBYTE(m_param04);
+
+	*cmd.GetBuffer(10) = HIBYTE(HIWORD(m_param05));
+	*cmd.GetBuffer(11) = LOBYTE(HIWORD(m_param05));
+	*cmd.GetBuffer(12) = HIBYTE(LOWORD(m_param05));
+	*cmd.GetBuffer(13) = LOBYTE(LOWORD(m_param05));
+
+	*cmd.GetBuffer(14) = HIBYTE(HIWORD(m_param06));
+	*cmd.GetBuffer(15) = LOBYTE(HIWORD(m_param06));
+	*cmd.GetBuffer(16) = HIBYTE(LOWORD(m_param06));
+	*cmd.GetBuffer(17) = LOBYTE(LOWORD(m_param06));	
+
+	*cmd.GetBuffer(18) = HIBYTE(HIWORD(m_param07));
+	*cmd.GetBuffer(19) = LOBYTE(HIWORD(m_param07));
+	*cmd.GetBuffer(20) = HIBYTE(LOWORD(m_param07));
+	*cmd.GetBuffer(21) = LOBYTE(LOWORD(m_param07));	
+
+	*cmd.GetBuffer(22) = HIBYTE(HIWORD(m_param08));
+	*cmd.GetBuffer(23) = LOBYTE(HIWORD(m_param08));
+	*cmd.GetBuffer(24) = HIBYTE(LOWORD(m_param08));
+	*cmd.GetBuffer(25) = LOBYTE(LOWORD(m_param08));
+
+	*cmd.GetBuffer(26) = m_param09;
+	*cmd.GetBuffer(27) = m_param10;
+
+	*cmd.GetBuffer(66) = (U08)m_attribute;
+	configCmd.SetData(cmd);
+	configPrompt = "Configure RTK parameters successful...";
+    AfxBeginThread(ConfigThread, 0);
+}
+
+// CConfigRtkReset 對話方塊
+IMPLEMENT_DYNAMIC(CConfigRtkReset, CCommonConfigDlg)
+
+CConfigRtkReset::CConfigRtkReset(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_RTK_RESET, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigRtkReset, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigRtkReset::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigRtkReset 訊息處理常式
+
+BOOL CConfigRtkReset::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+	GetDlgItem(IDC_MODE)->SetWindowText("0");
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigRtkReset::OnBnClickedOk()
+{	
+	CString txt;
+	GetDlgItem(IDC_MODE)->GetWindowText(txt);
+	m_mode = atoi(txt);
+	OnOK();
+}
+
+void CConfigRtkReset::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(3);
+	*cmd.GetBuffer(0) = 0x6A;
+	*cmd.GetBuffer(1) = 0x05;
+	*cmd.GetBuffer(2) = (U08)m_mode;
+	configCmd.SetData(cmd);
+	configPrompt = "Reset RTK engine successful...";
+    AfxBeginThread(ConfigThread, 0);
+}

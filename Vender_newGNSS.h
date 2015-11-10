@@ -149,12 +149,37 @@
 // .147 Add GAGAN option in [Query / Configure SBAS].
 // .148 Fixed GAGAN option error issue.
 // .149 20150720 Add iq plot functions.
-
+// .150 20150721 Update IQPlot for Windows XP.
+// .151 20150804 Add SWCFG_VENDOR_GNSS_TAKUJI version for Oliver's customer upgrade.
+// .152 20150804 Modify SWCFG_VENDOR_GNSS_TAKUJI version add tag.
+// .153 20150805 Add Master/Slave function.
+// .154 20150807 KML support Point List, and Scatter support 0.05m, 0.01m.
+// .155 20150807 KML point list support name tag in UTC time.
+// .156 20150817 Setup scatter center support 7 decimal Point.
+// .157 20150819 Support Fix RTK and Float RTK quality mode and modify KML converter.
+// .158 20150819 Support Fix RTK and Float RTK quality mode and modify KML converter.
+// .159 20150824 Modify [Configure Timing] for RTK.
+// .160 20150831 Release for Customer Release.
+// .161 20150911 KML remove point title.
+// .162 20150917 Add Geo-Fencing command.
+// .163 20150922 Add [Default Timeout] in setup dialog. Request by Andrew and Justin.
+// .164 20150923 Fixed 0x64, 0x03 size error issue. Report by Andrew.
+// .165 20150923 Add RTK mode command. Request by Andrew.
+// .166 20150925 Fix altitude issue for Scatter.
+// .167 20151001 IQ Plot support multi process.
+// .168 20151006 Fixed ShowBinaryOutput() issue.
+// .169 20151013 Add %012.9lf to KML converter. Request by Ken
+// .170 20151016 Remove REBOOT notify for scatter center changed. Request by Oliver
+// .171 20151026 Fix WGS84 XYZ not update issue. Report by forum user.
+// .172 20151029 Scatter will not change the center point after re-connect or restart, request by Oliver
+// .173 20151110 Add [Query/Configure RTK Parameters], [Reset RTK Engine] in [Venus 8 / RTK] menu.
+// .173 20151110 Fixed command ack lose issue when its contant 0xa0 0xa1.
+  
 //#define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.149"
+#define APP_VERSION				"2.0.173"
 #define APP_TITLE				""
 #define GPS_VIEWER				0
 
@@ -165,6 +190,15 @@
 #define OlinkStar				0x4F4C
 //
 
+//For customer upgrade
+#define UPGRADE_DOWNLOAD		0
+#define UPGRADE_CRC				0x0000
+#define UPGRADE_DUEDATE_Y		0
+#define UPGRADE_DUEDATE_M		0
+#define UPGRADE_DUEDATE_D		0
+#define UPGRADE_ADD_TAG			0
+#define UPGRADE_TAG_VALUE		0
+
 //application init default
 #define BAUDRATE				5		//5=115200,4=57600,3=38400,2=19200,1=9600,0=4800
 //change baudrate default
@@ -172,31 +206,18 @@
 #define FIRMWARE_DOWNLOAD			1
 //#define CHECK_COM_REGISTER		0
 //#define LIMIT_SCATTER_PLOT		1
-#define MAX_SCATTER_COUNT			100
+#define MAX_SCATTER_COUNT			2000
 
-//#define NOFIXED_CHECK				0
-//#define DRAW_COURSE					0
-
-//#define DATALOG_TRIP				0
 #define ODOMETER_SUPPORT			0
 #define BINARY_MESSAGE_SUPPORT		0
 #define BINARY_MESSAGE_INTERVAL		0
-//#define BINARY_MESSAGE_NI			1
-
 #define ACTIVATE_MINIHOMER		0
 #define NMEA_INPUT				0
-
-//#define RESTORE_CLK_OFFSET	0
-
 #define GSA_MAX_SATELLITE		12
-//#define	GNSS_VIEWER			1
-//PRE_LOADER defined the prom.bin is merged with smaller loader
-//#define PRE_LOADER			1
 //Download using resend protocol
 #define RESEND_DOWNLOAD			1
 //Display binary command in and ack in respond view.
 #define _SHOW_BINARY_DATA_		1
-
 //Using external SREC file directly, no prompt.
 #define _ALWAYS_USE_EXTERNAL_SREC_	0
 //Does not use pre-loader in download firmware.
@@ -208,27 +229,16 @@
 #define ECOMPASS_CALIBRATION	0
 #define TIMING_MODE				0
 
-//#define _V8_DOWNLOAD_			0
 #define _BAUTRATE_IDX_6_		891200
 #define PACIFIC					0
-//#define SJA						0
 #define OPEN_PINNING_RESERVE	0
 #define RESET_MOTION_SENSOR		0
-//#define AVID					0
-//#define NI						0
-//#define SOARCOMM				0
-//#define LG						0
-//#define IQIBLA					0
 #define _V8_SUPPORT				0
 #define GG12A					0
-//#define SUPPORT_CLEAR_LOGIN_PASSWORD	0
-//#define WITH_CONFIG_USB_BAUDRATE	0
 #define SHOW_CLOCK_OFFSET		0
 #define SHOW_NOISE				0
 #define DATA_POI				0
 #define TWIN_DATALOG			0
-//#define _UNIT_TESTING_			1
-//#define _UNICORE_NMEA_			1
 #define CUSTOMER_DOWNLOAD		0
 #define CUSTOMER_ID				Sktyraq
 #define NMEA_PRN_TYPE			0
@@ -242,9 +252,49 @@
 #define	_USE_RESOURCE_LOADER_	0
 #define	_RESOURCE_LOADER_ID_	0
 #define CHECK_SAEE_MULTIHZ_ON	0		//Check SAEE and Multi-Hz can't both on.
-////////////////////////////////////////////////////////////////////////////////////////////
+#define INVERT_LON_LAT			1		//Final spec for GeoFecing spec.
 
-#if defined(SWCFG_VENDOR_GNSS_SWID_NEW_DOWNLOAD)
+////////////////////////////////////////////////////////////////////////////////////////////
+#if defined(SWCFG_VENDOR_GNSS_TAKUJI)
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef OPEN_PINNING_RESERVE
+ #undef BINARY_MESSAGE_INTERVAL
+ #undef _DIRECTLY_DOWNLOAD_
+ #undef _V8_SUPPORT
+ #undef UPGRADE_DOWNLOAD
+ #undef UPGRADE_CRC
+ #undef UPGRADE_DUEDATE_Y		
+ #undef UPGRADE_DUEDATE_M		
+ #undef UPGRADE_DUEDATE_D		
+ #undef UPGRADE_ADD_TAG
+ #undef UPGRADE_TAG_VALUE
+
+ #define APP_CAPTION			"GNSS Viewer"
+ #define APP_TITLE				"Takuji Release"
+ #define GNSS_VIEWER			1
+ #define IS_DEBUG				0
+ #define BAUDRATE				5
+ #define BAUDRATE_DEFAULT		7
+ #define TIMING_MODE			1
+ #define OPEN_PINNING_RESERVE	1
+ #define BINARY_MESSAGE_INTERVAL	1
+ #define _DIRECTLY_DOWNLOAD_	1
+ #define _V8_SUPPORT			1
+ #define UPGRADE_DOWNLOAD		1
+ #define UPGRADE_CRC			0xce72
+ #define UPGRADE_DUEDATE_Y		2015
+ #define UPGRADE_DUEDATE_M		8
+ #define UPGRADE_DUEDATE_D		31
+ #define UPGRADE_ADD_TAG		1
+ #define UPGRADE_TAG_VALUE		0x0A01
+
+#elif defined(SWCFG_VENDOR_GNSS_SWID_NEW_DOWNLOAD)
  #undef APP_CAPTION
  #undef APP_TITLE
  #undef GNSS_VIEWER
@@ -559,7 +609,6 @@
  #undef TIMING_MODE
  #undef OPEN_PINNING_RESERVE
  #undef BINARY_MESSAGE_INTERVAL
-// #undef _ALWAYS_USE_EXTERNAL_SREC_
  #undef _DIRECTLY_DOWNLOAD_
  #undef _V8_SUPPORT
  #undef SHOW_ERROR_NMEA_NOTIFY
@@ -573,7 +622,6 @@
  #define TIMING_MODE			1
  #define OPEN_PINNING_RESERVE	1
  #define BINARY_MESSAGE_INTERVAL	1
- //#define _ALWAYS_USE_EXTERNAL_SREC_	1
  #define _DIRECTLY_DOWNLOAD_	1
  #define _V8_SUPPORT			1
  #define SHOW_ERROR_NMEA_NOTIFY 1
@@ -588,7 +636,6 @@
  #undef TIMING_MODE
  #undef OPEN_PINNING_RESERVE
  #undef BINARY_MESSAGE_INTERVAL
-// #undef _ALWAYS_USE_EXTERNAL_SREC_
  #undef _DIRECTLY_DOWNLOAD_
  #undef _V8_SUPPORT
  #undef SHOW_ERROR_NMEA_NOTIFY
@@ -596,7 +643,6 @@
 
  #define APP_CAPTION			"GNSS Viewer"
  #define APP_TITLE				"Internal Use GPS 183-188"
-
  #define GNSS_VIEWER			1
  #define IS_DEBUG				1
  #define BAUDRATE				5
@@ -604,7 +650,6 @@
  #define TIMING_MODE			1
  #define OPEN_PINNING_RESERVE	1
  #define BINARY_MESSAGE_INTERVAL	1
- //#define _ALWAYS_USE_EXTERNAL_SREC_	1
  #define _DIRECTLY_DOWNLOAD_	1
  #define _V8_SUPPORT			1
  #define SHOW_ERROR_NMEA_NOTIFY 1
@@ -620,7 +665,6 @@
  #undef TIMING_MODE
  #undef OPEN_PINNING_RESERVE
  #undef BINARY_MESSAGE_INTERVAL
-// #undef _ALWAYS_USE_EXTERNAL_SREC_
  #undef _DIRECTLY_DOWNLOAD_
  #undef _V8_SUPPORT
 
@@ -633,7 +677,6 @@
  #define TIMING_MODE			1
  #define OPEN_PINNING_RESERVE	1
  #define BINARY_MESSAGE_INTERVAL	1
- //#define _ALWAYS_USE_EXTERNAL_SREC_	1
  #define _DIRECTLY_DOWNLOAD_	1
  #define _V8_SUPPORT			1
 
@@ -647,7 +690,6 @@
  #undef TIMING_MODE
  #undef OPEN_PINNING_RESERVE
  #undef BINARY_MESSAGE_INTERVAL
-// #undef _ALWAYS_USE_EXTERNAL_SREC_
  #undef _DIRECTLY_DOWNLOAD_
  #undef _V8_SUPPORT
  #undef NMEA_PRN_TYPE
@@ -661,7 +703,6 @@
  #define TIMING_MODE			1
  #define OPEN_PINNING_RESERVE	1
  #define BINARY_MESSAGE_INTERVAL	1
- //#define _ALWAYS_USE_EXTERNAL_SREC_	1
  #define _DIRECTLY_DOWNLOAD_	1
  #define _V8_SUPPORT			1
  #define NMEA_PRN_TYPE			1
@@ -676,7 +717,6 @@
  #undef TIMING_MODE
  #undef OPEN_PINNING_RESERVE
  #undef BINARY_MESSAGE_INTERVAL
-// #undef _ALWAYS_USE_EXTERNAL_SREC_
  #undef _DIRECTLY_DOWNLOAD_
  #undef _V8_SUPPORT
  #undef NMEA_PRN_TYPE
@@ -691,7 +731,6 @@
  #define TIMING_MODE			1
  #define OPEN_PINNING_RESERVE	1
  #define BINARY_MESSAGE_INTERVAL	1
- //#define _ALWAYS_USE_EXTERNAL_SREC_	1
  #define _DIRECTLY_DOWNLOAD_	1
  #define _V8_SUPPORT			1
  #define NMEA_PRN_TYPE			1
@@ -736,7 +775,6 @@
  #undef TIMING_MODE
  #undef OPEN_PINNING_RESERVE
  #undef BINARY_MESSAGE_INTERVAL
-// #undef _ALWAYS_USE_EXTERNAL_SREC_
  #undef _DIRECTLY_DOWNLOAD_
  #undef _V8_SUPPORT
 
@@ -749,7 +787,6 @@
  #define TIMING_MODE			1
  #define OPEN_PINNING_RESERVE	1
  #define BINARY_MESSAGE_INTERVAL	1
- //#define _ALWAYS_USE_EXTERNAL_SREC_	1
  #define _DIRECTLY_DOWNLOAD_	1
  #define _V8_SUPPORT			1
 
@@ -763,7 +800,6 @@
  #undef TIMING_MODE
  #undef OPEN_PINNING_RESERVE
  #undef BINARY_MESSAGE_INTERVAL
-// #undef _ALWAYS_USE_EXTERNAL_SREC_
  #undef _DIRECTLY_DOWNLOAD_
  #undef _V8_SUPPORT
  #undef _CREATE_LICENSE_TAG_
@@ -777,7 +813,6 @@
  #define TIMING_MODE				1
  #define OPEN_PINNING_RESERVE		1
  #define BINARY_MESSAGE_INTERVAL	1
- //#define _ALWAYS_USE_EXTERNAL_SREC_	1
  #define _DIRECTLY_DOWNLOAD_		1
  #define _V8_SUPPORT				1
  #define _CREATE_LICENSE_TAG_		1

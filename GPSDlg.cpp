@@ -415,7 +415,7 @@ bool CGPSDlg::NmeaProc(const char* buffer, int offset, NmeaType& nmeaType)
 
 	if(nmeaType==MSG_REBOOT && !NMEA_INPUT)
 	{
-		PostMessage(UWM_FIRST_NMEA, 1000, 1);
+		//PostMessage(UWM_FIRST_NMEA, 1000, 1);
 	}
 
 	NMEA nmea;
@@ -794,7 +794,7 @@ CGPSDlg::CGPSDlg(CWnd* pParent /*=NULL*/)
 	m_customerId = CUSTOMER_ID;
 	usedEarth = g_setting.earthBitmap;
 	m_gpsdoInProgress = false;
-	m_nDefaultTimeout = DefaultTimeOut;
+	m_nDefaultTimeout = g_setting.defaultTimeout;
 }
 
 void CGPSDlg::DoDataExchange(CDataExchange* pDX)
@@ -820,6 +820,8 @@ void CGPSDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_MAPSCALE, m_mapscale);
 	DDX_Control(pDX, IDC_2DRMS, m_twodrms);
 	DDX_Control(pDX, IDC_CEP50, m_cep);
+	DDX_Control(pDX, IDC_CENTER_ALT, m_centerAlt);
+	DDX_Control(pDX, IDC_SCATTER_ALT, m_scatterAlt);
 	DDX_Control(pDX, IDC_RESPONSE, m_responseList);
 	DDX_Control(pDX, IDC_MESSAGE, m_nmeaList);
 	DDX_Control(pDX, IDC_OPEN_CLOSE_T, m_connectT);
@@ -963,8 +965,8 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_RESET_ODOMETER, OnResetOdometer)
 	ON_COMMAND(ID_BINARY_SYSTEMRESTART, OnBinarySystemRestart)
 	ON_COMMAND(ID_CONFIGURE1PPSTIMING_CONFIGURE1PPS, OnConfigure1ppstimingConfigure1pps)
-	ON_COMMAND(ID_CONFIGURE1PPSTIMING_CONFIGURE1PPSCABLEDELAY, OnConfigure1ppstimingConfigure1ppscabledelay)
-	ON_COMMAND(ID_CONFIGURE1PPSTIMING_CONFIGURE1PPSTIMING, OnConfigure1ppstimingConfigure1ppstiming)
+	ON_COMMAND(ID_CONFIGURE1PPSTIMING_CONFIGURE1PPSCABLEDELAY, OnConfigure1ppsCableDelay)
+	ON_COMMAND(ID_CONFIGURE1PPSTIMING_CONFIGURE1PPSTIMING, OnConfigure1ppsTiming)
 	ON_COMMAND(ID_CONFIG_ELEV_AND_CNR_MASK, OnConfigElevationAndCnrMask)
 	ON_COMMAND(ID_CONFIGUREOUTPUTMESSAGETYPE_BINARYMESSAGE, OnConfigureoutputmessagetypeBinarymessage)
 	ON_COMMAND(ID_CONFIGUREOUTPUTMESSAGETYPE_NMEAMESSAGE, OnConfigureoutputmessagetypeNmeamessage)
@@ -980,6 +982,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_BIN_CHECKSUM_CAL, OnBinaryChecksumCalculator)
 	ON_COMMAND(ID_TEST_EXTERNAL_SREC, OnTestExternalSrec)
 	ON_COMMAND(ID_IQ_PLOT, OnIqPlot)
+	ON_COMMAND(ID_UPGRADE_DOWNLOAD, OnUpgradeDownload)
 	ON_COMMAND(ID_DATALOG_LOGREADBATCH, OnDatalogLogReadBatch)
 //	ON_COMMAND(ID_DATALOG_LOGREADCONTROL, OnDatalogLogreadcontrol)
 //	ON_COMMAND(ID_DATALOG_LOGREADSREC, OnDatalogLogreadsrec)
@@ -1138,6 +1141,16 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_SUP800_WRITE_DATA, OnSup800WriteData)
 	ON_COMMAND(ID_SUP800_READ_DATA, OnSup800ReadData)
 
+	ON_COMMAND(ID_CONFIG_GEOFENCE, OnConfigGeofence)
+	ON_COMMAND(ID_QUERY_GEOFENCE, OnQueryGeofence)
+	ON_COMMAND(ID_QUERY_GEOFENCE_RESULT, OnQueryGeofenceResult)
+
+	ON_COMMAND(ID_QUERY_RTK_MODE, OnQueryRtkMode)
+	ON_COMMAND(ID_CONFIG_RTK_MODE, OnConfigRtkMode)
+	ON_COMMAND(ID_QUERY_RTK_PARAM, OnQueryRtkParameters)
+	ON_COMMAND(ID_CONFIG_RTK_PARAM, OnConfigRtkParameters)
+	ON_COMMAND(ID_RTK_RESET, OnRtkReset)
+
 	ON_COMMAND(ID_QUERY_SIG_DISTUR_DATA, OnQuerySignalDisturbanceData)
 	ON_COMMAND(ID_QUERY_SIG_DISTUR_STATUS, OnQuerySignalDisturbanceStatus)
 	ON_COMMAND(ID_CONFIG_SIG_DISTUR_STATUS, OnConfigureSignalDisturbanceStatus)
@@ -1241,7 +1254,7 @@ void CGPSDlg::Initialization()
 
 	m_SetOriginBtn.EnableWindow(!g_setting.specifyCenter);
 	m_scale.ResetContent();
-	CString enuItems[] = { "0.1m", "0.2m", "0.5m", "1m", "2m", "3m", "5m", "10m",
+	CString enuItems[] = { "0.01m", "0.05m", "0.1m", "0.2m", "0.5m", "1m", "2m", "3m", "5m", "10m",
 				"20m", "30m", "40m", "50m", "100m", "150m", "200m", "300m", "" };
 	int c = 0;
 	while(1)
@@ -1293,6 +1306,8 @@ void CGPSDlg::Initialization()
 	m_direction.SetFont(&m_infoFontL);
 	m_speed.SetFont(&m_infoFontL);
 	m_hdop.SetFont(&m_infoFontL);
+	m_centerAlt.SetFont(&m_infoFontL);
+	m_scatterAlt.SetFont(&m_infoFontL);
 
 	m_BaudRateCombo.SetCurSel(BAUDRATE);
 	UWM_UPDATE_EVENT = NMEA::gnssData.RegisterEventMessage();
@@ -1740,7 +1755,7 @@ void CGPSDlg::OnBnClickedConnect()
 	m_nmeaList.ClearAllText();
 	m_nmeaList.DeleteAllItems();
 
-	g_scatterData.ClearData();
+	//g_scatterData.ClearData();
 	OnCbnCloseupEnuscale();
 	OnCbnCloseupMapscale();
 //	m_scale.SetCurSel(DefauleEnuScale);
@@ -1907,17 +1922,26 @@ void CGPSDlg::UpdateCooridate()
 {
 	CString str;
 
-	str.Format("%.3f", g_scatterData.X);
+	str.Format("%.3f", g_scatterData.wgs84_X);
 	m_wgs84_x.SetWindowText(str);
 //Log2(__FUNCTION__, __LINE__, "m_wgs84_x");
 
-	str.Format("%.3f", g_scatterData.Y);
+	str.Format("%.3f", g_scatterData.wgs84_Y);
 	m_wgs84_y.SetWindowText(str);
 //Log2(__FUNCTION__, __LINE__, "m_wgs84_y");
 
-	str.Format("%.3f", g_scatterData.Z);
+	str.Format("%.3f", g_scatterData.wgs84_Z);
 	m_wgs84_z.SetWindowText(str);
 //Log2(__FUNCTION__, __LINE__, "m_wgs84_z");
+
+	str.Format("%.2f", g_scatterData.ini_h);
+	m_centerAlt.SetWindowText(str);
+
+	str.Format("(%.2f)", m_gpggaMsg.Altitude + m_gpggaMsg.GeoidalSeparation);
+	m_scatterAlt.SetWindowText(str);
+		//CString s;
+		//s.Format("iniH : Alt - %8.2f : %8.2f\r\n", g_scatterData.ini_h, alt);
+		//::OutputDebugString(s);
 
 	if(g_scatterData.IniPos)
 	{
@@ -2194,7 +2218,7 @@ void CGPSDlg::DisplayLongitude(int h, int m, double s, char c)
 	if(s != lastS || m != lastM || h != lastH || c != lastC)
 	{
 		CString txt;
-		txt.Format("%d %d' %.2f'' %c", h, m, s, c);
+		txt.Format("%d %d' %.3f'' %c", h, m, s, c);
 		m_longitude.SetWindowText(txt);
 		m_longitude.Invalidate(TRUE);
 		lastH = h;
@@ -2207,7 +2231,7 @@ void CGPSDlg::DisplayLongitude(int h, int m, double s, char c)
 void CGPSDlg::DisplayLongitude(D64 lon, U08 c)
 {
 	CString txt;
-	txt.Format("%d %d' %.2f'' %c", (int)(lon / 100.0), (int)lon - (int)(lon / 100.0) * 100,
+	txt.Format("%d %d' %.3f'' %c", (int)(lon / 100.0), (int)lon - (int)(lon / 100.0) * 100,
 		(lon - (int)lon) * 60.0, c);
 	m_longitude.SetWindowText(txt);
 	//m_longitude.Invalidate(TRUE);
@@ -2216,7 +2240,7 @@ void CGPSDlg::DisplayLongitude(D64 lon, U08 c)
 void CGPSDlg::DisplayLatitude(D64 lat, U08 c)
 {
 	CString txt;
-	txt.Format("%d %d' %.2f'' %c", (int)(lat / 100.0), (int)lat - (int)(lat / 100.0) * 100,
+	txt.Format("%d %d' %.3f'' %c", (int)(lat / 100.0), (int)lat - (int)(lat / 100.0) * 100,
 		(lat - (int)lat) * 60.0, c);
 	m_latitude.SetWindowText(txt);
 	m_latitude.Invalidate(TRUE);
@@ -2246,9 +2270,9 @@ void CGPSDlg::DisplayLatitude(int h, int m, double s, char c)
 	if(s != lastS || m != lastM || h != lastH || c != lastC)
 	{
 		CString txt;
-		txt.Format("%d %d' %.2f'' %c", h, m, s, c);
+		txt.Format("%d %d' %.3f'' %c", h, m, s, c);
 		m_latitude.SetWindowText(txt);
-		//m_latitude.Invalidate(TRUE);
+		m_latitude.Invalidate(TRUE);
 		lastH = h;
 		lastM = m;
 		lastS = s;
@@ -2262,6 +2286,7 @@ void CGPSDlg::ShowLongitudeLatitude(void)
 			(int)m_gpggaMsg.Longitude - (int)(m_gpggaMsg.Longitude / 100.0) * 100,
 			((m_gpggaMsg.Longitude - (int)m_gpggaMsg.Longitude) * 60.0),
 			m_gpggaMsg.Longitude_E_W);
+
 	DisplayLatitude((int)( m_gpggaMsg.Latitude / 100.0),
 			(int)m_gpggaMsg.Latitude - (int)(m_gpggaMsg.Latitude / 100.0) * 100,
 			((m_gpggaMsg.Latitude - (int)m_gpggaMsg.Latitude) * 60.0),
@@ -2465,93 +2490,18 @@ void CGPSDlg::ShowDirection(bool reset)
 
 void CGPSDlg::ShowStatus()
 {
-	enum QualityMode {
-		Uninitial = 0,
-		Unlocated,
-		EstimatedMode,
-		DgpsMode,
-		PpsMode,
-		PositionFix2d,
-		PositionFix3d,
-
-		SurveyIn,
-		StaticMode,
-		DataNotValid,
-		AutonomousMode,
-		DgpsMode2,
-	};
 	static QualityMode lastMode = Uninitial;
 	QualityMode mode = Unlocated;
-	U08 gpsInd = 0, gnssInd = 0;
 
-	if(m_gpggaMsg.GPSQualityIndicator > 0xFF)
+	if(m_gpggaMsg.GPSQualityIndicator != 0)
 	{
-		gpsInd = m_gpggaMsg.GPSQualityIndicator >> 8;
-		gnssInd = m_gpggaMsg.GPSQualityIndicator & 0xFF;
+		mode = GetGnssQualityMode(m_gpggaMsg.GPSQualityIndicator, (U08)m_gpgsaMsg.Mode, (U08)m_glgsaMsg.Mode, (U08)m_gagsaMsg.Mode, (U08)m_bdgsaMsg.Mode);
 	}
 	else
 	{
-		gpsInd = m_gpggaMsg.GPSQualityIndicator & 0xFF;
-		gnssInd = 0;
+		mode = GetGnssQualityMode(m_gprmcMsg.ModeIndicator);
 	}
 
-	if(gpsInd || gnssInd)
-	{
-		if(gpsInd=='E' || gnssInd=='E')
-		{
-			mode = EstimatedMode;
-		}
-		else if(gpsInd=='D' || gnssInd=='D')
-		{
-			mode = DgpsMode;
-		}
-		else if(gpsInd=='3')
-		{
-		}
-		else if(gpsInd=='2')
-		{
-			mode = DgpsMode;
-		}
-		else if(gpsInd == 'A' || gnssInd == 'A' || gpsInd == '1')
-		{
-
-			if(m_gpgsaMsg.Mode==2 || m_glgsaMsg.Mode==2 || m_bdgsaMsg.Mode==2)
-			{
-				mode = PositionFix2d;
-			}
-			else if(m_gpgsaMsg.Mode==3 || m_glgsaMsg.Mode==3 || m_bdgsaMsg.Mode==3)
-			{
-				mode = PositionFix3d;
-			}
-			else if(m_gpgsaMsg.Mode==4 || m_glgsaMsg.Mode==4 || m_bdgsaMsg.Mode==4)
-			{
-				mode = SurveyIn;
-			}
-			else if(m_gpgsaMsg.Mode==5 || m_glgsaMsg.Mode==5 || m_bdgsaMsg.Mode==5)
-			{
-				mode = StaticMode;
-			}
-		}
-	}
-	else if(m_gprmcMsg.ModeIndicator)
-	{
-		if(m_gprmcMsg.ModeIndicator=='N')
-		{
-				mode = DataNotValid;
-		}
-		else if(m_gprmcMsg.ModeIndicator=='A')
-		{
-				mode = AutonomousMode;
-		}
-		else if(m_gprmcMsg.ModeIndicator=='D')
-		{
-				mode = DgpsMode2;
-		}
-		else if(m_gprmcMsg.ModeIndicator=='E')
-		{
-				mode = EstimatedMode;
-		}
-	}
 	if(Unlocated==mode)
 	{
 		if(m_initTtff)
@@ -2583,6 +2533,8 @@ void CGPSDlg::ShowStatus()
 			"Data not Valid!",
 			"Autonomous mode!",
 			"DGPS mode!",
+			"Fix RTK",
+			"Float RTK",
 		};
 		CString txt = statusStrings[mode];
 		lastMode = mode;
@@ -2598,6 +2550,8 @@ void CGPSDlg::ShowStatus()
 		case StaticMode:
 		case AutonomousMode:
 		case DgpsMode2:
+		case FixRTK:
+		case FloatRTK:
 			m_fixed_status.SetTextColor(RGB(0, 0, 255));
 			if(m_setTtff)
 			{
@@ -2658,9 +2612,14 @@ void CGPSDlg::OnClose()
 	{
 		Terminate();
 	}
-	if(Utility::IsProcessRunning(L"IQPlot.exe"))
+	
+	//if(Utility::IsProcessRunning(L"IQPlot.exe"))
+	CString pipeName = Utility::GetNameAttachPid("SkytraqIQPlotPipe");
+	if(Utility::IsNamedPipeUsing(pipeName))
 	{
-		HANDLE h = CreateFile("//./pipe/SkytraqIQPlotPipe", GENERIC_WRITE,
+		CString pipeName;
+		pipeName.Format("//./pipe/%s", pipeName);
+		HANDLE h = CreateFile(pipeName, GENERIC_WRITE,
 			FILE_SHARE_READ | FILE_SHARE_WRITE , NULL, OPEN_EXISTING,
 			FILE_ATTRIBUTE_NORMAL, NULL);
 		if(h != INVALID_HANDLE_VALUE)
@@ -3028,20 +2987,20 @@ void CGPSDlg::DataLogDecompress(bool mode)
 			Z=DataLog.ECEF_Z;
 
 			double p = sqrt(pow((double)X,2.0)+pow((double)Y,2.0));
-			double theta = atan(Z*WGS84a/(p*WGS84b));
+			double theta = atan(Z*WGS84_RA/(p*WGS84_RB));
 			// e square
-			double e2 = (pow(WGS84a,2.0)-pow(WGS84b,2.0))/pow(WGS84a,2.0);
+			double e2 = (pow(WGS84_RA,2.0)-pow(WGS84_RB,2.0))/pow(WGS84_RA,2.0);
 			// e' square
-			double e2p = (pow(WGS84a,2.0)-pow(WGS84b,2.0))/pow(WGS84b,2.0);
+			double e2p = (pow(WGS84_RA,2.0)-pow(WGS84_RB,2.0))/pow(WGS84_RB,2.0);
 
 			// latitude : phi (rad.)
-			lat = atan2((Z+e2p*WGS84b*pow(sin(theta),3.0)),(p-e2*WGS84a*pow(cos(theta),3.0)));
-			//double lat = atan((Z+e2p*WGS84b*pow(sin(theta),3.0))/(p-e2*WGS84a*pow(cos(theta),3.0)));
+			lat = atan2((Z+e2p*WGS84_RB*pow(sin(theta),3.0)),(p-e2*WGS84_RA*pow(cos(theta),3.0)));
+			//double lat = atan((Z+e2p*WGS84_RB*pow(sin(theta),3.0))/(p-e2*WGS84_RA*pow(cos(theta),3.0)));
 			// longitude : lambda (rad.)
 			//double lon = atan((double)Y / (double)X )+PI;
 			lon = atan2((double)Y , (double)X );
 
-			double N = WGS84a/(sqrt(1-e*e*sin(lat)*sin(lat)));
+			double N = WGS84_RA/(sqrt(1-WGS84_E2*sin(lat)*sin(lat)));
 			alt = p/cos(lat)-N;
 
 			lat = lat*180/PI;
@@ -3082,16 +3041,9 @@ void CGPSDlg::DataLogDecompress(bool mode)
 #endif
 			else
 			{
-				kml.PushOnePoint(lon,lat,alt);
-
+				kml.PushOnePoint(lon, lat, alt, "", PositionFix3d);
 			}
-			//TRACE("type=%d\r\n",type);
-			//ConvertGpsTimeToUtc((S16) DataLog.WNO+1024,(D64) DataLog.TOW, &utc );
-			//	_cprintf("%d %d %d %d %d %.0f\n\n", utc.year, utc.month, utc.day, utc.hour, utc.minute, utc.sec);
 
-			//sprintf_s(Log, sizeof(Log), "%d %.2f %d:%d:%.2f %d/%d/%d %d %d %d %d %d %d %.2f %.6f %.6f %.6f %d\r\n",
-			//	DataLog.WNO+1024,tow,utc.hour,utc.minute,utc.sec,utc.month,utc.day,utc.year,
-			//	DataLog.DECEF_X,DataLog.DECEF_Y,DataLog.DECEF_Z,X,Y,Z,DataLog.V, lon,lat,alt,type);
 			strTxt.Format("%.2f", utc.sec);
 			if(strTxt=="60.00")
 			{
@@ -3312,15 +3264,16 @@ void CGPSDlg::OnDatalogClearControl()
 	}
 }
 
-void CGPSDlg::ExecuteConfigureCommand(U08 *cmd, int size, LPCSTR msg, bool restoreConnect/* = true*/)
+bool CGPSDlg::ExecuteConfigureCommand(U08 *cmd, int size, LPCSTR msg, bool restoreConnect/* = true*/)
 {
 	ClearQue();
-	SendToTarget(cmd, size, msg, true);
+	bool b = SendToTarget(cmd, size, msg, true);
 	if(restoreConnect)
 	{
 		SetMode();
 		CreateGPSThread();
 	}
+	return b;
 }
 
 UINT LogConfigureControlThread(LPVOID pParam)
@@ -4594,8 +4547,10 @@ void CGPSDlg::Load_Menu()
 		{ !NMEA_INPUT, MF_STRING, ID_FILE_BINARY, "&Save Binary", NULL },
 		{ 1, MF_STRING, ID_FILE_CLEANNEMA, "&Clear Message Screen", NULL },
 		{ NMEA_INPUT, MF_STRING, ID_FILE_PLAYNMEA, "&Play NMEA", NULL },
-		{ IS_DEBUG, MF_STRING, ID_VERIFY_FIRMWARE, "&Verify Firmware", NULL },
+		//{ IS_DEBUG, MF_STRING, ID_VERIFY_FIRMWARE, "&Verify Firmware", NULL },
 		{ 1, MF_SEPARATOR, 0, NULL, NULL },
+		{ UPGRADE_DOWNLOAD, MF_STRING, ID_UPGRADE_DOWNLOAD, "Upgrade", NULL },
+		{ IS_DEBUG, MF_STRING, ID_GPSDO_FW_DOWNLOAD, "Master/Slave Firmware Download", NULL },
 		{ IS_DEBUG, MF_STRING, ID_FILE_SETUP, "&Setup", NULL },
 		{ 1, MF_STRING, ID_FILE_EXIT, "&Exit", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
@@ -4701,7 +4656,6 @@ void CGPSDlg::Load_Menu()
 
 	static MenuItemEntry GpsdoControlMenu[] =
 	{
-		{ 1, MF_STRING, ID_GPSDO_FW_DOWNLOAD, "GPSDO Firmware Download", NULL },
 		//{ 1, MF_STRING, ID_GPSDO_ENTER_DWN_H, "High-Speed Slave Download(Master Only)!", NULL },
 		{ 1, MF_STRING, ID_QUERY_UARTPASS, "Query UART Pass Through Status", NULL },
 		{ 1, MF_STRING, ID_GPSDO_RESET_SLAVE, "Reset Slave MCU(Master Only)", NULL },
@@ -4726,6 +4680,25 @@ void CGPSDlg::Load_Menu()
 		{ 1, MF_STRING, ID_SUP800_READ_DATA, "SUP800 Read User Data", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
+	static MenuItemEntry GeoFencingMenu[] =
+	{
+		{ 1, MF_STRING, ID_CONFIG_GEOFENCE, "Configure geo-fencing data", NULL },
+		{ 1, MF_STRING, ID_QUERY_GEOFENCE, "Query geo-fencing data", NULL },
+		{ 1, MF_STRING, ID_QUERY_GEOFENCE_RESULT, "Query geo-fencing result ", NULL },
+		{ 0, 0, 0, NULL, NULL }	//End of table
+	};
+	static MenuItemEntry RtkMenu[] =
+	{
+		{ IS_DEBUG, MF_STRING, ID_RTK_RESET, "Reset RTK engine", NULL },
+		{ IS_DEBUG, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_STRING, ID_QUERY_RTK_MODE, "Query RTK Mode", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_PARAM, "Query RTK Parameters", NULL },
+		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_STRING, ID_CONFIG_RTK_MODE, "Configure RTK Mode", NULL },
+		{ IS_DEBUG, MF_STRING, ID_CONFIG_RTK_PARAM, "Configure RTK Parameters", NULL },
+
+		{ 0, 0, 0, NULL, NULL }	//End of table
+	};	
 	static MenuItemEntry SignalDisturbanceMenu[] =
 	{
 		{ 1, MF_STRING, ID_QUERY_SIG_DISTUR_DATA, "Query Signal Disturbance Data", NULL },
@@ -4743,6 +4716,8 @@ void CGPSDlg::Load_Menu()
 		{ IS_DEBUG, MF_POPUP, 0, "GPSDO Control", GpsdoControlMenu },
 		{ _V8_SUPPORT, MF_POPUP, 0, "SUP800 User Data Storage", Sup800Menu },
 		{ IS_DEBUG, MF_POPUP, 0, "Signal Disturbance Test", SignalDisturbanceMenu },
+		{ 1, MF_POPUP, 0, "Geofencing", GeoFencingMenu },
+		{ 1, MF_POPUP, 0, "RTK", RtkMenu },
 
 		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
 		{ 1, MF_STRING, ID_BINARY_QUERYSBAS, "Query SBAS", NULL },
@@ -5351,6 +5326,23 @@ bool CGPSDlg::DoDownload(int dlBaudIdx)
 	return true;
 }
 
+bool CGPSDlg::DoDownload(int dlBaudIdx, UINT rid)
+{
+	if(!CheckConnect())
+	{
+		return false;
+	}
+
+	m_DownloadMode = CustomerUpgrade;
+	m_nDownloadBaudIdx = dlBaudIdx;
+	m_nDownloadBufferIdx = 0;
+	m_inputMode = 0;
+	m_nDownloadResource = rid;
+
+	::AfxBeginThread(DownloadThread, 0);
+	return true;
+}
+
 void CGPSDlg::OnBnClickedDownload()
 {
 	int dlBaudIdx = ((CComboBox*)GetDlgItem(IDC_DL_BAUDRATE))->GetCurSel();
@@ -5358,6 +5350,13 @@ void CGPSDlg::OnBnClickedDownload()
 	theApp.SetIntSetting("dl_baudIdx", dlBaudIdx);
 
 	DoDownload(dlBaudIdx);
+}
+
+void CGPSDlg::OnUpgradeDownload()
+{
+#if defined (UPGRADE_DOWNLOAD)
+	DoDownload(6, IDR_UPGRADE_DOWNLOAD_PROM);
+#endif
 }
 
 void CGPSDlg::OnFileCleannema()
@@ -6151,7 +6150,7 @@ UINT configy_1pps_cable_delay_thread(LPVOID param)
 	return 0;
 }
 
-void CGPSDlg::OnConfigure1ppstimingConfigure1ppstiming()
+void CGPSDlg::OnConfigure1ppsTiming()
 {
 	CCon1PPS_Timing dlg_1pps_timing;
 
@@ -6169,7 +6168,7 @@ void CGPSDlg::OnConfigure1ppstimingConfigure1ppstiming()
 	}
 }
 
-void CGPSDlg::OnConfigure1ppstimingConfigure1ppscabledelay()
+void CGPSDlg::OnConfigure1ppsCableDelay()
 {
 	CCon1PPS_cable dlg_1pps_timing;
 
@@ -7557,13 +7556,15 @@ void CGPSDlg::RescaleDialog()
 
 		//Scatter
 		//TRUE, 0, IDC_SCATTER, {668, 384, 220, 220},
-		TRUE, 0, IDC_SCATTER, {658, 354, 256, 250},
+		TRUE, 0, IDC_SCATTER, {657, 354, 258, 250},
 		//TRUE, 0, IDC_SCATTER, {658, 354, 248, 248},
 
-		TRUE, 0, IDC_2DRMS_T, {915, 457, 78, 18},
-		TRUE, 0, IDC_2DRMS, {915, 476, 78, 18},
-		TRUE, 0, IDC_CEP50_T, {915, 497, 78, 18},
-		TRUE, 0, IDC_CEP50, {915, 516, 78, 18},
+		!IS_DEBUG, 0, IDC_2DRMS_T, {915, 457, 78, 18},
+		!IS_DEBUG, 0, IDC_2DRMS, {915, 476, 78, 18},
+		!IS_DEBUG, 0, IDC_CEP50_T, {915, 497, 78, 18},
+		!IS_DEBUG, 0, IDC_CEP50, {915, 516, 78, 18},
+		IS_DEBUG, 0, IDC_CENTER_ALT, {915, 464, 78, 16},
+		IS_DEBUG, 0, IDC_SCATTER_ALT, {915, 485, 78, 16},
 
 		TRUE, 0, IDC_ENUSCALE_T, {915, 358, 78, 18},
 		TRUE, 0, IDC_ENUSCALE, {915, 377, 78, 24},
@@ -7571,8 +7572,8 @@ void CGPSDlg::RescaleDialog()
 		TRUE, 0, IDC_COOR_T, {915, 406, 78, 18},
 		TRUE, 0, IDC_COOR, {915, 425, 78, 18},
 
-		TRUE, 0, IDC_SETORIGIN, {915, 540, 67, 24},
-		TRUE, 0, IDC_CLEAR, {915, 568, 67, 24},
+		TRUE, 0, IDC_SETORIGIN, {925, 540, 67, 24},
+		TRUE, 0, IDC_CLEAR, {925, 568, 67, 24},
 
 		//DR
 		SOFTWARE_FUNCTION & SW_FUN_DR, 0, IDC_ODO_METER_T, {848, 454, 80, 18},
@@ -7746,7 +7747,7 @@ LRESULT CGPSDlg::OnFirstNmea(WPARAM wParam, LPARAM lParam)
 	}
 	DeleteNmeaMemery();
 	ClearInformation();
-	g_scatterData.ClearData();
+	//g_scatterData.ClearData();
 	m_ttffCount = 0;
 	m_initTtff = false;
 	SetTTFF(0);
@@ -7859,7 +7860,9 @@ void CGPSDlg::MSG_PROC()
 	m_serial->ClearQueue();
 	static U08 buffer[1024] = {0};
 
-	hIQNamedFile = CreateFile("//./pipe/SkytraqIQPlotPipe", GENERIC_WRITE,
+	CString pipeName;
+	pipeName.Format("//./pipe/%s", Utility::GetNameAttachPid("SkytraqIQPlotPipe"));
+	hIQNamedFile = CreateFile(pipeName, GENERIC_WRITE,
 		FILE_SHARE_READ | FILE_SHARE_WRITE , NULL, OPEN_EXISTING,
 		FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -7934,7 +7937,7 @@ void CGPSDlg::MSG_PROC()
 					}
 					else
 					{
-						hIQNamedFile = CreateFile("//./pipe/SkytraqIQPlotPipe", GENERIC_WRITE,
+						hIQNamedFile = CreateFile(pipeName, GENERIC_WRITE,
 							FILE_SHARE_READ | FILE_SHARE_WRITE , NULL, OPEN_EXISTING,
 							FILE_ATTRIBUTE_NORMAL, NULL);
 					}
@@ -8059,4 +8062,15 @@ BOOL CGPSDlg::PreTranslateMessage(MSG* pMsg)
 		return TRUE;
 	}
 	return CDialog::PreTranslateMessage(pMsg);
+}
+
+double ConvertLeonDouble(const U08* ptr)
+{
+	U08 temp[8] = {0};
+	for(int i = 0; i < 8; ++i)
+	{
+		temp[7 - i] = *ptr++;
+	}
+	return *((double*)temp);
+
 }

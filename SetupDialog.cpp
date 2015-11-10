@@ -58,11 +58,34 @@ void CSetupDialog::OnBnClickedOk()
 	setting->responseLog = ((CButton*)GetDlgItem(IDC_ENABLE_LOG))->GetCheck();
 	((CEdit*)GetDlgItem(IDC_LOG_PATH))->GetWindowText(setting->responseLogPath);
 	setting->specifyCenter = ((CButton*)GetDlgItem(IDC_SPY_CENTER))->GetCheck();
+	setting->specifyCenterAlt = ((CButton*)GetDlgItem(IDC_SPY_ALT))->GetCheck();
 
 	GetDlgItem(IDC_LON)->GetWindowText(s);
 	setting->scatterCenterLon = atof(s);
 	GetDlgItem(IDC_LAT)->GetWindowText(s);
 	setting->scatterCenterLat = atof(s);
+	GetDlgItem(IDC_ALT)->GetWindowText(s);
+	setting->scatterCenterAlt = atof(s);
+	GetDlgItem(IDC_TIMEOUT)->GetWindowText(s);
+	if(s.IsEmpty())
+	{
+		setting->defaultTimeout = DefaultTimeout;
+	}
+	else
+	{
+		setting->defaultTimeout = atoi(s);
+	}
+
+	GetDlgItem(IDC_SCATTER_COUNT)->GetWindowText(s);
+	if(s.IsEmpty())
+	{
+		setting->defaultTimeout = MAX_SCATTER_COUNT;
+	}
+	else
+	{
+		setting->defaultTimeout = atoi(s);
+	}	
+	
 	OnOK();
 }
 
@@ -103,10 +126,16 @@ BOOL CSetupDialog::OnInitDialog()
 	((CButton*)GetDlgItem(IDC_ENABLE_LOG))->SetCheck(setting->responseLog);
 	((CEdit*)GetDlgItem(IDC_LOG_PATH))->SetWindowText(setting->responseLogPath);
 	((CButton*)GetDlgItem(IDC_SPY_CENTER))->SetCheck(setting->specifyCenter);
-	s.Format("%lf", setting->scatterCenterLon);
+	((CButton*)GetDlgItem(IDC_SPY_ALT))->SetCheck(setting->specifyCenterAlt);
+
+	s.Format("%12.9lf", setting->scatterCenterLon);
 	GetDlgItem(IDC_LON)->SetWindowText(s);
-	s.Format("%lf", setting->scatterCenterLat);
+	s.Format("%12.9lf", setting->scatterCenterLat);
 	GetDlgItem(IDC_LAT)->SetWindowText(s);
+	s.Format("%7.2lf", setting->scatterCenterAlt);
+	GetDlgItem(IDC_ALT)->SetWindowText(s);
+	s.Format("%d", setting->defaultTimeout);
+	GetDlgItem(IDC_TIMEOUT)->SetWindowText(s);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX 屬性頁應傳回 FALSE

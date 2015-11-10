@@ -24,6 +24,22 @@ typedef matrix<float> Matrix;
 
 #include "Registry.h"
 #define LogDefaultName		"Response.log"
+#define DefaultTimeout		3000
+
+#define MAX_WAIT_TIME		      INFINITE
+#define TIME_OUT_MS               10000
+#define TIME_OUT_QUICK_MS         1000
+#define SCAN_TIME_OUT_MS          2000
+#define DOWNLOAD_TIME_OUT_LOOP    10
+#define BUF_SIZE 4096
+
+#ifndef PI
+ #define PI          3.141592653589793
+#endif
+//#define e           0.0818191913
+
+#define BOOTLOADER_SIZE		0x10000
+
 struct Setting
 {
 	Setting()
@@ -49,6 +65,9 @@ struct Setting
 			reg.WriteInt("setting_specifyCenter", specifyCenter);
 			reg.WriteFloat("setting_scatterCenterLon", scatterCenterLon);
 			reg.WriteFloat("setting_scatterCenterLat", scatterCenterLat);
+			reg.WriteInt("setting_specifyCenterAlt", specifyCenterAlt);
+			reg.WriteFloat("setting_scatterCenterAlt", scatterCenterAlt);
+			reg.WriteInt("setting_defaultTimeout", defaultTimeout);
 		}	
 	}
 
@@ -58,6 +77,7 @@ struct Setting
 		reg.SetRootKey(HKEY_CURRENT_USER);
 		const double defaultCenterLon = 121.008756203;
 		const double defaultCenterLat = 24.784893606;
+		const double defaultCenterAlt = 100.0;
 
 		if(reg.SetKey("Software\\GNSSViewer\\GPS", true))
 		{
@@ -73,6 +93,9 @@ struct Setting
 			specifyCenter = reg.ReadInt("setting_specifyCenter", FALSE);
 			scatterCenterLon = reg.ReadFloat("setting_scatterCenterLon", defaultCenterLon);
 			scatterCenterLat = reg.ReadFloat("setting_scatterCenterLat", defaultCenterLat);
+			specifyCenterAlt = reg.ReadInt("setting_specifyCenterAlt", FALSE);
+			scatterCenterAlt = reg.ReadFloat("setting_scatterCenterAlt", defaultCenterAlt);
+			defaultTimeout = reg.ReadInt("setting_defaultTimeout", DefaultTimeout);
 		}
 		else
 		{
@@ -87,6 +110,9 @@ struct Setting
 			specifyCenter = FALSE;
 			scatterCenterLon = defaultCenterLon;
 			scatterCenterLat = defaultCenterLat;
+			specifyCenterAlt = FALSE;
+			scatterCenterAlt = defaultCenterAlt;
+			defaultTimeout = DefaultTimeout;
 		}
 		downloadTesting = FALSE;
 	}
@@ -103,6 +129,9 @@ struct Setting
 	BOOL specifyCenter;
 	double scatterCenterLon;
 	double scatterCenterLat;
+	BOOL specifyCenterAlt;
+	double scatterCenterAlt;
+	int defaultTimeout;;
 };
 
 typedef struct {
@@ -143,13 +172,33 @@ typedef struct UTC_TIME_T {
 	S16 minute;
 	F32 sec;
 } UtcTime;
+
+enum QualityMode {
+	Uninitial = 0,
+	Unlocated,
+	EstimatedMode,
+	DgpsMode,
+	PpsMode,
+	PositionFix2d,
+	PositionFix3d,
+
+	SurveyIn,
+	StaticMode,
+	DataNotValid,
+	AutonomousMode,
+	DgpsMode2,
+	FixRTK,
+	FloatRTK,
+};
+
+
 extern Setting g_setting;
 
 #define MAX_SATELLITE				32
 #define MyMaxPath		(MAX_PATH * 8)
 #define BINMSG_ERROR                0
 
-extern const float R2D;
+extern const double R2D;
 extern const COLORREF g_panelBkColor;
 
 extern U08 type;
@@ -197,6 +246,8 @@ U08 Cal_Checksum(U08* pt);
 UINT16 CalCheckSum2(U08* pt);
 void UtcConvertGpsToUtcTime(S16 wn, D64 tow, UtcTime *utc_time_p);
 void UtcConvertUtcToGpsTime(const UtcTime *utc_time_p, S16 *wn_p, D64 *tow_p);
+QualityMode GetGnssQualityMode(U32 qualityIndicator, U08 gpMode = 0, U08 glMode = 0, U08 gaMode = 0, U08 bdMode = 0);
+double ConvertLeonDouble(const U08* ptr);
 
 //void UTC_convert_gps_to_utc_time_by_default_parameters( S16 wn, D64 tow, UtcTime *utc_time_p );
 

@@ -26,6 +26,9 @@ Global
 		GNSS_General_SWID|Any CPU = GNSS_General_SWID|Any CPU
 		GNSS_General_SWID|Mixed Platforms = GNSS_General_SWID|Mixed Platforms
 		GNSS_General_SWID|Win32 = GNSS_General_SWID|Win32
+		GNSS_General_Takuji|Any CPU = GNSS_General_Takuji|Any CPU
+		GNSS_General_Takuji|Mixed Platforms = GNSS_General_Takuji|Mixed Platforms
+		GNSS_General_Takuji|Win32 = GNSS_General_Takuji|Win32
 		GNSS_General|Any CPU = GNSS_General|Any CPU
 		GNSS_General|Mixed Platforms = GNSS_General|Mixed Platforms
 		GNSS_General|Win32 = GNSS_General|Win32
@@ -81,6 +84,11 @@ Global
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_SWID|Mixed Platforms.Build.0 = GNSS_General_SWID|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_SWID|Win32.ActiveCfg = GNSS_General_SWID|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_SWID|Win32.Build.0 = GNSS_General_SWID|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_Takuji|Any CPU.ActiveCfg = GNSS_General_Takuji|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_Takuji|Mixed Platforms.ActiveCfg = GNSS_General_Takuji|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_Takuji|Mixed Platforms.Build.0 = GNSS_General_Takuji|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_Takuji|Win32.ActiveCfg = GNSS_General_Takuji|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_Takuji|Win32.Build.0 = GNSS_General_Takuji|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General|Any CPU.ActiveCfg = GNSS_General|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General|Mixed Platforms.ActiveCfg = GNSS_General|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General|Mixed Platforms.Build.0 = GNSS_General|Win32
