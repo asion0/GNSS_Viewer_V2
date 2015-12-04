@@ -709,8 +709,8 @@ void CGPSDlg::LogReadBatchControl()
 	free(buffer);
 	
 	CGPSDlg::gpsDlg->target_only_restart(0);
-	CGPSDlg::gpsDlg->m_serial->ResetPort(CGPSDlg::gpsDlg->GetBaudrate());
-	CGPSDlg::gpsDlg->m_BaudRateCombo.SetCurSel(CGPSDlg::gpsDlg->GetBaudrate());
+	CGPSDlg::gpsDlg->m_serial->ResetPort(g_setting.GetBaudrateIndex());
+	CGPSDlg::gpsDlg->m_BaudRateCombo.SetCurSel(g_setting.GetBaudrateIndex());
 	dataLogFile.Close();
 }
 
@@ -1083,6 +1083,52 @@ void CGPSDlg::parse_sti_03_message(const char *buff,int len) // for timing modul
 	m_odo_meter.SetWindowText(temp);
 }
 
+#if (MORE_INFO==1)
+void CGPSDlg::parse_sti_30_message(const char *buff,int len) // for timing module
+{
+	const char *ptr = buff;
+
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+
+	CString temp;
+	temp.Format("%.1f", atof(ptr));
+	m_rtkAge.SetWindowText(temp);
+
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+
+	temp.Format("%.1f", atof(ptr));
+	m_rtkRatio.SetWindowText(temp);
+}
+
+#endif
 #if(_MODULE_SUP_800_)
 void CGPSDlg::parse_sti_04_001_message(const char *buff,int len) // for timing module
 {
@@ -1152,6 +1198,12 @@ void CGPSDlg::parse_sti_message(const char *buff,int len)
 	{
 		parse_sti_03_message(buff,len);
 	}
+#if (MORE_INFO==1)
+	else if(psti_id == 30)		// for jamming interference
+	{
+		parse_sti_30_message(buff,len);
+	}
+#endif
 #if(_MODULE_SUP_800_)
 	else if(psti_id == 4)		// for SUP800
 	{
@@ -1287,7 +1339,7 @@ void CGPSDlg::parse_psti_50(const char *buff)		// gnss
 
 int position_update_rate;
 int position_update_attr;
-int com_baudrate;
+//int com_baudrate;
 UINT Configurepositionrate(LPVOID param)
 {
 	U08 msg[3];
@@ -1303,15 +1355,27 @@ UINT Configurepositionrate(LPVOID param)
 	if(CGPSDlg::gpsDlg->SendToTarget(CGPSDlg::m_inputMsg,len,"Configure Position Rate Successful..."))
 	{
 		Sleep(200);
-		if(position_update_rate>10 && com_baudrate<115200)				//Boost to 115200 when update rate > 10Hz.
+		if(position_update_rate>40 && g_setting.GetBaudrate()<961600)				//Boost to 961600 when update rate > 40Hz.
+		{
+			CGPSDlg::gpsDlg->ConfigBaudrate(8, position_update_attr);	
+		}
+		else if(position_update_rate>25 && g_setting.GetBaudrate()<460800)				//Boost to 460800 when update rate > 25Hz.
+		{
+			CGPSDlg::gpsDlg->ConfigBaudrate(7, position_update_attr);	
+		}
+		else if(position_update_rate>20 && g_setting.GetBaudrate()<230400)				//Boost to 230400 when update rate > 20Hz.
+		{
+			CGPSDlg::gpsDlg->ConfigBaudrate(6, position_update_attr);	
+		}
+		else if(position_update_rate>10 && g_setting.GetBaudrate()<115200)				//Boost to 115200 when update rate > 10Hz.
 		{
 			CGPSDlg::gpsDlg->ConfigBaudrate(5, position_update_attr);	
 		}
-		else if(position_update_rate>2 && com_baudrate<38400)			//Boost to 38400 when update rate > 2Hz.
+		else if(position_update_rate>2 && g_setting.GetBaudrate()<38400)			//Boost to 38400 when update rate > 2Hz.
 		{
 			CGPSDlg::gpsDlg->ConfigBaudrate(3, position_update_attr);	
 		}
-		else if(position_update_rate>1 && com_baudrate<9600)			//Boost to 9600 when update rate > 1Hz.
+		else if(position_update_rate>1 && g_setting.GetBaudrate()<9600)			//Boost to 9600 when update rate > 1Hz.
 		{
 			CGPSDlg::gpsDlg->ConfigBaudrate(1, position_update_attr);	
 		}
@@ -1345,15 +1409,15 @@ UINT ConfigureDrMultiHz(LPVOID param)
 	if(CGPSDlg::gpsDlg->SendToTarget(CGPSDlg::m_inputMsg,len,"Configure DR Multi-Hz Successful..."))
 	{
 		Sleep(200);
-		if(position_update_rate > 10 && com_baudrate < 115200)
+		if(position_update_rate > 10 && g_setting.GetBaudrate()<115200)
 		{
 			CGPSDlg::gpsDlg->ConfigBaudrate(5, position_update_attr);		//Boost to 115200 when update rate > 10Hz.
 		}
-		else if(position_update_rate>2 && com_baudrate<38400)	//Boost to 115200 when update rate > 2Hz.
+		else if(position_update_rate>2 && g_setting.GetBaudrate()<38400)	//Boost to 115200 when update rate > 2Hz.
 		{
 			CGPSDlg::gpsDlg->ConfigBaudrate(3, position_update_attr);		//Boost to 115200 when update rate > 10Hz.
 		}
-		else if(position_update_rate>1 && com_baudrate<9600)	//Boost to 115200 when update rate > 1Hz.
+		else if(position_update_rate>1 && g_setting.GetBaudrate()<9600)	//Boost to 115200 when update rate > 1Hz.
 		{
 			CGPSDlg::gpsDlg->ConfigBaudrate(1, position_update_attr);		//Boost to 115200 when update rate > 10Hz.
 		}
@@ -1384,7 +1448,7 @@ void CGPSDlg::OnBinaryConfigurepositionrate()
 	{
 		position_update_rate = dlg->rate;
 		position_update_attr = dlg->attr;
-		com_baudrate = m_serial->GetBaudRate();
+		//com_baudrate = g_setting.GetBaudrate();
 #if(CHECK_SAEE_MULTIHZ_ON)
 		if(position_update_rate > 1)
 		{
@@ -1433,7 +1497,7 @@ void CGPSDlg::OnBinaryConfigDrMultiHz()
 	{
 		position_update_rate = dlg->rate;
 		position_update_attr = dlg->attr;
-		com_baudrate = m_serial->GetBaudRate();
+		//com_baudrate = g_setting.baudrate;
 		AfxBeginThread(ConfigureDrMultiHz, 0);
 	}
 	else

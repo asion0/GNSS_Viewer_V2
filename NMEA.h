@@ -140,16 +140,10 @@ typedef struct GPZDA
 	U16     Year;
 	U16     LocalZoneHours;
 	U16     LocaZoneMinutes;
-}GPZDA, *pGPZDA, &rGPZDA;
-
-extern Satellite satellites_gps[MAX_SATELLITE];
-extern Satellite satellites_gnss[MAX_SATELLITE];
-extern Satellite satellites_bd[MAX_SATELLITE];
-extern Satellite satellites_ga[MAX_SATELLITE];
+} GPZDA, *pGPZDA, &rGPZDA;
 
 enum { INVALIDATE_SNR = 999 };
 enum { MaxNmeaParam = 30 };
-
 //#define UWM_GNSS_DATA_UPDATE	(WM_USER + 0x1379)
 class GnssData
 {
@@ -420,10 +414,15 @@ public:
 	static GNSS_System GetGNSSSystem2(int prn);
 	static GNSS_System GetGNSSSystem3(int prn);
 
-
 	static int TrimTail(const char* buffer, int offset);
 	static NmeaType MessageType(LPCSTR pt, int len);
 	static bool GetFirstGsaIn() { return firstGsaIn; }
+
+	Satellite satellites_gps[MAX_SATELLITE];
+	Satellite satellites_gnss[MAX_SATELLITE];
+	Satellite satellites_bd[MAX_SATELLITE];
+	Satellite satellites_ga[MAX_SATELLITE];
+
 	void ShowGPGLLmsg(GPGLL&, const char* ,int);
 	void ShowGPZDAmsg(GPZDA&, const char* ,int);
 	void ShowGPGGAmsg(GPGGA&, const char* ,int);
@@ -441,4 +440,5 @@ public:
 	void ShowGNGSAmsg(GPGSA& msg_gpgsa, GPGSA& msg_glgsa, GPGSA& msg_bdgsa, GPGSA& msg_gagsa, const char* pt, int offset);
 	void ShowBDGSAmsg(GPGSA& msg_bdgsa, const char* pt, int offset);
 	void ShowGAGSAmsg(GPGSA& msg_gagsa, const char* pt, int offset);
+	void ClearSatellites();
 };

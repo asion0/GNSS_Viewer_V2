@@ -52,10 +52,10 @@ BOOL CFirmwareDownloadDlg::OnInitDialog()
 	if(_V8_SUPPORT)
 	{
 		baudrateCombo->ResetContent();
-		for(int i=0; i<9; ++i)
+		for(int i=0; i<Setting::BaudrateTableSize; ++i)
 		{
 			CString strIdx;
-			strIdx.Format("%d", CSerial::BaudrateTable[i]);
+			strIdx.Format("%d", Setting::BaudrateTable[i]);
 			baudrateCombo->AddString(strIdx);
 		}
 	}
@@ -83,7 +83,7 @@ BOOL CFirmwareDownloadDlg::OnInitDialog()
 		m_strPath = theApp.GetCurrrentDir();
 		m_strPath += "\\prom.bin";
 	}
-
+	
 	icTypeCombo->SetCurSel(m_nLoaderType);
 	baudrateCombo->SetCurSel(m_nBaudrateIdx);
 	GetDlgItem(IDC_IMG_PATH)->SetWindowText(m_strPath);

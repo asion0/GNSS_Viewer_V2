@@ -99,17 +99,6 @@ UINT CGPSDlg::GetBinFromResource(int baud)
 				(IDR_GG12A_PRELOADER_230400),
 			};
 	promTable = gg12aPromTable;
-#elif (GPS_VIEWER)
-	UINT gpsPromTable[] = {
-			(IDR_GPS_PRELOADER_4800),
-			(IDR_GPS_PRELOADER_9600),
-			(IDR_GPS_PRELOADER_19200),
-			(IDR_GPS_PRELOADER_38400),
-			(IDR_GPS_PRELOADER_57600),
-			(IDR_GPS_PRELOADER_115200),
-			(IDR_GPS_PRELOADER_230400),
-		};
-	promTable = gpsPromTable;
 #endif
 
 	return promTable[baud];
@@ -888,9 +877,6 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, FILE *f,
 
 U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 {
-	int buad = 0;
-	buad = BAUDRATE;
-
 	Param promTag;
 	int extraSize = ParserBinFile(prom_path, &promTag);
 
@@ -921,7 +907,7 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 	}
 	else
 	{
-		bootLoaderSize = preLoader.ReadFromResource(GetBinFromResource(GetBaudrate()), "BIN");
+		bootLoaderSize = preLoader.ReadFromResource(GetBinFromResource(g_setting.GetBaudrateIndex()), "BIN");
 	}
 
 	const U08* sData = preLoader.Ptr();
@@ -975,7 +961,7 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 	do
 	{
 		fseek(f, BOOTLOADER_SIZE, SEEK_SET);
-		result = SendRomBuffer3(sData, bootLoaderSize, f, promLen, (buad >= 6), m_psoftImgDlDlg);
+		result = SendRomBuffer3(sData, bootLoaderSize, f, promLen, false, m_psoftImgDlDlg);
 	} while(result == RETURN_RETRY && (retryCount--) > 0);
 
 //---------------------------------------------------------------
@@ -1025,7 +1011,7 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 	do
 	{
 		fseek(f, 0, SEEK_SET);
-		result = SendRomBuffer3(NULL, bootLoaderSize, f, promLen, (buad >= 6), m_psoftImgDlDlg);
+		result = SendRomBuffer3(NULL, bootLoaderSize, f, promLen, false, m_psoftImgDlDlg);
 	} while(result == RETURN_RETRY && (retryCount--) > 0);
 
 
@@ -1357,17 +1343,7 @@ bool CGPSDlg::DownloadLoader()
 		memcpy(buff, sData, packetSize - 1);
 		buff[packetSize - 2] = 0x0a;
 		SendToTargetNoAck((U08*)buff, packetSize);
-/*
-		if(buad >= 6)
-		{
-			needdelay++;
-			if(needdelay==5)
-			{
-				needdelay = 0;
-				Sleep(1);
-			}
-		}
-*/	
+	
 		leftSize -= packetSize;
 		sData += packetSize;
 		totalByte += packetSize;//deduct by end of string character in sending
@@ -1487,7 +1463,7 @@ bool SecondRun = false;
 bool CGPSDlg::Download()
 {
 	if(m_DownloadMode == CustomerUpgrade)
-{
+	{
 		return Download2();
 	}
 

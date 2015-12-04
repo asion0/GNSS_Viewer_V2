@@ -16,8 +16,8 @@ public:
 	CSerial();
 	~CSerial();
 
-	static int BaudrateTable[];
-	static const int BaudrateTableSize;
+	//static int BaudrateTable[];
+	//static const int BaudrateTableSize;
 
 	enum { InQueueSize = 1024 };
 	enum { OutQueueSize = 1024 };

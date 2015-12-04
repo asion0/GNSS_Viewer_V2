@@ -1,11 +1,15 @@
 #include "StdAfx.h"
 #include "SkytraqKml.h"
 #include "GPSDlg.h"
+#include <algorithm>
 
 using namespace std;
 CSkyTraqKml::CSkyTraqKml(void)
 {
 	iniWriteKml = false;
+    msg_gpgsa = msg_glgsa = msg_bdgsa = msg_gagsa = NULL;
+    msg_gpgsv = msg_glgsv = msg_bdgsv = msg_gagsv = NULL;
+	satellites_gps = satellites_gnss = satellites_bd = satellites_ga = NULL;
 }
 
 CSkyTraqKml::~CSkyTraqKml(void)
@@ -13,7 +17,7 @@ CSkyTraqKml::~CSkyTraqKml(void)
 
 }
 
-void CSkyTraqKml::Init(const char *name, int color, bool kml3d, bool bPointList, bool bNoPointText)
+void CSkyTraqKml::Init(const char *name, int color, bool kml3d, bool bPointList, bool bNoPointText, bool bDetailInfo)
 {
 	kmlFile.Open(name, CFile::modeReadWrite | CFile::modeCreate);	
 	lineColor = color;
@@ -21,14 +25,112 @@ void CSkyTraqKml::Init(const char *name, int color, bool kml3d, bool bPointList,
 	convert3d = kml3d;
 	pointList = bPointList;
 	noPointText = bNoPointText;
+	detailInfo = bDetailInfo;
 	if(pointList)
 	{
+/*
+
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{font-family:Arial, sans-serif;font-size:14px;padding:0px 3px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:0px 3px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tg .tg-mlgx{font-size:small;font-family:Arial, Helvetica, sans-serif !important;;color:#cb0000;text-align:center;vertical-align:top}
+.tg .tg-lt90{font-size:small;font-family:Arial, Helvetica, sans-serif !important;;text-align:center;vertical-align:top}
+.tg .tg-i8eo{font-size:small;font-family:Arial, Helvetica, sans-serif !important;;color:#3531ff;text-align:center;vertical-align:top}
+</style>
+<table class="tg">
+  <tr>
+    <th class="tg-lt90">PRN</th>
+    <th class="tg-lt90">Azimuth</th>
+    <th class="tg-lt90">Elevation</th>
+    <th class="tg-lt90">SNR</th>
+  </tr>
+  <tr>
+    <td class="tg-i8eo">5</td>
+    <td class="tg-i8eo">128</td>
+    <td class="tg-i8eo">45</td>
+    <td class="tg-i8eo">41</td>
+  </tr>
+  <tr>
+    <td class="tg-mlgx">6</td>
+    <td class="tg-mlgx">315</td>
+    <td class="tg-mlgx">89</td>
+    <td class="tg-mlgx">40</td>
+  </tr>
+  <tr>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+  </tr>
+  <tr>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+  </tr>
+  <tr>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+  </tr>
+  <tr>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+  </tr>
+  <tr>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+  </tr>
+  <tr>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+  </tr>
+  <tr>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+  </tr>
+  <tr>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+  </tr>
+  <tr>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+    <td class="tg-lt90"></td>
+  </tr>
+</table>
+*/
 		pls.RemoveAll();
 		strPointList = "<Folder id=\"MyPoints\">"\
 		"<Style id=\"PointStyle\"><IconStyle><color>ffffffff</color><Icon><href>http://maps.google.com/mapfiles/kml/shapes/open-diamond.png</href></Icon></IconStyle></Style>" \
 		"<Style id=\"PointStyle2\"><IconStyle><color>ffff0000</color><Icon><href>http://maps.google.com/mapfiles/kml/shapes/open-diamond.png</href></Icon></IconStyle></Style>" \
-		"<Style id=\"PointStyle3\"><IconStyle><color>ff00ff00</color><Icon><href>http://maps.google.com/mapfiles/kml/shapes/open-diamond.png</href></Icon></IconStyle></Style>" \
-		"<name>Points</name>\r\n";
+		"<Style id=\"PointStyle3\"><IconStyle><color>ff00ff00</color><Icon><href>http://maps.google.com/mapfiles/kml/shapes/open-diamond.png</href></Icon></IconStyle></Style>";
+
+		if(detailInfo)
+		{
+			strPointList += "<style type=\"text/css\">" \
+			".tg  {border-collapse:collapse;border-spacing:0;}" \
+			".tg td{font-family:Arial, sans-serif;font-size:14px;padding:0px 3px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}" \
+			".tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:0px 3px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}" \
+			".tg .tg-mlgx{font-size:small;font-family:Arial, Helvetica, sans-serif !important;;color:#cb0000;text-align:center;vertical-align:top}" \
+			".tg .tg-lt90{font-size:small;font-family:Arial, Helvetica, sans-serif !important;;text-align:center;vertical-align:top}" \
+			".tg .tg-i8eo{font-size:small;font-family:Arial, Helvetica, sans-serif !important;;color:#3531ff;text-align:center;vertical-align:top}" \
+			"</style>";
+		}
+		strPointList += "<name>Points</name>\r\n";
 		pls.AddTail(strPointList);
 		strPointList.Empty();
 	}
@@ -158,6 +260,97 @@ void CSkyTraqKml::WriteKMLini(CFile& f)
 	f.Write(str, (UINT)str.GetLength());
 }
 
+bool CompareByPRN(Satellite const& lhs, Satellite const& rhs)
+{
+	if(lhs.SatelliteID != 0)
+		return lhs.SatelliteID < rhs.SatelliteID;
+
+	return false;
+}
+
+char CSkyTraqKml::CheckGsa(int p, GPGSA *gsa)
+{
+	for(int i = 0; i < MAX_SATELLITE; ++i)
+	{
+		if(gsa[i].SatelliteID[i] == p)
+			return 'O';
+	}
+	return 'X';
+}
+
+CString CSkyTraqKml::GenerateSatelliteTable(Satellite* s, GPGSA *gsa)
+{
+	//"<table class=\"tg\"><tr><th>PRN</th><th>Azimuth</th><th>Elevation</th><th>SNR</th><th>Used</th></tr>" \
+	//"<tr><td>5</td><td>128</td><td>45</td><td>41</td><td>O</td></tr>" \
+	//"<tr><td>6</td><td>315</td><td>89</td><td>40</td><td>X</td></tr>" \
+	//"</table>";
+	CString str = "<table class=\"tg\"><tr><th>PRN</th><th>Azimuth</th><th>Elevation</th><th>SNR</th><th>Used</th></tr>";
+	Satellite* p = s;
+	for(int i = 0; i < MAX_SATELLITE; ++i, ++p)
+	{
+		if(p->SatelliteID == 0)
+		{
+			break;
+		}
+		CString ss;
+		if(p->SNR == INVALIDATE_SNR)
+		{
+			ss.Format("<tr><td>%d</td><td>%d</td><td>%d</td><td>--</td><td>%c</td></tr>", 
+				p->SatelliteID, p->Azimuth, p->Elevation, CheckGsa(p->SatelliteID, gsa));
+		}
+		else
+		{
+			ss.Format("<tr><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%c</td></tr>", 
+				p->SatelliteID, p->Azimuth, p->Elevation, p->SNR, CheckGsa(p->SatelliteID, gsa));
+		}
+		str += ss;
+	}
+	str += "</table>";
+	return str;
+}
+
+CString CSkyTraqKml::GetSatelliteInfo()
+{
+	CString str;
+	if(satellites_gps && msg_gpgsa)
+	{
+		std::sort(satellites_gps, (satellites_gps + MAX_SATELLITE), CompareByPRN);
+		if(satellites_gps->SatelliteID > 0)
+		{
+			str += "GPS Satellites :<br>";
+			str += GenerateSatelliteTable(satellites_gps, msg_gpgsa);
+		}
+	}
+	if(satellites_gnss && msg_glgsa)
+	{
+		std::sort(satellites_gnss, (satellites_gnss + MAX_SATELLITE), CompareByPRN);
+		if(satellites_gnss->SatelliteID > 0)
+		{
+			str += "GLONASS Satellites :<br>";
+			str += GenerateSatelliteTable(satellites_gnss, msg_glgsa);
+		}
+	}
+	if(satellites_bd && msg_bdgsa)
+	{
+		std::sort(satellites_bd, (satellites_bd + MAX_SATELLITE), CompareByPRN);
+		if(satellites_bd->SatelliteID > 0)
+		{
+			str += "Beidou Satellites :<br>";
+			str += GenerateSatelliteTable(satellites_bd, msg_glgsa);
+		}
+	}
+	if(satellites_ga && msg_gagsa)
+	{
+		std::sort(satellites_ga, (satellites_ga + MAX_SATELLITE), CompareByPRN);
+		if(satellites_ga->SatelliteID > 0)
+		{
+			str += "Galileo Satellites :<br>";
+			str += GenerateSatelliteTable(satellites_ga, msg_gagsa);
+		}
+	}
+	return str;
+}
+
 void CSkyTraqKml::WriteKMLPath(CFile& f, double lon, double lat, double alt, const CString& ts, QualityMode q)
 {
 	CString str;
@@ -189,8 +382,14 @@ void CSkyTraqKml::WriteKMLPath(CFile& f, double lon, double lat, double alt, con
 		{
 			strPointList += "<Placemark><name>" + ts + "</name><description><![CDATA[";
 		}
-		str.Format("lontitude: %012.9lf <br>latitude: %012.9lf<br>altitude: %07.3lf<br>Time: %s<br>RTK Mode: %s", lon, lat, alt, ts, qMode);
+		str.Format("lontitude: %012.9lf <br>latitude: %012.9lf<br>altitude: %07.3lf<br>Time: %s<br>RTK Mode: %s<br>", lon, lat, alt, ts, qMode);
 		strPointList += str;
+
+		if(detailInfo)
+		{
+			strPointList += GetSatelliteInfo();
+			//"<table class=\"tg\"><tr><th>PRN</th><th>Azimuth</th><th>Elevation</th><th>SNR</th><th>Used</th></tr><tr><td>5</td><td>128</td><td>45</td><td>41</td><td>O</td></tr><tr><td>6</td><td>315</td><td>89</td><td>40</td><td>X</td></tr></table>";
+		}
 		if(q==FixRTK)
 		{
 			strPointList += "]]></description><styleUrl>#PointStyle2</styleUrl><Point>";

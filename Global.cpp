@@ -34,6 +34,21 @@ CMonitor_1PPS *dia_monitor_1pps = NULL;
 
 int FlashBytes[] = { 8*1024, 16*1024, 24*1024, 32*1024 };
 
+int Setting::BaudrateTable[] = {4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600};
+const int Setting::BaudrateTableSize = sizeof(Setting::BaudrateTable) / sizeof(Setting::BaudrateTable[0]);
+
+void Setting::SetBaudrate(int b)
+{
+	for(int i = 0; i < BaudrateTableSize; ++i)
+	{
+		if(BaudrateTable[i] == b)
+		{
+			baudrate = i;
+			return;
+		}
+	}
+	baudrate = -1;
+}
 
 U32 ConvertCharToU32(const char *src)
 {

@@ -45,15 +45,12 @@ BOOL CHostBaseDownloadDlg::OnInitDialog()
 	CComboBox* baudrateCombo = (CComboBox*)GetDlgItem(IDC_BAUDRATE_IDX);
 	CComboBox* bufferCombo = (CComboBox*)GetDlgItem(IDC_BUFFER_IDX);
 
-	if(_V8_SUPPORT)
+	baudrateCombo->ResetContent();
+	for(int i=0; i<Setting::BaudrateTableSize; ++i)
 	{
-		baudrateCombo->ResetContent();
-		for(int i=0; i<9; ++i)
-		{
-			CString strIdx;
-			strIdx.Format("%d", CSerial::BaudrateTable[i]);
-			baudrateCombo->AddString(strIdx);
-		}
+		CString strIdx;
+		strIdx.Format("%d", Setting::BaudrateTable[i]);
+		baudrateCombo->AddString(strIdx);
 	}
 	baudrateCombo->AddString("SPI");
 

@@ -78,14 +78,6 @@ BOOL CSysRestartDlg::OnInitDialog()
 	m_utcminute.SetCurSel(now.wMinute);
 	m_utcsecond.SetCurSel(now.wSecond);
 
-	if(GPS_VIEWER)
-	{	//GPS FW的Cold Start不會清除全部星曆資料，而Entirely Cold Start才會。
-		//GNSS FW的Cold Start會清除全部星曆資料，不需Entirely Cold Start。
-		m_startmode.AddString("Entirely Cold Start");
-	}
-
-//	DWORD GetRegValue(HKEY hKeyHandle, LPCTSTR lpSubkey, LPCTSTR lpRegName, CString &csRegvalue);
-//	DWORD GetRegValue(HKEY hKeyHandle, LPCTSTR lpSubkey, LPCTSTR lpRegName, int &nRegvalue);
 	CString tmpString;
 	Utility::GetRegValue(HKEY_CURRENT_USER, "Software\\GNSSViewer\\GPS", "lat", tmpString);
 	if(tmpString.IsEmpty()) 

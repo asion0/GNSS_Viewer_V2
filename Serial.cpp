@@ -4,8 +4,8 @@
 #include "Serial.h"
 #include "Utility.h"
 
-int CSerial::BaudrateTable[] = {4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600};
-const int CSerial::BaudrateTableSize = sizeof(CSerial::BaudrateTable) / sizeof(CSerial::BaudrateTable[0]);
+//int CSerial::BaudrateTable[] = {4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600};
+//const int CSerial::BaudrateTableSize = sizeof(CSerial::BaudrateTable) / sizeof(CSerial::BaudrateTable[0]);
 const DWORD defaultSendUnit = 512;
 
 char CSerial::debugBuffer[debugSize] = { 0 };
@@ -74,7 +74,7 @@ bool CSerial::Open(int port, int baudIndex)
 {
 	CString comPort;
 	comPort.Format("COM%d", port);
-	return OpenByBaudrate(comPort, BaudrateTable[baudIndex]);
+	return OpenByBaudrate(comPort, Setting::BaudrateTable[baudIndex]);
 }
 
 bool CSerial::OpenByBaudrate(LPCSTR comPort, int baudrate)
@@ -291,7 +291,7 @@ bool CSerial::WriteCommBytes(char* buffer, int bufferSize)
 	return true;
 }
 
-bool CSerial::ResetPortNoDelay(int baudrate)
+bool CSerial::ResetPortNoDelay(int b)
 {
 	DCB dcb = {0};
 	if(!GetCommState(m_comDeviceHandle, &dcb))
@@ -299,7 +299,7 @@ bool CSerial::ResetPortNoDelay(int baudrate)
 		DWORD error = ::GetLastError();
 		return false;
 	}
-	dcb.BaudRate = baudrate;
+	dcb.BaudRate = b;
 	dcb.Parity   = NOPARITY;
 	dcb.ByteSize = 8;
 	dcb.StopBits = ONESTOPBIT;
@@ -310,13 +310,13 @@ bool CSerial::ResetPortNoDelay(int baudrate)
 		return false;
 	}
 
-	m_baudRate = baudrate;
+	m_baudRate = b;
 	return true;
 }
 
 bool CSerial::ResetPort(int baudIndex)
 {
-	if(ResetPortNoDelay(BaudrateTable[baudIndex]))
+	if(ResetPortNoDelay(Setting::BaudrateTable[baudIndex]))
 	{
 		Sleep(800);
 		return true;

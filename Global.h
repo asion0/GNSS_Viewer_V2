@@ -51,9 +51,17 @@ struct Setting
 	{
 		CRegistry reg;
 		reg.SetRootKey(HKEY_CURRENT_USER);
+
 		if(reg.SetKey("Software\\GNSSViewer\\GPS", false))
 		{
+			reg.WriteInt("comport", comPort);
+			reg.WriteInt("baudrate", baudrate);
+			reg.WriteString("firmware", mainFwPath);
 			reg.WriteInt("setting_earthBitmap", earthBitmap);
+		}
+
+		if(IS_DEBUG &&reg.SetKey("Software\\GNSSViewer\\GPS", false))
+		{
 			reg.WriteInt("setting_delayBeforeBinsize", delayBeforeBinsize);
 			reg.WriteInt("setting_boostBaudrateIndex", boostBaudIndex);
 			reg.WriteInt("setting_autoQueryVersion", autoQueryVersion);
@@ -68,6 +76,7 @@ struct Setting
 			reg.WriteInt("setting_specifyCenterAlt", specifyCenterAlt);
 			reg.WriteFloat("setting_scatterCenterAlt", scatterCenterAlt);
 			reg.WriteInt("setting_defaultTimeout", defaultTimeout);
+			reg.WriteInt("setting_scatterCount", scatterCount);
 		}	
 	}
 
@@ -79,9 +88,8 @@ struct Setting
 		const double defaultCenterLat = 24.784893606;
 		const double defaultCenterAlt = 100.0;
 
-		if(reg.SetKey("Software\\GNSSViewer\\GPS", true))
+		if(IS_DEBUG && reg.SetKey("Software\\GNSSViewer\\GPS", true))
 		{
-			earthBitmap = reg.ReadInt("setting_earthBitmap", 0);
 			delayBeforeBinsize = reg.ReadInt("setting_delayBeforeBinsize", 0);
 			boostBaudIndex = reg.ReadInt("setting_boostBaudrateIndex", BAUDRATE_DEFAULT);
 			autoQueryVersion = reg.ReadInt("setting_autoQueryVersion", TRUE);
@@ -89,17 +97,16 @@ struct Setting
 			checkNmeaError = reg.ReadInt("setting_checkNmeaError", SHOW_ERROR_NMEA_NOTIFY);
 			responseLog = reg.ReadInt("setting_responseLog", FALSE);
 			responseLogPath = reg.ReadString("setting_responseLogPath", LogDefaultName);
-
 			specifyCenter = reg.ReadInt("setting_specifyCenter", FALSE);
 			scatterCenterLon = reg.ReadFloat("setting_scatterCenterLon", defaultCenterLon);
 			scatterCenterLat = reg.ReadFloat("setting_scatterCenterLat", defaultCenterLat);
 			specifyCenterAlt = reg.ReadInt("setting_specifyCenterAlt", FALSE);
 			scatterCenterAlt = reg.ReadFloat("setting_scatterCenterAlt", defaultCenterAlt);
 			defaultTimeout = reg.ReadInt("setting_defaultTimeout", DefaultTimeout);
+			scatterCount = reg.ReadInt("setting_scatterCount", MAX_SCATTER_COUNT);
 		}
 		else
 		{
-			earthBitmap = 0;
 			delayBeforeBinsize = 0;
 			boostBaudIndex = BAUDRATE_DEFAULT;
 			autoQueryVersion = TRUE;
@@ -113,11 +120,46 @@ struct Setting
 			specifyCenterAlt = FALSE;
 			scatterCenterAlt = defaultCenterAlt;
 			defaultTimeout = DefaultTimeout;
+			scatterCount = MAX_SCATTER_COUNT;
+		}
+
+		if(reg.SetKey("Software\\GNSSViewer\\GPS", true))
+		{
+			comPort = reg.ReadInt("comport", 0);
+			baudrate = reg.ReadInt("baudrate", 1);
+			mainFwPath = reg.ReadString("firmware", "");
+			earthBitmap = reg.ReadInt("setting_earthBitmap", 0);
+		}
+		else
+		{
+			comPort = 0;
+			baudrate = 1;
+			mainFwPath = "";
+			earthBitmap = 0;
 		}
 		downloadTesting = FALSE;
+		if(scatterCount <= 0)
+		{
+			scatterCount = MAX_SCATTER_COUNT;
+		}
 	}
 
+	int GetBaudrateIndex() { return baudrate; }
+	int GetBaudrate() { return BaudrateTable[baudrate]; }
+	void SetBaudrateIndex(int b) { baudrate = b; }
+	void SetBaudrate(int b);
+	int GetComPortIndex() { return comPort - 1; }
+	int GetComPort() { return comPort; }
+	void SetComPortIndex(int c) { comPort = c + 1; }
+	void SetComPort(int c) { comPort = c; }
+
+	//General use
+	static int BaudrateTable[];
+	static const int BaudrateTableSize;
+	CString mainFwPath;
 	int earthBitmap;
+
+	//Internal Use only
 	int delayBeforeBinsize;
 	int boostBaudIndex;
 	BOOL autoQueryVersion;
@@ -131,7 +173,15 @@ struct Setting
 	double scatterCenterLat;
 	BOOL specifyCenterAlt;
 	double scatterCenterAlt;
-	int defaultTimeout;;
+	int defaultTimeout;
+	int scatterCount;
+
+protected:
+
+	//General use
+	int comPort;
+	int baudrate;
+
 };
 
 typedef struct {

@@ -479,7 +479,7 @@ int CKmlDlg::GET_NMEA_SENTENCE(CFile& file, unsigned char* buffer)
 		length += nBytesRead;
 		if(nBytesRead == 0 || *(buffer+length-1)=='\n' && *(buffer+length-2)=='\r' || length == 200)
 			break;		
-	}while(1);
+	} while(1);
 	return length;
 }
 
@@ -501,6 +501,51 @@ U08 CKmlDlg::NMEA_PROC(const char* buffer, int offset)
 	case MSG_GNS:		
 		nmea.ShowGNSmsg(msg_gpgga, buffer, offset);
 		break; 
+
+	case MSG_GPGSA:
+		nmea.ShowGNGSAmsg(msg_gpgsa, msg_glgsa, msg_bdgsa, msg_gagsa, buffer, offset);
+		kml.msg_gpgsa = &msg_gpgsa;
+		break;
+	case MSG_GLGSA:
+		nmea.ShowGLGSAmsg(msg_glgsa, buffer, offset);
+		kml.msg_glgsa = &msg_glgsa;
+		break;
+	case MSG_GNGSA:
+		nmea.ShowGNGSAmsg(msg_gpgsa, msg_glgsa, msg_bdgsa, msg_gagsa, buffer, offset);
+		kml.msg_gpgsa = &msg_gpgsa;
+		kml.msg_glgsa = &msg_glgsa;
+		kml.msg_bdgsa = &msg_bdgsa;
+		kml.msg_gagsa = &msg_gagsa;
+		break;
+	case MSG_BDGSA:
+		nmea.ShowBDGSAmsg(msg_bdgsa, buffer, offset);
+		kml.msg_bdgsa = &msg_bdgsa;
+		break;
+	case MSG_GAGSA:
+		nmea.ShowGAGSAmsg(msg_gagsa, buffer, offset);
+		kml.msg_gagsa = &msg_gagsa;
+		break;
+	case MSG_GPGSV:
+		nmea.ShowGPGSVmsg2(msg_gpgsv, msg_glgsv, msg_bdgsv, msg_gagsv, buffer, offset);
+		kml.msg_gpgsv = &msg_gpgsv;
+		kml.satellites_gps = nmea.satellites_gps;
+		break;
+	case MSG_GLGSV:
+		nmea.ShowGLGSVmsg(msg_glgsv, buffer, offset);
+		kml.msg_glgsv = &msg_glgsv;
+		kml.satellites_gnss = nmea.satellites_gnss;
+		break;
+	case MSG_BDGSV:
+		nmea.ShowBDGSVmsg(msg_bdgsv, buffer, offset);
+		kml.msg_bdgsv = &msg_bdgsv;
+		kml.satellites_bd = nmea.satellites_bd;
+		break;
+	case MSG_GAGSV:
+		nmea.ShowGAGSVmsg(msg_gagsv, buffer, offset);
+		kml.msg_gagsv = &msg_gagsv;
+		kml.satellites_ga = nmea.satellites_ga;
+		break;
+
 	default :
 		break;
 	}
@@ -523,6 +568,7 @@ void CKmlDlg::Convert(CFile& f)
 	int b3d = ((CButton*)GetDlgItem(IDC_3DKML))->GetCheck();
 	int bPointList = ((CButton*)GetDlgItem(IDC_POINTLIST))->GetCheck();
 	int bNoPointText = ((CButton*)GetDlgItem(IDC_NO_TITLE))->GetCheck();
+	int bDetailInfo = ((CButton*)GetDlgItem(IDC_DETAIL_INFO))->GetCheck();
 	int color_index = m_color.GetCurSel(); 
 	//Red;Yellow;Blue;Green;
 	const U32 colors[] = {0x0000ff, 0x00FFFF, 0xff0000, 0x00ff00};
@@ -535,7 +581,7 @@ void CKmlDlg::Convert(CFile& f)
 		CString tmp_file ;
 		tmp_file.Format("%s%d%s", kml_filename,file_tail,".kml");
 		
-		kml.Init(tmp_file, color, (b3d==1), (bPointList==1), (bNoPointText==1));
+		kml.Init(tmp_file, color, (b3d==1), (bPointList==1), (bNoPointText==1), (bDetailInfo==1));
 		while(dwBytesRemaining)
 		{
 			int progress = (int)(((double)(f.GetLength() - dwBytesRemaining) / f.GetLength()) * 1000);
@@ -599,8 +645,7 @@ bool CKmlDlg::WriteToFile(U08 type)
 	{
 		if(IsFixed(msg_gpgga.GPSQualityIndicator))
 			ut = UsingGGA;
-		//if (msg_gprmc.Status == 'A')
-		if (IsFixed(msg_gprmc.Status))
+		if(IsFixed(msg_gprmc.Status))
 			ut = UsingRMC;
 	}		
 
@@ -612,7 +657,6 @@ bool CKmlDlg::WriteToFile(U08 type)
 			GetLat(msg_gpgga.Latitude, msg_gpgga.Latitude_N_S), msg_gpgga.Altitude, timeStr, GetGnssQualityMode(msg_gpgga.GPSQualityIndicator));
 		return true;
 	}
-	//else if (ut == UsingRMC && type==MSG_RMC && )
 	else if (ut == UsingRMC && type==MSG_RMC && msg_gprmc.Status == 'A')
 	{
 		CString timeStr;

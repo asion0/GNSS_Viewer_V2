@@ -39,7 +39,7 @@ UINT CigSrePorThread(LPVOID pParam)
 //	CP->Nmeamessage();
 	CGPSDlg::gpsDlg->SetMode();	
 	CGPSDlg::gpsDlg->CreateGPSThread();	
-	CGPSDlg::gpsDlg->WriteIni();
+	g_setting.Save();
 //	AfxEndThread(0);
 	return 0;
 }
@@ -78,26 +78,16 @@ BOOL CConSrePorDlg::OnInitDialog()
 
 	pCSPDlg=this;
 	m_comport.SetCurSel(0);
-	if(_V8_SUPPORT)
+
+	m_baudrate.ResetContent();
+	for(int i=0; i<Setting::BaudrateTableSize; ++i)
 	{
-		m_baudrate.ResetContent();
-		for(int i=0; i<9; ++i)
-		{
-			CString strIdx;
-			strIdx.Format("%d", CSerial::BaudrateTable[i]);
-			m_baudrate.AddString(strIdx);
-		}
+		CString strIdx;
+		strIdx.Format("%d", Setting::BaudrateTable[i]);
+		m_baudrate.AddString(strIdx);
 	}
-	else
-	{
-		m_baudrate.ResetContent();
-		for(int i=0; i<6; ++i)
-		{
-			CString strIdx;
-			strIdx.Format("%d", CSerial::BaudrateTable[i]);
-			m_baudrate.AddString(strIdx);
-		}
-	}
+
+
 	if(!IS_DEBUG)
 	{
 		GetDlgItem(IDC_CON_COMPORT_T)->ShowWindow(SW_HIDE);

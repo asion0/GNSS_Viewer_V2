@@ -339,11 +339,11 @@ UINT timing_thread(LPVOID param)
 {
 	U08 ret;
 	char text[100];
-	int buad = 0;
+	//int buad = 0;
 	
 	pDlg_timing->m_progress.SetPos(0);
 
-	buad = CGPSDlg::gpsDlg->GetBaudrate();
+	//buad = CGPSDlg::gpsDlg->GetBaudrate();
 	CGPSDlg::gpsDlg->SetPort(g_setting.boostBaudIndex, 2);
 
 	ret = pDlg_timing->set_almanac();
@@ -399,10 +399,8 @@ UINT timing_thread(LPVOID param)
 
 	if(TIMING_MODE)
 	{
-		CGPSDlg::gpsDlg->SetPort(buad, 2);
+		CGPSDlg::gpsDlg->SetPort(g_setting.GetBaudrateIndex(), 2);
 	}
-	CGPSDlg::gpsDlg->SetBaudrate(buad);
-
 
 	CGPSDlg::gpsDlg->m_ttffCount = 0;
 	CGPSDlg::gpsDlg->m_initTtff = false;

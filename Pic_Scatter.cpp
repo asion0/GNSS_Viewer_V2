@@ -32,6 +32,7 @@ void ScatterData::SetOrigin()
 		m_lat = lat_deg;
 		offset_x  = current_x; 
 		offset_y  = current_y;	
+		ini_h = CGPSDlg::gpsDlg->m_gpggaMsg.Altitude + CGPSDlg::gpsDlg->m_gpggaMsg.GeoidalSeparation;
 	}
 	
 	vector<double>::iterator enu_x_it, enu_y_it;
@@ -136,7 +137,7 @@ void ScatterData::AddLLAPoint(ScatterPoint* llaPoint)
 	LockLlaData();
 	llaPointSet.push_back(*llaPoint);	
 	
-	if((int)llaPointSet.size() > MAX_SCATTER_COUNT)
+	if((int)llaPointSet.size() > g_setting.scatterCount)
 	{
 		llaPointSet.erase(llaPointSet.begin());
 	}
@@ -167,7 +168,7 @@ void ScatterData::SetENU(double lon, double lat, double h)
 	enu_x_mean  = 0;
 	enu_y_mean  = 0;
 
-	if(enu_x.size() >= MAX_SCATTER_COUNT)
+	if(enu_x.size() >= (UINT)g_setting.scatterCount)
 	{
 		enu_x.erase(enu_x.begin());
 		enu_y.erase(enu_y.begin());
@@ -712,7 +713,7 @@ void CPic_Scatter::Create_scatterplot(CDC *dc)
 		}
 	}
 
-	if(IS_DEBUG)
+	//if(IS_DEBUG)
 	{
 		DrawScatterInfo(dc);
 	}
@@ -727,14 +728,13 @@ void CPic_Scatter::DrawScatterInfo(CDC *dc)
 	
 	dc->SetTextColor(RGB(30, 30, 30));
 	const int txt1X = 52, txt1Y = 2;
-	const int txt2X = 150, txt2Y = 2;
-	const int txtW = 106, txtH = 13;
+	//const int txt2X = 150, txt2Y = 2;
+	const int txtW = 212, txtH = 13;
 
-
-	txt.Format("2D RMS : %.4f", g_scatterData.TwoDrms);
+	txt.Format("Point count : %d / %d", g_scatterData.GetLLAPoint().size(), g_setting.scatterCount);
 	dc->DrawText(txt, CRect(txt1X, txt1Y, txt1X + txtW, txt1Y + txtH), DT_TOP | DT_LEFT);
-	txt.Format("CEP 50%% : %.4f", g_scatterData.CEP);
-	dc->DrawText(txt, CRect(txt2X, txt2Y, txt2X + txtW, txt2Y + txtH), DT_TOP | DT_LEFT);
+	//txt.Format("CEP 50%% : %.4f", g_scatterData.CEP);
+	//dc->DrawText(txt, CRect(txt2X, txt2Y, txt2X + txtW, txt2Y + txtH), DT_TOP | DT_LEFT);
 
 }
 
@@ -885,11 +885,11 @@ void CPic_Scatter::Show_ScatterChart(CDC *dc)
 			}
 		}
 
+		DrawScatterInfo(dc);
 		if(IS_DEBUG)
 		{
-			DrawScatterInfo(dc);
 			DrawScatterAltitude(dc, g_scatterData.ini_h, alt);
-	}
+		}
 
 		//CString s;
 		//s.Format("iniH : Alt - %8.2f : %8.2f\r\n", g_scatterData.ini_h, alt);

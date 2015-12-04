@@ -243,6 +243,8 @@ protected:
 	CColorStatic m_speed;
 	CColorStatic m_hdop;	
 	CColorStatic m_lbl_firmware_path;
+	CColorStatic m_rtkAge;	
+	CColorStatic m_rtkRatio;	
 
 	CComboBox m_ComPortCombo;
 	CComboBox m_BaudRateCombo;	
@@ -257,10 +259,12 @@ protected:
 
 	CEdit m_twodrms;
 	CEdit m_cep;
+	CColorStatic m_twodrms2;
+	CColorStatic m_cep2;
 	CEdit m_clock_offset;
 	CEdit m_noise;
-	CEdit m_centerAlt;
-	CEdit m_scatterAlt;
+	CColorStatic m_centerAlt;
+	//CEdit m_scatterAlt;
 
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 	virtual BOOL OnInitDialog();
@@ -551,6 +555,7 @@ private:
 public:
 	static CFont m_textFont;
 	static CFont m_infoFontS;
+	static CFont m_infoFontM;
 	static CFont m_infoFontL;
 	static CFont comboFont;;	
 	static CFont messageFont;
@@ -596,7 +601,7 @@ public:
 	U08 m_ns;
 	U08 m_pllDiv;	
 //	U08 Binary_mode;
-	U16 m_ttffCount;	
+	U32 m_ttffCount;	
 	bool m_initTtff;
 	bool m_setTtff;
 	U32  m_regAddress;	
@@ -711,7 +716,7 @@ public:
 	void ShowTime(void);
 	void Terminate(void);
 	void TerminateGPSThread();
-	void WriteIni();
+//	void WriteIni();
 //	void WriteKMLPath(CFile& ,double ,double );
 //	void WriteKMLini(CFile&  ,double ,double );	
 //	void WritePOIPath(CFile& file ,vector<LLA_T> *lst );
@@ -957,10 +962,11 @@ public:
 	bool SaveEphemeris2(U08* buff, WORD id);
 	void Refresh_EarthChart(CDC *earth_dc);
 	//void Refresh_ScatterChart(CDC *scatter_dc);
-	int GetComPort() { return m_comPort; }
-	int GetBaudrate() { return m_baudrate; }
+//	int GetComPort() { return m_comPort; }
+//	int GetBaudrate() { return m_baudrate; }
 	int GetCustomerID()
 	{ return m_customerID; }
+	NMEA nmea;
 
 private:
 	BOOL m_bShowBinaryCmdData;
@@ -971,6 +977,7 @@ private:
 	U08 m_inputMode;
 	CString datalogFilename;
 	CFile dataLogFile;
+
 
 	enum DataLogType
 	{
@@ -1296,6 +1303,9 @@ private:
 //	void parse_rtoem_message(const char *buff, int len);
 	void parse_psti_50(const char *buff);
 	void parse_sti_20_message(const char *buff,int len) /* for timing module */;
+#if(MORE_INFO==1)
+	void parse_sti_30_message(const char *buff,int len) /* for RTK module */;
+#endif
 //	void Config_silab_baudrate(HANDLE *m_DeviceHandle);
 //	void Config_silab_baudrate_flash(HANDLE *m_DeviceHandle);
 	void DoCommonConfig(CCommonConfigDlg* dlg);
@@ -1312,8 +1322,8 @@ private:
 	U08 PredictClockOffset(double *clk_offset);
 //End
 
-	int m_comPort;
-	int m_baudrate;
+//	int m_comPort;
+//	int m_baudrate;
 	WPARAM plugin_wParam;
 	CString plugin_port_name;
 	U16 m_customerId;

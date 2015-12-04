@@ -3,10 +3,7 @@
 #include "GPSDlg.h"
 using namespace std;
 
-Satellite satellites_gps[MAX_SATELLITE];
-Satellite satellites_gnss[MAX_SATELLITE];
-Satellite satellites_bd[MAX_SATELLITE];
-Satellite satellites_ga[MAX_SATELLITE];
+
 
 GnssData NMEA::gnssData;
 NMEA::NMEA_Type NMEA::nmeaType = NMEA::NtUnknown;
@@ -973,3 +970,12 @@ void NMEA::ShowGAGSVmsg(GPGSV& gagsv, LPCSTR pt, int len)
 		gagsv_counter=0;
 	}
 }
+
+void NMEA::ClearSatellites()
+{
+	memset(&satellites_gps, 0, sizeof(satellites_gps));
+	memset(&satellites_gnss, 0, sizeof(satellites_gnss));
+	memset(&satellites_bd, 0, sizeof(satellites_bd));
+	memset(&satellites_ga, 0, sizeof(satellites_ga));
+}
+

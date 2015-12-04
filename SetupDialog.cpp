@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "SetupDialog.h"
+#include "Pic_Scatter.h"
 #include "resource.h"
 
 
@@ -77,13 +78,15 @@ void CSetupDialog::OnBnClickedOk()
 	}
 
 	GetDlgItem(IDC_SCATTER_COUNT)->GetWindowText(s);
-	if(s.IsEmpty())
+	int tmp = atoi(s);
+	if(!s.IsEmpty() && tmp > 0 && setting->scatterCount != tmp)
 	{
-		setting->defaultTimeout = MAX_SCATTER_COUNT;
-	}
-	else
-	{
-		setting->defaultTimeout = atoi(s);
+		int r = ::AfxMessageBox("Modify Scatter Count will clear all data in Scatter View, are you sure?", MB_YESNO);
+		if(r == IDYES)
+		{
+			setting->scatterCount = tmp;
+			g_scatterData.Clear();
+		}
 	}	
 	
 	OnOK();
@@ -136,6 +139,8 @@ BOOL CSetupDialog::OnInitDialog()
 	GetDlgItem(IDC_ALT)->SetWindowText(s);
 	s.Format("%d", setting->defaultTimeout);
 	GetDlgItem(IDC_TIMEOUT)->SetWindowText(s);
+	s.Format("%d", setting->scatterCount);
+	GetDlgItem(IDC_SCATTER_COUNT)->SetWindowText(s);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX 屬性頁應傳回 FALSE

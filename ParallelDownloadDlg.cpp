@@ -42,20 +42,6 @@ BOOL CParallelDownloadDlg::OnInitDialog()
 	CComboBox* flashTypeCombo = (CComboBox*)GetDlgItem(IDC_FLASH_TYPE);
 	CComboBox* bufferCombo = (CComboBox*)GetDlgItem(IDC_BUFFER_IDX);
 
-	/*
-	if(_V8_SUPPORT)
-	{
-		baudrateCombo->ResetContent();
-		for(int i=0; i<9; ++i)
-		{
-			CString strIdx;
-			strIdx.Format("%d", CSerial::BaudrateTable[i]);
-			baudrateCombo->AddString(strIdx);
-		}
-	}
-	baudrateCombo->AddString("SPI");
-	*/
-
 	CRegistry reg;
 	reg.SetRootKey(HKEY_CURRENT_USER);
 	if(reg.SetKey("Software\\GNSSViewer\\GPS", true))

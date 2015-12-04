@@ -51,12 +51,18 @@ IDB_AGPS				BITMAP                  "res\\Agps.bmp"
 
 IDB_TTFF				BITMAP                  "res\\TTFF.bmp"
 IDB_DATE                BITMAP                  "res\\Date.bmp"
-IDB_TIME                BITMAP                  "res\\Time.bmp"
+
 
 #ifndef _MODULE_SUP_800_
-IDB_BOOT_STATUS         BITMAP                  "res\\BootStatus.bmp"
-IDB_SW_VER              BITMAP                  "res\\SwVer.bmp"
-IDB_SW_REV              BITMAP                  "res\\SwRev.bmp"
+ #ifdef _MORE_INFO_
+  IDB_BOOT_STATUS         BITMAP                  "res\\BootStatus_s.bmp"
+  IDB_SW_VER              BITMAP                  "res\\SwVer_s.bmp"
+  IDB_SW_REV              BITMAP                  "res\\SwRev_s.bmp"
+ #else
+  IDB_BOOT_STATUS         BITMAP                  "res\\BootStatus.bmp"
+  IDB_SW_VER              BITMAP                  "res\\SwVer.bmp"
+  IDB_SW_REV              BITMAP                  "res\\SwRev.bmp"
+ #endif
 #else
 IDB_BOOT_STATUS         BITMAP                  "res\\Pitch.bmp"
 IDB_SW_VER              BITMAP                  "res\\Roll.bmp"
@@ -65,24 +71,41 @@ IDB_SW_REV              BITMAP                  "res\\Yaw.bmp"
 
 IDB_LONGITUDE           BITMAP                  "res\\Longitude.bmp"
 IDB_LATITUDE            BITMAP                  "res\\Latitude.bmp"
+
+#ifdef _MORE_INFO_
+IDB_TIME                BITMAP                  "res\\Time_s.bmp"
+IDB_ALTITUDE            BITMAP                  "res\\Altitude_S.bmp"
+IDB_DIRECTION           BITMAP                  "res\\Direction_s.bmp"
+IDB_RTK_RATIO           BITMAP                  "res\\RTKRatio_s.bmp"
+IDB_RTK_AGE             BITMAP                  "res\\RTKAge_s.bmp"
+#else
+IDB_TIME                BITMAP                  "res\\Time.bmp"
 IDB_ALTITUDE            BITMAP                  "res\\Altitude.bmp"
 IDB_DIRECTION           BITMAP                  "res\\Direction.bmp"
-
-
-#ifndef _MODULE_SUP_800_
-IDB_SPEED               BITMAP                  "res\\Speed.bmp"
-IDB_PDOP                BITMAP                  "res\\Pdop.bmp"
-#else
-IDB_SPEED               BITMAP                  "res\\Pressure.bmp"
-IDB_PDOP                BITMAP                  "res\\Temperature.bmp"
 #endif
 
+#ifndef _MODULE_SUP_800_
+ #ifdef _MORE_INFO_
+  IDB_SPEED               BITMAP                  "res\\Speed_s.bmp"
+  IDB_PDOP                BITMAP                  "res\\Pdop_s.bmp"
+#else
+  IDB_SPEED               BITMAP                  "res\\Speed.bmp"
+  IDB_PDOP                BITMAP                  "res\\Pdop.bmp"
+#endif
+#else
+ IDB_SPEED               BITMAP                  "res\\Pressure.bmp"
+ IDB_PDOP                BITMAP                  "res\\Temperature.bmp"
+#endif
 
 IDB_COOR_T              BITMAP                  "res\\CoorT.bmp"
 IDB_SCALE_T             BITMAP                  "res\\ScaleT.bmp"
-IDB_TWODRMS_T           BITMAP                  "res\\TwoDRmsT.bmp"
-IDB_CEP50_T             BITMAP                  "res\\Cep50T.bmp"
-
+#ifdef _MORE_INFO_
+ IDB_TWODRMS_T           BITMAP                  "res\\TwoDRmsT_s.bmp"
+ IDB_CEP50_T             BITMAP                  "res\\Cep50T_s.bmp"
+#else
+ IDB_TWODRMS_T           BITMAP                  "res\\TwoDRmsT.bmp"
+ IDB_CEP50_T             BITMAP                  "res\\Cep50T.bmp"
+#endif
 #ifndef _ANOTHER_BAR_STYLE_
 IDB_MESSAGE             BITMAP                  "res\\MessageBar.bmp"
 IDB_RESPONSE            BITMAP                  "res\\ResponseBar.bmp"

@@ -234,6 +234,8 @@
 #define IDB_EARTH5                      478
 #define IDB_EARTH6                      479
 #define IDR_UPGRADE_DOWNLOAD_PROM       480
+#define IDB_RTK_AGE                     481
+#define IDB_RTK_RATIO                   482
 #define IDC_CONNECT                     1000
 #define IDC_CLOSE                       1001
 #define IDC_SETORIGIN                   1002
@@ -286,8 +288,13 @@
 #define IDC_LIST1                       1026
 #define IDC_LIST                        1026
 #define IDC_POINTS                      1026
+#define IDC_DIRECTION2                  1026
+#define IDC_RTK_RATIO                   1026
 #define IDC_PROGRESS1                   1027
+#define IDC_2DRMS2                      1027
+#define IDC_2DRMS_2                     1027
 #define IDC_LODER                       1028
+#define IDC_CEP50_2                     1028
 #define IDC_ROMWRITER                   1029
 #define IDC_FINISH                      1030
 #define IDC_ANIMATE1                    1031
@@ -514,6 +521,8 @@
 #define IDC_POINTLIST2                  1150
 #define IDC_NO_TITLE                    1150
 #define IDC_STATIC_SET2                 1151
+#define IDC_NO_TITLE2                   1151
+#define IDC_DETAIL_INFO                 1151
 #define IDC_STATIC_SET3                 1152
 #define IDC_STATIC_SET4                 1153
 #define IDC_BINARY_ATTRI                1154
@@ -676,6 +685,8 @@
 #define IDC_ALTITUDE_T                  1256
 #define IDC_DIRECTION_T                 1257
 #define IDC_CLOCK_T                     1258
+#define IDC_DIRECTION_T2                1259
+#define IDC_RTK_RATIO_T                 1259
 #define IDC_2DRMS_T                     1260
 #define IDC_CEP50_T                     1261
 #define IDC_TTFF_T                      1262
@@ -807,8 +818,11 @@
 #define IDC_SEND                        1327
 #define IDR_PARALLEL_TYPE0_SREC_115200  1328
 #define IDC_CUSTOM_NAV                  1328
+#define IDC_SW_REV_T2                   1328
+#define IDC_RTK_AGE_T                   1328
 #define IDR_PARALLEL_TYPE1_SREC_115200  1329
 #define IDC_CUSTOM_T                    1329
+#define IDC_RTK_AGE                     1329
 #define IDD_PLAY_NMEA                   1330
 #define IDC_SN                          1330
 #define IDC_FILENAME                    1331
@@ -1154,7 +1168,7 @@
 #define ID_QUERY_RTK_MODE               33102
 #define ID_CONFIG_RTK_PARAM             33103
 #define ID_QUERY_RTK_PARAM              33104
-#define ID_RTK_RESET					33105 
+#define ID_RTK_RESET                    33105
 
 // Next default values for new objects
 // 

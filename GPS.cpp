@@ -113,7 +113,7 @@ bool CGPSApp::CheckExternalPreloader(CString& externalPreloaderFile)
 CString CGPSApp::GetTitle()
 {
 	CString title;
-	title.Format("%s %s V%s for Venus 8", APP_CAPTION, APP_TITLE, APP_VERSION);
+	title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 	return title;
 }
 

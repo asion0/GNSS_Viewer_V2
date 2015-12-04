@@ -55,13 +55,13 @@ public:
 	bool IsFlogOpen;
 	U08 NMEA_PROC(const char*,int);
 
-	GPGLL msg_gpgll;
-    GPGSA msg_gpgsa;
+	//GPGLL msg_gpgll;
+    GPGSA msg_gpgsa, msg_glgsa, msg_bdgsa, msg_gagsa;
     GPGGA msg_gpgga;
-    GPGSV msg_gpgsv;
-    GPZDA msg_gpzda;
+    GPGSV msg_gpgsv, msg_glgsv, msg_bdgsv, msg_gagsv;
+    //GPZDA msg_gpzda;
     GPRMC msg_gprmc;
-    GPVTG msg_gpvtg;
+    //GPVTG msg_gpvtg;
 	NMEA nmea;
 
 	CString kml_filename;
