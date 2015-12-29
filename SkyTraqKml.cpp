@@ -26,93 +26,13 @@ void CSkyTraqKml::Init(const char *name, int color, bool kml3d, bool bPointList,
 	pointList = bPointList;
 	noPointText = bNoPointText;
 	detailInfo = bDetailInfo;
+
+    msg_gpgsa = msg_glgsa = msg_bdgsa = msg_gagsa = NULL;
+    msg_gpgsv = msg_glgsv = msg_bdgsv = msg_gagsv = NULL;
+	satellites_gps = satellites_gnss = satellites_bd = satellites_ga = NULL;
+
 	if(pointList)
 	{
-/*
-
-<style type="text/css">
-.tg  {border-collapse:collapse;border-spacing:0;}
-.tg td{font-family:Arial, sans-serif;font-size:14px;padding:0px 3px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
-.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:0px 3px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
-.tg .tg-mlgx{font-size:small;font-family:Arial, Helvetica, sans-serif !important;;color:#cb0000;text-align:center;vertical-align:top}
-.tg .tg-lt90{font-size:small;font-family:Arial, Helvetica, sans-serif !important;;text-align:center;vertical-align:top}
-.tg .tg-i8eo{font-size:small;font-family:Arial, Helvetica, sans-serif !important;;color:#3531ff;text-align:center;vertical-align:top}
-</style>
-<table class="tg">
-  <tr>
-    <th class="tg-lt90">PRN</th>
-    <th class="tg-lt90">Azimuth</th>
-    <th class="tg-lt90">Elevation</th>
-    <th class="tg-lt90">SNR</th>
-  </tr>
-  <tr>
-    <td class="tg-i8eo">5</td>
-    <td class="tg-i8eo">128</td>
-    <td class="tg-i8eo">45</td>
-    <td class="tg-i8eo">41</td>
-  </tr>
-  <tr>
-    <td class="tg-mlgx">6</td>
-    <td class="tg-mlgx">315</td>
-    <td class="tg-mlgx">89</td>
-    <td class="tg-mlgx">40</td>
-  </tr>
-  <tr>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-  </tr>
-  <tr>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-  </tr>
-  <tr>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-  </tr>
-  <tr>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-  </tr>
-  <tr>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-  </tr>
-  <tr>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-  </tr>
-  <tr>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-  </tr>
-  <tr>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-  </tr>
-  <tr>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-    <td class="tg-lt90"></td>
-  </tr>
-</table>
-*/
 		pls.RemoveAll();
 		strPointList = "<Folder id=\"MyPoints\">"\
 		"<Style id=\"PointStyle\"><IconStyle><color>ffffffff</color><Icon><href>http://maps.google.com/mapfiles/kml/shapes/open-diamond.png</href></Icon></IconStyle></Style>" \
@@ -272,7 +192,7 @@ char CSkyTraqKml::CheckGsa(int p, GPGSA *gsa)
 {
 	for(int i = 0; i < MAX_SATELLITE; ++i)
 	{
-		if(gsa[i].SatelliteID[i] == p)
+		if(gsa->SatelliteID[i] == p)
 			return 'O';
 	}
 	return 'X';
@@ -336,7 +256,7 @@ CString CSkyTraqKml::GetSatelliteInfo()
 		if(satellites_bd->SatelliteID > 0)
 		{
 			str += "Beidou Satellites :<br>";
-			str += GenerateSatelliteTable(satellites_bd, msg_glgsa);
+			str += GenerateSatelliteTable(satellites_bd, msg_bdgsa);
 		}
 	}
 	if(satellites_ga && msg_gagsa)

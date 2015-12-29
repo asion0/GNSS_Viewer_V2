@@ -1082,7 +1082,7 @@ CSUP800EraseUserDataDlg::CSUP800EraseUserDataDlg(CWnd* pParent /*=NULL*/)
 }
 
 BEGIN_MESSAGE_MAP(CSUP800EraseUserDataDlg, CCommonConfigDlg)
-	ON_BN_CLICKED(IDC_ERASE, &CSUP800EraseUserDataDlg::OnBnClickedErase)
+	ON_BN_CLICKED(IDOK, &CSUP800EraseUserDataDlg::OnBnClickedErase)
 END_MESSAGE_MAP()
 
 // CSUP800EraseUserDataDlg 訊息處理常式

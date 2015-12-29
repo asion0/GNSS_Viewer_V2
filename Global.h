@@ -2,6 +2,7 @@
 
 #include "Utility.h"
 #include <vector>
+#include <list>
 #include "matrix.h"
 using namespace math;
 using namespace std;

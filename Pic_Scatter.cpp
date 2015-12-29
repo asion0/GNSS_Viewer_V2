@@ -35,7 +35,7 @@ void ScatterData::SetOrigin()
 		ini_h = CGPSDlg::gpsDlg->m_gpggaMsg.Altitude + CGPSDlg::gpsDlg->m_gpggaMsg.GeoidalSeparation;
 	}
 	
-	vector<double>::iterator enu_x_it, enu_y_it;
+	list<double>::iterator enu_x_it, enu_y_it;
 	for(enu_x_it = enu_x.begin(), enu_y_it = enu_y.begin(); 
 		enu_x_it != enu_x.end(); 
 		++enu_x_it, ++enu_y_it)
@@ -167,14 +167,14 @@ void ScatterData::SetENU(double lon, double lat, double h)
 	enu_y.push_back(ENU(1,0)/1000);
 	enu_x_mean  = 0;
 	enu_y_mean  = 0;
-
+int ss = enu_x.size();
 	if(enu_x.size() >= (UINT)g_setting.scatterCount)
 	{
 		enu_x.erase(enu_x.begin());
 		enu_y.erase(enu_y.begin());
 	}
 
-	vector<double>::iterator enu_x_it, enu_y_it;	
+	list<double>::iterator enu_x_it, enu_y_it;	
 	for(enu_x_it = enu_x.begin(); enu_x_it != enu_x.end(); ++enu_x_it)
 	{				
 		enu_x_mean += *enu_x_it;
@@ -344,7 +344,7 @@ void CPic_Scatter::Create_scatterplot(CDC *dc)
 		double add = 200.0 / g_scatterData.enu_x.size();
 
 		g_scatterData.LockEnuData();
-		vector<double>::iterator enu_x_it, enu_y_it;	
+		list<double>::iterator enu_x_it, enu_y_it;	
 		for(enu_x_it = g_scatterData.enu_x.begin(), enu_y_it = g_scatterData.enu_y.begin(); 
 			enu_x_it != g_scatterData.enu_x.end(); 
 			++enu_x_it, ++enu_y_it)

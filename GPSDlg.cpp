@@ -2236,9 +2236,10 @@ void CGPSDlg::DisplayLatitude(int h, int m, double s, char c)
 	static char lastC = ' ';
 	if(s != lastS || m != lastM || h != lastH || c != lastC)
 	{
-		CString txt;
-		txt.Format("%d¢X %d' %.3f\"%c", h, m, s, c);
-		m_latitude.SetWindowText(txt);
+		CStringW txt;
+		txt.Format(L"%d¢X %d' %.3f\"%c", h, m, s, c);
+		//m_latitude.SetWindowText(txt);
+		::SetWindowTextW(m_latitude, txt);
 		m_latitude.Invalidate(TRUE);
 		lastH = h;
 		lastM = m;
@@ -2253,9 +2254,10 @@ void CGPSDlg::DisplayLongitude(int h, int m, double s, char c)
 	static char lastC = ' ';
 	if(s != lastS || m != lastM || h != lastH || c != lastC)
 	{
-		CString txt;
-		txt.Format("%d¢X %d' %.3f\"%c", h, m, s, c);
-		m_longitude.SetWindowText(txt);
+		CStringW txt;
+		txt.Format(L"%d¢X %d' %.3f\"%c", h, m, s, c);
+		//m_longitude.SetWindowTextW(txt);
+		::SetWindowTextW(m_longitude, txt);
 		m_longitude.Invalidate(TRUE);
 		lastH = h;
 		lastM = m;
@@ -2266,19 +2268,21 @@ void CGPSDlg::DisplayLongitude(int h, int m, double s, char c)
 
 void CGPSDlg::DisplayLongitude(D64 lon, U08 c)
 {
-	CString txt;
-	txt.Format("%d¢X %d' %.3f\"%c", (int)(lon / 100.0), (int)lon - (int)(lon / 100.0) * 100,
+	CStringW txt;
+	txt.Format(L"%d¢X %d' %.3f\"%c", (int)(lon / 100.0), (int)lon - (int)(lon / 100.0) * 100,
 		(lon - (int)lon) * 60.0, c);
-	m_longitude.SetWindowText(txt);
+	//m_longitude.SetWindowTextW(txt);
+	::SetWindowTextW(m_longitude, txt);
 	//m_longitude.Invalidate(TRUE);
 }
 
 void CGPSDlg::DisplayLatitude(D64 lat, U08 c)
 {
-	CString txt;
-	txt.Format("%d¢X %d' %.3f\"%c", (int)(lat / 100.0), (int)lat - (int)(lat / 100.0) * 100,
+	CStringW txt;
+	txt.Format(L"%d¢X %d' %.3f\"%c", (int)(lat / 100.0), (int)lat - (int)(lat / 100.0) * 100,
 		(lat - (int)lat) * 60.0, c);
-	m_latitude.SetWindowText(txt);
+	//m_latitude.SetWindowTextW(txt);
+	::SetWindowTextW(m_latitude, txt);
 	m_latitude.Invalidate(TRUE);
 }
 
@@ -4617,6 +4621,7 @@ void CGPSDlg::Load_Menu()
 		{ SOFTWARE_FUNCTION & SW_FUN_DR, MF_STRING, ID_BINARY_QUERYDRHWPARAMETER, "Query DR HW Parameter", NULL },//
 		{ 1, MF_STRING, ID_BINARY_QUERYGNSSKNUMBERSLOTCNR, "Query GLONASS K-Number, Slot, CNR", NULL },
 		{ 1, MF_STRING, ID_BINARY_QUERYNMEATALKERID, "Query NMEA Talker ID", NULL },
+		{ 1, MF_STRING, ID_QUERY_BIN_MEA_DAT_OUT, "Query Binary Measurement Data Out", NULL },
 
 		{ IS_DEBUG, MF_STRING, ID_BINARY_GETRGISTER, "Get Register", NULL },
 		{ 1, MF_SEPARATOR, 0,NULL,NULL },
@@ -4721,7 +4726,7 @@ void CGPSDlg::Load_Menu()
 		{ IS_DEBUG, MF_POPUP, 0, "GPSDO Control", GpsdoControlMenu },
 		{ _V8_SUPPORT, MF_POPUP, 0, "SUP800 User Data Storage", Sup800Menu },
 		{ IS_DEBUG, MF_POPUP, 0, "Signal Disturbance Test", SignalDisturbanceMenu },
-		{ 1, MF_POPUP, 0, "Geofencing", GeoFencingMenu },
+		{ IS_DEBUG, MF_POPUP, 0, "Geofencing", GeoFencingMenu },
 		{ 1, MF_POPUP, 0, "RTK", RtkMenu },
 
 		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,

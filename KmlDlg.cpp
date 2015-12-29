@@ -563,8 +563,6 @@ void CKmlDlg::Convert(CFile& f)
 
 	int write_count = 0;
 	int file_tail = 0;
-	
-
 	int b3d = ((CButton*)GetDlgItem(IDC_3DKML))->GetCheck();
 	int bPointList = ((CButton*)GetDlgItem(IDC_POINTLIST))->GetCheck();
 	int bNoPointText = ((CButton*)GetDlgItem(IDC_NO_TITLE))->GetCheck();
@@ -573,7 +571,7 @@ void CKmlDlg::Convert(CFile& f)
 	//Red;Yellow;Blue;Green;
 	const U32 colors[] = {0x0000ff, 0x00FFFF, 0xff0000, 0x00ff00};
 	U32 color = colors[color_index];
-	
+
 	ut = Unknown;
 	int lastProgress = 0;
 	while(dwBytesRemaining)

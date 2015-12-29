@@ -171,8 +171,8 @@ public:
 	void AddLLAPoint(ScatterPoint* llaPoint);
 	const vector<ScatterPoint>& GetLLAPoint() const
 	{ return llaPointSet; };
-	vector<double> enu_x;	
-	vector<double> enu_y;
+	list<double> enu_x;	
+	list<double> enu_y;
 	double ini_h; //initial data	    
 
 protected:

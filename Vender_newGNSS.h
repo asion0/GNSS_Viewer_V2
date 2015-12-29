@@ -182,12 +182,17 @@
 // .177 20151130 Add RTK field and modify 2DRMS & CEP50% display.
 // .177 20151130 Add MORE_INFO define and new profile [GNSS_General_RTK][GNSS_NMEAPLAYER_RTK].
 // .178 20151204 Fixed baud rate not restore after download.
+// .179 20151208 Fixed KML converter GSA issue.
+// .180 20151209 Fixed KML converter Beidou issue.
+// .181 20151217 Remove Geo-fecing in General version. request from Oliver.
+// .181 20151221 Fixed degree symbol display in English issue, report from fourm user.
+// .182 20151224 Add [Query Binary Measurement Data Out] in binary menu. Request form Andrew and Ryan.
   
 //#define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.178"
+#define APP_VERSION				"2.0.183"
 #define APP_TITLE				""
 #define APP_MODULE				"Venus 8"
 
