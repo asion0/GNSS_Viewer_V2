@@ -187,12 +187,16 @@
 // .181 20151217 Remove Geo-fecing in General version. request from Oliver.
 // .181 20151221 Fixed degree symbol display in English issue, report from fourm user.
 // .182 20151224 Add [Query Binary Measurement Data Out] in binary menu. Request form Andrew and Ryan.
-  
+// .184 20151230 Ture _ALWAYS_USE_EXTERNAL_SREC_ to 1, using 115200 dl srec. Request form Leo by ÀA½ü  
+// .185 20160105 SAINTMAX customer version QWP002001-1050104. Request form Leo
+// .186 20160112 SAINTMAX customer version QWP002001-1050104. Request form Leo
+// .187 20160120 Player fixed set origin error(In west earth) and timing control issue, Request by Oliver and Andrew.
+
 //#define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.183"
+#define APP_VERSION				"2.0.187"
 #define APP_TITLE				""
 #define APP_MODULE				"Venus 8"
 
@@ -217,10 +221,10 @@
 //Define FIRMWARE_DOWNLOAD 0 to disable download UI in Viewer
 #define FIRMWARE_DOWNLOAD		1
 //Default scatter count
-#define MAX_SCATTER_COUNT		100
+#define MAX_SCATTER_COUNT		250
 
-#define ODOMETER_SUPPORT			0
-#define BINARY_MESSAGE_INTERVAL		0
+#define ODOMETER_SUPPORT		0
+#define BINARY_MESSAGE_INTERVAL	0
 #define ACTIVATE_MINIHOMER		0
 #define NMEA_INPUT				0
 #define GSA_MAX_SATELLITE		12
@@ -263,9 +267,38 @@
 #define CHECK_SAEE_MULTIHZ_ON	0		//Check SAEE and Multi-Hz can't both on.
 #define INVERT_LON_LAT			1		//Final spec for GeoFecing spec.
 #define MORE_INFO				0		//More information field for RTK
+#define CLIENT_WIDTH			1008	//Viewer window client width
+#define CLIENT_HEIGHT			690		//Viewer window client height
+#define AUTO_QUERY_VERSION		0
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-#if defined(SWCFG_VENDOR_GNSS_NMEAPLAYER_RTK)	//20151130 request from Oliver
+#if defined(SWCFG_VENDOR_GNSS_SAINTMAX)
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef OPEN_PINNING_RESERVE
+ #undef BINARY_MESSAGE_INTERVAL
+ #undef CLIENT_WIDTH
+ #undef CLIENT_HEIGHT
+ #undef AUTO_QUERY_VERSION
+
+ #define APP_CAPTION			"GNSS Viewer"
+ #define APP_TITLE				"SANITMAX Release"
+ #define GNSS_VIEWER			1
+ #define IS_DEBUG				0
+ #define BAUDRATE_DEFAULT		7
+ #define TIMING_MODE			1
+ #define OPEN_PINNING_RESERVE	1
+ #define BINARY_MESSAGE_INTERVAL 1
+ #define SAINTMAX_UI			 1
+ #define CLIENT_WIDTH			577
+ #define CLIENT_HEIGHT			341
+ #define AUTO_QUERY_VERSION		1
+
+#elif defined(SWCFG_VENDOR_GNSS_NMEAPLAYER_RTK)	//20151130 request from Oliver
  #undef APP_CAPTION
  #undef APP_TITLE
  #undef APP_MODULE
@@ -278,6 +311,8 @@
  #undef NMEA_INPUT
  #undef SHOW_ERROR_NMEA_NOTIFY
  #undef MORE_INFO
+ #undef CLIENT_WIDTH
+ #undef CLIENT_HEIGHT
 
  #define APP_CAPTION			"GNSS Viewer"
  #define APP_TITLE				"NMEA Player"
@@ -291,6 +326,8 @@
  #define NMEA_INPUT				1
  #define SHOW_ERROR_NMEA_NOTIFY 1
  #define MORE_INFO				1		//Please define _MORE_INFO_ for rc2 too.
+ #define CLIENT_WIDTH			1008
+ #define CLIENT_HEIGHT			614
 
 #elif defined(SWCFG_VENDOR_GNSS_RTK)	//20151130 request from Oliver
  #undef APP_CAPTION
@@ -302,7 +339,6 @@
  #undef TIMING_MODE
  #undef OPEN_PINNING_RESERVE
  #undef BINARY_MESSAGE_INTERVAL
- #undef MAX_SCATTER_COUNT
  #undef MORE_INFO
 
  #define APP_CAPTION			"GNSS Viewer"
@@ -314,7 +350,6 @@
  #define TIMING_MODE			1
  #define OPEN_PINNING_RESERVE	1
  #define BINARY_MESSAGE_INTERVAL	1
- #define MAX_SCATTER_COUNT		100
  #define MORE_INFO				1		//Please define _MORE_INFO_ for rc2 too.
 
 #elif defined(SWCFG_VENDOR_GNSS_TAKUJI)
@@ -554,7 +589,7 @@
  #define OPEN_PINNING_RESERVE	1
  #define BINARY_MESSAGE_INTERVAL	1
  #define SHOW_ERROR_NMEA_NOTIFY 1
- #define MAX_SCATTER_COUNT		100
+ #define MAX_SCATTER_COUNT		1000
  #define MORE_INFO				1		//Please define _MORE_INFO_ for rc2 too.
 
 #elif defined(SWCFG_VENDOR_GNSS_INTERNALUSE_GPS_183)
@@ -589,7 +624,6 @@
  #undef TIMING_MODE
  #undef OPEN_PINNING_RESERVE
  #undef BINARY_MESSAGE_INTERVAL
- #undef MAX_SCATTER_COUNT
 
  #define APP_CAPTION			"GNSS Viewer"
  #define APP_TITLE				"Customer Release"
@@ -599,7 +633,6 @@
  #define TIMING_MODE			1
  #define OPEN_PINNING_RESERVE	1
  #define BINARY_MESSAGE_INTERVAL	1
- #define MAX_SCATTER_COUNT		100
 
 #elif defined(SWCFG_VENDOR_GNSS_FKHL)
  #undef APP_CAPTION
@@ -656,6 +689,8 @@
  #undef BINARY_MESSAGE_INTERVAL
  #undef NMEA_INPUT
  #undef SHOW_ERROR_NMEA_NOTIFY
+ #undef CLIENT_WIDTH
+ #undef CLIENT_HEIGHT
 
  #define APP_CAPTION			"GNSS Viewer"
  #define APP_TITLE				"NMEA Player"
@@ -667,6 +702,8 @@
  #define BINARY_MESSAGE_INTERVAL	1
  #define NMEA_INPUT				1
  #define SHOW_ERROR_NMEA_NOTIFY 1
+ #define CLIENT_WIDTH			1008	
+ #define CLIENT_HEIGHT			614
 
 #elif defined(SWCFG_VENDOR_GNSS_V8)
  #undef APP_CAPTION

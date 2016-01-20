@@ -5072,6 +5072,10 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryCableDelay(CmdExeMode nMode, void* outputDat
 UINT SetFacMsgThread(LPVOID pParam)
 {	
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(CGPSDlg::m_inputMsg, 9, "Configure Successful...");
+#if defined(SAINTMAX_UI)
+	Sleep(500);
+	CGPSDlg::gpsDlg->m_nmea0183msg.EnableWindow(TRUE);
+#endif
 	return 0;
 }
 

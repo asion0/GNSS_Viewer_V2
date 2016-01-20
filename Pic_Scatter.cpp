@@ -13,8 +13,8 @@ static void Log(CString f, int line, CString name = "", int data = 0)
 
 void ScatterData::SetOrigin()
 {
-	double offset_x = 0;
-	double offset_y = 0;	 
+	//double offset_x = 0;
+	//double offset_y = 0;	 
 	
 	LockEnuData();
 	if(g_setting.specifyCenter && IS_DEBUG)
@@ -30,8 +30,10 @@ void ScatterData::SetOrigin()
 	{
 		m_lon = lon_deg;
 		m_lat = lat_deg;
-		offset_x  = current_x; 
-		offset_y  = current_y;	
+		//offset_x  = current_x; 
+		//offset_y  = current_y;	
+		//offset_x = enu_x.back();
+		//offset_y = enu_y.back();
 		ini_h = CGPSDlg::gpsDlg->m_gpggaMsg.Altitude + CGPSDlg::gpsDlg->m_gpggaMsg.GeoidalSeparation;
 	}
 	
@@ -40,8 +42,10 @@ void ScatterData::SetOrigin()
 		enu_x_it != enu_x.end(); 
 		++enu_x_it, ++enu_y_it)
 	{				
-		*enu_x_it -= offset_x / 1000.0F;	
-		*enu_y_it -= offset_y / 1000.0F;		
+		//*enu_x_it -= offset_x / 1000.0F;
+		//*enu_y_it -= offset_y / 1000.0F;
+		*enu_x_it -= enu_x.back();
+		*enu_y_it -= enu_y.back();
 	}		
 	UnlockEnuData();
 
@@ -161,13 +165,13 @@ void ScatterData::SetENU(double lon, double lat, double h)
 	ENU = _WGS842NEU * ENU;			
 
 	LockEnuData();				
-	current_x = ENU(0,0);
-	current_y = ENU(1,0);
+	//current_x = ENU(0,0);
+	//current_y = ENU(1,0);
 	enu_x.push_back(ENU(0,0)/1000);
 	enu_y.push_back(ENU(1,0)/1000);
 	enu_x_mean  = 0;
 	enu_y_mean  = 0;
-int ss = enu_x.size();
+
 	if(enu_x.size() >= (UINT)g_setting.scatterCount)
 	{
 		enu_x.erase(enu_x.begin());
@@ -234,33 +238,10 @@ CPic_Scatter::CPic_Scatter(void)
 	}	
 
 }
-/*
-	int i=0, x=0, y=0;
-	//定義點圖的範圍大小
-	plot_x1 = 45 ; plot_y1 = 21 ; 
-	plot_x2 = plot_x1+160 ; plot_y2 = plot_y1+160 ;
-	plot_x2 = plot_x1+160 ; plot_y2 = plot_y1+160 ;
 
-	plot_cross_x = (plot_x1 + plot_x2) / 2;
-	plot_cross_y = (plot_y1 + plot_y2) / 2;
-
-	for(y=plot_y1;y<=plot_y2;y+=40)
-	{
-		VScatterScale[i].x=plot_x1+5;	
-		VScatterScale[i].y=y+2;
-		i++;
-	}
-	
-	i=0;	
-	for(x=plot_x1;x<=plot_x2;x+=40)
-	{	
-		HScatterScale[i].x=x;
-		HScatterScale[i].y=plot_y2;
-		i++;
-	}
-*/
 CPic_Scatter::~CPic_Scatter(void)
-{
+	{
+	
 }
 
 BEGIN_MESSAGE_MAP(CPic_Scatter, CStatic)
@@ -820,9 +801,6 @@ void CPic_Scatter::Show_ScatterChart(CDC *dc)
 		int ENUOrigin_X = plot_cross_x;
 		int ENUOrigin_Y = plot_cross_y;	
 
-
-		//double h = CGPSDlg::gpsDlg->m_gpggaMsg.Altitude;
-
 		double lon = int(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude  / 100);
 		lon += double(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude -
 			int(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude / 100) * 100) / 60;
@@ -847,10 +825,6 @@ void CPic_Scatter::Show_ScatterChart(CDC *dc)
 		LLApoint.y=(S16)map_y;
 		g_scatterData.AddLLAPoint(&LLApoint);
 
-		g_scatterData.LockEnuData();									
-		g_scatterData.lon_deg = lon;
-		g_scatterData.lat_deg = lat;
-		g_scatterData.UnlockEnuData();
 
 		map_x = lon - g_scatterData.inimaplon;				   
 		map_y = lat - g_scatterData.inimaplat;
@@ -864,6 +838,11 @@ void CPic_Scatter::Show_ScatterChart(CDC *dc)
 			if(lat>0)lat*=-1;
 		if(CGPSDlg::gpsDlg->m_gpggaMsg.Longitude_E_W == 'W')
 			if(lon>0)lon*=-1;
+
+		g_scatterData.LockEnuData();									
+		g_scatterData.lon_deg = lon;
+		g_scatterData.lat_deg = lat;
+		g_scatterData.UnlockEnuData();
 
 		lon = Deg2Rad(lon);
 		lat = Deg2Rad(lat);
@@ -890,11 +869,6 @@ void CPic_Scatter::Show_ScatterChart(CDC *dc)
 		{
 			DrawScatterAltitude(dc, g_scatterData.ini_h, alt);
 		}
-
-		//CString s;
-		//s.Format("iniH : Alt - %8.2f : %8.2f\r\n", g_scatterData.ini_h, alt);
-		//::OutputDebugString(s);
-
 	}
 
 	dc->SelectObject(oldPen);

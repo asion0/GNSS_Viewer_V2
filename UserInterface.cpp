@@ -18,7 +18,7 @@ static int GnssBarChartGapX = 22;
 static int MaxGpsId = 61;
 static int HalfMaxGpsId = (MaxGpsId + 1) / 2;
 static int GnssIdStart = 65;
-
+/*
 void CGPSDlg::Refresh_EarthChart(CDC *earth_dc)
 {
 	static bool firstFixed = false;
@@ -68,7 +68,7 @@ void CGPSDlg::Refresh_EarthChart(CDC *earth_dc)
 
 	Show_EarthChart(&(memDC.GetDC()));
 }
-
+*/
 CGPSDlg::PrnType CGPSDlg::GetPrnType(int id)
 {
 	if(id <= 51 || (id >= 193 && id <= 197))
@@ -83,7 +83,7 @@ CGPSDlg::PrnType CGPSDlg::GetPrnType(int id)
 
 	return Unknown;
 }
-
+/*
 void DrawEarthSate(CDC* dc, UISetting* s, Satellite* sate, GPGSV* gsv, GPGSA* gsa, GPGGA* gga)
 {
 	int centerX = 250 / 2;
@@ -117,9 +117,9 @@ void DrawEarthSate(CDC* dc, UISetting* s, Satellite* sate, GPGSV* gsv, GPGSA* gs
 		CSnrBarChart::DrawBarChartId(dc, s, isInUse, x, y, id, true);
 	}
 }
+*/
 
-
-
+/*
 void CGPSDlg::Show_EarthChart(CDC *dc)
 {
 	if(pic_earth->m_gpCheck.GetCheck())
@@ -143,7 +143,7 @@ void CGPSDlg::Show_EarthChart(CDC *dc)
 	}
 
 }
-
+*/
 
 
 int CGPSDlg::CreateSubMenu(const HMENU hMenu, const MenuItemEntry* menuItemTable, LPCSTR pszSubMenuText)

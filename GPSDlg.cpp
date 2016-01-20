@@ -649,8 +649,8 @@ UINT NMEA_Parsing_Thread(LPVOID pParam)
 				if(currentTick < (startTick + nGap))
 				{
 					Sleep((startTick + nGap) - currentTick);
-					startTick = ::GetTickCount();
 				}
+					startTick = ::GetTickCount();
 				if(g_nmeaInputTerminate)
 				{
 					break;
@@ -789,7 +789,7 @@ CGPSDlg::CGPSDlg(CWnd* pParent /*=NULL*/)
 	DeleteNmeaMemery();
 	m_dataLogDecompressMode = 1;
 	m_customerId = CUSTOMER_ID;
-	usedEarth = g_setting.earthBitmap;
+	//usedEarth = g_setting.earthBitmap;
 	m_gpsdoInProgress = false;
 	m_nDefaultTimeout = g_setting.defaultTimeout;
 }
@@ -1236,7 +1236,9 @@ CGPSDlg::~CGPSDlg()
 
 void CGPSDlg::Initialization()
 {
+#if !defined(SAINTMAX_UI)
 	Load_Menu();
+#endif
 	RescaleDialog();
 
 	m_pScanDlg = new CScanDlg;
@@ -2840,7 +2842,7 @@ void CGPSDlg::DataLogDecompress(bool mode)
 
 		CString tmp_file;
 		CString tmp_name = m_convertFile.GetFilePath();
-		int find = tmp_name.Find(".");
+		int find = tmp_name.ReverseFind('.');
 #if TWIN_DATALOG
 		tmp_file.Format("%s%d_datalogger1%s",tmp_name.Mid(0,find),file_tail,".kml");
 		kml.init(tmp_file,0x0000ff);
@@ -3642,18 +3644,30 @@ void CGPSDlg::OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL bSysMenu)
 
 void CGPSDlg::OnBnClickedNoOutput()
 {
+#if defined(SAINTMAX_UI)
+	m_nmea0183msg.EnableWindow(FALSE);
+	SetFactoryDefault(true);
+#else
 	OnConfigureoutputmessagetypeNooutput();
 	m_no_output.EnableWindow(0);
 	m_nmea0183msg.EnableWindow(1);
 	m_binarymsg.EnableWindow(1);
+#endif
 }
 
 void CGPSDlg::OnBnClickedNmeaOutput()
 {
+#if defined(SAINTMAX_UI)
+	OnConfigureoutputmessagetypeNmeamessage();
+	//m_no_output.EnableWindow(1);
+	m_nmea0183msg.EnableWindow(TRUE);
+	//m_binarymsg.EnableWindow(1);
+#else
 	OnConfigureoutputmessagetypeNmeamessage();
 	m_no_output.EnableWindow(1);
 	m_nmea0183msg.EnableWindow(0);
 	m_binarymsg.EnableWindow(1);
+#endif
 }
 
 void CGPSDlg::OnBnClickedBinaryOutput()
@@ -6166,7 +6180,8 @@ void CGPSDlg::OnConfigure1ppsTiming()
 		{
 			memcpy(&_config_1pps_timing,&dlg_1pps_timing._1pps_timing,sizeof(_1PPS_Timing_T));
 			::AfxBeginThread(configy_1pps_timing_thread, 0);
-		}else
+		}
+		else
 		{
 			SetMode();
 			CreateGPSThread();
@@ -7441,6 +7456,172 @@ void CGPSDlg::OnConverterCompress()
 
 void CGPSDlg::RescaleDialog()
 {
+#if defined(SAINTMAX_UI)
+	const UiLocationEntry UiTable[] =
+	{
+		//Connect Panel
+		TRUE, 0, IDC_COMPORT_T, {6, 1, 80, 15},
+		TRUE, 0, IDC_BAUDRATE_T, {92, 1, 80, 15},
+		TRUE, 0, IDC_OPEN_CLOSE_T, {170, 1, 51, 15},
+		TRUE, 0, IDC_COMPORT, {6, 17, 80, 13},
+		TRUE, 0, IDC_BAUDRATE_IDX, {92, 17, 80, 13},
+		TRUE, 0, IDC_CONNECT, {189, 17, 32, 24},
+		TRUE, 0, IDC_CLOSE, {189, 17, 32, 24},
+		FALSE, 0, IDC_PLAY, {182, 28, 32, 24},
+		FALSE, 0, IDC_RECORD, {218, 28, 32, 24},
+		FALSE, 0, IDC_STOP, {254, 28, 32, 24},
+		FALSE, 0, IDC_PLAY_T, {180, 7, 32, 18},
+		FALSE, 0, IDC_RECORD_T, {216, 7, 32, 18},
+		FALSE, 0, IDC_STOP_T, {252, 7, 32, 18},
+
+		//Message Panel
+		TRUE, 0, IDC_MESSAGE_T, {6, 45, 215, 29},
+		TRUE, 0, IDC_FIXED_STATUS, {77, 45, 144, 29},
+		TRUE, 0, IDC_MESSAGE, {6, 75, 215, 100},
+
+		//Response Panel
+		FALSE, 0, IDC_RESPONSE_T, {6, 192, 215, 29},
+		TRUE, 0, IDC_RESPONSE, {6, 178, 215, 100},
+
+		//Coordinate Panel
+		FALSE, 0, IDC_COORDINATE_T, {6, 399, 280, 29},
+		FALSE, 0, IDC_COORDINATE_F, {6, 429, 280, 132},
+		FALSE, 0, IDC_WGS84_X_T, {22, 436, 110, 18},
+		FALSE, 0, IDC_WGS84_X, {22, 454, 110, 18},
+		FALSE, 0, IDC_WGS84_Y_T, {22, 477, 110, 18},
+		FALSE, 0, IDC_WGS84_Y, {22, 495, 110, 18},
+		FALSE, 0, IDC_WGS84_Z_T, {22, 518, 110, 18},
+		FALSE, 0, IDC_WGS84_Z, {22, 536, 110, 18},
+		FALSE, 0, IDC_ENU_E_T, {160, 436, 110, 18},
+		FALSE, 0, IDC_ENU_E, {160, 454, 110, 18},
+		FALSE, 0, IDC_ENU_N_T, {160, 477, 110, 18},
+		FALSE, 0, IDC_ENU_N, {160, 495, 110, 18},
+		FALSE, 0, IDC_ENU_U_T, {160, 518, 110, 18},
+		FALSE, 0, IDC_ENU_U, {160, 536, 110, 18},
+
+		//Command Panel
+		TRUE, 0, IDC_NO_OUTPUT, {5, 268, 107, 71},
+		TRUE, 0, IDC_NMEA_OUTPUT, {116, 268, 107, 71},
+
+		FALSE, 0, IDC_COMMAND_T, {6, 325, 280, 29},
+		FALSE, 0, IDC_COMMAND_F, {6, 355, 280, 132},
+		FALSE, 0, IDC_HOTSTART, {15, 599, 82, 24},
+		FALSE, 0, IDC_WARMSTART, {105, 599, 82, 24},
+		FALSE, 0, IDC_COLDSTART, {195, 599, 82, 24},
+		FALSE, 0, IDC_BIN_OUTPUT, {195, 627, 82, 24},
+		FALSE, 0, IDC_SCANALL, {15, 655, 82, 24},
+		FALSE, 0, IDC_SCANPORT, {105, 655, 82, 24},
+		FALSE, 0, IDC_SCANBAUDRATE, {195, 655, 82, 24},
+
+		//Information
+		TRUE, 0, IDC_INFORMATION_T, {228, 17, 100, 19},
+		TRUE, 0, IDC_INFO_PANEL,	{228, 35, 343, 104},
+		TRUE, 0, IDC_TTFF_T,		{238, 46, 100, 37},
+		TRUE, 0, IDC_TTFF,			{243, 66,  94, 16},
+		TRUE, 0, IDC_LONGITUDE_T,	{238, 91, 100, 37},
+		TRUE, 0, IDC_LONGITUDE,		{243, 111, 94, 16},
+		TRUE, 0, IDC_DATE_T,		{350, 46, 100, 37},
+		TRUE, 0, IDC_DATE,			{355, 66,  94, 16},
+		TRUE, 0, IDC_LATITUDE_T,	{350, 91, 100, 37},
+		TRUE, 0, IDC_LATITUDE,		{355, 111, 94, 16},
+		TRUE, 0, IDC_TIME_T,		{462, 46, 100, 37},
+		TRUE, 0, IDC_TIME,			{467, 66,  94, 16},
+		TRUE, 0, IDC_SW_REV_T,		{462, 91, 100, 37},
+		TRUE, 0, IDC_SW_REV,		{467, 111, 94, 16},
+
+		FALSE, 0, IDC_BOOT_STATUS_T,	{656, 35, 100, 37},
+		FALSE, 0, IDC_BOOT_STATUS,	{661, 55,  94, 16},
+		FALSE, 0, IDC_DIRECTION_T,	{656, 80, 100, 37},
+		FALSE, 0, IDC_DIRECTION,		{661, 100, 94, 16},
+		FALSE, 0, IDC_SW_VER_T,		{768, 35, 100, 37},
+		FALSE, 0, IDC_SW_VER,		{773, 55,  94, 16},
+		FALSE, 0, IDC_SPEED_T,		{768, 80, 100, 37},
+		FALSE, 0, IDC_SPEED,			{773, 100, 94, 16},
+		FALSE, 0, IDC_ALTITUDE_T,	{880, 35, 100, 37},
+		FALSE, 0, IDC_ALTITUDE,		{885, 55,  94, 16},
+		FALSE, 0, IDC_PDOP_T,		{880, 80, 100, 37},
+		FALSE, 0, IDC_PDOP,			{885, 100, 94, 16},
+		FALSE, 0, IDC_RTK_AGE_T,		{907, 35, 80, 37},
+		FALSE, 0, IDC_RTK_AGE,		{912, 55,  74, 16},
+		FALSE, 0, IDC_RTK_RATIO_T,	{907, 80, 80, 37},
+		FALSE, 0, IDC_RTK_RATIO,		{912, 100, 74, 16},
+		FALSE, 0, IDC_CLOCK_T, {680, 112, 102, 19},
+		FALSE, 0, IDC_CLOCK, {680, 132, 102, 24},
+		FALSE, 0, IDC_NOISE_T, {680, 112, 102, 19},
+		FALSE, 0, IDC_NOISE, {680, 132, 102, 24},
+
+		//Glonass Knum
+		FALSE, 0, IDC_KNUM_ENABLE, {699, 113, 82, 22},
+		FALSE, 0, IDC_KNUM_DISABLE, {699, 137, 82, 22},
+		FALSE, 0, IDC_KNUM_LIST, {794, 0, 182, 170},
+
+		//SNR Chart
+		TRUE, 0, IDC_GPS_SNR_T, {228, 146, 180, 18},
+		TRUE, 0, IDC_GPS_BAR, {228, 164, 343, 75},
+
+		TRUE, 0, IDC_BEIDOU_SNR_T, {228, 246, 180, 18},
+		TRUE, 0, IDC_BD_BAR, {228, 263, 343, 75},
+		FALSE, 0, IDC_GA_SNR_T, {656, 234, 180, 18},
+		FALSE, 0, IDC_GA_BAR, {656, 252, 343, 75},
+
+
+		//Earth View
+		FALSE, 0, IDC_EARTH_T, {301, 332, 106, 21},
+		FALSE, 0, IDC_EARTHSETTING, {387, 334, 18, 18},
+		FALSE, 0, IDC_EARTH_PANEL, {301, 352, 343, 253},
+		FALSE, 0, IDC_EARTH, {332, 353, 312, 251},
+
+		//Scatter View
+		FALSE, 0, IDC_SCATTER_SNR_T, {656, 332, 106, 21},
+		FALSE, 0, IDC_SCATTER_PANEL, {656, 352, 343, 253},
+		FALSE, 0, IDC_SCATTERSETTING, {742, 334, 18, 18},
+		FALSE, 0, IDC_DOWNLOAD_PANEL, {301, 629, 698, 55},
+
+		//Title
+		FALSE, 0, IDC_DOWNLOAD_T, {301, 611, 100, 19},
+
+		//Panel Setting Button
+
+		//Scatter
+		FALSE, 0, IDC_SCATTER, {657, 354, 258, 250},
+		FALSE, 0, IDC_2DRMS_T, {916, 457, 78, 18},
+		FALSE, 0, IDC_2DRMS, {915, 476, 78, 18},
+		FALSE, 0, IDC_CEP50_T, {916, 497, 78, 18},
+		FALSE, 0, IDC_CEP50, {915, 516, 78, 18},
+		FALSE, 0, IDC_SETORIGIN, {925, 540, 67, 24},
+		FALSE, 0, IDC_CLEAR, {925, 568, 67, 24},
+		FALSE,0, IDC_2DRMS_2, {915, 476, 78, 18},
+		FALSE,0, IDC_CEP50_2, {915, 516, 78, 18},
+		FALSE, 0, IDC_CENTER_ALT, {916, 453, 78, 32},
+		FALSE, 0, IDC_SCATTER_ALT, {915, 450, 78, 30},
+
+		FALSE, 0, IDC_ENUSCALE_T, {915, 358, 78, 18},
+		FALSE, 0, IDC_ENUSCALE, {915, 377, 78, 24},
+		FALSE, 0, IDC_MAPSCALE, {915, 377, 78, 24},
+		FALSE, 0, IDC_COOR_T, {915, 406, 78, 18},
+		FALSE, 0, IDC_COOR, {915, 425, 78, 18},
+
+		//DR
+		FALSE, 0, IDC_ODO_METER_T, {848, 454, 80, 18},
+		FALSE, 0, IDC_ODO_METER, {848, 472, 66, 24},
+		FALSE, 0, IDC_GYRO_DATA_T, {848, 502, 80, 18},
+		FALSE, 0, IDC_GYRO_DATA, {848, 520, 66, 24},
+		FALSE, 0, IDC_BK_INDICATOR_T, {848, 550, 80, 18},
+		FALSE, 0, IDC_BK_INDICATOR, {848, 568, 66, 24},
+
+		//E-Compass Calibration
+		FALSE, 0, IDC_ECOM_CALIB, {852, 571, 80, 36},
+		FALSE, 0, IDC_ECOM_COUNTER, {852, 608, 80, 30},
+
+		//Download
+		FALSE, 0, IDC_DOWNLOAD, {305, 645, 67, 27},
+		FALSE, 0, IDC_DL_BAUDRATE, {375, 646, 80, 18},
+		FALSE, 0, IDC_BROWSE, {456, 646, 24, 24},
+		FALSE, 0, IDC_FIRMWARE_PATH, {485, 650, 513, 33},
+		FALSE, 0, IDC_IN_LOADER, {300, 618, 146, 15},
+		0, 0, 0, {0, 0, 0, 0}
+	};
+#else
 	const UiLocationEntry UiTable[] =
 	{
 		//Left Panel
@@ -7655,10 +7836,10 @@ void CGPSDlg::RescaleDialog()
 
 		0, 0, 0, {0, 0, 0, 0}
 	};
-
+#endif
 	CRect rcWin, rcClient, rcNewSize;
+	CSize szClient(CLIENT_WIDTH, CLIENT_HEIGHT);
 	//CSize szClient(872, 248);		//Mini version size
-	CSize szClient(1008, (NMEA_INPUT) ? 614 : 690);
 
 	GetWindowRect(rcWin);
 	GetClientRect(rcClient);
@@ -7780,7 +7961,7 @@ bool CGPSDlg::SetFirstDataIn(bool b)
 {
 	if(!m_firstDataIn && b)
 	{
-		PostMessage(UWM_FIRST_NMEA, 0, 0);
+		PostMessage(UWM_FIRST_NMEA, 800, 0);
 		m_firstDataIn = true;
 		return true;
 	}
@@ -7866,7 +8047,7 @@ LRESULT CGPSDlg::OnGpsdoHiDownload(WPARAM wParam, LPARAM lParam)
 
 void CGPSDlg::GetGPSStatus()
 {
-	if(!g_setting.autoQueryVersion)
+	if(!g_setting.autoQueryVersion && !AUTO_QUERY_VERSION)
 	{
 		return;
 	}

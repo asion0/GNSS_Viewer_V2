@@ -23,6 +23,9 @@ Global
 		GNSS_General_RTK|Any CPU = GNSS_General_RTK|Any CPU
 		GNSS_General_RTK|Mixed Platforms = GNSS_General_RTK|Mixed Platforms
 		GNSS_General_RTK|Win32 = GNSS_General_RTK|Win32
+		GNSS_General_SAINTMAX|Any CPU = GNSS_General_SAINTMAX|Any CPU
+		GNSS_General_SAINTMAX|Mixed Platforms = GNSS_General_SAINTMAX|Mixed Platforms
+		GNSS_General_SAINTMAX|Win32 = GNSS_General_SAINTMAX|Win32
 		GNSS_General_SWID_NewLoader|Any CPU = GNSS_General_SWID_NewLoader|Any CPU
 		GNSS_General_SWID_NewLoader|Mixed Platforms = GNSS_General_SWID_NewLoader|Mixed Platforms
 		GNSS_General_SWID_NewLoader|Win32 = GNSS_General_SWID_NewLoader|Win32
@@ -85,6 +88,11 @@ Global
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_RTK|Mixed Platforms.Build.0 = GNSS_General_RTK|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_RTK|Win32.ActiveCfg = GNSS_General_RTK|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_RTK|Win32.Build.0 = GNSS_General_RTK|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_SAINTMAX|Any CPU.ActiveCfg = GNSS_General_SAINTMAX|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_SAINTMAX|Mixed Platforms.ActiveCfg = GNSS_General_SAINTMAX|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_SAINTMAX|Mixed Platforms.Build.0 = GNSS_General_SAINTMAX|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_SAINTMAX|Win32.ActiveCfg = GNSS_General_SAINTMAX|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_SAINTMAX|Win32.Build.0 = GNSS_General_SAINTMAX|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_SWID_NewLoader|Any CPU.ActiveCfg = GNSS_General_SWID_NewLoader|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_SWID_NewLoader|Mixed Platforms.ActiveCfg = GNSS_General_SWID_NewLoader|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_General_SWID_NewLoader|Mixed Platforms.Build.0 = GNSS_General_SWID_NewLoader|Win32

@@ -1,6 +1,5 @@
 #pragma once
 
-
 struct ScatterPoint
 {
 	S16 x;
@@ -43,7 +42,7 @@ public:
 	double lat_deg;
 	Matrix _WGS842NEU;
 	Matrix ENU;
-	double current_x, current_y;
+	//double current_x, current_y;
 
     int maplondeg_t,  maplonmin_t;  
 	double maplonsec_t; 

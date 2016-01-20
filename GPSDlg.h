@@ -503,6 +503,16 @@ public:
 	bool m_nmeaPlayPause;
 	CCriticalSection _nmeaPlayInterval;
 	CCriticalSection csSatelliteStruct;
+	CButton m_nmea0183msg;
+
+	Satellite satecopy_gps[MAX_SATELLITE];
+	Satellite sate_gps[MAX_SATELLITE];	
+	Satellite satecopy_gnss[MAX_SATELLITE];
+	Satellite sate_gnss[MAX_SATELLITE];	
+	Satellite satecopy_bd[MAX_SATELLITE];
+	Satellite sate_bd[MAX_SATELLITE];	
+	Satellite satecopy_ga[MAX_SATELLITE];
+	Satellite sate_ga[MAX_SATELLITE];	
 
 protected:
     CBitmapButton m_SetOriginBtn;	
@@ -522,22 +532,12 @@ protected:
 	CCriticalSection _BINMSGCS;
 	CCriticalSection _save_nmea_cs;
 	
-	Satellite satecopy_gps[MAX_SATELLITE];
-	Satellite sate_gps[MAX_SATELLITE];	
-	Satellite satecopy_gnss[MAX_SATELLITE];
-	Satellite sate_gnss[MAX_SATELLITE];	
-	Satellite satecopy_bd[MAX_SATELLITE];
-	Satellite sate_bd[MAX_SATELLITE];	
-	Satellite satecopy_ga[MAX_SATELLITE];
-	Satellite sate_ga[MAX_SATELLITE];	
-
 
 	void UpdateCooridate();
 private:
 	char m_currentDir[MyMaxPath];
 	bool m_gpsdoInProgress;
 	CButton m_binarymsg;
-	CButton m_nmea0183msg;
 	CButton m_no_output;
 //	CCigRgsDlg* pCRDlg;
 	CStatic m_connectT;
@@ -1357,5 +1357,4 @@ private:
 public:
 	void NmeaOutput(LPCSTR pt, int len);
 	int m_lastNmeaToken;
-	UINT usedEarth;
 };
