@@ -20,8 +20,8 @@
 #include "ColorStatic.h"
 #include "MsgList.h"
 
-#include <Dbt.h>
-#include <setupapi.h>
+//#include <Dbt.h>
+//#include <setupapi.h>
 //#define WGS84a      6378137.0
 //#define WGS84b      6356752.314
 
@@ -36,9 +36,6 @@
 #define WGS84_RB    (WGS84_RA*(1.0-WGS84_F))      // semi-major earth axis(ellipsoid polar radius)
 #define WGS84_E2    (2.0*WGS84_F-WGS84_F*WGS84_F) // eccentricity squared: (RA*RA-RB*RB)/RA*RA
 #define WGS84_E2P   (WGS84_E2/(1.0-WGS84_E2))     // eccentricity squared: (RA*RA-RB*RB)/RB*RB
-
-
-#define ICD_PI           (3.1415926535898)  // ICD 200-c p.101 
 
 #define UWM_KERNEL_REBOOT	(WM_USER + 0x134)
 #define UWM_FIRST_NMEA		(WM_USER + 0x135)
@@ -127,7 +124,7 @@ struct LL2 {
 	double lon;
 	double speed;
 	double alt;
-	UTC_T utc;
+	UtcTime utc;
 };
 
 // Copy from HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceClasses
@@ -217,7 +214,10 @@ public:
 	static UINT UWM_SAVENMEA_EVENT;
 	static UINT UWM_UPDATE_EVENT;
 	static CGPSDlg* gpsDlg;
-
+#if (SPECIAL_TEST)
+	U08* specCmd;
+	U32	 specSize;
+#endif
 	enum { IDD = IDD_GPS_DIALOG };
 #if MORE_ENU_SCALE
 	enum { DefauleEnuScale = 5 };
@@ -721,7 +721,7 @@ public:
 //	void WriteKMLini(CFile&  ,double ,double );	
 //	void WritePOIPath(CFile& file ,vector<LLA_T> *lst );
 //	void close_nmea_file();
-	void ConvertGpsTimeToUtc(S16, D64, UTC_T*);	    
+//	void ConvertGpsTimeToUtc(S16, D64, UTC_T*);	    
 //	void stop_write_nmea();
     void Initialization();
     void SetFacMsg(unsigned char*);	

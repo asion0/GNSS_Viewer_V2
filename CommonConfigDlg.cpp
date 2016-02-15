@@ -14,6 +14,7 @@ UINT AFX_CDECL ConfigThread(LPVOID param)
 	return 0;
 }
 
+
 IMPLEMENT_DYNAMIC(CCommonConfigDlg, CDialog)
 
 CCommonConfigDlg::CCommonConfigDlg(UINT nIDTemplate, CWnd* pParent /*=NULL*/)
@@ -968,20 +969,20 @@ void CConfigPowerMode::DoCommand()
 }
 
 // CConfigParamSearchEngineSleepCRiteria 對話方塊
-IMPLEMENT_DYNAMIC(CConfigParamSearchEngineSleepCRiteria, CCommonConfigDlg)
+IMPLEMENT_DYNAMIC(CConfigParamSearchEngineSleepCriteria, CCommonConfigDlg)
 
-CConfigParamSearchEngineSleepCRiteria::CConfigParamSearchEngineSleepCRiteria(CWnd* pParent /*=NULL*/)
-: CCommonConfigDlg(IDD_CONFIG_PARAM_SRCH_ENG_SLP_CRT, pParent)
+CConfigParamSearchEngineSleepCriteria::CConfigParamSearchEngineSleepCriteria(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CONFIG_PRM_SRCH_ENG_SLP_CRT, pParent)
 {
 
 }
 
-BEGIN_MESSAGE_MAP(CConfigParamSearchEngineSleepCRiteria, CCommonConfigDlg)
-	ON_BN_CLICKED(IDOK, &CConfigParamSearchEngineSleepCRiteria::OnBnClickedOk)
+BEGIN_MESSAGE_MAP(CConfigParamSearchEngineSleepCriteria, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigParamSearchEngineSleepCriteria::OnBnClickedOk)
 END_MESSAGE_MAP()
 
 // CConfigParamSearchEngineSleepCRiteria 訊息處理常式
-BOOL CConfigParamSearchEngineSleepCRiteria::OnInitDialog()
+BOOL CConfigParamSearchEngineSleepCriteria::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
 	GetDlgItem(IDC_TRACKED_NUM)->SetWindowText("10");
@@ -990,7 +991,7 @@ BOOL CConfigParamSearchEngineSleepCRiteria::OnInitDialog()
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
-void CConfigParamSearchEngineSleepCRiteria::OnBnClickedOk()
+void CConfigParamSearchEngineSleepCriteria::OnBnClickedOk()
 {
 	CString txt;
 	GetDlgItem(IDC_TRACKED_NUM)->GetWindowText(txt);
@@ -1005,7 +1006,7 @@ void CConfigParamSearchEngineSleepCRiteria::OnBnClickedOk()
 	OnOK();
 }
 
-void CConfigParamSearchEngineSleepCRiteria::DoCommand()
+void CConfigParamSearchEngineSleepCriteria::DoCommand()
 {
 	BinaryData cmd(4);
 	*cmd.GetBuffer(0) = 0x64;
@@ -1982,6 +1983,24 @@ void CConfigRtkMode::OnBnClickedOk()
 	OnOK();
 }
 
+UINT AFX_CDECL ConfigRtkThread(LPVOID param)
+{
+	bool restoreConnect = (((int)(param))==0);
+	CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), configPrompt, false);
+
+	Sleep(1000);
+
+	BinaryData cmd(3);
+	*cmd.GetBuffer(0) = 0x0E;
+	*cmd.GetBuffer(1) = (U08)1;
+	*cmd.GetBuffer(2) = (U08)configCmd.GetData()[7];
+	configCmd.SetData(cmd);
+	configPrompt = "Configure 1Hz update rate successful...";
+	CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), configPrompt, restoreConnect);
+
+	return 0;
+}
+
 void CConfigRtkMode::DoCommand()
 {
 	CWaitCursor wait;
@@ -1993,8 +2012,16 @@ void CConfigRtkMode::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure RTK mode successful...";
-    AfxBeginThread(ConfigThread, 0);
+	if(m_mode == 1)	//Base mode
+	{
+		AfxBeginThread(ConfigRtkThread, 0);
+	}
+	else
+	{
+		AfxBeginThread(ConfigThread, 0);
+	}
 }
+
 
 // CConfigRtkParameters 對話方塊
 IMPLEMENT_DYNAMIC(CConfigRtkParameters, CCommonConfigDlg)

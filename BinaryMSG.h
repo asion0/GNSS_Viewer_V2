@@ -149,12 +149,11 @@ typedef struct RECEIVER_NAV_DATA
 	F32 hdop;
 	F32 vdop;
 	F32 tdop;
-}RECEIVER_NAV_DATA_T;
+} RECEIVER_NAV_DATA_T;
 
 //struct UTC_TIME_T;
 struct POS_T;
 struct LLA_T;
-
 
 
 void ECEF_USER_PVT_PROC(ECEF_USER_PVT& ecef_user_pvt,U08* pt);

@@ -6113,7 +6113,7 @@ void CGPSDlg::OnConfigLeapSeconds()
 
 void CGPSDlg::OnConfigParamSearchEngineSleepCriteria()
 {
-	CConfigParamSearchEngineSleepCRiteria dlg;
+	CConfigParamSearchEngineSleepCriteria dlg;
 	DoCommonConfig(&dlg);
 }
 

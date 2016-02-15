@@ -4,6 +4,8 @@
 #include <vector>
 #include <list>
 #include "matrix.h"
+#include "Registry.h"
+
 using namespace math;
 using namespace std;
 
@@ -22,8 +24,6 @@ class CWaitReadLog;
 struct GPGSA;
 typedef matrix<float> Matrix;
 
-
-#include "Registry.h"
 #define LogDefaultName		"Response.log"
 #define DefaultTimeout		3000
 
@@ -33,12 +33,6 @@ typedef matrix<float> Matrix;
 #define SCAN_TIME_OUT_MS          2000
 #define DOWNLOAD_TIME_OUT_LOOP    10
 #define BUF_SIZE 4096
-
-#ifndef PI
- #define PI          3.141592653589793
-#endif
-//#define e           0.0818191913
-
 #define BOOTLOADER_SIZE		0x10000
 
 struct Setting
@@ -185,14 +179,15 @@ protected:
 
 };
 
-typedef struct {
-  S16 year;
-  S16 month;
-  S16 day;
-  U08 hour;
-  U08 minute;
-  F32 sec;
-} UTC_T;
+typedef struct UTC_TIME_T {
+	S16 year;
+	S16 month;
+	S16 day;
+	S16 day_of_year;
+	S16 hour;
+	S16 minute;
+	F32 sec;
+} UtcTime;
 
 struct POS_T {
   D64 px;
@@ -206,23 +201,13 @@ struct LLA_T {
 	F32 alt;
 };
 
-typedef struct {
+struct LL {
 	double lat;
 	double lon;
 	double speed;
 	double alt;
-	UTC_T utc;
-} LL;
-
-typedef struct UTC_TIME_T {
-	S16 year;
-	S16 month;
-	S16 day;
-	S16 day_of_year;
-	S16 hour;
-	S16 minute;
-	F32 sec;
-} UtcTime;
+	UtcTime utc;
+};
 
 enum QualityMode {
 	Uninitial = 0,
@@ -288,7 +273,7 @@ double Deg2Rad(double degree);
 double Rad2Deg(double rad);
 float FixedPointToSingle(U32 FixedPointValue, int NumberOfFractionalBits);
 void COO_geodetic_to_cartesian( const LLA_T* lla_p, POS_T* xyz_p );
-void  convert_gps_time_to_utc( S16 wn, D64 tow, UTC_T* utc_p );
+//void  convert_gps_time_to_utc( S16 wn, D64 tow, UTC_T* utc_p );
 
 extern const char* DatumList[];
 extern const int DatumListSize;

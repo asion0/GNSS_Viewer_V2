@@ -56,7 +56,7 @@ BOOL CHostBaseDownloadDlg::OnInitDialog()
 
 	CRegistry reg;
 	reg.SetRootKey(HKEY_CURRENT_USER);
-	if(reg.SetKey("Software\\GNSSViewer\\GPS", true))
+	if(reg.SetKey("Software\\GNSSViewer\\GPS", TRUE))
 	{
 		m_nBaudrateIdx = reg.ReadInt("hb_baudrate", g_setting.boostBaudIndex);
 		m_strPath = reg.ReadString("hb_firmware", "");
@@ -118,12 +118,7 @@ void CHostBaseDownloadDlg::OnBnClickedSendCmd()
 {
 	GetValue();
 
-//	CGPSDlg::gpsDlg->m_bHostBasedMode = TRUE;
-//	CGPSDlg::gpsDlg->m_isHostOnlySendCmd = TRUE;
-//	CGPSDlg::gpsDlg->m_isHostOnlySendBin = FALSE;
-//	CGPSDlg::gpsDlg->m_isUsingV8InternalLoader = FALSE;
 	CGPSDlg::gpsDlg->m_DownloadMode = CGPSDlg::HostBasedCmdOnly;
-
 	CGPSDlg::gpsDlg->m_nDownloadBaudIdx = GetBaudrateIndex();
 	CGPSDlg::gpsDlg->m_strDownloadImage = GetFilePath();
 	CGPSDlg::gpsDlg->m_nDownloadBufferIdx = GetBufferIndex();
@@ -136,12 +131,7 @@ void CHostBaseDownloadDlg::OnBnClickedSendBin()
 {
 	GetValue();
 	
-//	CGPSDlg::gpsDlg->m_bHostBasedMode = TRUE;
-//	CGPSDlg::gpsDlg->m_isHostOnlySendCmd = FALSE;
-//	CGPSDlg::gpsDlg->m_isHostOnlySendBin = TRUE;
-//	CGPSDlg::gpsDlg->m_isUsingV8InternalLoader = FALSE;
 	CGPSDlg::gpsDlg->m_DownloadMode = CGPSDlg::HostBasedBinOnly;
-
 	CGPSDlg::gpsDlg->m_nDownloadBaudIdx = GetBaudrateIndex();
 	CGPSDlg::gpsDlg->m_strDownloadImage = GetFilePath();
 	CGPSDlg::gpsDlg->m_nDownloadBufferIdx = GetBufferIndex();

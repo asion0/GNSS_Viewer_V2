@@ -1493,7 +1493,7 @@ bool CGPSDlg::Download()
 		U16 crcCode = 0;
 		BOOL hasAckVersion = FALSE;
 		m_nDefaultTimeout = 5000;
-		if(Ack == QuerySoftwareCrcSystemCode(Return, &crcCode))
+		if(!DOWNLOAD_IMMEDIATELY && Ack == QuerySoftwareCrcSystemCode(Return, &crcCode))
 		{
 			hasAckVersion = TRUE;
 		}
@@ -1512,7 +1512,11 @@ bool CGPSDlg::Download()
 		{	//V8 ROM Code A must use external loader.
 			m_DownloadMode = RomExternalDownload;
 		}
-		Sleep(100);
+
+		if(!DOWNLOAD_IMMEDIATELY)
+		{
+			Sleep(100);
+		}
 
 		if(m_DownloadMode==GpsdoMasterSlave && SecondRun)
 		{

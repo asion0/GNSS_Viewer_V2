@@ -141,7 +141,7 @@ void CooCartesianToGeodetic(const POS_T* xyz_p, LLA_T* lla_p)
 
 	if( p <= 0.01f )
 	{
-		lla_p->lat = (xyz_p->pz >= 0)?(ICD_PI/2.0):(-ICD_PI/2.0);
+		lla_p->lat = (xyz_p->pz >= 0)?(PI/2.0):(-PI/2.0);
 		lla_p->lon = 0.0;
 		lla_p->alt = (F32)(fabs(xyz_p->pz) - WGS84_RB);
 		return;

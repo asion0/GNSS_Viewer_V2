@@ -187,16 +187,20 @@
 // .181 20151217 Remove Geo-fecing in General version. request from Oliver.
 // .181 20151221 Fixed degree symbol display in English issue, report from fourm user.
 // .182 20151224 Add [Query Binary Measurement Data Out] in binary menu. Request form Andrew and Ryan.
-// .184 20151230 Ture _ALWAYS_USE_EXTERNAL_SREC_ to 1, using 115200 dl srec. Request form Leo by ÀA½ü  
+// .184 20151230 Turn _ALWAYS_USE_EXTERNAL_SREC_ to 1, using 115200 dl srec. Request form Leo by ÀA½ü  
 // .185 20160105 SAINTMAX customer version QWP002001-1050104. Request form Leo
 // .186 20160112 SAINTMAX customer version QWP002001-1050104. Request form Leo
-// .187 20160120 Player fixed set origin error(In west earth) and timing control issue, Request by Oliver and Andrew.
+// .187 20160120 Player fixed set origin error(In west earth) and timing control issue, Request form Oliver and Andrew.
+// .188 20160123 Modify some typo text, Request from forum user.
+// .189 20160126 Send 1 Hz cmd after config to RTK base mode, Request from Oliver.
+// .190 20160202 Add SPECIAL_TEST for eten special command test, Request from Leo and Andrew.
+// .191 20160203 Add SPECIAL_TEST random test, Request from Leo and Andrew.
 
 //#define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.187"
+#define APP_VERSION				"2.0.191"
 #define APP_TITLE				""
 #define APP_MODULE				"Venus 8"
 
@@ -262,7 +266,6 @@
 #define	MORE_ENU_SCALE			1
 #define	GPS_183_188				1
 #define	_MODULE_SUP_800_		0
-//#define	_USE_RESOURCE_LOADER_	0
 #define	_RESOURCE_LOADER_ID_	0		//specify a special download loader for customer.
 #define CHECK_SAEE_MULTIHZ_ON	0		//Check SAEE and Multi-Hz can't both on.
 #define INVERT_LON_LAT			1		//Final spec for GeoFecing spec.
@@ -270,6 +273,8 @@
 #define CLIENT_WIDTH			1008	//Viewer window client width
 #define CLIENT_HEIGHT			690		//Viewer window client height
 #define AUTO_QUERY_VERSION		0
+#define DOWNLOAD_IMMEDIATELY	0		//start download immediately when nmea come in.
+#define SPECIAL_TEST			0		//Test ETEN case 20160202
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 #if defined(SWCFG_VENDOR_GNSS_SAINTMAX)

@@ -54,8 +54,6 @@ struct LogFlashInfo1
 	#if defined SOARCOM
 	S08 password[8]; 
 	#endif
-
-	//U08 checksum;
 };
 
 typedef struct 

@@ -347,12 +347,12 @@ protected:
 };
 
 // CConfigParamSearchEngineSleepCRiteria 對話方塊
-class CConfigParamSearchEngineSleepCRiteria : public CCommonConfigDlg
+class CConfigParamSearchEngineSleepCriteria : public CCommonConfigDlg
 {
-	DECLARE_DYNAMIC(CConfigParamSearchEngineSleepCRiteria)
+	DECLARE_DYNAMIC(CConfigParamSearchEngineSleepCriteria)
 public:
-	CConfigParamSearchEngineSleepCRiteria(CWnd* pParent = NULL);   // 標準建構函式
-	virtual ~CConfigParamSearchEngineSleepCRiteria() {};
+	CConfigParamSearchEngineSleepCriteria(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigParamSearchEngineSleepCriteria() {};
 
 	virtual void DoCommand();
 

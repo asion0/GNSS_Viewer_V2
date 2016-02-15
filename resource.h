@@ -219,7 +219,7 @@
 #define IDD_CONFIG_SMOOTH_MODE          467
 #define IDD_CONFIG_TIME_STAMPING        468
 #define IDD_CONFIG_LEAP_SECONDS         469
-#define IDD_CONFIG_PARAM_SRCH_ENG_SLP_CRT 470
+#define IDD_CONFIG_PRM_SRCH_ENG_SLP_CRT 470
 #define IDB_GA_ACT                      471
 #define IDD_GPSDO_DOWNLOAD              471
 #define IDB_GA_DIS                      472
