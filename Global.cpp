@@ -744,3 +744,13 @@ double ConvertLeonDouble(const U08* ptr)
 	}
 	return *((double*)temp);
 }
+
+float ConvertLeonFloat(const U08* ptr)
+{
+	U08 temp[4] = {0};
+	for(int i = 0; i < 4; ++i)
+	{
+		temp[3 - i] = *ptr++;
+	}
+	return *((float*)temp);
+}

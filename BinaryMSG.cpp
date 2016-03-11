@@ -282,6 +282,10 @@ void ShowSubframe(U08 *src, bool convertOnly, CString* pStr)
 	{
 		subFrameType = "BEIDOU2_D2_SUBFRAME";
 	}	
+	else if(msgType==0xE4)
+	{
+		subFrameType = "SBAS_SUBFRAME";
+	}
 	else
 	{
 		subFrameType = "Unknown_SUBFRAME";

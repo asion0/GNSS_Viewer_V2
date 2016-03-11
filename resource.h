@@ -674,7 +674,9 @@
 #define IDC_UART                        1243
 #define IDC_MODE2                       1243
 #define IDC_DEFAULT                     1243
+#define IDC_BASE_OPT_FUN                1243
 #define IDC_GET                         1244
+#define IDC_ROVER_OPT_FUN               1244
 #define IDC_SET                         1245
 #define IDC_DATE_T                      1250
 #define IDC_TIME_T                      1251
@@ -909,6 +911,20 @@
 #define IDC_PARAM07                     1385
 #define IDC_PARAM08                     1386
 #define IDC_PARAM09                     1387
+#define IDC_POINTS_PMT                  1388
+#define IDD_RTK_MODE2                   1389
+#define IDC_STT_EDT1                    1389
+#define IDC_STT_EDT2                    1390
+#define IDC_STT_EDT3                    1391
+#define IDC_SRV_SET1                    1392
+#define IDC_SRV_SET2                    1393
+#define IDC_STT_SET3                    1394
+#define IDC_SRV_SET3                    1394
+#define IDC_STT_SET1                    1395
+#define IDC_SRV_EDT1                    1396
+#define IDC_STT_SET2                    1397
+#define IDC_SRV_EDT2                    1398
+#define IDC_DESC                        1399
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_BINARY_SYSTEMRESTART         32811
@@ -1169,6 +1185,17 @@
 #define ID_CONFIG_RTK_PARAM             33103
 #define ID_QUERY_RTK_PARAM              33104
 #define ID_RTK_RESET                    33105
+#define ID_CONFIG_GEOFENCE1             33106
+#define ID_CONFIG_GEOFENCE2             33107
+#define ID_CONFIG_GEOFENCE3             33108
+#define ID_CONFIG_GEOFENCE4             33109
+#define ID_QUERY_GEOFENCE1              33110
+#define ID_QUERY_GEOFENCE2              33111
+#define ID_QUERY_GEOFENCE3              33112
+#define ID_QUERY_GEOFENCE4              33113
+#define ID_QUERY_GEOFENCE_RESULTEX      33114
+#define ID_QUERY_RTK_MODE2              33115
+#define ID_CONFIG_RTK_MODE2             33116
 
 // Next default values for new objects
 // 
@@ -1176,7 +1203,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        477
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1388
+#define _APS_NEXT_CONTROL_VALUE         1400
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

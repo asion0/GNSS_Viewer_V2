@@ -597,13 +597,8 @@ public:
 	virtual ~CConfigGeofencing() {};
 
 	virtual void DoCommand();
-	afx_msg void OnBnClickedOk();
-	afx_msg void OnBnClickedAddPoint();
-	afx_msg void OnBnClickedAddPoints();
-	afx_msg void OnBnClickedClearAll();
-
 	virtual BOOL OnInitDialog();
-
+	void SetDataNo(int n) { m_no = n; }
 protected:
 	struct Point
 	{
@@ -614,10 +609,15 @@ protected:
 	vector<double> lons;
 	vector<double> lats;
 	U08 m_attribute;
+	U08 m_no;
 
 	bool AddPoint(const CString s);
 
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
+	afx_msg void OnBnClickedOk();
+	afx_msg void OnBnClickedAddPoint();
+	afx_msg void OnBnClickedAddPoints();
+	afx_msg void OnBnClickedClearAll();
 	DECLARE_MESSAGE_MAP()
 };
 
@@ -689,3 +689,35 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
+
+// CConfigRtkMode2 對話方塊
+class CConfigRtkMode2 : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigRtkMode2)
+public:
+	CConfigRtkMode2(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigRtkMode2() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+	afx_msg void OnCbnSelChangeRtkMode();
+	afx_msg void OnCbnSelChangeBaseOpt();
+	afx_msg void OnCbnSelChangeRoverOpt();
+
+	virtual BOOL OnInitDialog();
+
+protected:
+	U08 m_rtkMode;
+	U08 m_baseOpt;
+	U08 m_roverOpt;
+	U32 m_srvValue1;
+	U32 m_srvValue2;
+	double m_sttValue1;
+	double m_sttValue2;
+	float m_sttValue3;
+	U08 m_attribute;
+
+	void UpdateStatus();
+
+	DECLARE_MESSAGE_MAP()
+};

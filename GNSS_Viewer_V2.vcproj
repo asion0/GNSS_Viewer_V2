@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG;_MORE_INFO_"
+				PreprocessorDefinitions="_DEBUG;_MORE_INFO_;"
 				Culture="1033"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
@@ -1349,7 +1349,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG;_MORE_INFO_"
+				PreprocessorDefinitions="NDEBUG;_MORE_INFO_;"
 				Culture="1033"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>

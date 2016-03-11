@@ -1760,7 +1760,7 @@ IMPLEMENT_DYNAMIC(CConfigGeofencing, CCommonConfigDlg)
 CConfigGeofencing::CConfigGeofencing(CWnd* pParent /*=NULL*/)
 : CCommonConfigDlg(IDD_GEOFENCE, pParent)
 {
-
+	m_no = 0;
 }
 
 BEGIN_MESSAGE_MAP(CConfigGeofencing, CCommonConfigDlg)
@@ -1788,13 +1788,13 @@ BOOL CConfigGeofencing::OnInitDialog()
 	{
 		GetDlgItem(IDC_COOR_TEXT1)->SetWindowText("Latitude");
 		GetDlgItem(IDC_COOR_TEXT2)->SetWindowText("Longitude");
-		GetDlgItem(IDC_POINTS_TEXT)->SetWindowText("2. Add multiple coordinates, separated by commas and rows(Ctrl + Enter).\r\ne.g.:\r\n24.784915663,121.008697445\r\n24.784965052,121.008810556\r\n24.784854644,121.008853770\r\n24.784811388,121.008751459");
+		GetDlgItem(IDC_POINTS_PMT)->SetWindowText("2. Add multiple coordinates, separated by commas and rows(Ctrl + Enter).\r\ne.g.:\r\n24.784915663,121.008697445\r\n24.784965052,121.008810556\r\n24.784854644,121.008853770\r\n24.784811388,121.008751459");
 	}
 	else
 	{
 		GetDlgItem(IDC_COOR_TEXT1)->SetWindowText("Longitude");
 		GetDlgItem(IDC_COOR_TEXT2)->SetWindowText("Latitude");
-		GetDlgItem(IDC_POINTS_TEXT)->SetWindowText("2. Add multiple coordinates, separated by commas and rows(Ctrl + Enter).\r\ne.g.:\r\n121.008697445,24.784915663\r\n121.008810556,24.784965052\r\n121.008853770,24.784854644\r\n121.008751459,24.784811388");
+		GetDlgItem(IDC_POINTS_PMT)->SetWindowText("2. Add multiple coordinates, separated by commas and rows(Ctrl + Enter).\r\ne.g.:\r\n121.008697445,24.784915663\r\n121.008810556,24.784965052\r\n121.008853770,24.784854644\r\n121.008751459,24.784811388");
 	}
 
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -1847,7 +1847,7 @@ void CConfigGeofencing::OnBnClickedAddPoints()
 
 bool CConfigGeofencing::AddPoint(const CString s)
 {
-	const int MaxCount = 10;
+	const int MaxCount = (m_no==0) ? 10 : 16;
 	if(m_points.GetCount() == MaxCount)
 	{
 		CString msg;
@@ -1870,9 +1870,21 @@ void CConfigGeofencing::OnBnClickedOk()
 	int count = m_points.GetCount();
 	if(count < 3)
 	{
-		txt.Format("It can not be set less than 3 points");
+		txt.Format("You can not set up less than 3 points.");
 		::AfxMessageBox(txt);
 		return;
+
+		/*
+		txt.Format("Set up less than 3 points will clear this geo-fencing data. Are you sure?");
+		if(IDYES == ::AfxMessageBox(txt, MB_YESNO))
+		{
+			count = 0;
+		}
+		else
+		{
+			return;
+		}
+		*/
 	}
 
 	lons.clear();
@@ -1913,17 +1925,23 @@ void CConfigGeofencing::DoCommand()
 	CWaitCursor wait;
 	U08 size = (U08)lons.size();
 	U08 temp[8];
-	BinaryData cmd(4 + 16 * size);
+	BinaryData cmd(((m_no==0) ? 4 : 5) + 16 * size);
 	*cmd.GetBuffer(0) = 0x64;
-	*cmd.GetBuffer(1) = 0x2F;
+	*cmd.GetBuffer(1) = (m_no==0) ? 0x2F : 0x34;
 	*cmd.GetBuffer(2) = m_attribute;
-	*cmd.GetBuffer(3) = size;
+	int index = 3;
+	if(m_no!=0)	
+	{
+		*cmd.GetBuffer(3) = m_no;
+		index = 4;
+	}
+	*cmd.GetBuffer(index) = size;
 
 	for(U08 i = 0; i < size; ++i)
 	{
 		memcpy(temp, &(lats[i]), sizeof(temp));
 		U08* dptr = temp + 7;
-		int p = i * 16 + 4;
+		int p = i * 16 + index + 1;
 		*cmd.GetBuffer(p++) = *dptr--;
 		*cmd.GetBuffer(p++) = *dptr--;
 		*cmd.GetBuffer(p++) = *dptr--;
@@ -1946,7 +1964,14 @@ void CConfigGeofencing::DoCommand()
 	}
 
 	configCmd.SetData(cmd);
-	configPrompt = "Configure geo-fencing data successful...";
+	if(m_no == 0)
+	{
+		configPrompt = "Configure geo-fencing data successful...";
+	}
+	else
+	{
+		configPrompt.Format("Configure geo-fencing data %d successful...", m_no);
+	}
     AfxBeginThread(ConfigThread, 0);
 }
 
@@ -2013,7 +2038,7 @@ void CConfigRtkMode::DoCommand()
 	configCmd.SetData(cmd);
 	configPrompt = "Configure RTK mode successful...";
 	if(m_mode == 1)	//Base mode
-	{
+	{	//Base mode should set to 1 Hz.
 		AfxBeginThread(ConfigRtkThread, 0);
 	}
 	else
@@ -2021,7 +2046,6 @@ void CConfigRtkMode::DoCommand()
 		AfxBeginThread(ConfigThread, 0);
 	}
 }
-
 
 // CConfigRtkParameters 對話方塊
 IMPLEMENT_DYNAMIC(CConfigRtkParameters, CCommonConfigDlg)
@@ -2183,4 +2207,231 @@ void CConfigRtkReset::DoCommand()
 	configCmd.SetData(cmd);
 	configPrompt = "Reset RTK engine successful...";
     AfxBeginThread(ConfigThread, 0);
+}
+
+// CConfigRtkMode2 對話方塊
+IMPLEMENT_DYNAMIC(CConfigRtkMode2, CCommonConfigDlg)
+
+CConfigRtkMode2::CConfigRtkMode2(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_RTK_MODE2, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigRtkMode2, CCommonConfigDlg)
+	ON_CBN_SELCHANGE(IDC_MODE, OnCbnSelChangeRtkMode)
+	ON_CBN_SELCHANGE(IDC_BASE_OPT_FUN, OnCbnSelChangeBaseOpt)
+	ON_CBN_SELCHANGE(IDC_ROVER_OPT_FUN, OnCbnSelChangeRoverOpt)
+	ON_BN_CLICKED(IDOK, &CConfigRtkMode2::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigRtkMode 訊息處理常式
+
+BOOL CConfigRtkMode2::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_ROVER_OPT_FUN))->SetCurSel(0);
+
+	GetDlgItem(IDC_SRV_EDT1)->SetWindowText("2000");
+	GetDlgItem(IDC_SRV_EDT2)->SetWindowText("30");
+
+	GetDlgItem(IDC_STT_EDT1)->SetWindowText("");
+	GetDlgItem(IDC_STT_EDT2)->SetWindowText("");
+	GetDlgItem(IDC_STT_EDT3)->SetWindowText("");
+
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	UpdateStatus();
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigRtkMode2::OnBnClickedOk()
+{	
+	m_rtkMode = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
+	m_baseOpt = ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->GetCurSel();
+	m_roverOpt = ((CComboBox*)GetDlgItem(IDC_ROVER_OPT_FUN))->GetCurSel();
+
+	CString txt;
+	((CEdit*)GetDlgItem(IDC_SRV_EDT1))->GetWindowText(txt);
+	m_srvValue1 = atoi(txt);
+	((CEdit*)GetDlgItem(IDC_SRV_EDT2))->GetWindowText(txt);
+	m_srvValue2 = atoi(txt);
+
+	((CEdit*)GetDlgItem(IDC_STT_EDT1))->GetWindowText(txt);
+	m_sttValue1 = atof(txt);
+	((CEdit*)GetDlgItem(IDC_STT_EDT2))->GetWindowText(txt);
+	m_sttValue2 = atof(txt);
+	((CEdit*)GetDlgItem(IDC_STT_EDT3))->GetWindowText(txt);
+	m_sttValue3 = (float)atof(txt);
+
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
+void CConfigRtkMode2::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(33);
+	*cmd.GetBuffer(0) = 0x6A;
+	*cmd.GetBuffer(1) = 0x06;
+	*cmd.GetBuffer(2) = (U08)m_rtkMode;
+	*cmd.GetBuffer(3) = (m_rtkMode) ? m_baseOpt : m_roverOpt;
+	//U32
+	*cmd.GetBuffer(4) = HIBYTE(HIWORD(m_srvValue1));
+	*cmd.GetBuffer(5) = LOBYTE(HIWORD(m_srvValue1));
+	*cmd.GetBuffer(6) = HIBYTE(LOWORD(m_srvValue1));
+	*cmd.GetBuffer(7) = LOBYTE(LOWORD(m_srvValue1));
+	//U32
+	*cmd.GetBuffer(8) = HIBYTE(HIWORD(m_srvValue2));
+	*cmd.GetBuffer(9) = LOBYTE(HIWORD(m_srvValue2));
+	*cmd.GetBuffer(10) = HIBYTE(LOWORD(m_srvValue2));
+	*cmd.GetBuffer(11) = LOBYTE(LOWORD(m_srvValue2));
+	//D64
+	*cmd.GetBuffer(12) = *(((U08*)(&m_sttValue1)) + 7);
+	*cmd.GetBuffer(13) = *(((U08*)(&m_sttValue1)) + 6);
+	*cmd.GetBuffer(14) = *(((U08*)(&m_sttValue1)) + 5);
+	*cmd.GetBuffer(15) = *(((U08*)(&m_sttValue1)) + 4);
+	*cmd.GetBuffer(16) = *(((U08*)(&m_sttValue1)) + 3);
+	*cmd.GetBuffer(17) = *(((U08*)(&m_sttValue1)) + 2);
+	*cmd.GetBuffer(18) = *(((U08*)(&m_sttValue1)) + 1);
+	*cmd.GetBuffer(19) = *(((U08*)(&m_sttValue1)) + 0);
+	//D64
+	*cmd.GetBuffer(20) = *(((U08*)(&m_sttValue2)) + 7);
+	*cmd.GetBuffer(21) = *(((U08*)(&m_sttValue2)) + 6);
+	*cmd.GetBuffer(22) = *(((U08*)(&m_sttValue2)) + 5);
+	*cmd.GetBuffer(23) = *(((U08*)(&m_sttValue2)) + 4);
+	*cmd.GetBuffer(24) = *(((U08*)(&m_sttValue2)) + 3);
+	*cmd.GetBuffer(25) = *(((U08*)(&m_sttValue2)) + 2);
+	*cmd.GetBuffer(26) = *(((U08*)(&m_sttValue2)) + 1);
+	*cmd.GetBuffer(27) = *(((U08*)(&m_sttValue2)) + 0);
+	//F32
+	*cmd.GetBuffer(28) = *(((U08*)(&m_sttValue3)) + 3);
+	*cmd.GetBuffer(29) = *(((U08*)(&m_sttValue3)) + 2);
+	*cmd.GetBuffer(30) = *(((U08*)(&m_sttValue3)) + 1);
+	*cmd.GetBuffer(31) = *(((U08*)(&m_sttValue3)) + 0);
+	//U08
+	*cmd.GetBuffer(32) = (U08)m_attribute;
+
+	configCmd.SetData(cmd);
+	configPrompt = "Configure RTK mode and operational function successful...";
+	if(m_rtkMode == 1)	//Base mode
+	{
+		AfxBeginThread(ConfigRtkThread, 0);
+	}
+	else
+	{
+		AfxBeginThread(ConfigThread, 0);
+	}
+}
+
+void CConfigRtkMode2::UpdateStatus()
+{
+	int rtkMode = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
+	int baseOpt = ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->GetCurSel();
+	int roverOpt = ((CComboBox*)GetDlgItem(IDC_ROVER_OPT_FUN))->GetCurSel();
+
+	const char *baseDesc1 = "This function can only match below operational function in RTK base mode:\r\n - Static\r\n - Survey";
+	const char *baseDesc2 = "This function can only match below operational function in RTK base mode:\r\n - Kinematic";
+	const char *roverDesc1 = "This function can only match below operational function in RTK rover mode:\r\n - Normal\r\n - Float";
+	const char *roverDesc2 = "This function can only match below operational function in RTK rover mode:\r\n - Moving base";
+
+	
+	if(rtkMode == 0)	//Rover mode
+	{
+		GetDlgItem(IDC_BASE_OPT_FUN)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_ROVER_OPT_FUN)->ShowWindow(SW_SHOW);
+
+		GetDlgItem(IDC_SRV_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET3)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT3)->ShowWindow(SW_HIDE);
+
+		if(roverOpt == 2)	//Kinematic
+		{
+			GetDlgItem(IDC_DESC)->SetWindowText(baseDesc2);
+		}
+		else
+		{
+			GetDlgItem(IDC_DESC)->SetWindowText(baseDesc1);
+		}
+		return;
+	}
+	else
+	{
+		GetDlgItem(IDC_BASE_OPT_FUN)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_ROVER_OPT_FUN)->ShowWindow(SW_HIDE);
+	}
+
+	if(baseOpt == 0)	//Kinematic 
+	{
+		GetDlgItem(IDC_SRV_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET3)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT3)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_DESC)->SetWindowText(roverDesc2);
+		return;
+	}
+
+	if(baseOpt == 1)	//Survey
+	{
+		GetDlgItem(IDC_SRV_SET1)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_SRV_SET2)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_SRV_EDT1)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_SRV_EDT2)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET3)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT3)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_DESC)->SetWindowText(roverDesc1);
+		return;
+	}
+
+	if(baseOpt == 2)	//Static
+	{
+		GetDlgItem(IDC_SRV_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET1)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_SET2)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_SET3)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_EDT1)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_EDT2)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_EDT3)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_DESC)->SetWindowText(roverDesc1);
+	}
+
+}
+
+void CConfigRtkMode2::OnCbnSelChangeRtkMode()
+{
+	UpdateStatus();
+}
+
+void CConfigRtkMode2::OnCbnSelChangeBaseOpt()
+{
+	UpdateStatus();
+}
+
+void CConfigRtkMode2::OnCbnSelChangeRoverOpt()
+{
+	UpdateStatus();
 }

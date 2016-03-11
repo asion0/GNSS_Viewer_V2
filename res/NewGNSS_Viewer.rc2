@@ -55,7 +55,11 @@ IDB_DATE                BITMAP                  "res\\Date.bmp"
 
 #ifndef _MODULE_SUP_800_
  #ifdef _MORE_INFO_
+  #ifdef SHOW_RTK_BASELINE
+  IDB_BOOT_STATUS         BITMAP                  "res\\Baseline.bmp"
+  #else
   IDB_BOOT_STATUS         BITMAP                  "res\\BootStatus_s.bmp"
+  #endif
   IDB_SW_VER              BITMAP                  "res\\SwVer_s.bmp"
   IDB_SW_REV              BITMAP                  "res\\SwRev_s.bmp"
  #else

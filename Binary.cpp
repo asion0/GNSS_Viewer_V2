@@ -186,6 +186,12 @@ static CommandEntry cmdTable[] =
 	{ 0x6A, 0x02, 2, 0x6A, 0x80 },
 	//QueryRtkParametersCmd,
 	{ 0x6A, 0x04, 2, 0x6A, 0x81 },
+	//QueryGeofenceCmdEx,
+	{ 0x64, 0x35, 3, 0x64, 0x99 },
+	//QueryGeofenceResultCmdEx,
+	{ 0x64, 0x36, 2, 0x64, 0x9A },
+	//QueryRtkModeCmd2,
+	{ 0x6A, 0x07, 2, 0x6A, 0x83 },
 };
 
 enum SqBinaryCmd
@@ -259,7 +265,10 @@ enum SqBinaryCmd
 	QueryGeofenceCmd,
 	QueryGeofenceResultCmd,
 	QueryRtkModeCmd,
-	QueryRtkParametersCmd
+	QueryRtkParametersCmd,
+	QueryGeofenceCmdEx,
+	QueryGeofenceResultCmdEx,
+	QueryRtkModeCmd2,
 };
 
 bool CGPSDlg::SaveEphemeris(U08* buff, U08 id)
@@ -1082,6 +1091,21 @@ void CGPSDlg::parse_sti_03_message(const char *buff,int len) // for timing modul
 	temp.Format("%d",atoi(ptr));
 	m_odo_meter.SetWindowText(temp);
 }
+#if (SHOW_RTK_BASELINE==1)
+void CGPSDlg::parse_sti_31_message(const char *buff,int len) // for timing module
+{
+	const char *ptr = buff;
+
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+
+	CString temp;
+	temp.Format("%.3f",atof(ptr));
+	m_bootStatus.SetWindowText(temp);
+}
+#endif
 
 #if (MORE_INFO==1)
 void CGPSDlg::parse_sti_30_message(const char *buff,int len) // for timing module
@@ -1127,7 +1151,6 @@ void CGPSDlg::parse_sti_30_message(const char *buff,int len) // for timing modul
 	temp.Format("%.1f", atof(ptr));
 	m_rtkRatio.SetWindowText(temp);
 }
-
 #endif
 #if(_MODULE_SUP_800_)
 void CGPSDlg::parse_sti_04_001_message(const char *buff,int len) // for timing module
@@ -1198,6 +1221,12 @@ void CGPSDlg::parse_sti_message(const char *buff,int len)
 	{
 		parse_sti_03_message(buff,len);
 	}
+#if (SHOW_RTK_BASELINE==1)
+	else if(psti_id == 31)		// for jamming interference
+	{
+		parse_sti_31_message(buff,len);
+	}
+#endif
 #if (MORE_INFO==1)
 	else if(psti_id == 30)		// for jamming interference
 	{
@@ -4398,6 +4427,45 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGeofenceResult(CmdExeMode nMode, void* outpu
 	return Timeout;
 }
 
+CGPSDlg::CmdErrorCode CGPSDlg::QueryGeofenceResultEx(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryGeofenceResultCmdEx].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryGeofenceResultCmdEx].cmdId);
+	cmd.SetU08(2, cmdTable[QueryGeofenceResultCmdEx].cmdSubId);
+
+	BinaryData ackCmd;
+	if(!ExcuteBinaryCommand(QueryGeofenceResultCmdEx, &cmd, &ackCmd))
+	{
+		CString strMsg;
+		strMsg = "Query geofencing result successful...";
+		add_msgtolist(strMsg);
+
+		const U08* ptr = ackCmd.Ptr(10);
+		double d1 = ConvertLeonDouble(ptr);
+		ptr = ackCmd.Ptr(18);
+		double d2 = ConvertLeonDouble(ptr);
+		if(INVERT_LON_LAT)
+		{
+			strMsg.Format("Geofencing in %12.9lf, %12.9lf", d1, d2);
+		}
+		else
+		{
+			strMsg.Format("Geofencing in %12.9lf, %12.9lf", d2, d1);
+		}
+		add_msgtolist(strMsg);
+
+		strMsg.Format("Geofencing result NO.1 : %d", ackCmd[6]);
+		add_msgtolist(strMsg);
+		strMsg.Format("Geofencing result NO.2 : %d", ackCmd[7]);
+		add_msgtolist(strMsg);
+		strMsg.Format("Geofencing result NO.3 : %d", ackCmd[8]);
+		add_msgtolist(strMsg);
+		strMsg.Format("Geofencing result NO.4 : %d", ackCmd[9]);
+		add_msgtolist(strMsg);
+	}
+	return Timeout;
+}
+
 CGPSDlg::CmdErrorCode CGPSDlg::QueryGeofence(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QueryGeofenceCmd].cmdSize);
@@ -4419,6 +4487,54 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGeofence(CmdExeMode nMode, void* outputData)
 		}
 
 		const U08* ptr = ackCmd.Ptr(7);
+		for(int i = 0; i < size; ++i)
+		{
+			U08 temp1[8] = {0};
+			U08 temp2[8] = {0};
+			for(int j = 0; j < 8; ++j)
+			{
+				temp1[7 - j] = *ptr++;
+			}
+			for(int j = 0; j < 8; ++j)
+			{
+				temp2[7 - j] = *ptr++;
+			}
+			if(INVERT_LON_LAT)
+			{
+				strMsg.Format("%12.9lf, %12.9lf", *((double*)temp1), *((double*)temp2));
+			}
+			else
+			{
+				strMsg.Format("%12.9lf, %12.9lf", *((double*)temp2), *((double*)temp1));
+			}
+			add_msgtolist(strMsg);
+		}
+	}
+	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryGeofenceEx(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryGeofenceCmdEx].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryGeofenceCmdEx].cmdId);
+	cmd.SetU08(2, cmdTable[QueryGeofenceCmdEx].cmdSubId);
+	cmd.SetU08(3, m_nGeofecingNo);
+
+	BinaryData ackCmd;
+	if(!ExcuteBinaryCommand(QueryGeofenceCmdEx, &cmd, &ackCmd))
+	{
+		CString strMsg;
+		strMsg.Format("Query geofencing data %d successful...", m_nGeofecingNo);
+		add_msgtolist(strMsg);
+		
+		U08 size = ackCmd[7];
+		if(size == 0)
+		{
+			strMsg.Format("No geofencing data");
+			add_msgtolist(strMsg);
+		}
+
+		const U08* ptr = ackCmd.Ptr(8);
 		for(int i = 0; i < size; ++i)
 		{
 			U08 temp1[8] = {0};
@@ -4469,6 +4585,97 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkMode(CmdExeMode nMode, void* outputData)
 		add_msgtolist(strMsg);
 	}
 	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkMode2(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryRtkModeCmd2].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryRtkModeCmd2].cmdId);
+	cmd.SetU08(2, cmdTable[QueryRtkModeCmd2].cmdSubId);
+
+	BinaryData ackCmd;
+	if(ExcuteBinaryCommand(QueryRtkModeCmd2, &cmd, &ackCmd))
+	{
+		return Timeout;
+	}
+
+	CString strMsg;
+	strMsg = "Query RTK mode successful...";
+	add_msgtolist(strMsg);
+
+	UINT8 rtkMode = ackCmd[6];
+	strMsg.Format((rtkMode) ? "RTK base mode" : "RTK rover mode");
+	add_msgtolist(strMsg);
+
+	strMsg.Format("Operational Function: ");
+	UINT8 rtkOpr = ackCmd[7];
+	if(rtkMode)	//base mode
+	{
+		switch(rtkOpr)
+		{
+		case 0:
+			strMsg += "Kinematic";
+			break;
+		case 1:
+			strMsg += "Survey";
+			break;
+		case 2:
+			strMsg += "Static";
+			break;
+		}
+	}
+	else	//rover mode
+	{
+		switch(rtkOpr)
+		{
+		case 0:
+			strMsg += "Normal";
+			break;
+		case 1:
+			strMsg += "Float";
+			break;
+		case 2:
+			strMsg += "Moving base";
+			break;
+		}		
+	}
+	add_msgtolist(strMsg);
+	
+	if(rtkMode == 0)	//rover mode
+	{
+		return Ack;
+	}
+
+	UINT8 timingMode = ackCmd[36];
+	strMsg.Format("Run-time Timing Mode: ");
+	switch(timingMode)
+	{
+	case 0:
+		strMsg += "Timing Normal Mode";
+		add_msgtolist(strMsg);
+		break;
+	case 1:
+		strMsg += "Timing Survey Mode";
+		add_msgtolist(strMsg);
+		strMsg.Format("Saved Survey Length:%u", MAKELONG(MAKEWORD(ackCmd[11], ackCmd[10]), MAKEWORD(ackCmd[9], ackCmd[8])));
+		add_msgtolist(strMsg);
+		strMsg.Format("Standard deviation:%u", MAKELONG(MAKEWORD(ackCmd[15], ackCmd[14]), MAKEWORD(ackCmd[13], ackCmd[12])));
+		add_msgtolist(strMsg);
+		strMsg.Format("Run-time Survey Length:%u", MAKELONG(MAKEWORD(ackCmd[40], ackCmd[39]), MAKEWORD(ackCmd[38], ackCmd[37])));
+		add_msgtolist(strMsg);
+		break;
+	case 2:
+		strMsg += "Timing Static Mode";
+		add_msgtolist(strMsg);
+		strMsg.Format("Saved Latitude:%f", ConvertLeonDouble(ackCmd.Ptr(16)));
+		add_msgtolist(strMsg);
+		strMsg.Format("Saved Longitude:%f", ConvertLeonDouble(ackCmd.Ptr(24)));
+		add_msgtolist(strMsg);
+		strMsg.Format("Saved Altitude:%f", ConvertLeonFloat(ackCmd.Ptr(32)));
+		add_msgtolist(strMsg);
+		break;
+	}	
+	return Ack;
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkParameters(CmdExeMode nMode, void* outputData)
@@ -6244,6 +6451,34 @@ void CGPSDlg::OnConfigGeofence()
 	DoCommonConfig(&dlg);
 }
 
+void CGPSDlg::OnConfigGeofence1()
+{
+	CConfigGeofencing dlg;
+	dlg.SetDataNo(1);
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigGeofence2()
+{
+	CConfigGeofencing dlg;
+	dlg.SetDataNo(2);
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigGeofence3()
+{
+	CConfigGeofencing dlg;
+	dlg.SetDataNo(3);
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigGeofence4()
+{
+	CConfigGeofencing dlg;
+	dlg.SetDataNo(4);
+	DoCommonConfig(&dlg);
+}
+
 void CGPSDlg::OnConfigRtkMode()
 {
 	CConfigRtkMode dlg;
@@ -6259,5 +6494,11 @@ void CGPSDlg::OnConfigRtkParameters()
 void CGPSDlg::OnRtkReset()
 {
 	CConfigRtkReset dlg;
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigRtkMode2()
+{
+	CConfigRtkMode2 dlg;
 	DoCommonConfig(&dlg);
 }

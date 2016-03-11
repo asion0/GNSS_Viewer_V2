@@ -284,6 +284,7 @@ void UtcConvertGpsToUtcTime(S16 wn, D64 tow, UtcTime *utc_time_p);
 void UtcConvertUtcToGpsTime(const UtcTime *utc_time_p, S16 *wn_p, D64 *tow_p);
 QualityMode GetGnssQualityMode(U32 qualityIndicator, U08 gpMode = 0, U08 glMode = 0, U08 gaMode = 0, U08 bdMode = 0);
 double ConvertLeonDouble(const U08* ptr);
+float ConvertLeonFloat(const U08* ptr);
 
 //void UTC_convert_gps_to_utc_time_by_default_parameters( S16 wn, D64 tow, UtcTime *utc_time_p );
 

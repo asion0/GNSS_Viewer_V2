@@ -483,7 +483,12 @@ protected:
 	afx_msg void OnSup800ReadData();
 
 	afx_msg void OnConfigGeofence();
+	afx_msg void OnConfigGeofence1();
+	afx_msg void OnConfigGeofence2();
+	afx_msg void OnConfigGeofence3();
+	afx_msg void OnConfigGeofence4();
 	afx_msg void OnConfigRtkMode();
+	afx_msg void OnConfigRtkMode2();
 	afx_msg void OnConfigRtkParameters();
 	afx_msg void OnRtkReset();
 
@@ -1102,8 +1107,11 @@ public:
 	CmdErrorCode ResetOdometer(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryCableDelay(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGeofence(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryGeofenceEx(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGeofenceResult(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryGeofenceResultEx(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryRtkMode(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryRtkMode2(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryRtkParameters(CmdExeMode nMode, void* outputData);
 
 //	CmdErrorCode ConfigureGpsdoMasterSerialPortHigh(CmdExeMode nMode, void* outputData);
@@ -1256,11 +1264,23 @@ private:
 	afx_msg void OnQueryCableDelay()
 	{ GenericQuery(&CGPSDlg::QueryCableDelay); }
 	afx_msg void OnQueryGeofence()
-	{ GenericQuery(&CGPSDlg::QueryGeofence); }
+	{ m_nGeofecingNo = 0; GenericQuery(&CGPSDlg::QueryGeofence); }
+	afx_msg void OnQueryGeofence1()
+	{ m_nGeofecingNo = 1; GenericQuery(&CGPSDlg::QueryGeofenceEx); }
+	afx_msg void OnQueryGeofence2()
+	{ m_nGeofecingNo = 2; GenericQuery(&CGPSDlg::QueryGeofenceEx); }
+	afx_msg void OnQueryGeofence3()
+	{ m_nGeofecingNo = 3; GenericQuery(&CGPSDlg::QueryGeofenceEx); }
+	afx_msg void OnQueryGeofence4()
+	{ m_nGeofecingNo = 4; GenericQuery(&CGPSDlg::QueryGeofenceEx); }
 	afx_msg void OnQueryGeofenceResult()
 	{ GenericQuery(&CGPSDlg::QueryGeofenceResult); }
+	afx_msg void OnQueryGeofenceResultEx()
+	{ GenericQuery(&CGPSDlg::QueryGeofenceResultEx); }
 	afx_msg void OnQueryRtkMode()
 	{ GenericQuery(&CGPSDlg::QueryRtkMode); }
+	afx_msg void OnQueryRtkMode2()
+	{ GenericQuery(&CGPSDlg::QueryRtkMode2); }
 	afx_msg void OnQueryRtkParameters()
 	{ GenericQuery(&CGPSDlg::QueryRtkParameters); }
 
@@ -1303,6 +1323,9 @@ private:
 //	void parse_rtoem_message(const char *buff, int len);
 	void parse_psti_50(const char *buff);
 	void parse_sti_20_message(const char *buff,int len) /* for timing module */;
+#if(SHOW_RTK_BASELINE==1)
+	void parse_sti_31_message(const char *buff,int len) /* for RTK module */;
+#endif
 #if(MORE_INFO==1)
 	void parse_sti_30_message(const char *buff,int len) /* for RTK module */;
 #endif
@@ -1351,6 +1374,7 @@ private:
 	bool m_firstDataIn;
 	U32 m_customerID;
 	int m_dataLogDecompressMode;
+	U08 m_nGeofecingNo;
 
 	DECLARE_MESSAGE_MAP()
 

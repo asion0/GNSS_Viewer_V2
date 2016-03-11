@@ -195,12 +195,17 @@
 // .189 20160126 Send 1 Hz cmd after config to RTK base mode, Request from Oliver.
 // .190 20160202 Add SPECIAL_TEST for eten special command test, Request from Leo and Andrew.
 // .191 20160203 Add SPECIAL_TEST random test, Request from Leo and Andrew.
+// .192 20160225 Modify GeoFencing to support multiple Geo-Fencing polgons. Request from Oliver and Andrew.
+// .193 20160226 Brench Kalman version, add RTK baseline display. Request from Leo.
+// .194 20160301 Show baseline to three decimal. Request from Leo.
+// .195 20160310 Support RTK Mode and operational function. Request from Andrew and Ryan Yang.
+// .195 20160310 Support binary E4 SBAS subframe. Request from Ryan Yang.
 
 //#define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.191"
+#define APP_VERSION				"2.0.195"
 #define APP_TITLE				""
 #define APP_MODULE				"Venus 8"
 
@@ -275,9 +280,36 @@
 #define AUTO_QUERY_VERSION		0
 #define DOWNLOAD_IMMEDIATELY	0		//start download immediately when nmea come in.
 #define SPECIAL_TEST			0		//Test ETEN case 20160202
+#define GEO_FENCING_CMD			1		//0 - old geo-fencing cmd, 1 - new geo-fencing cmd
+#define SHOW_RTK_BASELINE		0
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-#if defined(SWCFG_VENDOR_GNSS_SAINTMAX)
+#if defined(SWCFG_VENDOR_GNSS_KALMAN)
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef APP_MODULE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef OPEN_PINNING_RESERVE
+ #undef BINARY_MESSAGE_INTERVAL
+ #undef MORE_INFO
+ #undef SHOW_RTK_BASELINE
+
+ #define APP_CAPTION			"GNSS Viewer"
+ #define APP_TITLE				"Customer Release"
+ #define APP_MODULE				"Venus 8 RTK"
+ #define GNSS_VIEWER			1
+ #define IS_DEBUG				0
+ #define BAUDRATE_DEFAULT		7
+ #define TIMING_MODE			1
+ #define OPEN_PINNING_RESERVE	1
+ #define BINARY_MESSAGE_INTERVAL	1
+ #define MORE_INFO				1		//Please define _MORE_INFO_ for rc2 too.
+ #define SHOW_RTK_BASELINE		1		//Please define SHOW_RTK_BASELINE for rc2 too.
+
+#elif defined(SWCFG_VENDOR_GNSS_SAINTMAX)
  #undef APP_CAPTION
  #undef APP_TITLE
  #undef GNSS_VIEWER

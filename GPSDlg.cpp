@@ -530,14 +530,14 @@ void CGPSDlg::BinaryProc(U08* buffer, int len)
 	case 0xE1:		// sub frame data
 	case 0xE2:		// sub frame data
 	case 0xE3:		// sub frame data
-		//Show_Message(buffer,len);
+	case 0xE4:		// sub frame data
 		ShowSubframe(buffer);
 		break;
-	case BINMSG_ECEF_USER_PVT:
+	case BINMSG_ECEF_USER_PVT:		//0xA8
 		ShowBinaryOutput(buffer);
 		ShowTime();
 		break;
-	case BINMSG_ERROR:
+	case BINMSG_ERROR:		//0x00
 		add_msgtolist("Unknown: " + theApp.GetHexString(buffer, len));
 		break;
 	default:
@@ -1164,11 +1164,21 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_SUP800_READ_DATA, OnSup800ReadData)
 
 	ON_COMMAND(ID_CONFIG_GEOFENCE, OnConfigGeofence)
+	ON_COMMAND(ID_CONFIG_GEOFENCE1, OnConfigGeofence1)
+	ON_COMMAND(ID_CONFIG_GEOFENCE2, OnConfigGeofence2)
+	ON_COMMAND(ID_CONFIG_GEOFENCE3, OnConfigGeofence3)
+	ON_COMMAND(ID_CONFIG_GEOFENCE4, OnConfigGeofence4)
 	ON_COMMAND(ID_QUERY_GEOFENCE, OnQueryGeofence)
+	ON_COMMAND(ID_QUERY_GEOFENCE1, OnQueryGeofence1)
+	ON_COMMAND(ID_QUERY_GEOFENCE2, OnQueryGeofence2)
+	ON_COMMAND(ID_QUERY_GEOFENCE3, OnQueryGeofence3)
+	ON_COMMAND(ID_QUERY_GEOFENCE4, OnQueryGeofence4)
 	ON_COMMAND(ID_QUERY_GEOFENCE_RESULT, OnQueryGeofenceResult)
-
+	ON_COMMAND(ID_QUERY_GEOFENCE_RESULTEX, OnQueryGeofenceResultEx)
 	ON_COMMAND(ID_QUERY_RTK_MODE, OnQueryRtkMode)
+	ON_COMMAND(ID_QUERY_RTK_MODE2, OnQueryRtkMode2)
 	ON_COMMAND(ID_CONFIG_RTK_MODE, OnConfigRtkMode)
+	ON_COMMAND(ID_CONFIG_RTK_MODE2, OnConfigRtkMode2)
 	ON_COMMAND(ID_QUERY_RTK_PARAM, OnQueryRtkParameters)
 	ON_COMMAND(ID_CONFIG_RTK_PARAM, OnConfigRtkParameters)
 	ON_COMMAND(ID_RTK_RESET, OnRtkReset)
@@ -4740,25 +4750,39 @@ void CGPSDlg::Load_Menu()
 		{ 1, MF_STRING, ID_SUP800_READ_DATA, "SUP800 Read User Data", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
+
+	static MenuItemEntry GeoFencingConfigureMenu[] =
+	{
+		{ 1, MF_STRING, ID_CONFIG_GEOFENCE1, "Geo-fencing data NO.1", NULL },
+		{ 1, MF_STRING, ID_CONFIG_GEOFENCE2, "Geo-fencing data NO.2", NULL },
+		{ 1, MF_STRING, ID_CONFIG_GEOFENCE3, "Geo-fencing data NO.3", NULL },
+		{ 1, MF_STRING, ID_CONFIG_GEOFENCE4, "Geo-fencing data NO.4", NULL },
+		{ 0, 0, 0, NULL, NULL }	//End of table
+	};
+
+	static MenuItemEntry GeoFencingQueryMenu[] =
+	{
+		{ 1, MF_STRING, ID_QUERY_GEOFENCE1, "Geo-fencing data NO.1", NULL },
+		{ 1, MF_STRING, ID_QUERY_GEOFENCE2, "Geo-fencing data NO.2", NULL },
+		{ 1, MF_STRING, ID_QUERY_GEOFENCE3, "Geo-fencing data NO.3", NULL },
+		{ 1, MF_STRING, ID_QUERY_GEOFENCE4, "Geo-fencing data NO.4", NULL },
+		{ 0, 0, 0, NULL, NULL }	//End of table
+	};
+
 	static MenuItemEntry GeoFencingMenu[] =
 	{
+#if (GEO_FENCING_CMD==0)
 		{ 1, MF_STRING, ID_CONFIG_GEOFENCE, "Configure geo-fencing data", NULL },
 		{ 1, MF_STRING, ID_QUERY_GEOFENCE, "Query geo-fencing data", NULL },
 		{ 1, MF_STRING, ID_QUERY_GEOFENCE_RESULT, "Query geo-fencing result ", NULL },
+#else
+		{ 1, MF_POPUP, 0, "Configure geo-fencing data", GeoFencingConfigureMenu },
+		{ 1, MF_POPUP, 0, "Query geo-fencing data", GeoFencingQueryMenu },
+		{ 1, MF_STRING, ID_QUERY_GEOFENCE_RESULTEX, "Query geo-fencing result ", NULL },
+#endif
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
-	static MenuItemEntry RtkMenu[] =
-	{
-		{ IS_DEBUG, MF_STRING, ID_RTK_RESET, "Reset RTK engine", NULL },
-		{ IS_DEBUG, MF_SEPARATOR, 0, NULL, NULL }	,
-		{ 1, MF_STRING, ID_QUERY_RTK_MODE, "Query RTK Mode", NULL },
-		{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_PARAM, "Query RTK Parameters", NULL },
-		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
-		{ 1, MF_STRING, ID_CONFIG_RTK_MODE, "Configure RTK Mode", NULL },
-		{ IS_DEBUG, MF_STRING, ID_CONFIG_RTK_PARAM, "Configure RTK Parameters", NULL },
-
-		{ 0, 0, 0, NULL, NULL }	//End of table
-	};	
+	
 	static MenuItemEntry SignalDisturbanceMenu[] =
 	{
 		{ 1, MF_STRING, ID_QUERY_SIG_DISTUR_DATA, "Query Signal Disturbance Data", NULL },
@@ -4777,7 +4801,7 @@ void CGPSDlg::Load_Menu()
 		{ _V8_SUPPORT, MF_POPUP, 0, "SUP800 User Data Storage", Sup800Menu },
 		{ IS_DEBUG, MF_POPUP, 0, "Signal Disturbance Test", SignalDisturbanceMenu },
 		{ IS_DEBUG, MF_POPUP, 0, "Geofencing", GeoFencingMenu },
-		{ 1, MF_POPUP, 0, "RTK", RtkMenu },
+		//{ 1, MF_POPUP, 0, "RTK", RtkMenu },
 
 		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
 		{ 1, MF_STRING, ID_BINARY_QUERYSBAS, "Query SBAS", NULL },
@@ -4832,6 +4856,25 @@ void CGPSDlg::Load_Menu()
 	if(_V8_SUPPORT && !NMEA_INPUT)
 	{
 		CreateSubMenu(hMenu, menuItemVenus8, "&Venus 8");
+	}
+
+	static MenuItemEntry menuItemRtk[] =
+	{
+		{ IS_DEBUG, MF_STRING, ID_RTK_RESET, "Reset RTK engine", NULL },
+		{ IS_DEBUG, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_STRING, ID_QUERY_RTK_MODE, "Query RTK Mode", NULL },
+		{ 1, MF_STRING, ID_QUERY_RTK_MODE2, "Query RTK And Operational Function", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_PARAM, "Query RTK Parameters", NULL },
+		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_STRING, ID_CONFIG_RTK_MODE, "Configure RTK Mode", NULL },
+		{ 1, MF_STRING, ID_CONFIG_RTK_MODE2, "Configure RTK Mode And Operational Function", NULL },
+		{ IS_DEBUG, MF_STRING, ID_CONFIG_RTK_PARAM, "Configure RTK Parameters", NULL },
+
+		{ 0, 0, 0, NULL, NULL }	//End of table
+	};
+	if(_V8_SUPPORT && !NMEA_INPUT)
+	{
+		CreateSubMenu(hMenu, menuItemRtk, "&RTK");
 	}
 
 	//DRMenu
