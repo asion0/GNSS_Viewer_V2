@@ -50,13 +50,11 @@
 #define IDD_CON_NMEA_MSG                199
 #define IDD_CON_DATUM                   200
 #define IDD_CON_DOP                     202
-#define IDD_CFG_ELE                     204
-#define IDD_CFG_BIN                     205
 #define IDD_DLGCOMPRESS                 208
 #define IDD_DLGSETFILTER                210
 #define IDD_LOGFILTERDLG                211
 #define IDD_SOFTWAREIMAGEDOWNLOAD       213
-#define IDD_CIGRGSDLG                   214
+#define IDD_CFG_SUBSEC_REG              214
 #define IDD_GETRGSDLG                   215
 #define IDB_COMMAND                     216
 #define IDB_SYSTEMRESTART               216
@@ -64,6 +62,7 @@
 #define IDD_PLAYER_DIALOG               227
 #define IDD_SCANGPS_DLG                 229
 #define IDD_CFGMSG                      230
+#define IDD_CONFIG_MSG_OUT              230
 #define IDD_GETEPHEMERIS                233
 #define IDD_WAITLOGREAD                 235
 #define IDD_SAVENMEA                    236
@@ -81,6 +80,7 @@
 #define IDD_CON_MULTI_MODE              295
 #define IDD_CON_REGISTER                297
 #define IDD_CON_1PPS                    298
+#define IDD_CFG_GPS_MEAS_MODE           298
 #define IDB_NOISE                       300
 #define IDB_BITMAP15                    305
 #define IDB_CLOCK                       305
@@ -89,17 +89,15 @@
 #define IDD_CON_WAAS                    310
 #define IDD_CON_BINARY_MSG              312
 #define IDD_GETALMANAC                  314
-#define IDD_1PPS_CONFIG                 316
+#define IDD_CFG_TIMING                  316
 #define IDD_CONFIG_BINARY_INTERVAL      318
-#define IDD_1PPS_CABLE                  320
+#define IDD_CFG_TIMING_CABLE_DELAY      320
 #define IDD_1PPS_DOP                    322
 #define IDD_1PPS_ELEVCNR                324
 #define IDD_1PPS_MONITOR                327
 #define IDD_PROPRIETARY_NMEA            328
-#define IDD_CON_COMPASS                 330
 #define IDD_DEVICE_ADDING               331
 #define IDB_GL_ACT                      334
-#define IDD_CFG_USB                     343
 #define IDR_GNSS_PRELOADER_4800         344
 #define IDD_CON_GNSS_SELECTION          345
 #define IDR_GNSS_PRELOADER_9600         345
@@ -125,7 +123,6 @@
 #define IDR_GPS_PRELOADER_230400        357
 #define IDD_CON_INTERFERENCE            358
 #define IDR_GPS_SREC_4800               358
-#define IDD_CFG_ACQUISITION_MODE        359
 #define IDR_GPS_SREC_9600               359
 #define IDD_GET_GNSS_EPHEMERIS          360
 #define IDR_GPS_SREC_19200              360
@@ -159,15 +156,15 @@
 #define IDD_PASSWD                      397
 #define IDR_GPS_CREATETAG_SREC_115200   398
 #define IDR_GPS_REMOVETAG_SREC_115200   399
-#define IDD_CONFIG_SBAS                 400
+#define IDD_CFG_SBAS                    400
 #define IDD_CONFIG_SAGPS                401
-#define IDD_CONFIG_QZSS                 402
+#define IDD_CFG_QZSS                    402
 #define IDR_GNSS_CREATETAG_SREC_115200  403
 #define IDR_GNSS_REMOVETAG_SREC_115200  404
 #define IDD_CONFIG_1PPS_PULSE_WIDTH     405
 #define IDD_CONFIG_INF_DTE_CTRL         406
 #define IDD_CONFIG_NMBI_OUT_DES         407
-#define IDD_CONFIG_PARAM_SEARCH_ENG_NUM 408
+#define IDD_CFG_PARAM_SEARCH_ENG_NUM    408
 #define IDR_OLDEPH                      415
 #define IDD_HOSTBASE_DL                 416
 #define IDD_FIRMWARE_DL                 417
@@ -526,6 +523,7 @@
 #define IDC_STATIC_SET3                 1152
 #define IDC_STATIC_SET4                 1153
 #define IDC_BINARY_ATTRI                1154
+#define IDC_STATIC_                     1154
 #define IDC_1PPS_CABLE                  1155
 #define IDC_OUTPUT_RATE                 1155
 #define IDC_BINARY_ATTRI2               1155
@@ -554,13 +552,7 @@
 #define IDC_1PPS_MONITOR_ERROR3         1181
 #define IDC_1PPS_MONITOR_NOW_STD        1181
 #define IDC_PROPRIETARY_ATTR            1181
-#define IDC_COMPASS_OFFSETX             1182
-#define IDC_COMPASS_OFFSETY             1183
 #define IDC_PSTI_ID                     1183
-#define IDC_COMPASS_OFFSETZ             1184
-#define IDC_COMPASS_SENSX               1185
-#define IDC_COMPASS_SENSY               1186
-#define IDC_COMPASS_SENSZ               1187
 #define IDC_EARTH                       1188
 #define IDC_IQIBLA_LAT                  1188
 #define IDC_GPS_BAR                     1189
@@ -675,9 +667,7 @@
 #define IDC_MODE2                       1243
 #define IDC_DEFAULT                     1243
 #define IDC_BASE_OPT_FUN                1243
-#define IDC_GET                         1244
 #define IDC_ROVER_OPT_FUN               1244
-#define IDC_SET                         1245
 #define IDC_DATE_T                      1250
 #define IDC_TIME_T                      1251
 #define IDC_PDOP_T                      1252
@@ -925,6 +915,10 @@
 #define IDC_STT_SET2                    1397
 #define IDC_SRV_EDT2                    1398
 #define IDC_DESC                        1399
+#define IDC_STT_SET4                    1399
+#define IDC_MS                          1400
+#define IDC_NS                          1401
+#define IDC_PLLDIV                      1402
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_BINARY_SYSTEMRESTART         32811
@@ -938,16 +932,10 @@
 #define ID_BINARY_CONFIGUREDOPMASK      32819
 #define ID_BINARY_CONFIGUREELEVATIONMASK 32820
 #define ID_BINARY_CONFIGUREBINARY       32821
-#define ID_QUERYSOFTWAREVERSION_ROMCODE 32822
 #define ID_QUERYSOFTWAREVERSION_SYSTEMCODE 32823
-#define ID_QUERYSOFTWARECRC_ROMCODE     32824
 #define ID_QUERYSOFTWARECRC_SYSTEMCODE  32825
-#define ID_CONFIGUREOUTPUTMESSAGETYPE_NOOUTPUT 32826
-#define ID_CONFIGUREOUTPUTMESSAGETYPE_NMEAMESSAGE 32827
-#define ID_CONFIGUREOUTPUTMESSAGETYPE_BINARYMESSAGE 32828
 #define ID_SETFACTORYDEFAULT_NOREBOOT   32829
 #define ID_SETFACTORYDEFAULT_REBOOT     32830
-#define ID_BINARY_CONFIGUREBINARYDATA   32831
 #define ID_LOGGER_SAVELOG               32832
 #define ID_LOGGER_CONVERT               32833
 #define ID_CONVERTER_COMPRESS           32835
@@ -986,7 +974,6 @@
 #define ID_SOARCOMM_CONFIGPASSWORD      32890
 #define ID_FILE_CLEANNEMA               32891
 #define ID_WAAS_WAASDISABLE             32893
-#define ID_WAAS_WAASSTATUS              32894
 #define ID_BINARY_CONFIGUREMESSAGE_TYPE 32896
 #define ID_BINARY_CONFIGUREBINARYMSGINTERVAL 32897
 #define ID_BINARY_POSITIONFINDER        32898
@@ -1000,9 +987,8 @@
 #define ID_BINARY_QUERYPOSITIONPINNING  32907
 #define ID_BINARY_CONFIGUREPINNINGPARAMETERS 32908
 #define ID_MULTIMODE_CONFIGUREMODE      32909
-#define ID_MULTIMODE_QUERYMODE          32910
-#define ID_BINARY_CONFIGURESUBSECREGISTER 32911
-#define ID_BINARY_CONFIGURE1PPS         32912
+#define ID_CFG_SUBSEC_REG               32911
+#define ID_CFG_GPS_MEAS_MODE            32912
 #define ID_BINARY_QUERY1PPS             32913
 #define ID_BINARY_QUERYNOISEPOWER       32914
 #define ID_BINARY_CONFIGUREMULTIPATH    32918
@@ -1015,8 +1001,8 @@
 #define ID_BINARY_CONFIGURE1PPSCABLEDELAY 32926
 #define ID_BINARY_QUERY1PPSCABLEDELAY   32927
 #define ID_BINARY_CONFIGURE1PPSTIMING32928 32928
-#define ID_CONFIGURE1PPSTIMING_CONFIGURE1PPSTIMING 32929
-#define ID_CONFIGURE1PPSTIMING_CONFIGURE1PPSCABLEDELAY 32930
+#define ID_CFG_TIMING                   32929
+#define ID_CFG_TIMING_CABLE_DELAY       32930
 #define ID_CONFIGURE1PPSTIMING_CONFIGURE1PPS 32931
 #define ID_CONFIG_ELEV_AND_CNR_MASK     32932
 #define ID_QUERY1PPSTIMING_QUERYTIMING  32933
@@ -1035,10 +1021,9 @@
 #define ID_GLONASS_CONFIGUREUSBDRIVER   32947
 #define ID_BINARY_QUERY                 32948
 #define ID_CONFIG_GNSS_SEL_FOR_NAV      32949
-#define ID_QUERY_GNSS_SEL_FOR_NAV       32950
 #define ID_BINARY_QUERYGNSSK            32951
 #define ID_BINARY_QUERYGNSSKNUMBERSLOTCNR 32952
-#define ID_BINARY_CONFIGURENMEAOUTPUT32953 32953
+#define ID_CFG_NMEA_OUTPUT_COM          32953
 #define ID_BINARY_CONFIGURENMEATALKERID 32954
 #define ID_CFG_GL_ACQUISITION_MODE      32955
 #define ID_CONFIGUREGLONASSACQUISITIONMODE_BINARY 32956
@@ -1069,7 +1054,6 @@
 #define ID_BINARY_QUERYPROPRIETARYMESSAGE 32982
 #define ID_CONFIG_PROPRIETARY_MESSAGE   32983
 #define ID_BINARY_CONFIGUREPOWERSAVINGPARAMETERS 32984
-#define ID_BINARY_QUERYPOWERSAVINGPARAMETERS 32985
 #define ID_CONFIGURE_ANTENNA_DETECTION  32986
 #define ID_BINARY_QUERYANTENNADETECTION 32987
 #define ID_1PPSTIMING_CONFIGURE1PPSNMEADELAY 32989
@@ -1126,7 +1110,6 @@
 #define ID_GET_BEIDOU_EPHEMERIS         33044
 #define ID_FILE_SETUP                   33045
 #define ID_BINARY_QUERYNMEATALKERID     33046
-#define ID_QUERY_V8_POWER_SV_PARAM_ROM  33047
 #define ID_CONFIG_V8_POWER_SV_PARAM_ROM 33048
 #define ID_CONFIG_DOZE_MODE             33049
 #define ID_CONFIG_1PPS_FREQ_OUTPUT      33050
@@ -1203,7 +1186,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        477
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1400
+#define _APS_NEXT_CONTROL_VALUE         1404
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

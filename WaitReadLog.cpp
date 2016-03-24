@@ -1,4 +1,4 @@
-// WaitReadLog.cpp : 實作檔
+// WaitReadLog.cpp
 //
 
 #include "stdafx.h"
@@ -8,8 +8,7 @@
 
 extern HANDLE	waitlog;
 
-// CWaitReadLog 對話方塊
-
+// CWaitReadLog 
 IMPLEMENT_DYNAMIC(CWaitReadLog, CDialog)
 CWaitReadLog::CWaitReadLog(CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_WAITLOGREAD, pParent)
@@ -29,12 +28,12 @@ void CWaitReadLog::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CWaitReadLog, CDialog)
 	ON_WM_TIMER()
-	ON_BN_CLICKED(IDC_BUTTON1, OnBnClickedButton1)
-	ON_WM_CLOSE()
+	//ON_BN_CLICKED(IDC_BUTTON1, OnBnClickedButton1)
+	//ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 
-// CWaitReadLog 訊息處理常式
+// CWaitReadLog
 
 void CWaitReadLog::OnTimer(UINT nIDEvent)
 {
@@ -54,18 +53,5 @@ BOOL CWaitReadLog::OnInitDialog()
 	msg.SetWindowText("Please wait for log read!");
 	if(!SetEvent(waitlog ))   DWORD error = GetLastError();
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
-void CWaitReadLog::OnBnClickedButton1()
-{
-	CGPSDlg::gpsDlg->CancelRead();
-	// TODO: 在此加入控制項告知處理常式程式碼
-}
-
-void CWaitReadLog::OnClose()
-{
-	// TODO: 在此加入您的訊息處理常式程式碼和 (或) 呼叫預設值
-
-	//CDialog::OnClose();
-}

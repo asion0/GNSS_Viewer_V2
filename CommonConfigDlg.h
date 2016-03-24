@@ -12,6 +12,7 @@ public:
 	virtual ~CCommonConfigDlg();
 
 	virtual void DoCommand() = 0;
+	virtual INT_PTR DoDirect(int type);
 	virtual BOOL OnInitDialog();
 protected:
 	CButton *pCancelBtn;
@@ -689,7 +690,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-
 // CConfigRtkMode2 對話方塊
 class CConfigRtkMode2 : public CCommonConfigDlg
 {
@@ -721,3 +721,114 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 };
+
+// CConfigMessageOut 對話方塊
+class CConfigMessageOut : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigMessageOut)
+public:
+	CConfigMessageOut(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigMessageOut() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
+	virtual INT_PTR DoDirect(int type);
+
+protected:
+	U08 m_nType;
+	U08 m_nAttribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigSubSecRegister 對話方塊
+class CConfigSubSecRegister : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigSubSecRegister)
+public:
+	CConfigSubSecRegister(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigSubSecRegister() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
+
+protected:
+	U08 m_nMs;
+	U08 m_nNs;
+	U08 m_nPllDiv;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigTiming 對話方塊
+class CConfigTiming : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigTiming)
+public:
+	CConfigTiming(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigTiming() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+	afx_msg void OnCbnSelChangeMode();
+
+	virtual BOOL OnInitDialog();
+
+protected:
+	U08 m_timingMode;
+
+	U32 m_srvValue1;
+	U32 m_srvValue2;
+	double m_sttValue1;
+	double m_sttValue2;
+	float m_sttValue3;
+	U08 m_attribute;
+
+	void UpdateStatus();
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigTimingCableDelay 對話方塊
+class CConfigTimingCableDelay : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigTimingCableDelay)
+public:
+	CConfigTimingCableDelay(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigTimingCableDelay() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+
+	virtual BOOL OnInitDialog();
+
+protected:
+	U32 m_delay;
+	U08 m_attribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigGpsMeasurementMode 對話方塊
+class CConfigGpsMeasurementMode : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigGpsMeasurementMode)
+public:
+	CConfigGpsMeasurementMode(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigGpsMeasurementMode() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+
+	virtual BOOL OnInitDialog();
+
+protected:
+	U08 m_mode;
+	U08 m_attribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+

@@ -51,6 +51,11 @@ BOOL CCommonConfigDlg::OnInitDialog()
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
+INT_PTR CCommonConfigDlg::DoDirect(int type)
+{
+	return IDCANCEL;
+}
+
 // CConfigDGPS 對話方塊
 IMPLEMENT_DYNAMIC(CConfigDGPS, CCommonConfigDlg)
 
@@ -202,7 +207,7 @@ void CConfigTimeStamping::DoCommand()
 IMPLEMENT_DYNAMIC(CConfigSBAS, CCommonConfigDlg)
 
 CConfigSBAS::CConfigSBAS(CWnd* pParent /*=NULL*/)
-	: CCommonConfigDlg(IDD_CONFIG_SBAS, pParent)
+	: CCommonConfigDlg(IDD_CFG_SBAS, pParent)
 {
 	m_bEnable = FALSE;
 	m_bRanging = FALSE;
@@ -401,7 +406,7 @@ void CConfigSAEE::DoCommand()
 IMPLEMENT_DYNAMIC(CConfigQZSS, CCommonConfigDlg)
 
 CConfigQZSS::CConfigQZSS(CWnd* pParent /*=NULL*/)
-	: CCommonConfigDlg(IDD_CONFIG_QZSS, pParent)
+	: CCommonConfigDlg(IDD_CFG_QZSS, pParent)
 {
 	m_bEnable = FALSE;
 	m_nTrackingChannel = 0;
@@ -566,7 +571,7 @@ void CConfigNMEABinaryOutputDestination::DoCommand()
 IMPLEMENT_DYNAMIC(CConfigParameterSearchEngineNumber, CCommonConfigDlg)
 
 CConfigParameterSearchEngineNumber::CConfigParameterSearchEngineNumber(CWnd* pParent /*=NULL*/)
-	: CCommonConfigDlg(IDD_CONFIG_PARAM_SEARCH_ENG_NUM, pParent)
+	: CCommonConfigDlg(IDD_CFG_PARAM_SEARCH_ENG_NUM, pParent)
 {
 	m_nMode = 0;
 	m_nAttribute = 0;
@@ -2434,4 +2439,392 @@ void CConfigRtkMode2::OnCbnSelChangeBaseOpt()
 void CConfigRtkMode2::OnCbnSelChangeRoverOpt()
 {
 	UpdateStatus();
+}
+
+// CConfigMessageOut 對話方塊
+IMPLEMENT_DYNAMIC(CConfigMessageOut, CCommonConfigDlg)
+
+CConfigMessageOut::CConfigMessageOut(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CONFIG_MSG_OUT, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigMessageOut, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigMessageOut::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigRtkReset 訊息處理常式
+
+BOOL CConfigMessageOut::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+	((CComboBox*)GetDlgItem(IDC_TYPE))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigMessageOut::OnBnClickedOk()
+{	
+	m_nType = ((CComboBox*)GetDlgItem(IDC_TYPE))->GetCurSel();
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+	OnOK();
+}
+
+void CConfigMessageOut::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(3);
+	*cmd.GetBuffer(0) = 0x09;
+	*cmd.GetBuffer(1) = m_nType;
+	*cmd.GetBuffer(2) = m_nAttribute;
+	configCmd.SetData(cmd);
+	configPrompt = "Configure Message successful...";
+    AfxBeginThread(ConfigThread, 0);
+}
+
+INT_PTR CConfigMessageOut::DoDirect(int type)
+{
+	switch(type)
+	{
+	case 0:
+	case 1:
+	case 2:
+		m_nType = type;
+		m_nAttribute = 0;
+		break;
+	default:
+		return IDCANCEL;
+	}
+	return IDOK;
+}
+
+// CConfigSubSecRegister 對話方塊
+IMPLEMENT_DYNAMIC(CConfigSubSecRegister, CCommonConfigDlg)
+
+CConfigSubSecRegister::CConfigSubSecRegister(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CFG_SUBSEC_REG, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigSubSecRegister, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigSubSecRegister::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigRtkReset 訊息處理常式
+
+BOOL CConfigSubSecRegister::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+	GetDlgItem(IDC_MS)->SetWindowText("0");
+	GetDlgItem(IDC_NS)->SetWindowText("0");
+	GetDlgItem(IDC_PLLDIV)->SetWindowText("0");
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigSubSecRegister::OnBnClickedOk()
+{	
+	CString txt;
+	GetDlgItem(IDC_MS)->GetWindowText(txt);
+	m_nMs = atoi(txt);
+	if(m_nMs > 63 || m_nMs < 0)
+	{
+		AfxMessageBox("MS must be between 0 and 63");
+		return;
+	}
+
+	GetDlgItem(IDC_NS)->GetWindowText(txt);
+	m_nNs = atoi(txt);
+	if(m_nNs > 63 || m_nNs < 0)
+	{
+		AfxMessageBox("NS must be between 0 and 63");
+		return;
+	}
+
+	GetDlgItem(IDC_PLLDIV)->GetWindowText(txt);
+	m_nPllDiv = atoi(txt);
+	if(m_nPllDiv > 7 || m_nPllDiv < 0)
+	{
+		AfxMessageBox("PLL DIV must be between 0 and 7");
+		return;
+	}
+
+	OnOK();
+}
+
+void CConfigSubSecRegister::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(4);
+	*cmd.GetBuffer(0) = 0x70;
+	*cmd.GetBuffer(1) = m_nMs;
+	*cmd.GetBuffer(2) = m_nNs;
+	*cmd.GetBuffer(3) = m_nPllDiv;
+	configCmd.SetData(cmd);
+	configPrompt = "Configure SubSec Register Successful...";
+    AfxBeginThread(ConfigThread, 0);
+}
+
+// CConfigTiming 對話方塊
+IMPLEMENT_DYNAMIC(CConfigTiming, CCommonConfigDlg)
+
+CConfigTiming::CConfigTiming(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CFG_TIMING, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigTiming, CCommonConfigDlg)
+	ON_CBN_SELCHANGE(IDC_MODE, OnCbnSelChangeMode)
+	ON_BN_CLICKED(IDOK, &CConfigTiming::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigRtkMode 訊息處理常式
+
+BOOL CConfigTiming::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);
+
+	GetDlgItem(IDC_SRV_EDT1)->SetWindowText("2000");
+	GetDlgItem(IDC_SRV_EDT2)->SetWindowText("30");
+
+	GetDlgItem(IDC_STT_EDT1)->SetWindowText("");
+	GetDlgItem(IDC_STT_EDT2)->SetWindowText("");
+	GetDlgItem(IDC_STT_EDT3)->SetWindowText("");
+
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	UpdateStatus();
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigTiming::OnBnClickedOk()
+{	
+	m_timingMode = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
+
+	CString txt;
+	((CEdit*)GetDlgItem(IDC_SRV_EDT1))->GetWindowText(txt);
+	m_srvValue1 = atoi(txt);
+	((CEdit*)GetDlgItem(IDC_SRV_EDT2))->GetWindowText(txt);
+	m_srvValue2 = atoi(txt);
+
+	((CEdit*)GetDlgItem(IDC_STT_EDT1))->GetWindowText(txt);
+	m_sttValue1 = atof(txt);
+	((CEdit*)GetDlgItem(IDC_STT_EDT2))->GetWindowText(txt);
+	m_sttValue2 = atof(txt);
+	((CEdit*)GetDlgItem(IDC_STT_EDT3))->GetWindowText(txt);
+	m_sttValue3 = (float)atof(txt);
+
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
+void CConfigTiming::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(31);
+
+	*cmd.GetBuffer(0) = 0x54;
+	*cmd.GetBuffer(1) = m_timingMode;
+	//U32
+	*cmd.GetBuffer(2) = HIBYTE(HIWORD(m_srvValue1));
+	*cmd.GetBuffer(3) = LOBYTE(HIWORD(m_srvValue1));
+	*cmd.GetBuffer(4) = HIBYTE(LOWORD(m_srvValue1));
+	*cmd.GetBuffer(5) = LOBYTE(LOWORD(m_srvValue1));
+	//U32
+	*cmd.GetBuffer(6) = HIBYTE(HIWORD(m_srvValue2));
+	*cmd.GetBuffer(7) = LOBYTE(HIWORD(m_srvValue2));
+	*cmd.GetBuffer(8) = HIBYTE(LOWORD(m_srvValue2));
+	*cmd.GetBuffer(9) = LOBYTE(LOWORD(m_srvValue2));
+	//D64
+	*cmd.GetBuffer(10) = *(((U08*)(&m_sttValue1)) + 7);
+	*cmd.GetBuffer(11) = *(((U08*)(&m_sttValue1)) + 6);
+	*cmd.GetBuffer(12) = *(((U08*)(&m_sttValue1)) + 5);
+	*cmd.GetBuffer(13) = *(((U08*)(&m_sttValue1)) + 4);
+	*cmd.GetBuffer(14) = *(((U08*)(&m_sttValue1)) + 3);
+	*cmd.GetBuffer(15) = *(((U08*)(&m_sttValue1)) + 2);
+	*cmd.GetBuffer(16) = *(((U08*)(&m_sttValue1)) + 1);
+	*cmd.GetBuffer(17) = *(((U08*)(&m_sttValue1)) + 0);
+	//D64
+	*cmd.GetBuffer(18) = *(((U08*)(&m_sttValue2)) + 7);
+	*cmd.GetBuffer(19) = *(((U08*)(&m_sttValue2)) + 6);
+	*cmd.GetBuffer(20) = *(((U08*)(&m_sttValue2)) + 5);
+	*cmd.GetBuffer(21) = *(((U08*)(&m_sttValue2)) + 4);
+	*cmd.GetBuffer(22) = *(((U08*)(&m_sttValue2)) + 3);
+	*cmd.GetBuffer(23) = *(((U08*)(&m_sttValue2)) + 2);
+	*cmd.GetBuffer(24) = *(((U08*)(&m_sttValue2)) + 1);
+	*cmd.GetBuffer(25) = *(((U08*)(&m_sttValue2)) + 0);
+	//F32
+	*cmd.GetBuffer(26) = *(((U08*)(&m_sttValue3)) + 3);
+	*cmd.GetBuffer(27) = *(((U08*)(&m_sttValue3)) + 2);
+	*cmd.GetBuffer(28) = *(((U08*)(&m_sttValue3)) + 1);
+	*cmd.GetBuffer(29) = *(((U08*)(&m_sttValue3)) + 0);
+	//U08
+	*cmd.GetBuffer(30) = (U08)m_attribute;
+
+	configCmd.SetData(cmd);
+	configPrompt = "Configure Timing Successful...";
+
+	AfxBeginThread(ConfigThread, 0);
+
+}
+
+void CConfigTiming::UpdateStatus()
+{
+	int baseOpt = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
+
+	if(baseOpt == 0)	//Kinematic 
+	{
+		GetDlgItem(IDC_SRV_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET3)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT3)->ShowWindow(SW_HIDE);
+		return;
+	}
+
+	if(baseOpt == 1)	//Survey
+	{
+		GetDlgItem(IDC_SRV_SET1)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_SRV_SET2)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_SRV_EDT1)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_SRV_EDT2)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET3)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT3)->ShowWindow(SW_HIDE);
+		return;
+	}
+
+	if(baseOpt == 2)	//Static
+	{
+		GetDlgItem(IDC_SRV_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET1)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_SET2)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_SET3)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_EDT1)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_EDT2)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_EDT3)->ShowWindow(SW_SHOW);
+	}
+}
+
+void CConfigTiming::OnCbnSelChangeMode()
+{
+	UpdateStatus();
+}
+
+// CConfigTimingCableDelay 對話方塊
+IMPLEMENT_DYNAMIC(CConfigTimingCableDelay, CCommonConfigDlg)
+
+CConfigTimingCableDelay::CConfigTimingCableDelay(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CFG_TIMING_CABLE_DELAY, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigTimingCableDelay, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigTimingCableDelay::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigRtkMode 訊息處理常式
+
+BOOL CConfigTimingCableDelay::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	GetDlgItem(IDC_1PPS_CABLE)->SetWindowText("0");
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigTimingCableDelay::OnBnClickedOk()
+{	
+
+	CString txt;
+	((CEdit*)GetDlgItem(IDC_1PPS_CABLE))->GetWindowText(txt);
+	m_delay = atoi(txt);
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
+void CConfigTimingCableDelay::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(6);
+
+	*cmd.GetBuffer(0) = 0x45;
+	//U32
+	*cmd.GetBuffer(1) = HIBYTE(HIWORD(m_delay));
+	*cmd.GetBuffer(2) = LOBYTE(HIWORD(m_delay));
+	*cmd.GetBuffer(3) = HIBYTE(LOWORD(m_delay));
+	*cmd.GetBuffer(4) = LOBYTE(LOWORD(m_delay));
+	//U08
+	*cmd.GetBuffer(5) = (U08)m_attribute;
+
+	configCmd.SetData(cmd);
+	configPrompt = "Configure Cable Delay Successful...";
+	AfxBeginThread(ConfigThread, 0);
+}
+
+// CConfigGpsMeasurementMode 對話方塊
+IMPLEMENT_DYNAMIC(CConfigGpsMeasurementMode, CCommonConfigDlg)
+
+CConfigGpsMeasurementMode::CConfigGpsMeasurementMode(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CFG_GPS_MEAS_MODE, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigGpsMeasurementMode, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigGpsMeasurementMode::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigRtkMode 訊息處理常式
+
+BOOL CConfigGpsMeasurementMode::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigGpsMeasurementMode::OnBnClickedOk()
+{	
+	m_mode = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
+void CConfigGpsMeasurementMode::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(3);
+
+	*cmd.GetBuffer(0) = 0x3E;
+	*cmd.GetBuffer(1) = (U08)m_mode;
+	*cmd.GetBuffer(2) = (U08)m_attribute;
+
+	configCmd.SetData(cmd);
+	configPrompt = "Configure GPS Measurement Mode Successful...";
+	AfxBeginThread(ConfigThread, 0);
 }

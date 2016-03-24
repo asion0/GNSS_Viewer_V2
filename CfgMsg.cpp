@@ -68,7 +68,6 @@ END_MESSAGE_MAP()
 BOOL CCfgMsg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-
 	m_type.AddString("No output");
 	m_type.AddString("NMEA Message");
 	m_type.AddString("Binary Message");

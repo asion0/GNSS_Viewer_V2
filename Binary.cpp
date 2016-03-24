@@ -23,8 +23,8 @@
 #include "ConfigNmeaIntervalDlg.h"
 #include "ConDauDlg.h"
 #include "ConDOPDlg.h"
-#include "ConEleDlg.h"
-#include "ConBinOutDlg.h"
+//#include "ConEleDlg.h"
+//#include "ConBinOutDlg.h"
 #include "ConSrePorDlg.h"
 #include "DrMultiHzDlg.h"
 #include "Config1ppsFrequenceOutput.h"
@@ -45,230 +45,229 @@ struct CommandEntry
 
 static CommandEntry cmdTable[] =
 {
-	//QueryPositionRateCmd
-	{ 0x10, 0xFF, 1, 0x86, 0x00 },
-	//QueryPositionPinningCmd
-	{ 0x3A, 0xFF, 1, 0xB4, 0x00 },
-	//QueryDatumCmd
-	{ 0x2D, 0xFF, 1, 0xAE, 0x00 },
-	//QuerySha1StringCmd
-	{ 0x64, 0x7E, 2, 0x64, 0xFF },
-	//QueryConstellationCapabilityCmd
-	{ 0x64, 0x29, 2, 0x64, 0x93 },
-	//QueryVersionExtensionCmd
-	{ 0x64, 0x7D, 2, 0x64, 0xFE },
 	//QuerySwVerRomCmd
-	{ 0x02, 0x00, 2, 0x80, 0x00 },
+	//{ 0x02, 0x00, 2, 0x80, 0x00 },
 	//QuerySwVerSysCmd
 	{ 0x02, 0x01, 2, 0x80, 0x00 },
 	//QuerySwCrcRomCmd
-	{ 0x03, 0x00, 2, 0x81, 0x00 },
+	//{ 0x03, 0x00, 2, 0x81, 0x00 },
 	//QuerySwCrcSysCmd
 	{ 0x03, 0x01, 2, 0x81, 0x00 },
-	//QueryWaasStatusCmd
-	{ 0x38, 0x00, 2, 0xB3, 0x00 },
-	//Query1ppsModeCmd
-	{ 0x3F, 0xFF, 1, 0xB6, 0x00 },
+	//QueryPowerSavingParametersCmd
+	//{ 0x0D, 0xFF, 1, 0x86, 0x00 },
+	//QueryCustomerIDCmd,
+	{ 0x0D, 0xFF, 1, 0x85, 0x00 },
+	//QueryPositionRateCmd
+	{ 0x10, 0xFF, 1, 0x86, 0x00 },
+	//QueryGnssSelectionForNavigationSystemCmd,
+	//{ 0x11, 0xFF, 1, 0x87, 0x00 },
+	//QueryGnssKnumberSlotCnrCmd,
+	//{ 0x12, 0xFF, 1, 0x88, 0x00 },
 	//QueryPowerModeCmd
 	{ 0x15, 0xFF, 1, 0xB9, 0x00 },
-	//QueryPowerSavingParametersCmd
-	{ 0x0D, 0xFF, 1, 0x86, 0x00 },
-	//QueryProprietaryMessageCmd
-	{ 0x4A, 0xFF, 1, 0xBF, 0x00 },
-	//QueryTimingCmd
-	{ 0x44, 0xFF, 1, 0xC2, 0x00 },
+	//QueryDatalogLogStatusCmd,
+	{ 0x17, 0xFF, 1, 0x94, 0x00 },
+	//QueryBinaryMeasurementDataOutCmd,
+	{ 0x1F, 0xFF, 1, 0x89, 0x00 },
+	//QueryDatumCmd
+	{ 0x2D, 0xFF, 1, 0xAE, 0x00 },
 	//QueryDopMaskCmd
 	{ 0x2E, 0xFF, 1, 0xAF, 0x00 },
 	//QueryElevationAndCnrMaskCmd,
 	{ 0x2F, 0xFF, 1, 0xB0, 0x00 },
-	//QueryAntennaDetectionCmd,
-	{ 0x48, 0xFF, 1, 0xBC, 0x00 },
-	//QueryNoisePowerCmd,
-	{ 0x40, 0xFF, 1, 0xB7, 0x00 },
-	//QueryDrInfoCmd,
-	{ 0x7F, 0xFF, 1, 0xF0, 0x00 },
-	//QueryDrHwParameterCmd,
-	{ 0x7E, 0xFF, 1, 0xF1, 0x00 },
-	//QueryGnssSelectionForNavigationSystemCmd,
-	{ 0x11, 0xFF, 1, 0x87, 0x00 },
-	//QueryGnssKnumberSlotCnrCmd,
-	{ 0x12, 0xFF, 1, 0x88, 0x00 },
-	//QuerySbasCmd,
-	{ 0x62, 0x02, 2, 0x62, 0x80 },
-	//QuerySagpsCmd,
-	{ 0x63, 0x02, 2, 0x63, 0x80 },
-	//QueryQzssCmd,
-	{ 0x62, 0x04, 2, 0x62, 0x81 },
-	//QueryNoisePowerControlCmd,
-	{ 0x64, 0x09, 2, 0x64, 0x84 },
-	//QueryInterferenceDetectControlCmd,
-	{ 0x64, 0x07, 2, 0x64, 0x83 },
-	//QueryNmeaBinaryOutputDestinationCmd,
-	{ 0x64, 0x05, 2, 0x64, 0x82 },
-	//QueryParameterSearchEngineNumberCmd,
-	{ 0x64, 0x0b, 2, 0x64, 0x85 },
 	//QueryAgpsStatusCmd,
 	{ 0x34, 0xFF, 8, 0xB2, 0x00 },
-	//QueryDatalogLogStatusCmd,
-	{ 0x17, 0xFF, 1, 0x94, 0x00 },
-	//QueryRegisterCmd,
-	{ 0x71, 0xFF, 5, 0xC0, 0x00 },
-	//QueryPositionFixNavigationMaskCmd,
-	{ 0x64, 0x12, 2, 0x64, 0x88 },
-	//QueryChannelDopplerCmd,
-	{ 0x7B, 0xFF, 9, 0xFE, 0x00 },
+	//QueryWaasStatusCmd
+	//{ 0x38, 0x00, 2, 0xB3, 0x00 },
+	//QueryPositionPinningCmd
+	{ 0x3A, 0xFF, 1, 0xB4, 0x00 },
 	//QueryNavigationModeCmd,
-	{ 0x3D, 0xFF, 1, 0xB5, 0x00 },
-	//QueryNmeaIntervalV8Cmd,
-	{ 0x64, 0x03, 2, 0x64, 0x81 },
-	//QueryNmeaInterval2V8Cmd,
-	{ 0x7A, 0x01, 3, 0x7A, 0x01 },
-	//QueryChannelClockOffsetCmd,
-	{ 0x7C, 0xFF, 9, 0xFF, 0x00 },
-	//QueryRefTimeSyncToGpsTimeCmd,
-	{ 0x64, 0x16, 2, 0x64, 0x8A },
-	//QuerySearchEngineSleepCriteriaCmd,
-	{ 0x64, 0x26, 2, 0x64, 0x91 },
-	//QueryDatumIndexCmd,
-	{ 0x64, 0x28, 2, 0x64, 0x92 },
-	//QueryNavigationModeV8Cmd,
-	{ 0x64, 0x18, 2, 0x64, 0x8B },
+	//{ 0x3D, 0xFF, 1, 0xB5, 0x00 },
+	//Query1ppsModeCmd
+	{ 0x3F, 0xFF, 1, 0xB6, 0x00 },
+	//QueryNoisePowerCmd,
+	{ 0x40, 0xFF, 1, 0xB7, 0x00 },
+	//QueryTimingCmd
+	{ 0x44, 0xFF, 1, 0xC2, 0x00 },
+	//QueryCableDelayCmd,
+	{ 0x46, 0xFF, 1, 0xBB, 0x00 },
+	//QueryAntennaDetectionCmd,
+	{ 0x48, 0xFF, 1, 0xBC, 0x00 },
+	//QueryProprietaryMessageCmd
+	{ 0x4A, 0xFF, 1, 0xBF, 0x00 },
+	//QueryGnssNmeaTalkIdCmd,
+	{ 0x4F, 0xFF, 1, 0x93, 0x00 },
+	//QuerySbasCmd,
+	{ 0x62, 0x02, 2, 0x62, 0x80 },
+	//QueryQzssCmd,
+	{ 0x62, 0x04, 2, 0x62, 0x81 },
+	//QuerySagpsCmd,
+	{ 0x63, 0x02, 2, 0x63, 0x80 },
 	//QueryGnssBootStatusCmd,
 	{ 0x64, 0x01, 2, 0x64, 0x80 },
-	//QueryDrMultiHzCmd,
-	{ 0x6F, 0x02, 2, 0x6F, 0x80 },
-	//QueryGnssKnumberSlotCnr2Cmd,
-	{ 0x66, 0x7F, 2, 0x66, 0xFF },
-	//QueryGnssSelectionForNavigationSystem2Cmd,
-	{ 0x66, 0x02, 2, 0x66, 0x80 },
+	//QueryNmeaIntervalV8Cmd,
+	{ 0x64, 0x03, 2, 0x64, 0x81 },
+	//QueryNmeaBinaryOutputDestinationCmd,
+	{ 0x64, 0x05, 2, 0x64, 0x82 },
+	//QueryInterferenceDetectControlCmd,
+	{ 0x64, 0x07, 2, 0x64, 0x83 },
+	//QueryNoisePowerControlCmd,
+	{ 0x64, 0x09, 2, 0x64, 0x84 },
+	//QueryParameterSearchEngineNumberCmd,
+	{ 0x64, 0x0b, 2, 0x64, 0x85 },
 	//QueryV8PowerSaveParameters,
 	{ 0x64, 0x0D, 2, 0x64, 0x86 },
 	//QueryV8RomPowerSaveParameters,
-	{ 0x64, 0x0D, 2, 0x86, 0x00 },
+	//{ 0x64, 0x0D, 2, 0x86, 0x00 },
+	//QueryPositionFixNavigationMaskCmd,
+	{ 0x64, 0x12, 2, 0x64, 0x88 },
+	//QueryRefTimeSyncToGpsTimeCmd,
+	{ 0x64, 0x16, 2, 0x64, 0x8A },
+	//QueryNavigationModeV8Cmd,
+	{ 0x64, 0x18, 2, 0x64, 0x8B },
 	//QueryGnssNavSolCmd,
-	{ 0x64, 0x1A, 2, 0x64, 0x8C },
-	//{ 0x64, 0x1A, 2, 0x8C, 0x00 },
-	//QueryGnssNmeaTalkIdCmd,
-	{ 0x4F, 0xFF, 1, 0x93, 0x00 },
-	//QueryCustomerIDCmd,
-	{ 0x0D, 0xFF, 1, 0x85, 0x00 },
-	//Query1ppsFreqencyOutputCmd,
-	{ 0x65, 0x04, 2, 0x65, 0x81 },
-	//QueryEricssonIntervalCmd,
-	{ 0x7A, 0x04, 3, 0x7A, 0x04 },
-	//QueryUartPassCmd,
-	{ 0x7A, 0x08, 3, 0x7A, 0x08 },
-	//QQueryBinaryMeasurementDataOutCmd,
-	{ 0x1F, 0xFF, 1, 0x89, 0x00 },
-	//QuerySerialNumberCmd,
-	{ 0x7A, 0x05, 3, 0x7A, 0x05 },
-	//QueryDgpsCmd,
-	{ 0x69, 0x02, 2, 0x69, 0x80 },
-	//QuerySmoothModeCmd,
-	{ 0x69, 0x04, 2, 0x69, 0x81 },
+	{ 0x64, 0x1A, 2, 0x64, 0x8C }, 	//{ 0x64, 0x1A, 2, 0x8C, 0x00 },
 	//QueryTimeStampingCmd,
 	{ 0x64, 0x1E, 2, 0x64, 0x8D },
 	//QueryGpsTimeCmd,
 	{ 0x64, 0x20, 2, 0x64, 0x8E },
-	//ReadSup800UserDataCmd,
-	{ 0x7A, 0x09, 8, 0x7A, 0x09 },
+	//QuerySearchEngineSleepCriteriaCmd,
+	{ 0x64, 0x26, 2, 0x64, 0x91 },
+	//QueryDatumIndexCmd,
+	{ 0x64, 0x28, 2, 0x64, 0x92 },
+	//QueryConstellationCapabilityCmd
+	{ 0x64, 0x29, 2, 0x64, 0x93 },
 	//QuerySignalDisturbanceStatusCmd,
 	{ 0x64, 0x2B, 2, 0x64, 0x94 },
 	//QuerySignalDisturbanceDataCmd,
 	{ 0x64, 0x2C, 2, 0x64, 0x95 },
-	//QueryCableDelayCmd,
-	{ 0x46, 0xFF, 1, 0xBB, 0x00 },
 	//QueryGeofenceCmd,
 	{ 0x64, 0x30, 2, 0x64, 0x96 },
 	//QueryGeofenceResultCmd,
 	{ 0x64, 0x31, 2, 0x64, 0x97 },
-	//QueryRtkModeCmd,
-	{ 0x6A, 0x02, 2, 0x6A, 0x80 },
-	//QueryRtkParametersCmd,
-	{ 0x6A, 0x04, 2, 0x6A, 0x81 },
 	//QueryGeofenceCmdEx,
 	{ 0x64, 0x35, 3, 0x64, 0x99 },
 	//QueryGeofenceResultCmdEx,
 	{ 0x64, 0x36, 2, 0x64, 0x9A },
+	//QuerySha1StringCmd
+	{ 0x64, 0x7E, 2, 0x64, 0xFF },
+	//QueryVersionExtensionCmd
+	{ 0x64, 0x7D, 2, 0x64, 0xFE },
+	//Query1ppsFreqencyOutputCmd,
+	{ 0x65, 0x04, 2, 0x65, 0x81 },
+	//QueryGnssSelectionForNavigationSystem2Cmd,
+	//{ 0x66, 0x02, 2, 0x66, 0x80 },
+	//QueryGnssKnumberSlotCnr2Cmd,
+	{ 0x66, 0x7F, 2, 0x66, 0xFF },
+	//QueryDgpsCmd,
+	{ 0x69, 0x02, 2, 0x69, 0x80 },
+	//QuerySmoothModeCmd,
+	{ 0x69, 0x04, 2, 0x69, 0x81 },
+	//QueryRtkModeCmd,
+	{ 0x6A, 0x02, 2, 0x6A, 0x80 },
+	//QueryRtkParametersCmd,
+	{ 0x6A, 0x04, 2, 0x6A, 0x81 },
 	//QueryRtkModeCmd2,
 	{ 0x6A, 0x07, 2, 0x6A, 0x83 },
+	//QueryDrMultiHzCmd,
+	{ 0x6F, 0x02, 2, 0x6F, 0x80 },
+	//QueryRegisterCmd,
+	{ 0x71, 0xFF, 5, 0xC0, 0x00 },
+	//QueryNmeaInterval2V8Cmd,
+	{ 0x7A, 0x01, 3, 0x7A, 0x01 },
+	//QueryEricssonIntervalCmd,
+	{ 0x7A, 0x04, 3, 0x7A, 0x04 },
+	//QuerySerialNumberCmd,
+	{ 0x7A, 0x05, 3, 0x7A, 0x05 },
+	//QueryUartPassCmd,
+	{ 0x7A, 0x08, 3, 0x7A, 0x08 },
+	//ReadSup800UserDataCmd,
+	{ 0x7A, 0x09, 8, 0x7A, 0x09 },
+	//QueryChannelDopplerCmd,
+	{ 0x7B, 0xFF, 9, 0xFE, 0x00 },
+	//QueryChannelClockOffsetCmd,
+	{ 0x7C, 0xFF, 9, 0xFF, 0x00 },
+	//QueryDrHwParameterCmd,
+	{ 0x7E, 0xFF, 1, 0xF1, 0x00 },
+	//QueryDrInfoCmd,
+	{ 0x7F, 0xFF, 1, 0xF0, 0x00 },
 };
 
 enum SqBinaryCmd
 {
-	QueryPositionRateCmd = 0,
-	QueryPositionPinningCmd,
-	QueryDatumCmd,
-	QuerySha1StringCmd,
-	QueryConstellationCapabilityCmd,
-	QueryVersionExtensionCmd,
-	QuerySwVerRomCmd,
-	QuerySwVerSysCmd,
-	QuerySwCrcRomCmd,
+	//QuerySwVerRomCmd = 0,
+	QuerySwVerSysCmd = 0,
+	//QuerySwCrcRomCmd,
 	QuerySwCrcSysCmd,
-	QueryWaasStatusCmd,
-	Query1ppsModeCmd,
+	//QueryPowerSavingParametersCmd,
+	QueryCustomerIDCmd,
+	QueryPositionRateCmd,
+	//QueryGnssSelectionForNavigationSystemCmd,
+	//QueryGnssKnumberSlotCnrCmd,
 	QueryPowerModeCmd,
-	QueryPowerSavingParametersCmd,
-	QueryProprietaryMessageCmd,
-	QueryTimingCmd,
+	QueryDatalogLogStatusCmd,
+	QueryBinaryMeasurementDataOutCmd,
+	QueryDatumCmd,
 	QueryDopMaskCmd,
 	QueryElevationAndCnrMaskCmd,
-	QueryAntennaDetectionCmd,
-	QueryNoisePowerCmd,
-	QueryDrInfoCmd,
-	QueryDrHwParameterCmd,
-	QueryGnssSelectionForNavigationSystemCmd,
-	QueryGnssKnumberSlotCnrCmd,
-	QuerySbasCmd,
-	QuerySagpsCmd,
-	QueryQzssCmd,
-	QueryNoisePowerControlCmd,
-	QueryInterferenceDetectControlCmd,
-	QueryNmeaBinaryOutputDestinationCmd,
-	QueryParameterSearchEngineNumberCmd,
 	QueryAgpsStatusCmd,
-	QueryDatalogLogStatusCmd,
-	QueryRegisterCmd,
-	QueryPositionFixNavigationMaskCmd,
-	QueryChannelDopplerCmd,
-	QueryNavigationModeCmd,
-	QueryNmeaIntervalV8Cmd,
-	QueryNmeaInterval2V8Cmd,
-	QueryChannelClockOffsetCmd,
-	QueryRefTimeSyncToGpsTimeCmd,
-	QuerySearchEngineSleepCriteriaCmd,
-	QueryDatumIndexCmd,
-	QueryNavigationModeV8Cmd,
-	QueryGnssBootStatusCmd,
-	QueryDrMultiHzCmd,
-	QueryGnssKnumberSlotCnr2Cmd,
-	QueryGnssSelectionForNavigationSystem2Cmd,
-	QueryV8PowerSaveParameters,
-	QueryV8RomPowerSaveParameters,
-	QueryGnssNavSolCmd,
+	//QueryWaasStatusCmd,
+	QueryPositionPinningCmd,
+	//QueryNavigationModeCmd,
+	Query1ppsModeCmd,
+	QueryNoisePowerCmd,
+	QueryTimingCmd,
+	QueryCableDelayCmd,
+	QueryAntennaDetectionCmd,
+	QueryProprietaryMessageCmd,
 	QueryGnssNmeaTalkIdCmd,
-	QueryCustomerIDCmd,
-	Query1ppsFreqencyOutputCmd,
-	QueryEricssonIntervalCmd,
-	QueryUartPassCmd,
-	QueryBinaryMeasurementDataOutCmd,
-	QuerySerialNumberCmd,
-	QueryDgpsCmd,
-	QuerySmoothModeCmd,
+	QuerySbasCmd,
+	QueryQzssCmd,
+	QuerySagpsCmd,
+	QueryGnssBootStatusCmd,
+	QueryNmeaIntervalV8Cmd,
+	QueryNmeaBinaryOutputDestinationCmd,
+	QueryInterferenceDetectControlCmd,
+	QueryNoisePowerControlCmd,
+	QueryParameterSearchEngineNumberCmd,
+	QueryV8PowerSaveParameters,
+	//QueryV8RomPowerSaveParameters,
+	QueryPositionFixNavigationMaskCmd,
+	QueryRefTimeSyncToGpsTimeCmd,
+	QueryNavigationModeV8Cmd,
+	QueryGnssNavSolCmd,
 	QueryTimeStampingCmd,
 	QueryGpsTimeCmd,
-	ReadSup800UserDataCmd,
+	QuerySearchEngineSleepCriteriaCmd,
+	QueryDatumIndexCmd,
+	QueryConstellationCapabilityCmd,
 	QuerySignalDisturbanceStatusCmd,
 	QuerySignalDisturbanceDataCmd,
-	QueryCableDelayCmd,
 	QueryGeofenceCmd,
 	QueryGeofenceResultCmd,
-	QueryRtkModeCmd,
-	QueryRtkParametersCmd,
 	QueryGeofenceCmdEx,
 	QueryGeofenceResultCmdEx,
+	QuerySha1StringCmd,
+	QueryVersionExtensionCmd,
+	Query1ppsFreqencyOutputCmd,
+	//QueryGnssSelectionForNavigationSystem2Cmd,
+	QueryGnssKnumberSlotCnr2Cmd,
+	QueryDgpsCmd,
+	QuerySmoothModeCmd,
+	QueryRtkModeCmd,
+	QueryRtkParametersCmd,
 	QueryRtkModeCmd2,
+	QueryDrMultiHzCmd,
+	QueryRegisterCmd,
+	QueryNmeaInterval2V8Cmd,
+	QueryEricssonIntervalCmd,
+	QuerySerialNumberCmd,
+	QueryUartPassCmd,
+	ReadSup800UserDataCmd,
+	QueryChannelDopplerCmd,
+	QueryChannelClockOffsetCmd,
+	QueryDrHwParameterCmd,
+	QueryDrInfoCmd,
 };
 
 bool CGPSDlg::SaveEphemeris(U08* buff, U08 id)
@@ -977,7 +976,7 @@ void CGPSDlg::activate_minihomer()
 {
 	CRedirector m_redir;
 	char cmd_path[1024];
-	GetCurrentDirectory(1024,cmd_path);
+	GetCurrentDirectory(1024, cmd_path);
 	strcat_s(cmd_path, sizeof(cmd_path), "\\Create_miniHomer_Activate_Code.exe -c -s");
 //	NMEA nmea;
 
@@ -2576,7 +2575,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryDatum(CmdExeMode nMode, void* outputData)
 	}
 	return Timeout;
 }
-
+/*
 CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareVersionRomCode(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QuerySwVerRomCmd].cmdSize);
@@ -2597,7 +2596,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareVersionRomCode(CmdExeMode nMode, voi
 	}
 	return Timeout;
 }
-
+*/
 CGPSDlg::CmdErrorCode CGPSDlg::QuerySha1String(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QuerySha1StringCmd].cmdSize);
@@ -2757,7 +2756,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareVersionSystemCode(CmdExeMode nMode, 
 	}
 	return Timeout;
 }
-
+/*
 CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareCrcRomCode(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QuerySwCrcRomCmd].cmdSize);
@@ -2774,7 +2773,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareCrcRomCode(CmdExeMode nMode, void* o
 	}
 	return Timeout;
 }
-
+*/
 CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareCrcSystemCode(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QuerySwCrcSysCmd].cmdSize);
@@ -2797,7 +2796,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareCrcSystemCode(CmdExeMode nMode, void
 	}
 	return Timeout;
 }
-
+/*
 CGPSDlg::CmdErrorCode CGPSDlg::QueryWaasStatus(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QueryWaasStatusCmd].cmdSize);
@@ -2814,7 +2813,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryWaasStatus(CmdExeMode nMode, void* outputDat
 	}
 	return Timeout;
 }
-
+*/
 CGPSDlg::CmdErrorCode CGPSDlg::QueryPositionPinning(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QueryPositionPinningCmd].cmdSize);
@@ -2904,7 +2903,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPowerMode(CmdExeMode nMode, void* outputData
 	}
 	return Timeout;
 }
-
+/*
 CGPSDlg::CmdErrorCode CGPSDlg::QueryPowerSavingParameters(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QueryPowerSavingParametersCmd].cmdSize);
@@ -2975,7 +2974,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryV8PowerSavingParametersRom(CmdExeMode nMode,
 	}
 	return Timeout;
 }
-
+*/
 CGPSDlg::CmdErrorCode CGPSDlg::QueryV8PowerSavingParameters(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QueryV8PowerSaveParameters].cmdSize);
@@ -3342,7 +3341,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryDrHwParameter(CmdExeMode nMode, void* output
 	}
 	return Timeout;
 }
-
+/*
 CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssSelectionForNavigationSystem(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QueryGnssSelectionForNavigationSystemCmd].cmdSize);
@@ -3394,7 +3393,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssKnumberSlotCnr(CmdExeMode nMode, void* o
 	}
 	return Timeout;
 }
-
+*/
 CGPSDlg::CmdErrorCode CGPSDlg::QuerySbas(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QuerySbasCmd].cmdSize);
@@ -3815,7 +3814,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryAgpsStatus(CmdExeMode nMode, void* outputDat
 	}
 	return ret;
 }
-
+/*
 CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssSelectionForNavigationSystem2(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QueryGnssSelectionForNavigationSystem2Cmd].cmdSize);
@@ -3823,7 +3822,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssSelectionForNavigationSystem2(CmdExeMode
 	cmd.SetU08(2, cmdTable[QueryGnssSelectionForNavigationSystem2Cmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryGnssSelectionForNavigationSystem2Cmd, &cmd, &ackCmd))
+	if(!ExcuteBinaryCommand(QueryGnssKnumberSlotCnrCmdQueryGnssSelectionForNavigationSystem2Cmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Gnss Sel for Nav System Successful...";
 		add_msgtolist(strMsg);
@@ -3849,7 +3848,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssSelectionForNavigationSystem2(CmdExeMode
 	}
 	return Timeout;
 }
-
+*/
 CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssNmeaTalkId(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QueryGnssNmeaTalkIdCmd].cmdSize);
@@ -4041,7 +4040,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPositionFixNavigationMask(CmdExeMode nMode, 
 	}
 	return Timeout;
 }
-
+/*
 CGPSDlg::CmdErrorCode CGPSDlg::QueryNavigationMode(CmdExeMode nMode, void* outputData)
 {	    
 	BinaryCommand cmd(cmdTable[QueryNavigationModeCmd].cmdSize);
@@ -4083,7 +4082,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryNavigationMode(CmdExeMode nMode, void* outpu
 	}
 	return Timeout;
 }
-
+*/
 CGPSDlg::CmdErrorCode CGPSDlg::QueryNavigationModeV8(CmdExeMode nMode, void* outputData)
 {	    
 	BinaryCommand cmd(cmdTable[QueryNavigationModeV8Cmd].cmdSize);
@@ -4651,7 +4650,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkMode2(CmdExeMode nMode, void* outputData)
 	switch(timingMode)
 	{
 	case 0:
-		strMsg += "Timing Normal Mode";
+		strMsg += "Timing Kinematic Mode";
 		add_msgtolist(strMsg);
 		break;
 	case 1:
@@ -4667,12 +4666,16 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkMode2(CmdExeMode nMode, void* outputData)
 	case 2:
 		strMsg += "Timing Static Mode";
 		add_msgtolist(strMsg);
-		strMsg.Format("Saved Latitude:%f", ConvertLeonDouble(ackCmd.Ptr(16)));
-		add_msgtolist(strMsg);
-		strMsg.Format("Saved Longitude:%f", ConvertLeonDouble(ackCmd.Ptr(24)));
-		add_msgtolist(strMsg);
-		strMsg.Format("Saved Altitude:%f", ConvertLeonFloat(ackCmd.Ptr(32)));
-		add_msgtolist(strMsg);
+		if(rtkOpr==2)
+		{
+
+			strMsg.Format("Saved Latitude:%f", ConvertLeonDouble(ackCmd.Ptr(16)));
+			add_msgtolist(strMsg);
+			strMsg.Format("Saved Longitude:%f", ConvertLeonDouble(ackCmd.Ptr(24)));
+			add_msgtolist(strMsg);
+			strMsg.Format("Saved Altitude:%f", ConvertLeonFloat(ackCmd.Ptr(32)));
+			add_msgtolist(strMsg);
+		}
 		break;
 	}	
 	return Ack;
@@ -5278,7 +5281,8 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryCableDelay(CmdExeMode nMode, void* outputDat
 
 UINT SetFacMsgThread(LPVOID pParam)
 {	
-	CGPSDlg::gpsDlg->ExecuteConfigureCommand(CGPSDlg::m_inputMsg, 9, "Configure Successful...");
+	int len = *((int*)(pParam));
+	CGPSDlg::gpsDlg->ExecuteConfigureCommand(CGPSDlg::m_inputMsg, len, "Configure Successful...");
 #if defined(SAINTMAX_UI)
 	Sleep(500);
 	CGPSDlg::gpsDlg->m_nmea0183msg.EnableWindow(TRUE);
@@ -5292,9 +5296,9 @@ void CGPSDlg::SetFactoryDefault(bool isReboot)
 	{
 		return;
 	}
-
+	int cmdLen = 9;
 	m_inputMode = 0;	
-	memset(m_inputMsg, 0, 9);   		    
+	memset(m_inputMsg, 0, cmdLen);   		    
 	m_inputMsg[0]=(U08)0xa0;
 	m_inputMsg[1]=(U08)0xa1;
 	m_inputMsg[2]=0;
@@ -5313,7 +5317,7 @@ void CGPSDlg::SetFactoryDefault(bool isReboot)
 	m_inputMsg[7]=(U08)0x0d;
 	m_inputMsg[8]=(U08)0x0a;
 	slgsv = 6;
-	AfxBeginThread(SetFacMsgThread, 0);
+	AfxBeginThread(SetFacMsgThread, &cmdLen);
 }
 
 void CGPSDlg::OnSetFactoryDefaultNoReboot()
@@ -5325,26 +5329,29 @@ void CGPSDlg::OnSetFactoryDefaultReboot()
 {	
 	SetFactoryDefault(true);
 }
-
+/*
 void CGPSDlg::OnConfigureoutputmessagetypeNooutput()
 {	
 	if(!CheckConnect())return;
-	m_inputMode = 0;	
-	memset(m_inputMsg, 0, 9);   		    
+	m_inputMode = 0;
+	int cmdLen = 10;
+
+	memset(m_inputMsg, 0, cmdLen);   		    
 	m_inputMsg[0]=(U08)0xa0;
 	m_inputMsg[1]=(U08)0xa1;
 	m_inputMsg[2]=0;
-	m_inputMsg[3]=2;
+	m_inputMsg[3]=3;
 	m_inputMsg[4]=9; //msgid
 	m_inputMsg[5]=0;
-	m_inputMsg[6]=9; //checksum right	    
-	m_inputMsg[7]=(U08)0x0d;
-	m_inputMsg[8]=(U08)0x0a;
+	m_inputMsg[6]=0;
+	m_inputMsg[7]=9; //checksum right	    
+	m_inputMsg[8]=(U08)0x0d;
+	m_inputMsg[9]=(U08)0x0a;
 	SetMsgType(Nooutput_Mode);
 	m_no_output.EnableWindow(0);
 	m_nmea0183msg.EnableWindow(1);
 	m_binarymsg.EnableWindow(1);
-	AfxBeginThread(SetFacMsgThread,0);
+	AfxBeginThread(SetFacMsgThread, &cmdLen);
 	//InvalidateRect(CRect(30,64,320,114),TRUE);	
 }
 
@@ -5352,21 +5359,23 @@ void CGPSDlg::OnConfigureoutputmessagetypeNmeamessage()
 {	
 	if(!CheckConnect())return;
 	m_inputMode = 0;	
-	memset(m_inputMsg, 0, 9);   		    
+	int cmdLen = 10;
+	memset(m_inputMsg, 0, cmdLen);   		    
 	m_inputMsg[0]=(U08)0xa0;
 	m_inputMsg[1]=(U08)0xa1;
 	m_inputMsg[2]=0;
-	m_inputMsg[3]=2;
+	m_inputMsg[3]=3;
 	m_inputMsg[4]=9; //msgid
 	m_inputMsg[5]=1;
-	m_inputMsg[6]=8; //checksum right	    
-	m_inputMsg[7]=(U08)0x0d;
-	m_inputMsg[8]=(U08)0x0a;
+	m_inputMsg[6]=0;
+	m_inputMsg[7]=8; //checksum right	    
+	m_inputMsg[8]=(U08)0x0d;
+	m_inputMsg[9]=(U08)0x0a;
 	SetMsgType(NMEA_Mode);
 	m_no_output.EnableWindow(1);
 	m_nmea0183msg.EnableWindow(0);
 	m_binarymsg.EnableWindow(1);
-	AfxBeginThread(SetFacMsgThread,0);
+	AfxBeginThread(SetFacMsgThread, &cmdLen);
 }
 
 void CGPSDlg::OnConfigureoutputmessagetypeBinarymessage()
@@ -5377,23 +5386,25 @@ void CGPSDlg::OnConfigureoutputmessagetypeBinarymessage()
 	}
 
 	m_inputMode = 0;	
-	memset(m_inputMsg, 0, 9);   		    
+	int cmdLen = 10;
+	memset(m_inputMsg, 0, cmdLen);   		    
 	m_inputMsg[0]=(U08)0xa0;
 	m_inputMsg[1]=(U08)0xa1;
 	m_inputMsg[2]=0;
-	m_inputMsg[3]=2;
+	m_inputMsg[3]=3;
 	m_inputMsg[4]=9; //msgid
 	m_inputMsg[5]=2;
-	m_inputMsg[6]=11; //checksum right	    
-	m_inputMsg[7]=(U08)0x0d;
-	m_inputMsg[8]=(U08)0x0a;
+	m_inputMsg[6]=0;
+	m_inputMsg[7]=11; //checksum right	    
+	m_inputMsg[8]=(U08)0x0d;
+	m_inputMsg[9]=(U08)0x0a;
 	SetMsgType(Binary_Mode);
 	m_no_output.EnableWindow(1);
 	m_nmea0183msg.EnableWindow(1);
 	m_binarymsg.EnableWindow(0);
-	AfxBeginThread(SetFacMsgThread,0);
+	AfxBeginThread(SetFacMsgThread, &cmdLen);
 }
-
+*/
 void CGPSDlg::OnBinaryConfigurenmeaoutput()
 {   
 	if(!CheckConnect())
@@ -5489,7 +5500,7 @@ void CGPSDlg::OnBinaryConfiguredopmask()
 		CreateGPSThread();
 	}
 }
-
+/*
 void CGPSDlg::OnBinaryConfigureelevationmask()
 {	
 	if(!CheckConnect())
@@ -5521,7 +5532,7 @@ void CGPSDlg::OnBinaryConfigurebinarydata()
 		CreateGPSThread();
 	}
 }
-
+*/
 void CGPSDlg::OnConfigureSerialPort()
 {
 	if(!CheckConnect())
@@ -6288,6 +6299,26 @@ void CGPSDlg::DoCommonConfig(CCommonConfigDlg* dlg)
 	}
 }
 
+void CGPSDlg::DoCommonConfigDirect(CCommonConfigDlg* dlg, int type)
+{
+	if(!CheckConnect())
+	{
+		return;
+	}
+
+	m_inputMode = 0;
+	INT_PTR nResult = dlg->DoDirect(type);
+	if(nResult == IDOK) 
+	{
+		dlg->DoCommand();
+	}
+	else
+	{
+		SetMode();  
+		CreateGPSThread();
+	}
+}
+
 void CGPSDlg::OnBinaryConfigureQZSS()
 {
 	CConfigQZSS dlg;
@@ -6502,3 +6533,41 @@ void CGPSDlg::OnConfigRtkMode2()
 	CConfigRtkMode2 dlg;
 	DoCommonConfig(&dlg);
 }
+
+void CGPSDlg::OnConfigMessageOut()
+{
+	CConfigMessageOut dlg;
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigSubSecRegister()
+{
+	CConfigSubSecRegister dlg;
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigTiming()
+{
+	CConfigTiming dlg;
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigTimingCableDelay()
+{
+	CConfigTimingCableDelay dlg;
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigGpsMeasurementMode()
+{
+	CConfigGpsMeasurementMode dlg;
+	DoCommonConfig(&dlg);
+}
+
+
+
+
+
+
+
+

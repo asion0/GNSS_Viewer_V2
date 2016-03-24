@@ -272,7 +272,7 @@ protected:
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
-	afx_msg void OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL bSysMenu);
+//	afx_msg void OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL bSysMenu);
 	afx_msg void OnBnClickedConnect();
 	afx_msg void OnBnClickedRecord();
 	afx_msg void OnBnClickedPlay();
@@ -305,17 +305,17 @@ protected:
 	afx_msg void OnConfigureSerialPort();
 	afx_msg void OnSetFactoryDefaultNoReboot();
 	afx_msg void OnSetFactoryDefaultReboot();
-	afx_msg void OnConfigureoutputmessagetypeNooutput();
-	afx_msg void OnConfigureoutputmessagetypeNmeamessage();
-	afx_msg void OnConfigureoutputmessagetypeBinarymessage();
+//	afx_msg void OnConfigureoutputmessagetypeNooutput();
+//	afx_msg void OnConfigureoutputmessagetypeNmeamessage();
+//	afx_msg void OnConfigureoutputmessagetypeBinarymessage();
 	afx_msg void OnBinaryConfigurenmeaoutput();
 	afx_msg void OnConfigureNmeaIntervalV8();
 	afx_msg void OnConfigureEricssonSentecneInterval();
 	afx_msg void OnConfigureSerialNumber();
 	afx_msg void OnBinaryConfiguredatum();
 	afx_msg void OnBinaryConfiguredopmask();
-	afx_msg void OnBinaryConfigureelevationmask();
-	afx_msg void OnBinaryConfigurebinarydata();
+//	afx_msg void OnBinaryConfigureelevationmask();
+//	afx_msg void OnBinaryConfigurebinarydata();
 	afx_msg void OnConverterDecompress();	
 	afx_msg void OnCovDecopre();
 	afx_msg void OnConverterCompress();
@@ -370,7 +370,7 @@ protected:
 	afx_msg void OnMultimodeConfiguremode();
 	afx_msg void OnMultimodeQuerymode();
 	afx_msg void OnBinaryConfiguresubsecregister();
-	afx_msg void OnBinaryConfigure1pps();
+	afx_msg void OnConfigGpsMeasurementMode();
 	afx_msg void OnBinaryQuery1pps();
 //	afx_msg void OnBnClickedSetoriginUser();
 	afx_msg void OnBinaryConfigurepowermode();
@@ -379,8 +379,8 @@ protected:
 	afx_msg void OnGetGpsAlmanac();
 	afx_msg void OnBinaryQuerybinarymsginterval();
 	afx_msg void OnBinaryResetodometer();
-	afx_msg void OnConfigure1ppsTiming();
-	afx_msg void OnConfigure1ppsCableDelay();
+	afx_msg void OnConfigTiming();
+	afx_msg void OnConfigTimingCableDelay();
 	afx_msg void OnConfigure1ppstimingConfigure1pps();
 	afx_msg void OnConfigElevationAndCnrMask();
 	afx_msg void On1ppstimingMonitoring1pps();
@@ -408,7 +408,7 @@ protected:
 //	afx_msg void OnBinaryConfiguregnssselectionfornavigationsystem();
 	afx_msg void OnBnClickedKnumEnable();
 	afx_msg void OnBnClickedKnumDisable();
-	afx_msg void OnBinaryConfigurenmeaoutput32953();
+	afx_msg void OnConfigNmeaOutputComPort();
 	afx_msg void OnBinaryConfigurenmeatalkerid();
 //	afx_msg void OnCfgGlonassAcquisitionMode();
 	afx_msg void OnGetGlonassAlmanac();
@@ -491,6 +491,8 @@ protected:
 	afx_msg void OnConfigRtkMode2();
 	afx_msg void OnConfigRtkParameters();
 	afx_msg void OnRtkReset();
+	afx_msg void OnConfigMessageOut();
+	afx_msg void OnConfigSubSecRegister();
 
 	afx_msg void OnConfigureSignalDisturbanceStatus();
 	afx_msg void OnConfigureGpsUtcLeapSecondsInUtc();
@@ -508,7 +510,7 @@ public:
 	bool m_nmeaPlayPause;
 	CCriticalSection _nmeaPlayInterval;
 	CCriticalSection csSatelliteStruct;
-	CButton m_nmea0183msg;
+	//CButton m_nmea0183msg;
 
 	Satellite satecopy_gps[MAX_SATELLITE];
 	Satellite sate_gps[MAX_SATELLITE];	
@@ -542,8 +544,8 @@ protected:
 private:
 	char m_currentDir[MyMaxPath];
 	bool m_gpsdoInProgress;
-	CButton m_binarymsg;
-	CButton m_no_output;
+	//CButton m_binarymsg;
+	//CButton m_no_output;
 //	CCigRgsDlg* pCRDlg;
 	CStatic m_connectT;
 	CFile m_convertFile;
@@ -602,9 +604,9 @@ public:
 
 
 	LogFlashInfo1 m_logFlashInfo;
-	U08 m_ms;
-	U08 m_ns;
-	U08 m_pllDiv;	
+//	U08 m_ms;
+//	U08 m_ns;
+//	U08 m_pllDiv;	
 //	U08 Binary_mode;
 	U32 m_ttffCount;	
 	bool m_initTtff;
@@ -629,14 +631,14 @@ public:
 		str.Format("%d", t);
 		GetDlgItem(IDC_TTFF)->SetWindowText(str);
 	}
-	void SetKernelTestTTFF(int t, int c)
-	{
-		CString str;
-		str.Format("%d(%d)", t, c);
-		GetDlgItem(IDC_TTFF)->SetWindowText(str);
-	}
+	//void SetKernelTestTTFF(int t, int c)
+	//{
+	//	CString str;
+	//	str.Format("%d(%d)", t, c);
+	//	GetDlgItem(IDC_TTFF)->SetWindowText(str);
+	//}
 	//尚未整理分隔線
-	const char* GetCurrentDir() { return m_currentDir; }
+	//const char* GetCurrentDir() { return m_currentDir; }
 
 	U08 IsSuccessful(U08* buff, int tail, bool show_msg = true);
 //	U08 Rom(CString prom_path);
@@ -1032,20 +1034,20 @@ public:
 
 	CmdErrorCode QueryPositionRate(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDatum(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QuerySoftwareVersionRomCode(CmdExeMode nMode, void* outputData);
+	//CmdErrorCode QuerySoftwareVersionRomCode(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySha1String(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryConstellationCapability(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryVersionExtension(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySoftwareVersionSystemCode(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QuerySoftwareCrcRomCode(CmdExeMode nMode, void* outputData);
+	//CmdErrorCode QuerySoftwareCrcRomCode(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySoftwareCrcSystemCode(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryWaasStatus(CmdExeMode nMode, void* outputData);
+	//CmdErrorCode QueryWaasStatus(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPositionPinning(CmdExeMode nMode, void* outputData);
 	CmdErrorCode Query1ppsMode(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPowerMode(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryPowerSavingParameters(CmdExeMode nMode, void* outputData);
+	//CmdErrorCode QueryPowerSavingParameters(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryV8PowerSavingParameters(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryV8PowerSavingParametersRom(CmdExeMode nMode, void* outputData);
+	//CmdErrorCode QueryV8PowerSavingParametersRom(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryProprietaryMessage(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryTiming(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDopMask(CmdExeMode nMode, void* outputData);
@@ -1055,7 +1057,7 @@ public:
 	CmdErrorCode QueryDrInfo(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDrHwParameter(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGnssSelectionForNavigationSystem(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryGnssKnumberSlotCnr(CmdExeMode nMode, void* outputData);
+	//CmdErrorCode QueryGnssKnumberSlotCnr(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySbas(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySagps(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryQzss(CmdExeMode nMode, void* outputData);
@@ -1068,7 +1070,7 @@ public:
 	CmdErrorCode QueryRegister(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPositionFixNavigationMask(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryChannelDoppler(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryNavigationMode(CmdExeMode nMode, void* outputData);
+	//CmdErrorCode QueryNavigationMode(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryNmeaIntervalV8(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryNmeaInterval2V8(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryEricssonInterval(CmdExeMode nMode, void* outputData);
@@ -1091,7 +1093,7 @@ public:
 	CmdErrorCode QueryGnssBootStatus(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDrMultiHz(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGnssKnumberSlotCnr2(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryGnssSelectionForNavigationSystem2(CmdExeMode nMode, void* outputData);
+	//CmdErrorCode QueryGnssSelectionForNavigationSystem2(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGnssNmeaTalkId(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGnssNavSol(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryCustomerID(CmdExeMode nMode, void* outputData);
@@ -1120,8 +1122,8 @@ private:
 	{ GenericQuery(&CGPSDlg::QueryPositionRate); }
 	afx_msg void OnQueryDatum()
 	{ GenericQuery(&CGPSDlg::QueryDatum); }
-	afx_msg void OnQuerySoftwareVersionRomCode()
-	{ GenericQuery(&CGPSDlg::QuerySoftwareVersionRomCode); }
+	//afx_msg void OnQuerySoftwareVersionRomCode()
+	//{ GenericQuery(&CGPSDlg::QuerySoftwareVersionRomCode); }
 	afx_msg void OnQuerySha1String()
 	{ GenericQuery(&CGPSDlg::QuerySha1String); }
 	afx_msg void OnQueryConstellationCapability()
@@ -1130,24 +1132,24 @@ private:
 	{ GenericQuery(&CGPSDlg::QueryVersionExtension); }
 	afx_msg void OnQuerySoftwareVersionSystemCode()
 	{ GenericQuery(&CGPSDlg::QuerySoftwareVersionSystemCode); }
-	afx_msg void OnQuerySoftwareCrcRomCode()
-	{ GenericQuery(&CGPSDlg::QuerySoftwareCrcRomCode); }
+	//afx_msg void OnQuerySoftwareCrcRomCode()
+	//{ GenericQuery(&CGPSDlg::QuerySoftwareCrcRomCode); }
 	afx_msg void OnQuerySoftwareCrcSystemCode()	
 	{ GenericQuery(&CGPSDlg::QuerySoftwareCrcSystemCode); }
-	afx_msg void OnQueryWaasStatus()
-	{ GenericQuery(&CGPSDlg::QueryWaasStatus); }
+//	afx_msg void OnQueryWaasStatus()
+//	{ GenericQuery(&CGPSDlg::QueryWaasStatus); }
 	afx_msg void OnQueryPositionPinning()
 	{ GenericQuery(&CGPSDlg::QueryPositionPinning); }
 	afx_msg void OnQuery1ppsMode()
 	{ GenericQuery(&CGPSDlg::Query1ppsMode); }
 	afx_msg void OnQueryPowerMode()
 	{ GenericQuery(&CGPSDlg::QueryPowerMode); }
-	afx_msg void OnQueryPowerSavingParameters()
-	{ GenericQuery(&CGPSDlg::QueryPowerSavingParameters); }
+//	afx_msg void OnQueryPowerSavingParameters()
+//	{ GenericQuery(&CGPSDlg::QueryPowerSavingParameters); }
 	afx_msg void OnQueryV8PowerSavingParameters()
 	{ GenericQuery(&CGPSDlg::QueryV8PowerSavingParameters); }
-	afx_msg void OnQueryV8PowerSavingParametersRom()
-	{ GenericQuery(&CGPSDlg::QueryV8PowerSavingParametersRom); }
+//	afx_msg void OnQueryV8PowerSavingParametersRom()
+//	{ GenericQuery(&CGPSDlg::QueryV8PowerSavingParametersRom); }
 	afx_msg void OnQueryProprietaryMessage()
 	{ GenericQuery(&CGPSDlg::QueryProprietaryMessage); }
 	afx_msg void OnQueryTiming()
@@ -1164,10 +1166,10 @@ private:
 	{ GenericQuery(&CGPSDlg::QueryDrInfo); }
 	afx_msg void OnQueryDrHwParameter()
 	{ GenericQuery(&CGPSDlg::QueryDrHwParameter); }
-	afx_msg void OnQueryGnssSelectionForNavigationSystem()
-	{ GenericQuery(&CGPSDlg::QueryGnssSelectionForNavigationSystem); }
-	afx_msg void OnQueryGnssKnumberSlotCnr()
-	{ GenericQuery(&CGPSDlg::QueryGnssKnumberSlotCnr); }
+//	afx_msg void OnQueryGnssSelectionForNavigationSystem()
+//	{ GenericQuery(&CGPSDlg::QueryGnssSelectionForNavigationSystem); }
+//	afx_msg void OnQueryGnssKnumberSlotCnr()
+//	{ GenericQuery(&CGPSDlg::QueryGnssKnumberSlotCnr); }
 	afx_msg void OnQuerySbas()
 	{ GenericQuery(&CGPSDlg::QuerySbas); }
 	afx_msg void OnQuerySagps()
@@ -1188,8 +1190,8 @@ private:
 	{ GenericQuery(&CGPSDlg::QueryDatalogLogStatus); }
 	afx_msg void OnQueryPositionFixNavigationMask()
 	{ GenericQuery(&CGPSDlg::QueryPositionFixNavigationMask); }
-	afx_msg void OnQueryNavigationMode()
-	{ GenericQuery(&CGPSDlg::QueryNavigationMode); }
+	//afx_msg void OnQueryNavigationMode()
+	//{ GenericQuery(&CGPSDlg::QueryNavigationMode); }
 	afx_msg void OnQueryNmeaIntervalV8()
 #if (CUSTOMER_ID==0x0001)	//SWID customize
 	{ GenericQuery(&CGPSDlg::QueryNmeaInterval2V8); }
@@ -1232,8 +1234,8 @@ private:
 	{ GenericQuery(&CGPSDlg::QueryDrMultiHz); }
 	afx_msg void OnQueryGnssKnumberSlotCnr2()
 	{ GenericQuery(&CGPSDlg::QueryGnssKnumberSlotCnr2); }
-	afx_msg void OnQueryGnssSelectionForNavigationSystem2()
-	{ GenericQuery(&CGPSDlg::QueryGnssSelectionForNavigationSystem2); }
+//	afx_msg void OnQueryGnssSelectionForNavigationSystem2()
+//	{ GenericQuery(&CGPSDlg::QueryGnssSelectionForNavigationSystem2); }
 	afx_msg void OnQueryGnssNmeaTalkId()
 	{ GenericQuery(&CGPSDlg::QueryGnssNmeaTalkId); }
 	afx_msg void OnQueryGnssNavSol()
@@ -1332,6 +1334,7 @@ private:
 //	void Config_silab_baudrate(HANDLE *m_DeviceHandle);
 //	void Config_silab_baudrate_flash(HANDLE *m_DeviceHandle);
 	void DoCommonConfig(CCommonConfigDlg* dlg);
+	void DoCommonConfigDirect(CCommonConfigDlg* dlg, int type);
 	//Functions for combain GPS / GNSS Viewer UI Layout.
 	int CreateSubMenu(const HMENU hMenu, const MenuItemEntry* menuItemTable, LPCSTR pszSubMenuText);
 	PrnType GetPrnType(int id);

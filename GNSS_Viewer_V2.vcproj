@@ -45,7 +45,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_GNSS_RTK"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_GNSS_INTERNALUSE_BDV8"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -1609,14 +1609,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Con1PPS.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Con1PPS_cable.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Con1PPS_DOP.cpp"
 				>
 			</File>
@@ -1626,14 +1618,6 @@
 			</File>
 			<File
 				RelativePath=".\Con1PPS_OutputMode.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Con1PPS_Timing.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Con_acquisition.cpp"
 				>
 			</File>
 			<File
@@ -1649,23 +1633,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ConBinOutDlg.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ConCompassCali.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\ConDauDlg.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\ConDOPDlg.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ConEleDlg.cpp"
 				>
 			</File>
 			<File
@@ -1975,14 +1947,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Con1PPS.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Con1PPS_cable.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Con1PPS_DOP.h"
 				>
 			</File>
@@ -1992,14 +1956,6 @@
 			</File>
 			<File
 				RelativePath=".\Con1PPS_OutputMode.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Con1PPS_Timing.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Con_acquisition.h"
 				>
 			</File>
 			<File
@@ -2015,23 +1971,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ConBinOutDlg.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ConCompassCali.h"
-				>
-			</File>
-			<File
 				RelativePath=".\ConDauDlg.h"
 				>
 			</File>
 			<File
 				RelativePath=".\ConDOPDlg.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ConEleDlg.h"
 				>
 			</File>
 			<File
@@ -2316,86 +2260,6 @@
 				RelativePath=".\Utility.h"
 				>
 			</File>
-		</Filter>
-		<Filter
-			Name="3_UIComponent"
-			>
-			<File
-				RelativePath=".\ColorStatic.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ColorStatic.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Config1ppsFrequenceOutput.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Config1ppsFrequenceOutput.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ConfigEricssonIntervalDlg.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ConfigEricssonIntervalDlg.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ExternalSrecDlg.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MsgList.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MsgList.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PanelBackground.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PanelBackground.h"
-				>
-			</File>
-			<File
-				RelativePath="Pic_Earth.cpp"
-				>
-			</File>
-			<File
-				RelativePath="Pic_Earth.h"
-				>
-			</File>
-			<File
-				RelativePath="Pic_Scatter.cpp"
-				>
-			</File>
-			<File
-				RelativePath="Pic_Scatter.h"
-				>
-			</File>
-			<File
-				RelativePath="SnrBarChart.cpp"
-				>
-			</File>
-			<File
-				RelativePath="SnrBarChart.h"
-				>
-			</File>
-			<File
-				RelativePath=".\UISetting.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\UISetting.h"
-				>
-			</File>
 			<Filter
 				Name="Common"
 				>
@@ -2405,14 +2269,6 @@
 				</File>
 				<File
 					RelativePath="BinaryMSG.h"
-					>
-				</File>
-				<File
-					RelativePath="CigRgsDlg.cpp"
-					>
-				</File>
-				<File
-					RelativePath="CigRgsDlg.h"
 					>
 				</File>
 				<File
@@ -2624,6 +2480,86 @@
 					>
 				</File>
 			</Filter>
+		</Filter>
+		<Filter
+			Name="3_UIComponent"
+			>
+			<File
+				RelativePath=".\ColorStatic.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ColorStatic.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Config1ppsFrequenceOutput.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Config1ppsFrequenceOutput.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ConfigEricssonIntervalDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ConfigEricssonIntervalDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ExternalSrecDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MsgList.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MsgList.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PanelBackground.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PanelBackground.h"
+				>
+			</File>
+			<File
+				RelativePath="Pic_Earth.cpp"
+				>
+			</File>
+			<File
+				RelativePath="Pic_Earth.h"
+				>
+			</File>
+			<File
+				RelativePath="Pic_Scatter.cpp"
+				>
+			</File>
+			<File
+				RelativePath="Pic_Scatter.h"
+				>
+			</File>
+			<File
+				RelativePath="SnrBarChart.cpp"
+				>
+			</File>
+			<File
+				RelativePath="SnrBarChart.h"
+				>
+			</File>
+			<File
+				RelativePath=".\UISetting.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\UISetting.h"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\res\Eph_Old.dat"

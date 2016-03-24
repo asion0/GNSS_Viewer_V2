@@ -25,6 +25,6 @@ public:
 	afx_msg void OnTimer(UINT nIDEvent);
 	virtual BOOL OnInitDialog();
 	bool IsFinish;
-	afx_msg void OnBnClickedButton1();
-	afx_msg void OnClose();
+	//afx_msg void OnBnClickedButton1();
+	//afx_msg void OnClose();
 };

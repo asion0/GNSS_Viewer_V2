@@ -15,23 +15,22 @@
 #include "ConPinningParameter.h"
 #include "ConMultiMode.h"
 #include "Con_register.h"
-#include "Con1PPS.h"
+//#include "Con1PPS.h"
 #include "ConMultiPath.h"
 #include "ConWaas.h"
 #include "Cfg_binary_msg.h"
-#include "Con1PPS_Timing.h"
 #include "Config_binary_interval.h"
-#include "Con1PPS_cable.h"
+//#include "Con1PPS_cable.h"
 #include "Con1PPS_DOP.h"
 #include "Con1PPS_ElevCNR.h"
 #include "Proprietary_nmea.h"
 #include "Device_Adding.h"
 #include "geoid.h"
-#include "Config_USB.h"
+//#include "Config_USB.h"
 #include "ConGNSSSelectionforNAV.h"
 #include "ConNMEAComport.h"
 #include "Con_NMEA_TalkerID.h"
-#include "Con_acquisition.h"
+//#include "Con_acquisition.h"
 #include "GetGNSSEphemeris.h"
 #include "SetGNSSEphemeris.h"
 #include "GetTimeCorrection.h"
@@ -50,7 +49,7 @@
 #include "SnrBarChart.h"
 #include "Pic_Earth.h"
 #include "Pic_Scatter.h"
-#include "CigRgsDlg.h"
+//#include "CigRgsDlg.h"
 #include "GetRgsDlg.h"
 #include "HostBaseDownloadDlg.h"
 #include "FirmwareDownloadDlg.h"
@@ -65,6 +64,7 @@
 #include "PanelBackground.h"
 #include "RawMeasmentOutputConvertDlg.h"
 #include "VerifyFwDlg.h"
+#include "CommonConfigDlg.h"
 
 #include <Dbt.h>
 
@@ -847,9 +847,9 @@ void CGPSDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_RESPONSE, m_responseList);
 	DDX_Control(pDX, IDC_MESSAGE, m_nmeaList);
 	DDX_Control(pDX, IDC_OPEN_CLOSE_T, m_connectT);
-	DDX_Control(pDX, IDC_NO_OUTPUT, m_no_output);
-	DDX_Control(pDX, IDC_NMEA_OUTPUT, m_nmea0183msg);
-	DDX_Control(pDX, IDC_BIN_OUTPUT, m_binarymsg);
+	//DDX_Control(pDX, IDC_NO_OUTPUT, m_no_output);
+	//DDX_Control(pDX, IDC_NMEA_OUTPUT, m_nmea0183msg);
+	//DDX_Control(pDX, IDC_BIN_OUTPUT, m_binarymsg);
 	DDX_Control(pDX, IDC_FIRMWARE_PATH, m_lbl_firmware_path);
 	DDX_Control(pDX, IDC_INFO_PANEL, *m_infoPanel);
 	DDX_Control(pDX, IDC_EARTH_PANEL, *m_earthPanel);
@@ -949,23 +949,24 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_1PPSTIMING_QUERYPPSOUTPUTMODE, &CGPSDlg::On1ppstimingQueryppsoutputmode)
 	ON_COMMAND(ID_AGPS_CONFIG, OnAgpsConfig)
 //	ON_COMMAND(ID_AGPS_FTP, OnAgpsFtp)
-	ON_COMMAND(ID_BINARY_CONFIGURE1PPS, OnBinaryConfigure1pps)
-	ON_COMMAND(ID_BINARY_CONFIGUREBINARYDATA, OnBinaryConfigurebinarydata)
+	ON_COMMAND(ID_CFG_GPS_MEAS_MODE, OnConfigGpsMeasurementMode)
+//	ON_COMMAND(ID_BINARY_CONFIGUREBINARYDATA, OnBinaryConfigurebinarydata)
 	ON_COMMAND(ID_BINARY_CONFIGUREBINARYINTERVAL, OnBinaryConfigureBinaryInterval)
 	ON_COMMAND(ID_BINARY_CONFIGUREDATUM, OnBinaryConfiguredatum)
 	ON_COMMAND(ID_BINARY_CONFIGUREDOPMASK, OnBinaryConfiguredopmask)
-	ON_COMMAND(ID_BINARY_CONFIGUREELEVATIONMASK, OnBinaryConfigureelevationmask)
+//	ON_COMMAND(ID_BINARY_CONFIGUREELEVATIONMASK, OnBinaryConfigureelevationmask)
 //	ON_COMMAND(ID_CFG_GL_ACQUISITION_MODE, &CGPSDlg::OnCfgGlonassAcquisitionMode)
 //	ON_COMMAND(ID_CONFIG_GNSS_SEL_FOR_NAV, &CGPSDlg::OnBinaryConfiguregnssselectionfornavigationsystem)
 
-	ON_COMMAND(ID_BINARY_CONFIGUREMESSAGETYPE, OnBinaryConfiguremessagetype)
-	ON_COMMAND(ID_BINARY_CONFIGUREMESSAGE_TYPE, OnBinaryConfiguremessageType)
+//	ON_COMMAND(ID_BINARY_CONFIGUREMESSAGETYPE, OnBinaryConfiguremessagetype)
+//	ON_COMMAND(ID_BINARY_CONFIGUREMESSAGE_TYPE, OnBinaryConfiguremessageType)
+	ON_COMMAND(ID_BINARY_CONFIGUREMESSAGETYPE, OnConfigMessageOut)
 	ON_COMMAND(ID_BINARY_CONFIGUREMULTIPATH, OnBinaryConfiguremultipath)
 	ON_COMMAND(ID_BINARY_CONFIGURENMEAOUTPUT, OnBinaryConfigurenmeaoutput)
 	ON_COMMAND(ID_CONFIG_NMEA_INTERVAL_V8, OnConfigureNmeaIntervalV8)
 	ON_COMMAND(ID_CONFIG_ERICSSON_STC_ITV, OnConfigureEricssonSentecneInterval)
 
-	ON_COMMAND(ID_BINARY_CONFIGURENMEAOUTPUT32953, &CGPSDlg::OnBinaryConfigurenmeaoutput32953)
+	ON_COMMAND(ID_CFG_NMEA_OUTPUT_COM, &CGPSDlg::OnConfigNmeaOutputComPort)
 	ON_COMMAND(ID_BINARY_CONFIGURENMEATALKERID, &CGPSDlg::OnBinaryConfigurenmeatalkerid)
 	ON_COMMAND(ID_BINARY_CONFIGUREPINNINGPARAMETERS, OnBinaryConfigurepinningparameters)
 	ON_COMMAND(ID_BINARY_CONFIGUREPOSITIONPINNING, OnBinaryConfigurepositionpinning)
@@ -979,7 +980,8 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 
 	ON_COMMAND(ID_BINARY_CONFIGUREREGISTER, OnBinaryConfigureregister)
 	ON_COMMAND(ID_CONFIGURE_SERIAL_PORT, OnConfigureSerialPort)
-	ON_COMMAND(ID_BINARY_CONFIGURESUBSECREGISTER, OnBinaryConfiguresubsecregister)
+	//ON_COMMAND(ID_CFG_SUBSEC_REG, OnBinaryConfiguresubsecregister)
+	ON_COMMAND(ID_CFG_SUBSEC_REG, OnConfigSubSecRegister)
 	ON_COMMAND(ID_BINARY_DUMPDATA, OnBinaryDumpData)
 	ON_COMMAND(ID_BINARY_GETRGISTER, OnBinaryGetrgister)
 	ON_COMMAND(ID_BINARY_POSITIONFINDER, OnBinaryPositionfinder)
@@ -987,12 +989,13 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_RESET_ODOMETER, OnResetOdometer)
 	ON_COMMAND(ID_BINARY_SYSTEMRESTART, OnBinarySystemRestart)
 	ON_COMMAND(ID_CONFIGURE1PPSTIMING_CONFIGURE1PPS, OnConfigure1ppstimingConfigure1pps)
-	ON_COMMAND(ID_CONFIGURE1PPSTIMING_CONFIGURE1PPSCABLEDELAY, OnConfigure1ppsCableDelay)
-	ON_COMMAND(ID_CONFIGURE1PPSTIMING_CONFIGURE1PPSTIMING, OnConfigure1ppsTiming)
+	ON_COMMAND(ID_CFG_TIMING_CABLE_DELAY, OnConfigTimingCableDelay)
+	//ON_COMMAND(ID_CFG_TIMING, OnConfigure1ppsTiming)
+	ON_COMMAND(ID_CFG_TIMING, OnConfigTiming)
 	ON_COMMAND(ID_CONFIG_ELEV_AND_CNR_MASK, OnConfigElevationAndCnrMask)
-	ON_COMMAND(ID_CONFIGUREOUTPUTMESSAGETYPE_BINARYMESSAGE, OnConfigureoutputmessagetypeBinarymessage)
-	ON_COMMAND(ID_CONFIGUREOUTPUTMESSAGETYPE_NMEAMESSAGE, OnConfigureoutputmessagetypeNmeamessage)
-	ON_COMMAND(ID_CONFIGUREOUTPUTMESSAGETYPE_NOOUTPUT, OnConfigureoutputmessagetypeNooutput)
+	//ON_COMMAND(ID_CONFIGUREOUTPUTMESSAGETYPE_BINARYMESSAGE, OnConfigureoutputmessagetypeBinarymessage)
+	//ON_COMMAND(ID_CONFIGUREOUTPUTMESSAGETYPE_NMEAMESSAGE, OnConfigureoutputmessagetypeNmeamessage)
+	//ON_COMMAND(ID_CONFIGUREOUTPUTMESSAGETYPE_NOOUTPUT, OnConfigureoutputmessagetypeNooutput)
 	ON_COMMAND(ID_CONVERTER_COMPRESS, OnConverterCompress)
 	ON_COMMAND(ID_CONVERTER_DECOMPRESS, OnCovDecopre)
 	ON_COMMAND(ID_CONVERTER_KML, OnConverterKml)
@@ -1092,19 +1095,19 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	//New type
 	ON_COMMAND(ID_BINARY_QUERYPOSITIONRATE, OnQueryPositionRate)
 	ON_COMMAND(ID_BINARY_QUERYDATUM, OnQueryDatum)
-	ON_COMMAND(ID_QUERYSOFTWAREVERSION_ROMCODE, OnQuerySoftwareVersionRomCode)
+	//ON_COMMAND(ID_QUERYSOFTWAREVERSION_ROMCODE, OnQuerySoftwareVersionRomCode)
 	ON_COMMAND(ID_QUERY_SHA1, OnQuerySha1String)
 	ON_COMMAND(ID_QUERY_CON_CAP, OnQueryConstellationCapability)
 	ON_COMMAND(ID_QUERYSOFTWAREVERSION_SYSTEMCODE, OnQuerySoftwareVersionSystemCode)
-	ON_COMMAND(ID_QUERYSOFTWARECRC_ROMCODE, OnQuerySoftwareCrcRomCode)
+	//ON_COMMAND(ID_QUERYSOFTWARECRC_ROMCODE, OnQuerySoftwareCrcRomCode)
 	ON_COMMAND(ID_QUERYSOFTWARECRC_SYSTEMCODE, OnQuerySoftwareCrcSystemCode)
-	ON_COMMAND(ID_WAAS_WAASSTATUS, OnQueryWaasStatus)
+	//ON_COMMAND(ID_WAAS_WAASSTATUS, OnQueryWaasStatus)
 	ON_COMMAND(ID_BINARY_QUERYPOSITIONPINNING, OnQueryPositionPinning)
 	ON_COMMAND(ID_BINARY_QUERY1PPS, OnQuery1ppsMode)
 	ON_COMMAND(ID_BINARY_QUERYPOWERMODE, OnQueryPowerMode)
-	ON_COMMAND(ID_BINARY_QUERYPOWERSAVINGPARAMETERS, OnQueryPowerSavingParameters)
+	//ON_COMMAND(ID_BINARY_QUERYPOWERSAVINGPARAMETERS, OnQueryPowerSavingParameters)
 	ON_COMMAND(ID_QUERY_V8_POWER_SV_PARAM, OnQueryV8PowerSavingParameters)
-	ON_COMMAND(ID_QUERY_V8_POWER_SV_PARAM_ROM, OnQueryV8PowerSavingParametersRom)
+	//ON_COMMAND(ID_QUERY_V8_POWER_SV_PARAM_ROM, OnQueryV8PowerSavingParametersRom)
 	ON_COMMAND(ID_QUERY_1PPS_FREQ_OUTPUT, OnQuery1ppsFreqencyOutput)
 	ON_COMMAND(ID_BINARY_QUERYPROPRIETARYMESSAGE, OnQueryProprietaryMessage)
 	ON_COMMAND(ID_QUERY1PPSTIMING_QUERYTIMING, OnQueryTiming)
@@ -1115,7 +1118,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_BINARY_QUERYDRINFO, OnQueryDrInfo)		//Not test
 	ON_COMMAND(ID_BINARY_QUERYDRHWPARAMETER, OnQueryDrHwParameter)	//Not test
 	//ON_COMMAND(ID_QUERY_GNSS_SEL_FOR_NAV, OnQueryGnssSelectionForNavigationSystem)//Not test
-	ON_COMMAND(ID_QUERY_GNSS_SEL_FOR_NAV, OnQueryGnssSelectionForNavigationSystem2)//Not test
+	//ON_COMMAND(ID_QUERY_GNSS_SEL_FOR_NAV, OnQueryGnssSelectionForNavigationSystem2)//Not test
 	//ON_COMMAND(ID_BINARY_QUERYGNSSKNUMBERSLOTCNR, OnQueryGnssKnumberSlotCnr)//Not test
 	ON_COMMAND(ID_BINARY_QUERYNMEATALKERID, OnQueryGnssNmeaTalkId)
 	ON_COMMAND(ID_BINARY_QUERYGNSSKNUMBERSLOTCNR, OnQueryGnssKnumberSlotCnr2)//Not test
@@ -1133,7 +1136,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_AGPS_STATUS, OnQueryAgpsStatus)
 	ON_COMMAND(ID_DATALOG_LOGSTATUSCONTROL, OnQueryDatalogLogStatus)
 	ON_COMMAND(ID_QUERY_POS_FIX_NAV_MASK, OnQueryPositionFixNavigationMask)
-	ON_COMMAND(ID_MULTIMODE_QUERYMODE, OnQueryNavigationMode)
+	//ON_COMMAND(ID_MULTIMODE_QUERYMODE, OnQueryNavigationMode)
 	ON_COMMAND(ID_QUERY_NMEA_INTERVAL_V8, OnQueryNmeaIntervalV8)
 	ON_COMMAND(ID_QUERY_ERICSSON_STC_ITV, OnQueryEricssonInterval)
 	ON_COMMAND(ID_QUERY_REF_TIME_TO_GPS, OnQueryRefTimeSyncToGpsTime)
@@ -3516,7 +3519,7 @@ void CGPSDlg::OnSoftwareimagedownloadLoaderimage()
 	OnBnClickedDownload();
 }
 */
-
+/*
 UINT CigRgsThread(LPVOID pParam)
 {
 	U08 message[11];
@@ -3538,6 +3541,7 @@ UINT CigRgsThread(LPVOID pParam)
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(message, 11, "Configure Register Successful...");
 	return 0;
 }
+*/
 /*
 void CGPSDlg::ConfigureRegister(U08* message)
 {
@@ -3661,7 +3665,7 @@ UINT demoagps_thread(LPVOID param)
 	CGPSDlg::gpsDlg->m_btn_coldstart.EnableWindow(1);
 	return TRUE;
 }
-
+/*
 
 void CGPSDlg::OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL bSysMenu)
 {
@@ -3687,9 +3691,20 @@ void CGPSDlg::OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL bSysMenu)
 		break;
 	}
 }
-
+*/
 void CGPSDlg::OnBnClickedNoOutput()
 {
+	CConfigMessageOut dlg;
+	DoCommonConfigDirect(&dlg, 0);
+
+	GetDlgItem(IDC_NO_OUTPUT)->EnableWindow(FALSE);
+	GetDlgItem(IDC_NMEA_OUTPUT)->EnableWindow(TRUE);
+	GetDlgItem(IDC_BIN_OUTPUT)->EnableWindow(TRUE);
+	//m_no_output.EnableWindow(FALSE);
+	//m_nmea0183msg.EnableWindow(TRUE);
+	//m_binarymsg.
+	return;
+/*
 #if defined(SAINTMAX_UI)
 	m_nmea0183msg.EnableWindow(FALSE);
 	SetFactoryDefault(true);
@@ -3699,10 +3714,21 @@ void CGPSDlg::OnBnClickedNoOutput()
 	m_nmea0183msg.EnableWindow(1);
 	m_binarymsg.EnableWindow(1);
 #endif
+*/
 }
 
 void CGPSDlg::OnBnClickedNmeaOutput()
 {
+	CConfigMessageOut dlg;
+	DoCommonConfigDirect(&dlg, 1);
+	GetDlgItem(IDC_NO_OUTPUT)->EnableWindow(TRUE);
+	GetDlgItem(IDC_NMEA_OUTPUT)->EnableWindow(FALSE);
+	GetDlgItem(IDC_BIN_OUTPUT)->EnableWindow(TRUE);
+	//m_no_output.EnableWindow(TRUE);
+	//m_nmea0183msg.EnableWindow(FALSE);
+	//m_binarymsg.EnableWindow(TRUE);
+	return;
+/*
 #if defined(SAINTMAX_UI)
 	OnConfigureoutputmessagetypeNmeamessage();
 	//m_no_output.EnableWindow(1);
@@ -3714,14 +3740,26 @@ void CGPSDlg::OnBnClickedNmeaOutput()
 	m_nmea0183msg.EnableWindow(0);
 	m_binarymsg.EnableWindow(1);
 #endif
+*/
 }
 
 void CGPSDlg::OnBnClickedBinaryOutput()
 {
+	CConfigMessageOut dlg;
+	DoCommonConfigDirect(&dlg, 2);
+	GetDlgItem(IDC_NO_OUTPUT)->EnableWindow(TRUE);
+	GetDlgItem(IDC_NMEA_OUTPUT)->EnableWindow(TRUE);
+	GetDlgItem(IDC_BIN_OUTPUT)->EnableWindow(FALSE);
+	//m_no_output.EnableWindow(TRUE);
+	//m_nmea0183msg.EnableWindow(TRUE);
+	//m_binarymsg.EnableWindow(FALSE);
+	return;
+/*
 	OnConfigureoutputmessagetypeBinarymessage();
 	m_no_output.EnableWindow(1);
 	m_nmea0183msg.EnableWindow(1);
 	m_binarymsg.EnableWindow(0);
+*/
 }
 
 UINT DownloadThread(LPVOID pParam)
@@ -4138,7 +4176,7 @@ U08 CGPSDlg::wait_res(char* res)
 	}
 	return false;
 }
-
+/*
 void CGPSDlg::OnBinaryConfiguremessagetype()
 {
 	if(!CheckConnect())
@@ -4158,7 +4196,7 @@ void CGPSDlg::OnBinaryConfiguremessagetype()
 	delete dlg;
 	dlg = NULL;
 }
-
+*/
 void CGPSDlg::SetBaudrate(int b)
 {
 	CloseOpenUart();
@@ -4628,6 +4666,7 @@ void CGPSDlg::Load_Menu()
 	CreateSubMenu(hMenu, menuItemFile, "&File");
 
 	//Binary Menu
+	/*
 	static MenuItemEntry QuerySwVerMenu[] =
 	{
 		{ 1, MF_STRING, ID_QUERYSOFTWAREVERSION_ROMCODE, "Rom Code", NULL },
@@ -4640,7 +4679,7 @@ void CGPSDlg::Load_Menu()
 		{ 1, MF_STRING, ID_QUERYSOFTWARECRC_SYSTEMCODE, "System Code", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
-
+	*/
 	static MenuItemEntry SetFactoryDefaultMenu[] =
 	{
 		{ 1, MF_STRING, ID_SETFACTORYDEFAULT_NOREBOOT, "No Reboot", NULL },
@@ -4670,7 +4709,7 @@ void CGPSDlg::Load_Menu()
 		{ 1, MF_STRING, ID_BINARY_QUERYPOSITIONPINNING, "Query Position Pinning", NULL },
 		{ 1, MF_STRING, ID_BINARY_QUERY1PPS, "Query GPS Measurement Mode", NULL },
 		{ 1, MF_STRING, ID_BINARY_QUERYPOWERMODE, "Query Power Mode", NULL },//
-		{ IS_DEBUG && !_V8_SUPPORT, MF_STRING, ID_BINARY_QUERYPOWERSAVINGPARAMETERS, "Query Power Saving Parameters", NULL },//
+		//{ IS_DEBUG && !_V8_SUPPORT, MF_STRING, ID_BINARY_QUERYPOWERSAVINGPARAMETERS, "Query Power Saving Parameters", NULL },//
 		{ IS_DEBUG && _V8_SUPPORT, MF_STRING, ID_QUERY_V8_POWER_SV_PARAM, "Query Power Saving Parameters", NULL },//
 		{ IS_DEBUG, MF_STRING, ID_BINARY_QUERYPROPRIETARYMESSAGE, "Query Proprietary Message", NULL },//
 		{ 1, MF_STRING, ID_QUERY1PPSTIMING_QUERY, "Query DOP Mask", NULL },//
@@ -4686,27 +4725,27 @@ void CGPSDlg::Load_Menu()
 		{ IS_DEBUG, MF_STRING, ID_BINARY_GETRGISTER, "Get Register", NULL },
 		{ 1, MF_SEPARATOR, 0,NULL,NULL },
 		{ 1, MF_STRING, ID_CONFIGURE_SERIAL_PORT, "Configure Serial Port", NULL },
-		{ !_V8_SUPPORT, MF_STRING, ID_BINARY_CONFIGURENMEAOUTPUT, "Configure NMEA Output", NULL },
+		//{ !_V8_SUPPORT, MF_STRING, ID_BINARY_CONFIGURENMEAOUTPUT, "Configure NMEA Output", NULL },
 		{ _V8_SUPPORT, MF_STRING, ID_CONFIG_NMEA_INTERVAL_V8, "Configure NMEA Message Interval", NULL },
 		{ (CUSTOMER_ID==Ericsson), MF_STRING, ID_CONFIG_ERICSSON_STC_ITV, "Configure Ericsson Sentence Interval", NULL },
 		{ (CUSTOMER_ID==OlinkStar), MF_STRING, ID_CONFIG_SERIAL_NUMBER, "Set Serial Number", NULL },
 
 		{ 1, MF_STRING, ID_BINARY_CONFIGUREMESSAGETYPE, "Configure Message Type", NULL },
-		{ BINARY_MESSAGE_INTERVAL, MF_STRING, ID_BINARY_CONFIGUREBINARYINTERVAL, "Configure Binary Message Interval", NULL },
+		{ 1, MF_STRING, ID_BINARY_CONFIGUREBINARYINTERVAL, "Configure Binary Message Interval", NULL },
 		{ IS_DEBUG, MF_STRING, ID_BINARY_CONFIGUREMULTIPATH, "Configure Multi-path", NULL },	//
 		{ 1, MF_STRING, ID_BINARY_CONFIGUREPOSITIONRATE, "Configure Position Update Rate", NULL },
 		{ 1, MF_STRING, ID_BINARY_CONFIGUREDATUM, "Configure Datum", NULL },
 		{ 1, MF_STRING, ID_BINARY_CONFIGUREPOSITIONPINNING, "Configure Position Pinning", NULL },
 		{ 1, MF_STRING, ID_BINARY_CONFIGUREPINNINGPARAMETERS, "Configure Pinning Parameters", NULL },
-		{ 1, MF_STRING, ID_BINARY_CONFIGURE1PPS, "Configure GPS Measurement Mode", NULL },
+		{ 1, MF_STRING, ID_CFG_GPS_MEAS_MODE, "Configure GPS Measurement Mode", NULL },
 		{ 1, MF_STRING, ID_BINARY_CONFIGUREPOWERMODE, "Configure Power Mode", NULL },
 		{ IS_DEBUG, MF_STRING, ID_BINARY_CONFIGUREPOWERSAVINGPARAMETERS, "Configure Power Saving Parameters", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CONFIG_PROPRIETARY_MESSAGE, "Configure Proprietary Message", NULL },
 		{ 1, MF_STRING, ID_CONFIGURE1PPSTIMING_CONFIGURE1PPS, "Configure DOP Mask", NULL },
 		{ IS_DEBUG || SHOW_ELEV_AND_CNR_MASK_IN_GEN, MF_STRING, ID_CONFIG_ELEV_AND_CNR_MASK, "Configure Elevation and CNR Mask", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CONFIGURE_ANTENNA_DETECTION, "Configure Antenna Detection", NULL },
-		{ IS_DEBUG, MF_STRING, ID_BINARY_CONFIGURESUBSECREGISTER, "Configure SubSec Register", NULL },
-		{ 1, MF_STRING, ID_BINARY_CONFIGURENMEAOUTPUT32953, "Configure NMEA Output Comport", NULL },
+		{ IS_DEBUG, MF_STRING, ID_CFG_SUBSEC_REG, "Configure SubSec Register", NULL },
+		{ 1, MF_STRING, ID_CFG_NMEA_OUTPUT_COM, "Configure NMEA Output Comport", NULL },
 		{ 1, MF_STRING, ID_BINARY_CONFIGURENMEATALKERID, "Configure NMEA Talker ID", NULL },
 		//2014/03/11, Oliver remove this command in raw measurment version.
 		//2014/05/12, Added by customer request.
@@ -4898,13 +4937,13 @@ void CGPSDlg::Load_Menu()
 		{ 1, MF_STRING, ID_QUERY_CABLEDELAY, "Query Cable Delay", NULL },
 		{ TIMING_MONITORING, MF_STRING, ID_1PPSTIMING_MONITORING1PPS, "Monitoring 1PPS", NULL },
 		{ 1, MF_STRING, ID_1PPSTIMING_QUERY1PPSPULSEWIDTH, "Query 1PPS Pulse Width", NULL },
-		{ 1, MF_STRING, ID_1PPSTIMING_QUERYPPSOUTPUTMODE, "Query PPS Output Mode", NULL },
+		{ 1, MF_STRING, ID_1PPSTIMING_QUERYPPSOUTPUTMODE, "Query 1PPS Output Mode", NULL },
 //		{ 1, MF_STRING, ID_1PPSTIMING_QUERYPPSCLKSOURCE, "Query PPS Pulse Clock Source", NULL },
 		{ 1, MF_STRING, ID_QUERY_1PPS_FREQ_OUTPUT, "Query 1PPS Frequency Output", NULL },
 		{ 1, MF_SEPARATOR, 0, NULL, NULL },
-		{ 1, MF_STRING, ID_CONFIGURE1PPSTIMING_CONFIGURE1PPSTIMING, "Configure Timing", NULL },
+		{ 1, MF_STRING, ID_CFG_TIMING, "Configure Timing", NULL },
 		//{ 1, MF_STRING, ID_1PPSTIMING_CONFIGURE1PPSNMEADELAY, "Configure 1PPS NMEA Delay", NULL },
-		{ 1, MF_STRING, ID_CONFIGURE1PPSTIMING_CONFIGURE1PPSCABLEDELAY, "Configure Cable Delay", NULL },
+		{ 1, MF_STRING, ID_CFG_TIMING_CABLE_DELAY, "Configure Cable Delay", NULL },
 		{ 1, MF_STRING, ID_1PPSTIMING_CONFIGUREPROPRIETARYNMEA, "Configure Proprietary NMEA", NULL },
 		{ 1, MF_STRING, ID_1PPSTIMING_CONFIGURE1PPSPULSEWIDTH, "Configure 1PPS Pulse Width", NULL },
 		{ 1, MF_STRING, ID_1PPSTIMING_CONFIGUREPPSOUTPUTMODE, "Configure 1PPS Output Mode", NULL },
@@ -4948,6 +4987,7 @@ void CGPSDlg::Load_Menu()
 	}
 
 	//Navigation Mode Menu
+	/*
 	static MenuItemEntry menuItemNavMode[] =
 	{
 		{ 1, MF_STRING, ID_MULTIMODE_QUERYMODE, "Query Navigation Mode", NULL },
@@ -4958,6 +4998,7 @@ void CGPSDlg::Load_Menu()
 	{
 		CreateSubMenu(hMenu, menuItemNavMode, "&Navigation Mode");
 	}
+	*/
 
 	//AGPS Menu
 	static MenuItemEntry menuItemAGPS[] =
@@ -5005,6 +5046,7 @@ void CGPSDlg::Load_Menu()
 	CreateSubMenu(hMenu, menuItemConvert, "&Converter");
 
 	//WAAS Menu
+	/*
 	static MenuItemEntry menuItemWASS[] =
 	{
 		{ 1, MF_STRING, ID_WAAS_WAASSTATUS, "&WAAS Status", NULL },
@@ -5015,6 +5057,7 @@ void CGPSDlg::Load_Menu()
 	{
 		CreateSubMenu(hMenu, menuItemWASS, "&WAAS");
 	}
+	*/
 
 	//miniHomer Menu
 	static MenuItemEntry menuItemminiHomer[] =
@@ -5485,7 +5528,7 @@ void CGPSDlg::OnBnClickedBrowse()
 		g_setting.Save();
 	}
 }
-
+/*
 void CGPSDlg::OnBinaryConfiguremessageType()
 {
 	if(!CheckConnect())
@@ -5502,7 +5545,7 @@ void CGPSDlg::OnBinaryConfiguremessageType()
 		CreateGPSThread();
 	}
 }
-
+*/
 int m_mt,m_rm,m_sc,m_rs,m_sub,m_gsb,m_binary_interval_attr,m_rate;
 UINT set_binarymsg_interval_andrew(LPVOID param)
 {
@@ -5995,7 +6038,7 @@ void CGPSDlg::OnBinaryConfigureregister()
 		CreateGPSThread();
 	}
 }
-
+/*
 void CGPSDlg::OnBinaryConfiguresubsecregister()
 {
 	if(!CheckConnect())
@@ -6033,17 +6076,11 @@ UINT Configure1pps_thread(LPVOID param)
 
 	int len = CGPSDlg::gpsDlg->SetMessage(msg,sizeof(msg));
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(CGPSDlg::m_inputMsg, len, "Configure GPS Measurement Successful...");
-/*
-	CGPSDlg::gpsDlg->//WaitEvent();
-	CGPSDlg::gpsDlg->ClearQue();
-	CGPSDlg::gpsDlg->SendToTarget(CGPSDlg::m_inputMsg,len,"Configure GPS Measurement Successful...");
-	CGPSDlg::gpsDlg->SetMode();
-	CGPSDlg::gpsDlg->CreateGPSThread();
-*/
+
 	return 0;
 }
 
-void CGPSDlg::OnBinaryConfigure1pps()
+void CGPSDlg::OnConfigGpsMeasurementMode()
 {
 	CCon1PPS *p1ppsDlg;
 	if(!CheckConnect())return;
@@ -6062,7 +6099,7 @@ void CGPSDlg::OnBinaryConfigure1pps()
 		CreateGPSThread();
 	}
 }
-
+*/
 void CGPSDlg::Show_Noise()
 {
 	CString tmp;
@@ -6226,7 +6263,7 @@ UINT configy_1pps_timing_thread(LPVOID param)
 */
 	return 0;
 }
-
+/*
 int m_1pps_delay;
 int m_1pps_cable_attr;
 UINT configy_1pps_cable_delay_thread(LPVOID param)
@@ -6247,27 +6284,27 @@ UINT configy_1pps_cable_delay_thread(LPVOID param)
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(CGPSDlg::m_inputMsg, len, "Configure 1PPS Cable Delay Successful...");
 	return 0;
 }
-
-void CGPSDlg::OnConfigure1ppsTiming()
-{
-	CCon1PPS_Timing dlg_1pps_timing;
-
-	if(CheckConnect())
-	{
-		if(dlg_1pps_timing.DoModal()==IDOK)
-		{
-			memcpy(&_config_1pps_timing,&dlg_1pps_timing._1pps_timing,sizeof(_1PPS_Timing_T));
-			::AfxBeginThread(configy_1pps_timing_thread, 0);
-		}
-		else
-		{
-			SetMode();
-			CreateGPSThread();
-		}
-	}
-}
-
-void CGPSDlg::OnConfigure1ppsCableDelay()
+*/
+//void CGPSDlg::OnConfigure1ppsTiming()
+//{
+//	CCon1PPS_Timing dlg_1pps_timing;
+//
+//	if(CheckConnect())
+//	{
+//		if(dlg_1pps_timing.DoModal()==IDOK)
+//		{
+//			memcpy(&_config_1pps_timing,&dlg_1pps_timing._1pps_timing,sizeof(_1PPS_Timing_T));
+//			::AfxBeginThread(configy_1pps_timing_thread, 0);
+//		}
+//		else
+//		{
+//			SetMode();
+//			CreateGPSThread();
+//		}
+//	}
+//}
+/*
+void CGPSDlg::OnConfigTimingCableDelay()
 {
 	CCon1PPS_cable dlg_1pps_timing;
 
@@ -6285,7 +6322,7 @@ void CGPSDlg::OnConfigure1ppsCableDelay()
 		}
 	}
 }
-
+*/
 int m_dop_sel,m_dop_pdop,m_dop_hdop,m_dop_gdop,m_dop_attr;
 
 UINT configy_1pps_dop_thread(LPVOID param)
@@ -6743,7 +6780,7 @@ UINT config_NMEA_Comport_thread(LPVOID param)
 	return 0;
 }
 
-void CGPSDlg::OnBinaryConfigurenmeaoutput32953()
+void CGPSDlg::OnConfigNmeaOutputComPort()
 {
 	CConNMEAComport dlg;
 
@@ -8068,7 +8105,7 @@ LRESULT CGPSDlg::OnGpsdoHiDownload(WPARAM wParam, LPARAM lParam)
 
 void CGPSDlg::GetGPSStatus()
 {
-	if(!g_setting.autoQueryVersion && !AUTO_QUERY_VERSION)
+	if(g_setting.autoQueryVersion || AUTO_QUERY_VERSION)
 	{
 		return;
 	}
