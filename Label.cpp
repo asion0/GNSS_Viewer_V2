@@ -38,7 +38,7 @@ END_MESSAGE_MAP()
 // B. Support for background transparency
 // C. More comments provided
 // D. If alignment is 'centered' and the window text is seperated by '\r\n'
-//	  the will be centered accordingly - requested by someone @ nasa ;)
+//	  the will be centered accordingly - requested by someone @ nasa;)
 // E. Support for font rotation.
 // F. Respond to System Color Change
 // G. OnPaint improved performance - using Double Buffering Technique
@@ -374,10 +374,10 @@ void CLabel::OnPaint()
 		int nAlign = pDCMem->SetTextAlign (TA_BASELINE);
 
 		CPoint pt;
-		GetViewportOrgEx (pDCMem->m_hDC,&pt) ;
-		SetViewportOrgEx (pDCMem->m_hDC,rc.Width() / 2, rc.Height() / 2, NULL) ;
-		pDCMem->TextOut (0, 0, strText) ;
-		SetViewportOrgEx (pDCMem->m_hDC,pt.x / 2, pt.y / 2, NULL) ;
+		GetViewportOrgEx (pDCMem->m_hDC,&pt);
+		SetViewportOrgEx (pDCMem->m_hDC,rc.Width() / 2, rc.Height() / 2, NULL);
+		pDCMem->TextOut (0, 0, strText);
+		SetViewportOrgEx (pDCMem->m_hDC,pt.x / 2, pt.y / 2, NULL);
 		pDCMem->SetTextAlign (nAlign);
 	}
 	else
@@ -410,7 +410,7 @@ void CLabel::OnPaint()
 	{
 		dc.BitBlt(0,0,rc.Width(),rc.Height(),pDCMem,0,0,SRCCOPY);
 		// continue DC restore 
-		pDCMem->SelectObject ( pOldBitmap ) ;
+		pDCMem->SelectObject ( pOldBitmap );
 		delete pDCMem;
 	}
 }

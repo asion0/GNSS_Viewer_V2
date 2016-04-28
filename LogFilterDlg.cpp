@@ -119,7 +119,7 @@ void CLogFilterDlg::OnBnClickedOk()
 		m_minv.GetWindowTextLength() > len || m_maxv.GetWindowTextLength() > len )
 	{
 		AfxMessageBox("max input length = 9");
-		return ;
+		return;
 	}
 	//sprintf(temp1, "%s", temp);
 

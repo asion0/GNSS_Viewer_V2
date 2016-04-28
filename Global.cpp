@@ -4,6 +4,7 @@
 #include "Monitor_1PPS.h"
 #include "NMEA.h"
 #include "GPSDlg.h"
+#include "Serial.h"
 
 const double R2D = 57.2957795131;
 const COLORREF g_panelBkColor = RGB(250, 250, 250);
@@ -56,7 +57,7 @@ U32 ConvertCharToU32(const char *src)
 	U08 charIter;
 	const char *ptr = src;
 	int start = strlen(src);
-	for (int i=start-1; i>=0 ;--i)
+	for (int i=start-1; i>=0;--i)
 	{
 		charIter = *ptr;
 		if (charIter >= '0' && charIter <= '9')
@@ -298,7 +299,7 @@ void UtcConvertGpsToUtcTime(S16 wn, D64 tow, UtcTime *utc_time_p)
 
 	S16 i;
 	S32 passed_leap_days, passed_utc_years, day_of_utc_year, leap_days_of_passed_utc_years;  
-//	S32 ref_time ;              // ICD-200C : p122 ~ p124, decide situation a. or b. or c.             
+//	S32 ref_time;              // ICD-200C : p122 ~ p124, decide situation a. or b. or c.             
 	D64 tE = wn*604800 + tow;   // GPS time as estimated by the user.
 	D64 delta_t_UTC = 0;        // leap sec calculated from sub4-p18
 	D64 double_total_utc_sec;   
@@ -328,7 +329,7 @@ void UtcConvertGpsToUtcTime(S16 wn, D64 tow, UtcTime *utc_time_p)
 	if( (utc_time_p->year & 3) == 0 )        
 		month_tbl_p = day_of_leap_year_table; // this year is leap year
 
-	for( i = 1 ; i < 13 ; i++ )
+	for( i = 1; i < 13; i++ )
 		if( day_of_utc_year < month_tbl_p[i] )
 			break;
 
@@ -608,7 +609,7 @@ U16 CalCheckSum2(U08* pt)
 	return BINMSG_ERROR;
 }
 
-void UtcConvertUtcToGpsTime( const UtcTime *utc_time_p, S16 *wn_p, D64 *tow_p )
+void UtcConvertUtcToGpsTime(const UtcTime *utc_time_p, S16 *wn_p, D64 *tow_p )
 {
 //	const S16 DEFAULT_LEAP_SECS = 14; // GPS-UTC = +14 seconds  
 	const S32 SECS_PER_YEAR = 31536000;
@@ -623,25 +624,76 @@ void UtcConvertUtcToGpsTime( const UtcTime *utc_time_p, S16 *wn_p, D64 *tow_p )
 	S32 total_int_sec;
 
 	passed_years = utc_time_p->year - 1980; // from 1980.01.01 
-	passed_leap_years = ( passed_years + 3 )/4 ;
+	passed_leap_years = ( passed_years + 3 )/4;
 
 	if( (utc_time_p->year & 0x3) == 0 )
 		month_tbl_p = day_of_leap_year_table; // this year is leap year  
 
-	total_int_sec = ( passed_leap_years*SECS_PER_LEAP_YEAR );
-	total_int_sec += ( passed_years - passed_leap_years )*SECS_PER_YEAR;
-	total_int_sec += ( month_tbl_p[ utc_time_p->month - 1 ] + utc_time_p->day - 1 )*86400;
-	total_int_sec += ( utc_time_p->hour*3600 ) ;
-	total_int_sec += ( utc_time_p->minute*60 ) ;
-	total_int_sec += ( int_tow ) ;
-	total_int_sec +=  DefaultLeapSeconds; // because GPS-UTC = +14 seconds    
+	total_int_sec = (passed_leap_years * SECS_PER_LEAP_YEAR);
+	total_int_sec += (passed_years - passed_leap_years) * SECS_PER_YEAR;
+	total_int_sec += (month_tbl_p[utc_time_p->month - 1] + utc_time_p->day - 1) * 86400;
+	total_int_sec += (utc_time_p->hour*3600);
+	total_int_sec += (utc_time_p->minute*60);
+	total_int_sec += (int_tow);
+	total_int_sec += DefaultLeapSeconds; // because GPS-UTC = +14 seconds    
 	total_int_sec -= 86400*5;          // because from 1980.01.05/06 mid night
 	*wn_p = (S16)(total_int_sec / 604800L);
-	*tow_p = (D64)( total_int_sec - (*wn_p)*604800L + tow_frac );  
+	*tow_p = (D64)(total_int_sec - (*wn_p)*604800L + tow_frac);  
 }
 
 QualityMode GetGnssQualityMode(U32 qualityIndicator, U08 gpMode, U08 glMode, U08 gaMode, U08 bdMode)
 {
+/*
+GNS & RMC Mode indicator
+A(1) - Autonomous. Satellites system used in non-differential mode in position fix.
+D(2) - Differential.
+E(6) - Estimated (dead reckoning) Mode.
+F(5) - Float RTK.
+M(7) - Manual Input Mode.
+N(0) - No fix.
+P(?) - Precise. Satellites system used in precision mode. Precision mode is defined as: no delibrate.
+R(4) - Real Time Kinematic. Satellites system used in RTK mode with fixed integers.
+S(8) - Simulator mode.
+
+In nmea_nostudio.c
+Nmea_qi[FIX_NMODE]={0, 1, 1, 1, 2, 5, 4};
+Nmea_mi[FIX_NMODE]={"N", "E", "A", "A", "D", "F", "R"};
+
+GGA Mode indicator
+0(N) - Fix not available or invalid. 
+1(A) - GPS SPS Mode, fix valid.
+2(D) - Differential GPS, SPS Mode, fix valid. 
+3(?) - GPS PPS Mode, fix valid.
+4(R) - Real Time Kinematic. Satellites system used in RTK mode with fixed integers.
+5(F) - Float RTK. Satellites system used in RTK mode, floating integers.
+6(E) - Estimated (dead recking) Mode.
+7(M) - Manual Input Mode.
+8(S) - Simulator Mode.
+
+// Quality Indicator used by GGA
+static const S08 Nmea_quality_indicator[FIX_NMODE] = {
+              '0',   // FIX_NONE
+              '6',   // FIX_PREDICTION
+              '1',   // FIX_2D
+              '1',   // FIX_3D
+              '2',   // FIX_DIFF
+              '5',   // FIX_RTK_FLOAT
+              '4',   // FIX_RTK_FIX
+	Unlocated,
+	EstimatedMode,
+	DgpsMode,
+	PpsMode,
+	PositionFix2d,
+	PositionFix3d,
+
+	SurveyIn,
+	StaticMode,
+	DataNotValid,
+	AutonomousMode,
+	DgpsMode2,
+	FixRTK,
+	FloatRTK,
+*/
 	QualityMode mode = Unlocated;
 	U08 gpInd = 0, glInd = 0;
 	U08 gaInd = 0, bdInd = 0;
@@ -674,68 +726,79 @@ QualityMode GetGnssQualityMode(U32 qualityIndicator, U08 gpMode, U08 glMode, U08
 		bdInd = 0;
 	}
 
-	if(gpInd || glInd || gaInd || bdInd)
+	if(gpInd==0 && glInd==0 && gaInd==0 && bdInd==0)
 	{
-		if(gpInd=='E' || glInd=='E'|| gaInd=='E'|| bdInd=='E')
+		return mode;
+	}
+
+	if(gpInd=='E' || glInd=='E'|| gaInd=='E'|| bdInd=='E')
+	{
+		mode = EstimatedMode;
+	}
+	else if(gpInd=='D' || glInd=='D' || gaInd=='D' || bdInd=='D')
+	{
+		mode = DgpsMode;
+	}
+	//else if(gpInd=='1')
+	//{
+	//	return Unlocated;
+	//}
+	else if(gpInd=='2')
+	{
+		mode = DgpsMode;
+	}
+	else if(gpInd=='3')
+	{
+		mode = PpsMode;
+	}
+	else if(gpInd=='4')
+	{
+		mode = FixRTK;
+	}
+	else if(gpInd=='5')
+	{
+		mode = FloatRTK;
+	}
+	else if(gpInd=='6')
+	{
+		mode = EstimatedMode;
+	}
+	else if(gpInd == 'A' || glInd == 'A' || gaInd == 'A' || bdInd == 'A' || gpInd == '1')
+	{
+		if(gpMode==2 || glMode==2 || bdMode==2)
 		{
-			mode = EstimatedMode;
+			mode = PositionFix2d;
 		}
-		else if(gpInd=='D' || glInd=='D' || gaInd=='D' || bdInd=='D')
+		else if(gpMode==3 || glMode==3 || bdMode==3)
 		{
-			mode = DgpsMode;
+			mode = PositionFix3d;
 		}
-		else if(gpInd=='2')
+		else if(gpMode==4 || glMode==4 || bdMode==4)
 		{
-			mode = DgpsMode;
+			mode = SurveyIn;
 		}
-		else if(gpInd=='3')
+		else if(gpMode==5 || glMode==5 || bdMode==5)
 		{
-			mode = PpsMode;
-		}
-		else if(gpInd=='4')
-		{
-			mode = FixRTK;
-		}
-		else if(gpInd=='5')
-		{
-			mode = FloatRTK;
-		}
-		else if(gpInd == 'A' || glInd == 'A' || gaInd == 'A' || bdInd == 'A' || gpInd == '1')
-		{
-			if(gpMode==2 || glMode==2 || bdMode==2)
-			{
-				mode = PositionFix2d;
-			}
-			else if(gpMode==3 || glMode==3 || bdMode==3)
-			{
-				mode = PositionFix3d;
-			}
-			else if(gpMode==4 || glMode==4 || bdMode==4)
-			{
-				mode = SurveyIn;
-			}
-			else if(gpMode==5 || glMode==5 || bdMode==5)
-			{
-				mode = StaticMode;
-			}
-		}
-		else if(gpInd=='N')
-		{
-			mode = DataNotValid;
-		}
-		else if(gpInd=='R')
-		{
-			mode = FixRTK;
-		}
-		else if(gpInd=='F')
-		{
-			mode = FloatRTK;
+			mode = StaticMode;
 		}
 	}
+	else if(gpInd=='N')
+	{
+		mode = DataNotValid;
+	}
+	else if(gpInd=='R')
+	{
+		mode = FixRTK;
+	}
+	else if(gpInd=='F')
+	{
+		mode = FloatRTK;
+	}
+
 	return mode;
 }
 
-double ConvertLeonDouble(const U08* ptr)
+D64 ConvertLeonDouble(const U08* ptr)
 {
 	U08 temp[8] = {0};
 	for(int i = 0; i < 8; ++i)
@@ -745,7 +808,7 @@ double ConvertLeonDouble(const U08* ptr)
 	return *((double*)temp);
 }
 
-float ConvertLeonFloat(const U08* ptr)
+F32 ConvertLeonFloat(const U08* ptr)
 {
 	U08 temp[4] = {0};
 	for(int i = 0; i < 4; ++i)
@@ -754,3 +817,114 @@ float ConvertLeonFloat(const U08* ptr)
 	}
 	return *((float*)temp);
 }
+
+U16 ConvertLeonU16(const U08* ptr)
+{
+	return MAKEWORD(ptr[1], ptr[0]);
+}
+
+S16 ConvertLeonS16(const U08* ptr)
+{
+	return (S16)MAKEWORD(ptr[1], ptr[0]);
+}
+
+U32 ConvertLeonU32(const U08* ptr)
+{
+	return MAKELONG(MAKEWORD(ptr[3], ptr[2]), MAKEWORD(ptr[1], ptr[0]));
+}
+
+S32 ConvertLeonS32(const U08* ptr)
+{
+	return (S32)MAKELONG(MAKEWORD(ptr[3], ptr[2]), MAKEWORD(ptr[1], ptr[0]));
+}
+WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)
+{
+	typedef struct _WlfEntry
+	{
+		WlfResult result;
+		const char* string;
+	} WlfEntry;
+
+	WlfEntry feedbackTable[] = {
+		{ wlf_Ready, "READY"},
+		{ wlf_Ready1, "READY1"},
+		{ wlf_Ready2, "READY2"},
+		{ wlf_error41, "Error41"},
+		{ wlf_error42, "Error42"},
+		{ wlf_error43, "Error43"},
+		//^^^^^^^^^for Loader debug
+		{ wlf_error5, "Error5"},
+		{ wlf_error4, "Error4"},
+		{ wlf_error3, "Error3"},
+		{ wlf_error2, "Error2"},
+		{ wlf_error1, "Error1"},
+		{ wlf_resendbin, "Resendbin"},
+		{ wlf_reset, "Reset"},
+		{ wlf_resend, "Resend"},
+		{ wlf_end, "END"},
+		{ wlf_ok, "OK"},
+		{ wlf_None, "WAIT"},
+		{ wlf_None, ""},
+	};
+
+	WlfResult nReturn = wlf_ok;
+	CString strAckCmd;
+	ScopeTimer t;
+
+	while(1)
+	{
+		if(t.GetDuration() > (DWORD)TimeoutLimit && msgWnd != NULL)
+		{	//Time Out
+			msgWnd->PostMessage(UWM_SETTIMEOUT, t.GetDuration(), 0);
+		}
+
+		if(t.GetDuration() > (DWORD)TimeoutLimit)
+		{
+			nReturn = wlf_timeout;
+			break;
+		}
+
+		strAckCmd.Empty();
+		DWORD len = serial->GetString(strAckCmd.GetBuffer(1024), 1024, TimeoutLimit - t.GetDuration());
+		strAckCmd.ReleaseBuffer();
+
+		if(!ReadOK(len))
+		{	
+			continue;
+		}
+
+		if(len != 0)
+		{
+			nReturn = wlf_None;
+			int tableSize = sizeof(feedbackTable) / sizeof(feedbackTable[0]);
+			//while(buff[0] && tableSize--)
+			while(tableSize--)
+			{
+				//if(0==strcmp(buff, feedbackTable[tableSize].string)) 
+				if(0==strAckCmd.Compare(feedbackTable[tableSize].string)) 
+				{
+					nReturn = feedbackTable[tableSize].result;
+					break;
+				}
+			}
+
+			if(wlf_None != nReturn)
+			{
+				break;
+			}
+		}
+		else
+		{
+			Sleep(20);
+		}
+	}
+
+	if(nReturn > wlf_timeout)
+	{
+		AfxMessageBox("Unknow Error!");
+		Utility::Log(__FUNCTION__, "return", (int)nReturn);
+	}
+	Utility::Log(__FUNCTION__, "return", (int)nReturn);
+	return nReturn;
+}
+

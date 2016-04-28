@@ -133,7 +133,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				WholeProgramOptimization="true"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_GNSS_INTERNALUSE_BDV8;TEST_SREC"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_GNSS_ADDTAG"
 				StringPooling="true"
 				MinimalRebuild="false"
 				RuntimeLibrary="0"
@@ -159,7 +159,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="D:\Project\GitCodes\SkytraqGitHub\V8DownloadLoaderAddTagTest\GNSS_ViewerD.exe"
+				OutputFile="Exe/GNSS_Viewer-AddTag.exe"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				EnableUAC="false"
@@ -1579,6 +1579,93 @@
 				CommandLine="Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
+		<Configuration
+			Name="DebugPlayer|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="1"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				PreprocessorDefinitions="_DEBUG"
+				MkTypLibCompatible="false"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_GNSS_NMEAPLAYER_RTK"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				TreatWChar_tAsBuiltInType="true"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="StdAfx.h"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="4"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_DEBUG;_MORE_INFO_;"
+				Culture="1033"
+				AdditionalIncludeDirectories="$(IntDir)"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				OutputFile="Exe\GNSS_ViewerDP.exe"
+				LinkIncremental="2"
+				GenerateManifest="false"
+				EnableUAC="false"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine=""
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -1645,10 +1732,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ConGNSSSelectionforNAV.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\ConMultiMode.cpp"
 				>
 			</File>
@@ -1697,10 +1780,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\GetGNSSEphemeris.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\GetTimeCorrection.cpp"
 				>
 			</File>
@@ -1725,15 +1804,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Login.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\NmeaChecksumCalDlg.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PositionFinderDlg.cpp"
 				>
 			</File>
 			<File
@@ -1911,6 +1982,14 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugPlayer|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\VerifyFwDlg.cpp"
@@ -1987,10 +2066,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ConGNSSSelectionforNAV.h"
-				>
-			</File>
-			<File
 				RelativePath=".\ConMultiMode.h"
 				>
 			</File>
@@ -2051,10 +2126,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\GetGNSSEphemeris.h"
-				>
-			</File>
-			<File
 				RelativePath=".\GetTimeCorrection.h"
 				>
 			</File>
@@ -2079,10 +2150,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Login.h"
-				>
-			</File>
-			<File
 				RelativePath=".\matrix.h"
 				>
 			</File>
@@ -2092,10 +2159,6 @@
 			</File>
 			<File
 				RelativePath=".\NmeaChecksumCalDlg.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PositionFinderDlg.h"
 				>
 			</File>
 			<File
@@ -2249,6 +2312,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SerialAgents.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SerialAgents.h"
+				>
+			</File>
+			<File
 				RelativePath=".\StBaseType.h"
 				>
 			</File>
@@ -2312,27 +2383,11 @@
 					>
 				</File>
 				<File
-					RelativePath="Config_Password.cpp"
-					>
-				</File>
-				<File
-					RelativePath="Config_Password.h"
-					>
-				</File>
-				<File
 					RelativePath=".\Config_Proprietary.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\Config_Proprietary.h"
-					>
-				</File>
-				<File
-					RelativePath=".\ConfigNavigationModeV8Dlg.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\ConfigNavigationModeV8Dlg.h"
 					>
 				</File>
 				<File

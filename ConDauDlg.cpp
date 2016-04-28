@@ -6,7 +6,6 @@
 #include "ConDauDlg.h"
 #include "GPSDlg.h"
 
-
 CConDauDlg* pDauDlg;
 // CConDauDlg ¹ï¸Ü¤è¶ô
 U16 EllipseList;
@@ -17,34 +16,33 @@ S32 DeltaZ;
 U32 Semi_Major_Axis;
 U32 Inversed_Flattening;
 
+EL el[24] = {
+	{0, 0},
+	{6377563396-sma, 2993249646-IF1},
+	{6377340189-sma, 2993249646-IF1},
+	{6378160000-sma, 2982500000-IF1},
+	{6377483865-sma, 2991528128-IF1},
+	{6377397155-sma, 2991528128-IF1},
+	{6378206400-sma, 2949786982-IF1},
+	{6378249145-sma, 2934650000-IF1},
+	{6377276345-sma, 3008017000-IF1},
+	{6377298556-sma, 3008017000-IF1},
+	{6377301243-sma, 3008017000-IF1},
+	{6377295664-sma, 3008017000-IF1},
+	{6377304063-sma, 3008017000-IF1},
+	{6377309613-sma, 3008017000-IF1},
+	{6378155000-sma, 2983000000-IF1},
+	{6378200000-sma, 2983000000-IF1},
+	{6378270000-sma, 2970000000-IF1},
+	{6378160000-sma, 2982470000-IF1},
+	{6378388000-sma, 2970000000-IF1},
+	{6378245000-sma, 2983000000-IF1},
+	{6378137000-sma, 2982572221-IF1},
+	{6378160000-sma, 2982500000-IF1},
+	{6378135000-sma, 2982600000-IF1},
+	{6378137000-sma, 2982572235-IF1} };
 
-EL  el[24]={{0,0},
-{6377563396-sma,	2993249646-IF1},
-{6377340189-sma,	2993249646-IF1},
-{6378160000-sma,	2982500000-IF1},
-{6377483865-sma,	2991528128-IF1},
-{6377397155-sma,	2991528128-IF1},
-{6378206400-sma,	2949786982-IF1},
-{6378249145-sma,	2934650000-IF1},
-{6377276345-sma,	3008017000-IF1},
-{6377298556-sma,	3008017000-IF1},
-{6377301243-sma,	3008017000-IF1},
-{6377295664-sma,	3008017000-IF1},
-{6377304063-sma,	3008017000-IF1},
-{6377309613-sma,	3008017000-IF1},
-{6378155000-sma,	2983000000-IF1},
-{6378200000-sma,	2983000000-IF1},
-{6378270000-sma,	2970000000-IF1},
-{6378160000-sma,	2982470000-IF1},
-{6378388000-sma,	2970000000-IF1},
-{6378245000-sma,	2983000000-IF1},
-{6378137000-sma,	2982572221-IF1},
-{6378160000-sma,	2982500000-IF1},
-{6378135000-sma,	2982600000-IF1},
-{6378137000-sma,	2982572235-IF1}
-};
-DRL datum[]=
-{
+DRL datum[]= {
 	{   0,    0,    0, el[23].a, el[23].I_F,23},
 	{-118,  -14,  218, el[7].a,  el[7].I_F ,7},
 	{-134,   -2,  210, el[7].a,  el[7].I_F,7 },
@@ -268,7 +266,6 @@ DRL datum[]=
 
 UINT CigDauThread(LPVOID pParam)
 {
-
 	U08 messages[26];	
     int i;	    
 	memset(messages, 0, 26); 
@@ -302,13 +299,6 @@ UINT CigDauThread(LPVOID pParam)
 	messages[24]=(U08)0x0d;
 	messages[25]=(U08)0x0a;	
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(messages, 26, "Configure Datum Successful...");
-/*	
-	CGPSDlg::gpsDlg->ClearQue();
-	CGPSDlg::gpsDlg->SendToTarget(messages, 26,"Configure Datum Successful...");		
-	CGPSDlg::gpsDlg->SetMode(); 
-	CGPSDlg::gpsDlg->CreateGPSThread();
-//	AfxEndThread(0);
-*/
 	return 0;
 }
 
@@ -447,3 +437,4 @@ void CConDauDlg::OnBnClickedDatumTest()
 
 	
 }
+

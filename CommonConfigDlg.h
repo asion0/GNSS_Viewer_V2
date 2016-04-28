@@ -712,9 +712,10 @@ protected:
 	U08 m_roverOpt;
 	U32 m_srvValue1;
 	U32 m_srvValue2;
-	double m_sttValue1;
-	double m_sttValue2;
-	float m_sttValue3;
+	D64 m_sttValue1;
+	D64 m_sttValue2;
+	F32 m_sttValue3;
+	F32 m_mvbLength;
 	U08 m_attribute;
 
 	void UpdateStatus();
@@ -831,4 +832,40 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
+// CConfigPscmDeviceAddress 對話方塊
+class CConfigPscmDeviceAddress : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigPscmDeviceAddress)
+public:
+	CConfigPscmDeviceAddress(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigPscmDeviceAddress() {};
 
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+
+	virtual BOOL OnInitDialog();
+
+protected:
+	U08 m_num;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigPscmLatLonFractionalDigits 對話方塊
+class CConfigPscmLatLonFractionalDigits : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigPscmLatLonFractionalDigits)
+public:
+	CConfigPscmLatLonFractionalDigits(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigPscmLatLonFractionalDigits() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+
+	virtual BOOL OnInitDialog();
+
+protected:
+	U08 m_num;
+
+	DECLARE_MESSAGE_MAP()
+};

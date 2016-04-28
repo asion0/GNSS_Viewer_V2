@@ -90,25 +90,25 @@ IDB_DIRECTION           BITMAP                  "res\\Direction.bmp"
 
 #ifndef _MODULE_SUP_800_
  #ifdef _MORE_INFO_
-  IDB_SPEED               BITMAP                  "res\\Speed_s.bmp"
-  IDB_PDOP                BITMAP                  "res\\Pdop_s.bmp"
+  IDB_SPEED               BITMAP                "res\\Speed_s.bmp"
+  IDB_PDOP                BITMAP                "res\\Pdop_s.bmp"
 #else
-  IDB_SPEED               BITMAP                  "res\\Speed.bmp"
-  IDB_PDOP                BITMAP                  "res\\Pdop.bmp"
+  IDB_SPEED               BITMAP                "res\\Speed.bmp"
+  IDB_PDOP                BITMAP                "res\\Pdop.bmp"
 #endif
 #else
- IDB_SPEED               BITMAP                  "res\\Pressure.bmp"
- IDB_PDOP                BITMAP                  "res\\Temperature.bmp"
+ IDB_SPEED               BITMAP                 "res\\Pressure.bmp"
+ IDB_PDOP                BITMAP                 "res\\Temperature.bmp"
 #endif
 
 IDB_COOR_T              BITMAP                  "res\\CoorT.bmp"
 IDB_SCALE_T             BITMAP                  "res\\ScaleT.bmp"
 #ifdef _MORE_INFO_
- IDB_TWODRMS_T           BITMAP                  "res\\TwoDRmsT_s.bmp"
- IDB_CEP50_T             BITMAP                  "res\\Cep50T_s.bmp"
+ IDB_TWODRMS_T           BITMAP                 "res\\TwoDRmsT_s.bmp"
+ IDB_CEP50_T             BITMAP                 "res\\Cep50T_s.bmp"
 #else
- IDB_TWODRMS_T           BITMAP                  "res\\TwoDRmsT.bmp"
- IDB_CEP50_T             BITMAP                  "res\\Cep50T.bmp"
+ IDB_TWODRMS_T           BITMAP                 "res\\TwoDRmsT.bmp"
+ IDB_CEP50_T             BITMAP                 "res\\Cep50T.bmp"
 #endif
 #ifndef _ANOTHER_BAR_STYLE_
 IDB_MESSAGE             BITMAP                  "res\\MessageBar.bmp"
@@ -184,10 +184,10 @@ IDR_V8_DL_SREC_115200 SREC						"res\\loader_v8_download_115200.srec"
 IDR_V8_DL_SREC_230400 SREC						"res\\loader_v8_download_230400.srec"
 IDR_V8_DL_SREC_460800 SREC						"res\\loader_v8_download_460800.srec"
 
-IDR_V8_AT_SREC_115200 SREC						"res\\loader_v8_add_tag_115200.srec"
-IDR_V8_AT_SREC_230400 SREC						"res\\loader_v8_add_tag_230400.srec"
-IDR_V8_AT_SREC_460800 SREC						"res\\loader_v8_add_tag_460800.srec"
-IDR_V8_AT_SREC_921600 SREC						"res\\loader_v8_add_tag_921600.srec"
+//IDR_V8_AT_SREC_115200 SREC						"res\\loader_v8_add_tag_115200.srec"
+//IDR_V8_AT_SREC_230400 SREC						"res\\loader_v8_add_tag_230400.srec"
+//IDR_V8_AT_SREC_460800 SREC						"res\\loader_v8_add_tag_460800.srec"
+//IDR_V8_AT_SREC_921600 SREC						"res\\loader_v8_add_tag_921600.srec"
 IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag.srec"
 IDR_INTERNAL_LOADER_SPECIAL     SREC			"res\\loader_v8_new.srec"
 
@@ -196,33 +196,33 @@ IDR_INTERNAL_LOADER_SPECIAL     SREC			"res\\loader_v8_new.srec"
 // BIN
 //
 
-IDR_GNSS_PRELOADER_4800 BIN                     "res\\prom_glonass_4800.bin"
+IDR_GNSS_PRELOADER_4800 BIN						"res\\prom_glonass_4800.bin"
 IDR_GNSS_PRELOADER_9600 BIN                     "res\\prom_glonass_9600.bin"
-IDR_GNSS_PRELOADER_19200 BIN                     "res\\prom_glonass_19200.bin"
-IDR_GNSS_PRELOADER_38400 BIN                     "res\\prom_glonass_38400.bin"
-IDR_GNSS_PRELOADER_57600 BIN                     "res\\prom_glonass_57600.bin"
-IDR_GNSS_PRELOADER_115200 BIN                     "res\\prom_glonass_115200.bin"
-IDR_GNSS_PRELOADER_891200 BIN                     "res\\prom_glonass_230400.bin"
-IDR_GG12A_PRELOADER_4800 BIN                     "res\\prom_GG12A_4800.bin"
-IDR_GG12A_PRELOADER_9600 BIN                     "res\\prom_GG12A_9600.bin"
-IDR_GG12A_PRELOADER_19200 BIN                     "res\\prom_GG12A_19200.bin"
-IDR_GG12A_PRELOADER_38400 BIN                     "res\\prom_GG12A_38400.bin"
-IDR_GG12A_PRELOADER_57600 BIN                     "res\\prom_GG12A_57600.bin"
-IDR_GG12A_PRELOADER_115200 BIN                     "res\\prom_GG12A_115200.bin"
-IDR_GG12A_PRELOADER_230400 BIN                     "res\\prom_GG12A_230400.bin"
-IDR_GPS_PRELOADER_4800 BIN							"res\\plprom_4800.bin"
-IDR_GPS_PRELOADER_9600 BIN							"res\\plprom_9600.bin"
-IDR_GPS_PRELOADER_19200 BIN							"res\\plprom_19200.bin"
-IDR_GPS_PRELOADER_38400 BIN							"res\\plprom_38400.bin"
-IDR_GPS_PRELOADER_57600 BIN							"res\\plprom_57600.bin"
-IDR_GPS_PRELOADER_115200 BIN						"res\\plprom_115200.bin"
+IDR_GNSS_PRELOADER_19200 BIN                    "res\\prom_glonass_19200.bin"
+IDR_GNSS_PRELOADER_38400 BIN                    "res\\prom_glonass_38400.bin"
+IDR_GNSS_PRELOADER_57600 BIN                    "res\\prom_glonass_57600.bin"
+IDR_GNSS_PRELOADER_115200 BIN                   "res\\prom_glonass_115200.bin"
+IDR_GNSS_PRELOADER_891200 BIN                   "res\\prom_glonass_230400.bin"
+IDR_GG12A_PRELOADER_4800 BIN                    "res\\prom_GG12A_4800.bin"
+IDR_GG12A_PRELOADER_9600 BIN                    "res\\prom_GG12A_9600.bin"
+IDR_GG12A_PRELOADER_19200 BIN                   "res\\prom_GG12A_19200.bin"
+IDR_GG12A_PRELOADER_38400 BIN                   "res\\prom_GG12A_38400.bin"
+IDR_GG12A_PRELOADER_57600 BIN                   "res\\prom_GG12A_57600.bin"
+IDR_GG12A_PRELOADER_115200 BIN                  "res\\prom_GG12A_115200.bin"
+IDR_GG12A_PRELOADER_230400 BIN                  "res\\prom_GG12A_230400.bin"
+IDR_GPS_PRELOADER_4800 BIN						"res\\plprom_4800.bin"
+IDR_GPS_PRELOADER_9600 BIN						"res\\plprom_9600.bin"
+IDR_GPS_PRELOADER_19200 BIN						"res\\plprom_19200.bin"
+IDR_GPS_PRELOADER_38400 BIN						"res\\plprom_38400.bin"
+IDR_GPS_PRELOADER_57600 BIN						"res\\plprom_57600.bin"
+IDR_GPS_PRELOADER_115200 BIN					"res\\plprom_115200.bin"
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Upgrade PROM
 //
 #if defined(UPGRADE_DOWNLOAD)
-IDR_UPGRADE_DOWNLOAD_PROM BIN						"res\\STI_02.00.74-01.07.27_V8_Glonass_GPS_Takuji_Hostlogger_T_CRC_b02c_9600_20150615.bin"
+IDR_UPGRADE_DOWNLOAD_PROM BIN					"res\\STI_02.00.74-01.07.27_V8_Glonass_GPS_Takuji_Hostlogger_T_CRC_b02c_9600_20150615.bin"
 
 #endif
 

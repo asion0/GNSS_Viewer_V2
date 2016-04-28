@@ -576,7 +576,7 @@ void CKmlDlg::Convert(CFile& f)
 	int lastProgress = 0;
 	while(dwBytesRemaining)
 	{	
-		CString tmp_file ;
+		CString tmp_file;
 		tmp_file.Format("%s%d%s", kml_filename,file_tail,".kml");
 		
 		kml.Init(tmp_file, color, (b3d==1), (bPointList==1), (bNoPointText==1), (bDetailInfo==1));

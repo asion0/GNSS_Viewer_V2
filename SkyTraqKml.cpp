@@ -37,7 +37,8 @@ void CSkyTraqKml::Init(const char *name, int color, bool kml3d, bool bPointList,
 		strPointList = "<Folder id=\"MyPoints\">"\
 		"<Style id=\"PointStyle\"><IconStyle><color>ffffffff</color><Icon><href>http://maps.google.com/mapfiles/kml/shapes/open-diamond.png</href></Icon></IconStyle></Style>" \
 		"<Style id=\"PointStyle2\"><IconStyle><color>ffff0000</color><Icon><href>http://maps.google.com/mapfiles/kml/shapes/open-diamond.png</href></Icon></IconStyle></Style>" \
-		"<Style id=\"PointStyle3\"><IconStyle><color>ff00ff00</color><Icon><href>http://maps.google.com/mapfiles/kml/shapes/open-diamond.png</href></Icon></IconStyle></Style>";
+		"<Style id=\"PointStyle3\"><IconStyle><color>ff00ff00</color><Icon><href>http://maps.google.com/mapfiles/kml/shapes/open-diamond.png</href></Icon></IconStyle></Style>" \
+		"<Style id=\"PointStyle4\"><IconStyle><color>ffff00ff</color><Icon><href>http://maps.google.com/mapfiles/kml/shapes/open-diamond.png</href></Icon></IconStyle></Style>";
 
 		if(detailInfo)
 		{
@@ -290,10 +291,15 @@ void CSkyTraqKml::WriteKMLPath(CFile& f, double lon, double lat, double alt, con
 		{
 			qMode = "Float RTK";
 		}		
+		else if(q==EstimatedMode)
+		{
+			qMode.Format("Estimated Mode");
+		}
 		else
 		{
-			qMode = "";
+			qMode.Format("%d", (int)q);
 		}
+
 		if(noPointText)
 		{
 			strPointList += "<Placemark><name></name><description><![CDATA[";
@@ -302,7 +308,7 @@ void CSkyTraqKml::WriteKMLPath(CFile& f, double lon, double lat, double alt, con
 		{
 			strPointList += "<Placemark><name>" + ts + "</name><description><![CDATA[";
 		}
-		str.Format("lontitude: %012.9lf <br>latitude: %012.9lf<br>altitude: %07.3lf<br>Time: %s<br>RTK Mode: %s<br>", lon, lat, alt, ts, qMode);
+		str.Format("lontitude: %012.9lf <br>latitude: %012.9lf<br>altitude: %07.3lf<br>Time: %s<br>Fix Mode: %s<br>", lon, lat, alt, ts, qMode);
 		strPointList += str;
 
 		if(detailInfo)
@@ -317,6 +323,10 @@ void CSkyTraqKml::WriteKMLPath(CFile& f, double lon, double lat, double alt, con
 		else if(q==FloatRTK)
 		{
 			strPointList += "]]></description><styleUrl>#PointStyle3</styleUrl><Point>";
+		}		
+		else if(q==EstimatedMode)
+		{
+			strPointList += "]]></description><styleUrl>#PointStyle4</styleUrl><Point>";
 		}		
 		else
 		{

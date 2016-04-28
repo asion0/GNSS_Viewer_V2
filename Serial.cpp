@@ -82,12 +82,26 @@ bool CSerial::OpenByBaudrate(LPCSTR comPort, int baudrate)
 	CString portName;
 	portName.Format("\\\\.\\%s", comPort);
 
-	m_comDeviceHandle = CreateFile(portName, GENERIC_READ | GENERIC_WRITE,
-			0, NULL, OPEN_EXISTING, 0, 0);
-
-	if(m_comDeviceHandle==INVALID_HANDLE_VALUE)
+	int tryCnt = 10;
+	while(TRUE)
 	{
-		return false;
+		m_comDeviceHandle = CreateFile(portName, GENERIC_READ | GENERIC_WRITE,
+				0, NULL, OPEN_EXISTING, 0, 0);
+
+		if(m_comDeviceHandle==INVALID_HANDLE_VALUE)
+		{
+			if(--tryCnt == 0)
+			{
+				errorCode = ::GetLastError();
+				return false;
+			}
+			else
+			{
+				Sleep(50);
+				continue;
+			}
+		}
+		break;
 	}
 
 	ComInitial();
@@ -494,6 +508,103 @@ DWORD CSerial::GetBinary(void *buffer, DWORD bufferSize, DWORD timeout)
 	} //while(total < size - 1)
 	return totalSize;
 }
+
+DWORD CSerial::GetBinaryAck(void *buffer, DWORD bufferSize, DWORD timeout)
+{	
+	U08* bufferIter = (U08*)buffer;
+	DWORD totalSize = 0;
+	DWORD failCount = 10;
+	ScopeTimer clock;
+	while(totalSize < bufferSize - 1)
+	{ 
+		if(clock.GetDuration() > timeout)
+		{
+			return READ_ERROR;
+		}
+
+		if(m_cancelTransmission)
+		{
+			m_cancelTransmission = false;
+			return READ_ERROR;
+		}
+
+		DWORD dwBytesDoRead = 0;
+		DWORD dwErrorFlags = 0;
+		COMSTAT comStat;
+		BOOL b2 = ClearCommError(m_comDeviceHandle, &dwErrorFlags, &comStat);
+		if(!b2)
+		{
+			DWORD err = ::GetLastError();
+			return -1;
+		}
+		if(comStat.cbInQue <= 0) 
+		{
+			Sleep(10);
+			continue;
+		}
+
+		DWORD bytesinbuff = comStat.cbInQue;
+		while(bytesinbuff)
+		{
+			if(m_cancelTransmission)
+			{
+				m_cancelTransmission = false;
+				return -1;
+			}
+			BOOL bb = ReadFile(m_comDeviceHandle, bufferIter, 1, &dwBytesDoRead, 0);
+			if(dwBytesDoRead <= 0)
+			{	//Read fail.
+				DWORD dwErr = ::GetLastError();
+				continue;
+			}
+
+			if(totalSize > 0)
+			{	//not first char.
+				if(*bufferIter==0xa1 && *(bufferIter-1)==0xa0)
+				{
+					bufferIter -= totalSize;
+					*bufferIter = 0xa0; 
+					++bufferIter;
+					*bufferIter = 0xa1; 
+					++bufferIter;
+					totalSize = 2;
+					continue;
+				}
+				else if(*bufferIter==0x0a && *(bufferIter-1)==0x0d)
+				{
+					unsigned char *chk_ptr = bufferIter - totalSize;
+					
+					if (*chk_ptr == 0xa0)
+					{
+						int tmp_len = *(chk_ptr + 2);
+						tmp_len = tmp_len << 8 | *(chk_ptr+3);
+						if (totalSize == tmp_len + 6) 
+						{
+							*(bufferIter+1) = 0;
+							return totalSize + 1;
+						}
+					}
+					else
+					{
+						return totalSize;
+					}
+				}
+			}
+			++totalSize;
+			if (totalSize >=  bufferSize - 1)
+			{	//Check 
+				*(bufferIter+1) = 0;
+
+				break;
+			}
+				
+			++bufferIter;
+			--bytesinbuff;
+		} //while(bytesinbuff)
+	} //while(total < size - 1)
+	return totalSize;
+}
+
 
 DWORD CSerial::GetBinaryBlock(void* buffer, DWORD bufferSize, DWORD blockSize)
 {	

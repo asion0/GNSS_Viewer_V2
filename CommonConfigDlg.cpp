@@ -42,10 +42,10 @@ BOOL CCommonConfigDlg::OnInitDialog()
 	CRect	rcClient, rcCtrl;
 	GetClientRect(&rcClient);
 
-	rcCtrl.SetRect(rcClient.right - 112, rcClient.bottom - 36, rcClient.right - 16, rcClient.bottom - 8);
+	rcCtrl.SetRect(rcClient.right - 112, rcClient.bottom - 35, rcClient.right - 16, rcClient.bottom - 8);
 	pCancelBtn->Create(_T("Cancel"), dwStyle, rcCtrl, this, IDCANCEL);
 
-	rcCtrl.SetRect(rcClient.right - 224, rcClient.bottom - 36, rcClient.right - 128, rcClient.bottom - 8);
+	rcCtrl.SetRect(rcClient.right - 224, rcClient.bottom - 35, rcClient.right - 128, rcClient.bottom - 8);
 	pAcceptBtn->Create(_T("Accept"), dwStyle, rcCtrl, this, IDOK);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -2240,6 +2240,8 @@ BOOL CConfigRtkMode2::OnInitDialog()
 	((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->SetCurSel(0);
 	((CComboBox*)GetDlgItem(IDC_ROVER_OPT_FUN))->SetCurSel(0);
 
+	GetDlgItem(IDC_MVB_EDT1)->SetWindowText("0");
+
 	GetDlgItem(IDC_SRV_EDT1)->SetWindowText("2000");
 	GetDlgItem(IDC_SRV_EDT2)->SetWindowText("30");
 
@@ -2271,6 +2273,8 @@ void CConfigRtkMode2::OnBnClickedOk()
 	m_sttValue2 = atof(txt);
 	((CEdit*)GetDlgItem(IDC_STT_EDT3))->GetWindowText(txt);
 	m_sttValue3 = (float)atof(txt);
+	((CEdit*)GetDlgItem(IDC_MVB_EDT1))->GetWindowText(txt);	
+	m_mvbLength = (float)atof(txt);
 
 	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
 
@@ -2280,7 +2284,7 @@ void CConfigRtkMode2::OnBnClickedOk()
 void CConfigRtkMode2::DoCommand()
 {
 	CWaitCursor wait;
-	BinaryData cmd(33);
+	BinaryData cmd(37);
 	*cmd.GetBuffer(0) = 0x6A;
 	*cmd.GetBuffer(1) = 0x06;
 	*cmd.GetBuffer(2) = (U08)m_rtkMode;
@@ -2318,8 +2322,13 @@ void CConfigRtkMode2::DoCommand()
 	*cmd.GetBuffer(29) = *(((U08*)(&m_sttValue3)) + 2);
 	*cmd.GetBuffer(30) = *(((U08*)(&m_sttValue3)) + 1);
 	*cmd.GetBuffer(31) = *(((U08*)(&m_sttValue3)) + 0);
+	//F32
+	*cmd.GetBuffer(32) = *(((U08*)(&m_mvbLength)) + 3);
+	*cmd.GetBuffer(33) = *(((U08*)(&m_mvbLength)) + 2);
+	*cmd.GetBuffer(34) = *(((U08*)(&m_mvbLength)) + 1);
+	*cmd.GetBuffer(35) = *(((U08*)(&m_mvbLength)) + 0);
 	//U08
-	*cmd.GetBuffer(32) = (U08)m_attribute;
+	*cmd.GetBuffer(36) = (U08)m_attribute;
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure RTK mode and operational function successful...";
@@ -2361,13 +2370,19 @@ void CConfigRtkMode2::UpdateStatus()
 		GetDlgItem(IDC_STT_EDT2)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_STT_EDT3)->ShowWindow(SW_HIDE);
 
-		if(roverOpt == 2)	//Kinematic
+		if(roverOpt == 2)	//Moving base
 		{
 			GetDlgItem(IDC_DESC)->SetWindowText(baseDesc2);
+			GetDlgItem(IDC_MVB_SET)->ShowWindow(SW_SHOW);
+			GetDlgItem(IDC_MVB_SET2)->ShowWindow(SW_SHOW);
+			GetDlgItem(IDC_MVB_EDT1)->ShowWindow(SW_SHOW);
 		}
 		else
 		{
 			GetDlgItem(IDC_DESC)->SetWindowText(baseDesc1);
+			GetDlgItem(IDC_MVB_SET)->ShowWindow(SW_HIDE);
+			GetDlgItem(IDC_MVB_SET2)->ShowWindow(SW_HIDE);
+			GetDlgItem(IDC_MVB_EDT1)->ShowWindow(SW_HIDE);
 		}
 		return;
 	}
@@ -2375,6 +2390,9 @@ void CConfigRtkMode2::UpdateStatus()
 	{
 		GetDlgItem(IDC_BASE_OPT_FUN)->ShowWindow(SW_SHOW);
 		GetDlgItem(IDC_ROVER_OPT_FUN)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_MVB_SET)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_MVB_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_MVB_EDT1)->ShowWindow(SW_HIDE);
 	}
 
 	if(baseOpt == 0)	//Kinematic 
@@ -2828,3 +2846,90 @@ void CConfigGpsMeasurementMode::DoCommand()
 	configPrompt = "Configure GPS Measurement Mode Successful...";
 	AfxBeginThread(ConfigThread, 0);
 }
+
+// CConfigPscmDeviceAddress 對話方塊
+IMPLEMENT_DYNAMIC(CConfigPscmDeviceAddress, CCommonConfigDlg)
+
+CConfigPscmDeviceAddress::CConfigPscmDeviceAddress(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CFG_PSCM_DEV_ADDR, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigPscmDeviceAddress, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigPscmDeviceAddress::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigPscmDeviceAddress 訊息處理常式
+
+BOOL CConfigPscmDeviceAddress::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+	GetDlgItem(IDC_NUM)->SetWindowText("1");
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigPscmDeviceAddress::OnBnClickedOk()
+{	
+	CString txt;
+	GetDlgItem(IDC_NUM)->GetWindowText(txt);
+	m_num = atoi(txt);
+	OnOK();
+}
+
+void CConfigPscmDeviceAddress::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(4);
+	*cmd.GetBuffer(0) = 0x7A;
+	*cmd.GetBuffer(1) = 0x0A;
+	*cmd.GetBuffer(2) = (U08)0x01;
+	*cmd.GetBuffer(3) = (U08)m_num;
+	configCmd.SetData(cmd);
+	configPrompt = "Configure Pscm Device Address Successful...";
+    AfxBeginThread(ConfigThread, 0);
+}
+
+// CConfigPscmLatLonFractionalDigits 對話方塊
+IMPLEMENT_DYNAMIC(CConfigPscmLatLonFractionalDigits, CCommonConfigDlg)
+
+CConfigPscmLatLonFractionalDigits::CConfigPscmLatLonFractionalDigits(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CFG_PSCM_LAT_LON_DIGITS, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigPscmLatLonFractionalDigits, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigPscmLatLonFractionalDigits::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigRtkReset 訊息處理常式
+
+BOOL CConfigPscmLatLonFractionalDigits::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+	GetDlgItem(IDC_NUM)->SetWindowText("4");
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigPscmLatLonFractionalDigits::OnBnClickedOk()
+{	
+	CString txt;
+	GetDlgItem(IDC_NUM)->GetWindowText(txt);
+	m_num = atoi(txt);
+	OnOK();
+}
+
+void CConfigPscmLatLonFractionalDigits::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(4);
+	*cmd.GetBuffer(0) = 0x7A;
+	*cmd.GetBuffer(1) = 0x0A;
+	*cmd.GetBuffer(2) = (U08)0x03;
+	*cmd.GetBuffer(3) = (U08)m_num;
+	configCmd.SetData(cmd);
+	configPrompt = "Configure Pscm LAT/LON Fractional Digits Successful...";
+    AfxBeginThread(ConfigThread, 0);
+}
+

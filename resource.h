@@ -70,10 +70,7 @@
 #define IDB_FTP_BANNER                  240
 #define IDB_AGPS                        241
 #define IDD_AGPS_CONFIG                 243
-#define IDD_LOGIN                       245
-#define IDD_CONFIG_PASSWORD             246
 #define IDD_CON_USERDEFINEMSG_INTERVAL  265
-#define IDD_CONFIG_POSSET               267
 #define IDD_CONFIG_POSITIONRATE         268
 #define IDD_CON_POSITION_PINNING        292
 #define IDD_CON_PINNING                 294
@@ -99,7 +96,6 @@
 #define IDD_DEVICE_ADDING               331
 #define IDB_GL_ACT                      334
 #define IDR_GNSS_PRELOADER_4800         344
-#define IDD_CON_GNSS_SELECTION          345
 #define IDR_GNSS_PRELOADER_9600         345
 #define IDR_GNSS_PRELOADER_19200        346
 #define IDD_CON_NMEA_COMPORT            347
@@ -124,7 +120,6 @@
 #define IDD_CON_INTERFERENCE            358
 #define IDR_GPS_SREC_4800               358
 #define IDR_GPS_SREC_9600               359
-#define IDD_GET_GNSS_EPHEMERIS          360
 #define IDR_GPS_SREC_19200              360
 #define IDD_SET_GNSS_EPHEMERIS          361
 #define IDR_GPS_SREC_38400              361
@@ -173,7 +168,6 @@
 #define IDD_PARALLEL_DL                 420
 #define IDD_NMEA_CHECKSUM_CAL           421
 #define IDD_CONFIG_REF_TIME_TO_GPS_TIME 422
-#define IDD_CONFIG_NAV_MODE_V8          423
 #define IDD_BIN_CHECKSUM_CAL            424
 #define IDR_V8_DL_SREC_115200           425
 #define IDR_V8_DL_SREC_230400           426
@@ -196,14 +190,10 @@
 #define IDB_ICON256                     454
 #define IDD_DIALOG2                     455
 #define IDD_SETUP                       455
-#define IDR_V8_AT_SREC_115200           456
-#define IDR_V8_AT_SREC_230400           457
 #define IDD_DIALOG3                     457
 #define IDD_EXTERNAL_SREC               457
-#define IDR_V8_AT_SREC_460800           458
 #define IDD_DIALOG4                     458
 #define IDD_EARTH_SETTING               458
-#define IDR_V8_AT_SREC_921600           459
 #define IDD_RAW_MEAS_OUT_CONV           459
 #define IDR_V8_AT_SREC                  460
 #define IDD_VERIFY_FW                   460
@@ -228,6 +218,7 @@
 #define IDD_GEOFENCE                    475
 #define IDB_EARTH3                      476
 #define IDB_EARTH4                      477
+#define IDD_CFG_PSCM_DEV_ADDR           477
 #define IDB_EARTH5                      478
 #define IDB_EARTH6                      479
 #define IDR_UPGRADE_DOWNLOAD_PROM       480
@@ -370,7 +361,6 @@
 #define IDC_CHECK8                      1077
 #define IDC_SV                          1077
 #define IDC_CHECK9                      1078
-#define IDC_SV_GLONASS                  1078
 #define IDC_TEXT                        1078
 #define IDC_CHECK10                     1079
 #define IDC_HOST                        1079
@@ -385,11 +375,8 @@
 #define IDC_ABOUT_VERSION               1084
 #define IDC_CHECK15                     1084
 #define IDC_CHECK16                     1085
-#define IDC_LOGIN_PASSWORD              1085
 #define IDC_CHECK17                     1086
-#define IDC_OLD_PASS                    1086
 #define IDC_CHECK18                     1087
-#define IDC_NEW_PASS                    1087
 #define IDC_CHECK19                     1088
 #define IDC_CHECK20                     1089
 #define IDC_LBL_MIC                     1089
@@ -403,9 +390,7 @@
 #define IDC_CHECK24                     1093
 #define IDC_FIRMWARE_PATH               1093
 #define IDC_CHECK25                     1094
-#define IDC_POS_LAT                     1094
 #define IDC_CHECK26                     1095
-#define IDC_POS_LON                     1095
 #define IDC_CHECK27                     1096
 #define IDC_LBL_DOWNLOAD                1096
 #define IDC_CHECK28                     1097
@@ -617,7 +602,6 @@
 #define IDC_BTN_BROWSE_GLONASS          1215
 #define IDC_FILE_GPS                    1216
 #define IDC_FILE_GLONASS                1217
-#define IDC_SV_GPS                      1218
 #define IDC_FILE                        1219
 #define IDC_INTERFERENCE_MODE           1220
 #define IDC_TIMECORR_ATTR               1220
@@ -905,6 +889,8 @@
 #define IDD_RTK_MODE2                   1389
 #define IDC_STT_EDT1                    1389
 #define IDC_STT_EDT2                    1390
+#define IDD_CFG_PSCM_DEV_ADDR1          1390
+#define IDD_CFG_PSCM_LAT_LON_DIGITS     1390
 #define IDC_STT_EDT3                    1391
 #define IDC_SRV_SET1                    1392
 #define IDC_SRV_SET2                    1393
@@ -917,8 +903,13 @@
 #define IDC_DESC                        1399
 #define IDC_STT_SET4                    1399
 #define IDC_MS                          1400
+#define IDC_MVB_SET                     1400
 #define IDC_NS                          1401
+#define IDC_MVB_SET2                    1401
 #define IDC_PLLDIV                      1402
+#define IDC_STT_EDT4                    1402
+#define IDC_MVB_EDT1                    1402
+#define IDC_NUM                         1404
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_BINARY_SYSTEMRESTART         32811
@@ -976,7 +967,6 @@
 #define ID_WAAS_WAASDISABLE             32893
 #define ID_BINARY_CONFIGUREMESSAGE_TYPE 32896
 #define ID_BINARY_CONFIGUREBINARYMSGINTERVAL 32897
-#define ID_BINARY_POSITIONFINDER        32898
 #define ID_BINARY_QUERYPOSITIONRATE     32899
 #define ID_BINARY_CONFIGUREPOSITIONRATE 32900
 #define ID_BINARY_CONFIGUREMULTI        32901
@@ -1008,7 +998,7 @@
 #define ID_QUERY1PPSTIMING_QUERYTIMING  32933
 #define ID_QUERY_CABLEDELAY             32934
 #define ID_QUERY1PPSTIMING_QUERY        32935
-#define ID_QUERY1PPSTIMING_QUERYELEVATIONANDCNRMASK 32936
+#define ID_QUERY_ELE_CNR_MSK            32936
 #define ID_1PPSTIMING_MONITORING1PPS    32937
 #define ID_1PPSTIMING_CONFIGUREPROPRIETARYNMEA 32938
 #define ID_SET_GP_ALMANAC               32939
@@ -1037,9 +1027,7 @@
 #define ID_EPHEMERIS_SETGPS             32965
 #define ID_EPHEMERIS_GETGPS32966        32966
 #define ID_EPHEMERIS_SETGPS32967        32967
-#define ID_EPHEMERIS_GETGPSGLONASS      32968
 #define ID_EPHEMERIS_SETGPSGLONASS      32969
-#define ID_EPHEMERIS_GETGPSGLONASSALMANAC 32970
 #define ID_EPHEMERIS_SETGPSGLONASS_ALMANAC 32971
 #define ID_EPHEMERIS_GETTIMECORRECTIONS 32972
 #define ID_EPHEMERIS_SETTIMECORRECTIONS 32973
@@ -1179,14 +1167,19 @@
 #define ID_QUERY_GEOFENCE_RESULTEX      33114
 #define ID_QUERY_RTK_MODE2              33115
 #define ID_CONFIG_RTK_MODE2             33116
+#define ID_QUERY_PSCM_DEV_ADDR          33117
+#define ID_QUERY_PSCM_LAT_LON           33118
+#define ID_CONFIG_PSCM_DEV_ADDR         33119
+#define ID_CONFIG_PSCM_LAT_LON          33120
+#define ID_READ_MEM_TO_FILE             33121
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        477
+#define _APS_NEXT_RESOURCE_VALUE        478
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1404
+#define _APS_NEXT_CONTROL_VALUE         1405
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

@@ -89,7 +89,7 @@ UINT ReadNMEA(LPVOID pParam)
 
 	while(dwBytesRemaining)
 	{	
-		CString tmp_file ;
+		CString tmp_file;
 		tmp_file.Format("%s%d%s", pComDlg->kml_file_name,file_tail, ".kml");
 		pComDlg->kml.Init(tmp_file,0x0000ff);
 		while(dwBytesRemaining)

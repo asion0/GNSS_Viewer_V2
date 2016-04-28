@@ -10,8 +10,8 @@ class CConWaas : public CDialog
 public:
 	CConWaas(CWnd* pParent = NULL);   // 標準建構函式
 	virtual ~CConWaas();
-	int waas ;
-	int attribute ;
+	int waas;
+	int attribute;
 // 對話方塊資料
 	enum { IDD = IDD_CON_WAAS };
 

@@ -1,9 +1,7 @@
 #pragma once
 
 // CSoftImDwDlg ¹ï¸Ü¤è¶ô
-#define UWM_SETTIMEOUT		(WM_USER + 0x0062)
-#define UWM_SETPROGRESS		(WM_USER + 0x0005)
-#define UWM_SETPROMPT_MSG	(WM_USER + 0x0019)
+
 
 class CSoftImDwDlg : public CDialog
 {
@@ -38,5 +36,5 @@ protected:
 	
 	CEdit m_msg;
 	CEdit m_percent;
-//	CButton m_close ;
+//	CButton m_close;
 };

@@ -25,7 +25,7 @@ void log2nmea::parse_symbol(char *src,int src_len,char *dst,int *len_dst,char sy
 {
 	char *pt_line = src;
 	int line_size = 0;	
-	for(int i = 0 ; i < src_len;i++)
+	for(int i = 0; i < src_len; i++)
 	{
 		if (*src != symbol)
 		{
@@ -126,7 +126,7 @@ void log2nmea::parse_rmc(char *src,rmc_nmea *rmc)
 	char *ptr = src;
 	size_t len = strlen(src);
 	
-	for(size_t i = 0 ; i < len;i++)
+	for(size_t i = 0; i < len; i++)
 	{
 		if(*src != ' ' && i != len-1)
 		{
@@ -191,7 +191,7 @@ void log2nmea::parse_date(char* src, char *dst, int dstSize)
 	char *ptr = src;
 	size_t len = strlen(src);
 	int MM,DD,YY;
-	for(size_t i = 0 ; i < len;i++)
+	for(size_t i = 0; i < len; i++)
 	{
 		if(*src != '/' && *src != ' ' )
 		{
@@ -229,7 +229,7 @@ void log2nmea::parse_time(char* src,char *dst, int dstSize)
 	int hh,mm,ss;
 
 
-	for(int i = 0 ; i < len;i++)
+	for(int i = 0; i < len; i++)
 	{
 		if(*src != ':' && *src != ' ' )
 		{

@@ -21,6 +21,7 @@ using namespace std;
 #endif
 
 class CWaitReadLog;
+class CSerial;
 struct GPGSA;
 typedef matrix<float> Matrix;
 
@@ -30,7 +31,7 @@ typedef matrix<float> Matrix;
 #define MAX_WAIT_TIME		      INFINITE
 #define TIME_OUT_MS               10000
 #define TIME_OUT_QUICK_MS         1000
-#define SCAN_TIME_OUT_MS          2000
+#define SCAN_TIME_OUT_MS          500
 #define DOWNLOAD_TIME_OUT_LOOP    10
 #define BUF_SIZE 4096
 #define BOOTLOADER_SIZE		0x10000
@@ -227,6 +228,27 @@ enum QualityMode {
 	FloatRTK,
 };
 
+enum WlfResult {
+	wlf_None,
+	wlf_ok,
+	wlf_end,
+	wlf_error1,
+	wlf_error2,
+	wlf_error3,
+	wlf_error4,
+	wlf_error5,
+	wlf_resend,
+	wlf_reset,
+	wlf_resendbin,
+	wlf_timeout,
+	//for Loader debug
+	wlf_error41,
+	wlf_error42,
+	wlf_error43,
+	wlf_Ready,
+	wlf_Ready1,
+	wlf_Ready2,
+};
 
 extern Setting g_setting;
 
@@ -283,8 +305,14 @@ UINT16 CalCheckSum2(U08* pt);
 void UtcConvertGpsToUtcTime(S16 wn, D64 tow, UtcTime *utc_time_p);
 void UtcConvertUtcToGpsTime(const UtcTime *utc_time_p, S16 *wn_p, D64 *tow_p);
 QualityMode GetGnssQualityMode(U32 qualityIndicator, U08 gpMode = 0, U08 glMode = 0, U08 gaMode = 0, U08 bdMode = 0);
-double ConvertLeonDouble(const U08* ptr);
-float ConvertLeonFloat(const U08* ptr);
+//QualityMode GetGnssQualityMode(const U32 qualityIndicator, const U08 gpMode = 0, const U08 glMode = 0, const  gaMode = 0, const U08 bdMode = 0);
+D64 ConvertLeonDouble(const U08* ptr);
+F32 ConvertLeonFloat(const U08* ptr);
+U16 ConvertLeonU16(const U08* ptr);
+S16 ConvertLeonS16(const U08* ptr);
+U32 ConvertLeonU32(const U08* ptr);
+S32 ConvertLeonS32(const U08* ptr);
+WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd);
 
 //void UTC_convert_gps_to_utc_time_by_default_parameters( S16 wn, D64 tow, UtcTime *utc_time_p );
 

@@ -71,9 +71,7 @@ BOOL CCfgMsg::OnInitDialog()
 	m_type.AddString("No output");
 	m_type.AddString("NMEA Message");
 	m_type.AddString("Binary Message");
-#if PACIFIC
-	m_type.AddString("Binary Message(Pacific Telescope defined)");
-#endif
+
 	m_attribute.AddString("Update to SRAM");
 	m_attribute.AddString("Update to SRAM+FLASH");
 
@@ -93,16 +91,14 @@ void CCfgMsg::OnBnClickedOk()
 	switch(type)
 	{
 	case 0:
-		CGPSDlg::gpsDlg->SetMsgType(CGPSDlg::Nooutput_Mode);
+		CGPSDlg::gpsDlg->SetMsgType(CGPSDlg::NoOutputMode);
 		break;
 	case 1:
-		CGPSDlg::gpsDlg->SetMsgType(CGPSDlg::NMEA_Mode);
+		CGPSDlg::gpsDlg->SetMsgType(CGPSDlg::NmeaMessageMode);
 		break;
 	case 2:
-		CGPSDlg::gpsDlg->SetMsgType(CGPSDlg::Binary_Mode); 
+		CGPSDlg::gpsDlg->SetMsgType(CGPSDlg::BinaryMessageMode); 
 		break;
-	case 3:
-		CGPSDlg::gpsDlg->SetMsgType(CGPSDlg::Binary_Pacific);
 	default:
 		break;
 	}

@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "GPS.h"
+#include "GPSDlg.h"
 #include "SoftImDwDlg.h"
 
 // CSoftImDwDlg ¹ï¸Ü¤è¶ô

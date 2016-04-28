@@ -52,7 +52,7 @@ END_MESSAGE_MAP()
 
 U08 CTiming_start::Ftp_File(char *remote_file, const char *local_file)
 {
-	unsigned long time_out ;
+	unsigned long time_out;
 	const int textSize = 100;
 	char text[textSize];
 	//float fpos;
@@ -138,7 +138,7 @@ TheLast:
 
 U08 CTiming_start::FTP_utc()
 {
-	U08 ret ;
+	U08 ret;
 	const char file_name[] = "utc.dat";
 	char remote_path[100];
 
@@ -150,7 +150,7 @@ U08 CTiming_start::FTP_utc()
 
 U08 CTiming_start::FTP_almanac()
 {
-	U08 ret ;
+	U08 ret;
 	const char file_name[] = "almanac.dat";
 	char remote_path[100];
 
@@ -162,7 +162,7 @@ U08 CTiming_start::FTP_almanac()
 
 U08 CTiming_start::FTP_Eph()
 {
-	U08 ret ;
+	U08 ret;
 	const char file_name[] = "Eph_4.dat";
 	char remote_path[100];
 
@@ -193,7 +193,7 @@ U08 CTiming_start::set_eph_4()
 
 	if(f != NULL)
 	{
-		for(i = 0 ; i< SATELLITES_COUNT ;i++)
+		for(i = 0; i< SATELLITES_COUNT;i++)
 		{
 			int size = fread(buff,1,SATELLITE_EPH_SIZE,f);
 			if(size == SATELLITE_EPH_SIZE)
@@ -297,12 +297,12 @@ U08 CTiming_start::target_warmstart(int year,U08 mon,U08 day,U08 hour,U08 minute
 	msg[0] = 0x1; //msgid
 	msg[1] = 0x02; //mode
 	msg[2] = year >> 8 &0xff;
-	msg[3] = year ;	
-	msg[4] = mon ;
-	msg[5] = day ;
-	msg[6] = hour ;
-	msg[7] = minute ;
-	msg[8] = sec ;
+	msg[3] = year;	
+	msg[4] = mon;
+	msg[5] = day;
+	msg[6] = hour;
+	msg[7] = minute;
+	msg[8] = sec;
 	msg[9]= lat >>8     &0xff;
 	msg[10]= lat        &0xff;	
 	msg[11]= lon >>8     &0xff;

@@ -1,8 +1,20 @@
 #pragma once
 
 #include "StBaseType.h"
-
 #define		UTILITY_MAX_PATH		(MAX_PATH * 4)
+///////////////// Define Value and Data Struct/////////////
+//Delete pointer that creating by operator new 
+#define SafelyDelPtr(x)  { delete (x); x = NULL; }
+
+//Delete pointer that creating by operator new []
+#define SafelyDelArray(x)  { delete [] (x); x = NULL; }
+
+ //Delete pointer that create by CreateWindow()
+#define SafelyDelWnd(x)  if(x) { (x)->DestroyWindow(); delete x; x = NULL; }
+
+//Calculate the number of elements in the array, x must be an array not pointer
+#define Dim(x) ( sizeof(x) / sizeof(x[0]) )
+
 
 class BinaryData;
 namespace Utility
@@ -43,6 +55,8 @@ namespace Utility
 	bool ConvertBinaryToHex(const BinaryData& binData, CString& strOutput, int startIndex, int maxCount, int lineCount);
 	CString GetSpecialFolder(INT iFolder);	//See define: CSIDL_APPDATA
 	CString GetNameAttachPid(LPCSTR name);
+	void DoEvents();
+	void GetErrorString(CString& msg, DWORD errorCode);
 }
 
 class ScopeTimer

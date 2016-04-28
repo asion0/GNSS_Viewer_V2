@@ -21,9 +21,9 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedOk();
-	int enable ;
-	int attribute ;
-	CComboBox cbo_status ;
+	int enable;
+	int attribute;
+	CComboBox cbo_status;
 	virtual BOOL OnInitDialog();
 	void Set_Enable(U08 enable);
 };

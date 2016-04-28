@@ -12,7 +12,7 @@ IMPLEMENT_DYNAMIC(CCon1PPS_DOP, CDialog)
 CCon1PPS_DOP::CCon1PPS_DOP(CWnd* pParent /*=NULL*/)
 	: CDialog(CCon1PPS_DOP::IDD, pParent)
 {
-	dop_sel ;
+	dop_sel;
 	pdop = hdop = gdop = 10;
 }
 

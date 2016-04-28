@@ -11,7 +11,7 @@
 #define BINMSG_LOG_READ_DATA               0x95
 #define BINMSG_REPLY_LOG_STATUS            0x94
 #define BINMSG_GET_EPHEMERIS               0xb1
-#define BINMSG_PVT_ANDREW                  8
+//#define BINMSG_PVT_ANDREW                  8
 
 typedef struct ECEF_USER_PVT
 {
@@ -156,17 +156,17 @@ struct POS_T;
 struct LLA_T;
 
 
-void ECEF_USER_PVT_PROC(ECEF_USER_PVT& ecef_user_pvt,U08* pt);
-void GEODETIC_USER_PVT_PROC(GEODETIC_USER_PVT& geod_user_pvt,U08* pt);
-void USER_SATELLITE_INFOMATION_PROC(USER_SATELLITE_INFOMATION& sv_info,U08* pt);
-void SATELLITE_MEASUREMENT_DATA_PROC(SATELLITE_MEASUREMENT_DATA& sm_data,U08* pt);
-void SHOW_ECEF_USER_PVT(ECEF_USER_PVT& ecef_user_pvt,U08* pt,int len);
-void SHOW_GEODETIC_USER_PVT(GEODETIC_USER_PVT& geod_user_pvt,U08* pt,int len);
-void SHOW_USER_SATELLITE_INFOMATION(USER_SATELLITE_INFOMATION& sv_info,U08* pt,int len);
-void SHOW_SATELLITE_MEASUREMENT_DATA(SATELLITE_MEASUREMENT_DATA& sm_data,U08* pt,int len);
-void SHOW_USER_SATELLITE_INFOMATION(USER_SATELLITE_INFOMATION& sv_info,U08* pt,int len);
-void SHOW_SATELLITE_MEASUREMENT_DATA(SATELLITE_MEASUREMENT_DATA& sm_data,U08* pt,int len);
-//void CooCartesianToGeodetic( const POS_T* xyz_p, LLA_T* lla_p );
+//void ECEF_USER_PVT_PROC(ECEF_USER_PVT& ecef_user_pvt,U08* pt);
+//void GEODETIC_USER_PVT_PROC(GEODETIC_USER_PVT& geod_user_pvt,U08* pt);
+//void USER_SATELLITE_INFOMATION_PROC(USER_SATELLITE_INFOMATION& sv_info,U08* pt);
+//void SATELLITE_MEASUREMENT_DATA_PROC(SATELLITE_MEASUREMENT_DATA& sm_data,U08* pt);
+//void SHOW_ECEF_USER_PVT(ECEF_USER_PVT& ecef_user_pvt,U08* pt,int len);
+//void SHOW_GEODETIC_USER_PVT(GEODETIC_USER_PVT& geod_user_pvt,U08* pt,int len);
+//void SHOW_USER_SATELLITE_INFOMATION(USER_SATELLITE_INFOMATION& sv_info,U08* pt,int len);
+//void SHOW_SATELLITE_MEASUREMENT_DATA(SATELLITE_MEASUREMENT_DATA& sm_data,U08* pt,int len);
+//void SHOW_USER_SATELLITE_INFOMATION(USER_SATELLITE_INFOMATION& sv_info,U08* pt,int len);
+//void SHOW_SATELLITE_MEASUREMENT_DATA(SATELLITE_MEASUREMENT_DATA& sm_data,U08* pt,int len);
+void CooCartesianToGeodetic( const POS_T* xyz_p, LLA_T* lla_p );
 U08 *decode_4bytes(U08 *src,U32 *dst);
 U08 *decode_2bytes(U08 *src,U16 *dst);
 U08 *decode_1bytes(U08 *src,U08 *dst);
@@ -177,3 +177,4 @@ void ShowMeasurementTime(U08 *src, bool convertOnly = false, CString* pStr = NUL
 void ShowMeasurementSv(U08 *src, bool convertOnly = false, CString* pStr = NULL);
 void ShowReceiverNav(U08 *src, bool convertOnly = false, CString* pStr = NULL);
 void ShowBinaryOutput(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowDjiBinaryOutput(U08* src, bool convertOnly = false, CString* pStr = NULL);

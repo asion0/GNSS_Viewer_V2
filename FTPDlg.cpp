@@ -45,7 +45,9 @@ BEGIN_MESSAGE_MAP(CFTPDlg, CDialog)
 	ON_BN_CLICKED(IDC_CONNECT, OnBnClickedConnect)
 	ON_BN_CLICKED(IDC_CLOSE, OnBnClickedClose)
 	ON_BN_CLICKED(IDC_ERASE, &CFTPDlg::OnBnClickedErase)
-	ON_STN_CLICKED(IDC_NAME_T, &CFTPDlg::OnStnClickedNameT)
+	ON_STN_CLICKED(IDC_HOST_T, &CFTPDlg::OnStnClickedHostT)
+	ON_STN_CLICKED(IDC_PWD_T, &CFTPDlg::OnStnClickedPwdT)
+	ON_EN_CHANGE(IDC_PWD, &CFTPDlg::OnEnChangePwd)
 END_MESSAGE_MAP()
 
 // CFTPDlg 訊息處理常式
@@ -61,7 +63,8 @@ BOOL CFTPDlg::OnInitDialog()
 		GetDlgItem(IDC_ERASE)->ShowWindow(SW_HIDE);
 	}
 
-	m_host.SetWindowText("60.250.205.31");
+	//m_host.SetWindowText("60.250.205.31");
+	m_host.SetWindowText("agps.skytraq.com.tw");
 	m_ftp_title.SetWindowText("This utility can support to get the predicted ephemeris data.");
 	m_name.SetWindowText("skytraq");
 	m_pwd.SetWindowText("skytraq");
@@ -205,10 +208,6 @@ void CFTPDlg::GetAgpsFile()
 		m_text.SetWindowText("Start to set the predicted ephemeris to target!");
 		FindEphemerisFile();	
 	}
-//	if(!SetEvent(m_hClose))  
-//	{
-//		DWORD error = GetLastError(); 
-//	}
 	PostMessage(WM_CLOSE, 0, 0);
 }
 
@@ -250,10 +249,6 @@ UINT DoFtpThread(LPVOID pParam)
 
 void CFTPDlg::OnBnClickedConnect()
 {	
-//	if(!ResetEvent(m_hClose)) 
-//	{
-//		DWORD error = GetLastError();
-//	}
 	m_connectBtn.EnableWindow(FALSE);
 	m_closeBtn.EnableWindow(FALSE);
 	CGPSDlg::gpsDlg->m_nDownloadBaudIdx = g_setting.boostBaudIndex;
@@ -294,11 +289,6 @@ void CFTPDlg::OnBnClickedClose()
 
 void CFTPDlg::OnCancel()
 {
-//	if(m_hClose)
-//	{
-//		CloseHandle(m_hClose);
-//		m_hClose = NULL;
-//	}	
 	CDialog::OnCancel();
 }
 
@@ -334,17 +324,14 @@ bool CFTPDlg::UploadBin()
 
 	CString strMsg;
 	strMsg.Format("BINSIZE = %d Checksum = %d Checksumb = %d ", ephData.Size(), mycheckt, mycheckb);
-	if(CGPSDlg::gpsDlg->send_command_withackString((U08*)(LPCSTR)strMsg, 
-		strMsg.GetLength() + 1, "OK"))
+	CGPSDlg::gpsDlg->m_serial->SendData((LPCSTR)strMsg, strMsg.GetLength() + 1);	
+	WlfResult wlf = WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, 2000, NULL);
+	if(wlf_ok == wlf)
 	{
 		m_progress.SetPos(2);	
 		return TransferFile(ephData);
-	}
-	else
-	{
-		return false;
-	}
-	return true;
+	}	
+	return false;
 }
 
 bool CFTPDlg::TransferFile(BinaryData& ephData)
@@ -359,7 +346,7 @@ bool CFTPDlg::TransferFile(BinaryData& ephData)
 		totalBytes += sentBytes;
 		if((totalBytes % sentBytes) == 0)
 		{
-			if(!CGPSDlg::gpsDlg->wait_res("OK"))
+			if(wlf_ok == WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, 2000, NULL))
 			{
 				ret = false;
 				break;
@@ -370,7 +357,7 @@ bool CFTPDlg::TransferFile(BinaryData& ephData)
 		m_progress.SetPos((int)fpos);
 	}	
 
-	if (!CGPSDlg::gpsDlg->wait_res("END"))
+	if(wlf_end == WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, 2000, NULL))
 	{
 		ret = false;
 	}
@@ -389,7 +376,6 @@ void CFTPDlg::DoRomAgps()
 		::AfxMessageBox(strMsg);
 		return;
 	}
-//	CGPSDlg::gpsDlg->BoostBaudrate(FALSE, CGPSDlg::ChangeToTemp);
 	m_text.SetWindowText("Warm start the target.");
 	if(2==m_agpsMode)
 	{
@@ -413,8 +399,6 @@ void CFTPDlg::DoRomAgps()
 			return;
 		}
 	}
-//	Sleep(500);
-//	CGPSDlg::gpsDlg->BoostBaudrate(TRUE, CGPSDlg::ChangeToTemp);
 }
 
 void CFTPDlg::GetAllDatFileSrec()
@@ -451,7 +435,22 @@ void CFTPDlg::OnBnClickedErase()
 	AfxBeginThread(DoFtpThread, this);
 }
 
-void CFTPDlg::OnStnClickedNameT()
+void CFTPDlg::OnStnClickedHostT()
 {
 	// TODO: 在此加入控制項告知處理常式程式碼
+}
+
+void CFTPDlg::OnStnClickedPwdT()
+{
+	// TODO: 在此加入控制項告知處理常式程式碼
+}
+
+void CFTPDlg::OnEnChangePwd()
+{
+	// TODO:  如果這是 RICHEDIT 控制項，控制項將不會
+	// 傳送此告知，除非您覆寫 CDialog::OnInitDialog()
+	// 函式和呼叫 CRichEditCtrl().SetEventMask()
+	// 讓具有 ENM_CHANGE 旗標 ORed 加入遮罩。
+
+	// TODO:  在此加入控制項告知處理常式程式碼
 }

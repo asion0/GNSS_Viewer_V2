@@ -8,6 +8,9 @@ Global
 		Debug|Any CPU = Debug|Any CPU
 		Debug|Mixed Platforms = Debug|Mixed Platforms
 		Debug|Win32 = Debug|Win32
+		DebugPlayer|Any CPU = DebugPlayer|Any CPU
+		DebugPlayer|Mixed Platforms = DebugPlayer|Mixed Platforms
+		DebugPlayer|Win32 = DebugPlayer|Win32
 		GNSS_Create_Tag|Any CPU = GNSS_Create_Tag|Any CPU
 		GNSS_Create_Tag|Mixed Platforms = GNSS_Create_Tag|Mixed Platforms
 		GNSS_Create_Tag|Win32 = GNSS_Create_Tag|Win32
@@ -63,6 +66,11 @@ Global
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.Debug|Mixed Platforms.Build.0 = Debug|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.Debug|Win32.ActiveCfg = Debug|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.Debug|Win32.Build.0 = Debug|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.DebugPlayer|Any CPU.ActiveCfg = DebugPlayer|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.DebugPlayer|Mixed Platforms.ActiveCfg = DebugPlayer|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.DebugPlayer|Mixed Platforms.Build.0 = DebugPlayer|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.DebugPlayer|Win32.ActiveCfg = DebugPlayer|Win32
+		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.DebugPlayer|Win32.Build.0 = DebugPlayer|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_Create_Tag|Any CPU.ActiveCfg = GNSS_Create_Tag|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_Create_Tag|Mixed Platforms.ActiveCfg = GNSS_Create_Tag|Win32
 		{7282594B-1D3E-494A-9B12-6F2F695A38D1}.GNSS_Create_Tag|Mixed Platforms.Build.0 = GNSS_Create_Tag|Win32

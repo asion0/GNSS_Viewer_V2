@@ -187,7 +187,7 @@
 // .181 20151217 Remove Geo-fecing in General version. request from Oliver.
 // .181 20151221 Fixed degree symbol display in English issue, report from fourm user.
 // .182 20151224 Add [Query Binary Measurement Data Out] in binary menu. Request form Andrew and Ryan.
-// .184 20151230 Turn _ALWAYS_USE_EXTERNAL_SREC_ to 1, using 115200 dl srec. Request form Leo by 錦輪  
+// .184 20151230 Modify _ALWAYS_USE_EXTERNAL_SREC_ to 1, using 115200 dl srec. Request form Leo by 錦輪  
 // .185 20160105 SAINTMAX customer version QWP002001-1050104. Request form Leo
 // .186 20160112 SAINTMAX customer version QWP002001-1050104. Request form Leo
 // .187 20160120 Player fixed set origin error(In west earth) and timing control issue, Request form Oliver and Andrew.
@@ -201,12 +201,24 @@
 // .195 20160310 Support RTK Mode and operational function. Request from Andrew and Ryan Yang.
 // .196 20160317 Reconstruction Configure Message Type functions and modify QueryRtkMode2. Request from Ryan Yang and Ken.
 // .197 20160323 Modify RTK static mode altitude prompt text. Request from Ryan Yang.
+// .197 20160324 Fixed scan port / baudrate bugs.
+// .197 20160330 ETEN customize version, add PSTM menu, Request from Leo.
+// .198 20160331 Add Utility function [Read 0x50000000 to File], Request from Andrew.
+// .199 20160331 KML Converter support DR Mode, Request from Ken.
+// .199 20160411 Add binary output player in Player version, Request from Leo.
+// .200 20160412 Fix download issue when raw mode download will fail, Report from Andrew and Ken.
+// .200 20160413 Fix crash issue when UI fast operation, Report from Andrew and Ryan.
+// .201 20160414 Read prom bin fast when download, Report from Ken.
+// .202 20160419 Support DJI NAVIGATION DATA MESSAGE(ID: 0x7A, CUSTOMER ID: 0xB, SID: 0x80), Report from Andrew, Roger.
+// .203 20160422 Modify RTK Mode and operational function, add Baseline length, Request from Andrew, Ryan.
+// .203 20160422 Remove GPS Measurement Mode command, Request from Andrew, Oliver.
+// .204
 
-//#define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
+
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.197"
+#define APP_VERSION				"2.0.203"
 #define APP_TITLE				""
 #define APP_MODULE				"Venus 8"
 
@@ -215,6 +227,7 @@
 #define SWID					0x0001		//重慶西南集成電路設計
 #define Ericsson				0x0004
 #define OlinkStar				0x4F4C
+#define Eten					0x000A
 //
 
 //For customer upgrade
@@ -253,7 +266,6 @@
 #define TIMING_MODE				0
 
 //#define _BAUTRATE_IDX_6_		891200
-#define PACIFIC					0
 #define OPEN_PINNING_RESERVE	0
 #define RESET_MOTION_SENSOR		0
 #define _V8_SUPPORT				1
@@ -264,9 +276,16 @@
 #define TWIN_DATALOG			0
 #define CUSTOMER_DOWNLOAD		0
 #define CUSTOMER_ID				Sktyraq
+
+//NMEA PRN parsing type
+//Type 0 - GL: 65~96; GP: 1~64, 183~188, 193~197; BD: others
+//Type 1 - GL: 201~300; GP: 101~200; BD: 1~100; GA: 301~400
+//Type 2 - GP: 1~85; BD: others
+//Type 3 - GL: 65~96; GP: 1~64, 183~188, 193~197; BD: others; Don't care GPS_183_188 flag.
 #define NMEA_PRN_TYPE			0
-#define TIMING_MONITORING	1
-#define TIMING_OUTPUT_ALIGN	1
+
+#define TIMING_MONITORING		1
+#define TIMING_OUTPUT_ALIGN		1
 #define	SHOW_ELEV_AND_CNR_MASK_IN_GEN	1
 #define	SHOW_ERROR_NMEA_NOTIFY	0
 #define	MORE_ENU_SCALE			1
@@ -276,6 +295,7 @@
 #define CHECK_SAEE_MULTIHZ_ON	0		//Check SAEE and Multi-Hz can't both on.
 #define INVERT_LON_LAT			1		//Final spec for GeoFecing spec.
 #define MORE_INFO				0		//More information field for RTK
+#define RTK_MENU				1		//Show RTK menu
 #define CLIENT_WIDTH			1008	//Viewer window client width
 #define CLIENT_HEIGHT			690		//Viewer window client height
 #define AUTO_QUERY_VERSION		0
@@ -285,7 +305,60 @@
 #define SHOW_RTK_BASELINE		0
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-#if defined(SWCFG_VENDOR_GNSS_KALMAN)
+#if defined(SWCFG_VENDOR_GNSS_ADDTAG)
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef OPEN_PINNING_RESERVE
+ //#undef BINARY_MESSAGE_INTERVAL
+ #undef CLIENT_WIDTH
+ #undef CLIENT_HEIGHT
+ #undef AUTO_QUERY_VERSION
+
+ #define APP_CAPTION			"GNSS Viewer"
+ #define APP_TITLE				"SANITMAX Release"
+ #define GNSS_VIEWER			1
+ #define IS_DEBUG				0
+ #define BAUDRATE_DEFAULT		7
+ #define TIMING_MODE			1
+ #define OPEN_PINNING_RESERVE	1
+ //#define BINARY_MESSAGE_INTERVAL 1
+ #define SAINTMAX_UI			 1
+ #define CLIENT_WIDTH			577
+ #define CLIENT_HEIGHT			341
+ #define AUTO_QUERY_VERSION		1
+
+#elif defined(SWCFG_VENDOR_GNSS_ETEN20160330)	//Request from Leo
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef APP_MODULE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef OPEN_PINNING_RESERVE
+ #undef MORE_INFO
+ #undef SHOW_RTK_BASELINE
+ #undef CUSTOMER_ID
+ #undef RTK_MENU
+
+ #define APP_CAPTION			"GNSS Viewer"
+ #define APP_TITLE				"Customer Release"
+ #define APP_MODULE				"Venus 8"
+ #define GNSS_VIEWER			1
+ #define IS_DEBUG				0
+ #define BAUDRATE_DEFAULT		7
+ #define TIMING_MODE			1
+ #define OPEN_PINNING_RESERVE	1
+ #define MORE_INFO				0		//Please define _MORE_INFO_ for rc2 too.
+ #define SHOW_RTK_BASELINE		0		//Please define SHOW_RTK_BASELINE for rc2 too.
+ #define CUSTOMER_ID			Eten
+ #define RTK_MENU				0
+
+#elif defined(SWCFG_VENDOR_GNSS_KALMAN)
  #undef APP_CAPTION
  #undef APP_TITLE
  #undef APP_MODULE

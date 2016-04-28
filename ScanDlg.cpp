@@ -28,15 +28,12 @@ void CScanDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT2, m_msg);
 }
 
-
 BEGIN_MESSAGE_MAP(CScanDlg, CDialog)
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_BUTTON1, OnBnClickedButton1)
 END_MESSAGE_MAP()
 
-
 // CScanDlg 訊息處理常式
-
 BOOL CScanDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
@@ -46,19 +43,17 @@ BOOL CScanDlg::OnInitDialog()
 	m_msg.SetWindowText("Start to Scan GPS");
 	Pos = 0;	
 	IsFinish = false;
-	if(!SetEvent(hScanGPS))	DWORD error = GetLastError();
-	
-	SetTimer(1,0,NULL);
-	// TODO:  在此加入額外的初始化
-
+	if(!SetEvent(hScanGPS))	
+	{
+		DWORD error = GetLastError();
+	}
+	SetTimer(1, 0, NULL);
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 
 void CScanDlg::OnTimer(UINT nIDEvent)
 {
-
 	Pos+=10;
 	if(Pos == 100)
 		Pos = 0;
@@ -68,10 +63,6 @@ void CScanDlg::OnTimer(UINT nIDEvent)
 		KillTimer(1);
 		OnOK();
 	}
-
-	
-	
-
 	CDialog::OnTimer(nIDEvent);
 }
 

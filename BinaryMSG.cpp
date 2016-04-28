@@ -107,12 +107,11 @@ void SATELLITE_MEASUREMENT_DATA_PROC(SATELLITE_MEASUREMENT_DATA& sm_data,U08* pt
 	memcpy(&sm_data.TOW           , &pt[151],  sizeof(U32));
 	memcpy(&sm_data.ClockOffset   , &pt[155],  sizeof(U16));
 }
-
+/*
 void SHOW_ECEF_USER_PVT(ECEF_USER_PVT& ecef_user_pvt,U08* pt,int len)
 {
 	ECEF_USER_PVT_PROC(ecef_user_pvt,pt);
 }
-
 
 void SHOW_GEODETIC_USER_PVT(GEODETIC_USER_PVT& geod_user_pvt,U08* pt,int len)
 {	
@@ -128,7 +127,7 @@ void SHOW_SATELLITE_MEASUREMENT_DATA(SATELLITE_MEASUREMENT_DATA& sm_data,U08* pt
 {	
 	SATELLITE_MEASUREMENT_DATA_PROC(sm_data,pt);
 }
-
+*/
 void CooCartesianToGeodetic(const POS_T* xyz_p, LLA_T* lla_p)
 {
 	D64 p;
@@ -638,7 +637,7 @@ void ShowBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 	double lat = src[13]<<24 | src[14]<<16 | src[15]<<8 | src[16];
 	double lon = src[17]<<24 | src[18]<<16 | src[19]<<8 | src[20];
 
-	D64 flat = lat ;
+	D64 flat = lat;
 	flat /= 10000000;
 	flat =((int)flat)*100 +(double)(flat - (int)flat)*60;
 
@@ -747,7 +746,7 @@ void ShowBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 		add2message(m_buff, msg_len);
 	}
 
-	msg_len = sprintf_s(m_buff,"$sea level altitude=%.2f", (F32)alt);
+	msg_len = sprintf_s(m_buff,"$sea level altitude=%.2f", (F32)alt / 100);
 	if(convertOnly)
 	{
 		*pStr += m_buff;
@@ -926,3 +925,329 @@ void ShowBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 	CGPSDlg::gpsDlg->m_gprmcMsgCopy.SpeedKnots = (F32)(fv / 1.852);
 }
 
+void ShowDjiBinaryOutput(U08* src, bool convertOnly, CString* pStr)
+{
+	src += 3;	//pass id and sid
+	U16 wn = ConvertLeonU16(src + 6);
+	D64 tow = ConvertLeonDouble(src + 8);
+
+	UtcTime utc;
+	UtcConvertGpsToUtcTime(wn, tow, &utc);
+
+	D64 lat = ConvertLeonDouble(src + 16);
+	D64 lon = ConvertLeonDouble(src + 24);
+	lat =((int)lat)*100 +(double)(lat - (int)lat)*60;
+	lon = ((int)lon)*100 +(double)(lon - (int)lon)*60;
+
+	F32 alt_t = ConvertLeonFloat(src + 32);
+	F32 alt = ConvertLeonFloat(src + 36);
+
+	U16 gdop = ConvertLeonU16(src + 40);
+	U16 pdop = ConvertLeonU16(src + 42);
+	U16 hdop = ConvertLeonU16(src + 44);
+	U16 vdop = ConvertLeonU16(src + 46);
+	U16 tdop = ConvertLeonU16(src + 48);
+
+	D64 ecefx = ConvertLeonDouble(src + 50);
+	D64 ecefy = ConvertLeonDouble(src + 58);
+	D64 ecefz = ConvertLeonDouble(src + 66);
+
+	D64 vx = ConvertLeonDouble(src + 74);
+	D64 vy = ConvertLeonDouble(src + 78);
+	D64 vz = ConvertLeonDouble(src + 82);
+
+	F32 rtkAge = (F32)ConvertLeonU16(src + 86) / 10;
+	F32 rtkFix = (F32)ConvertLeonU16(src + 88) / 10;
+	
+	CGPSDlg::gpsDlg->PostMessage(UWM_UPDATE_RTK_INFO, *(WPARAM*)&rtkAge, *(LPARAM*)&rtkFix);
+
+	D64 fv = sqrt(vx * vx + vy * vy + vz * vz);
+
+	char m_buff[512];
+	int msg_len;
+
+	msg_len = sprintf_s(m_buff, "$fix mode=%d", src[4]);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+	msg_len = sprintf_s(m_buff, "$number if sv in fix=%d", src[5]);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+	msg_len = sprintf_s(m_buff, "$GPS Week=%d", wn);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+	msg_len = sprintf_s(m_buff,"$GPS TOW=%.2f", tow);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+
+	msg_len = sprintf_s(m_buff,"$latitude=%.7f", lat);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+
+	msg_len = sprintf_s(m_buff,"$longutide=%.7f",lon);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+
+	msg_len = sprintf_s(m_buff,"$ellipsoid altitude=%.2f", alt_t);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+
+	msg_len = sprintf_s(m_buff,"$sea level altitude=%.2f", alt);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+
+	msg_len = sprintf_s(m_buff,"$gdop=%.2f",(F32)gdop/100);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+	msg_len = sprintf_s(m_buff,"$pdop=%.2f",(F32)pdop/100);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+	msg_len = sprintf_s(m_buff,"$hdop=%.2f",(F32)hdop/100);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+	msg_len = sprintf_s(m_buff,"$tdop=%.2f",(F32)tdop/100);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+
+	msg_len = sprintf_s(m_buff,"$ecef-x=%.2f",(double)ecefx);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+	msg_len = sprintf_s(m_buff,"$ecef-y=%.2f",(double)ecefy);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+	msg_len = sprintf_s(m_buff,"$ecef-z=%.2f",(double)ecefz);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+
+	msg_len = sprintf_s(m_buff,"$ecef-vx=%.2f",vx);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+	msg_len = sprintf_s(m_buff,"$ecef-vy=%.2f",vy);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+
+	msg_len = sprintf_s(m_buff,"$ecef-vz=%.2f",vz);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+
+	msg_len = sprintf_s(m_buff, "$RTK age=%.1f", rtkAge);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+	msg_len = sprintf_s(m_buff, "$RTK ratio=%.1f", rtkFix);
+	if(convertOnly)
+	{
+		*pStr += m_buff;
+		*pStr += "\r\n";
+	}
+	else
+	{
+		add2message(m_buff, msg_len);
+	}
+
+	if(convertOnly)
+	{
+		return;
+	}
+
+	if(src[4]==0)
+	{
+		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '0';
+		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 1;
+		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'V';
+	}
+	else if(src[4] ==1)
+	{
+		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
+		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 2;
+		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
+	}
+	else if(src[4] == 2)
+	{
+		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
+		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
+	}
+	else if(src[4] == 3)
+	{
+		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '2';
+		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
+	}
+	else if(src[4] == 4)
+	{
+		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '5';
+		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'F';
+	}
+	else if(src[4] == 5)
+	{
+		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '4';
+		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'R';
+	}	CGPSDlg::gpsDlg->m_gpggaMsgCopy.NumsOfSatellites = src[5];
+
+	volatile U16 i_sec;
+	i_sec = (U16)(utc.sec * 1000);
+
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Hour = utc.hour;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Min = utc.minute;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Sec = i_sec*0.001f;
+
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Year = utc.year;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Month = utc.month;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Day = utc.day;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Hour = utc.hour;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Min = utc.minute;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Sec = i_sec * 0.001f;
+
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude = lat;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude_N_S = lat >= 0 ? 'N' : 'S';
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude = lon;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude_E_W = lon >= 0 ? 'E' : 'W';
+
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Latitude = lat;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Latitude_N_S = lat >= 0 ? 'N' : 'S';
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Longitude = lon;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Longitude_E_W = lon >= 0 ? 'E' : 'W';
+
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Altitude = alt;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Altitude /= 100.0F;
+
+	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.PDOP = (F32)pdop/100;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.HDOP = (F32)hdop/100;
+	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.VDOP = (F32)vdop/100;
+
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.SpeedKnots = (F32)(fv / 1.852);
+}

@@ -72,7 +72,7 @@ void BinaryChecksumCalDlg::OnEnChangeInput()
 	}
 
 	U08 checkSum = 0;
-	for(int i=0; i<binData.Size() ; ++i)
+	for(int i=0; i<binData.Size(); ++i)
 	{
 		checkSum ^= binData[i];
 	}

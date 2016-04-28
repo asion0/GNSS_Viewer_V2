@@ -6,9 +6,7 @@
 #include "Pic_Scatter.h"
 #include "resource.h"
 
-
 // CSetupDialog 對話方塊
-
 IMPLEMENT_DYNAMIC(CSetupDialog, CDialog)
 
 CSetupDialog::CSetupDialog(CWnd* pParent /*=NULL*/)
@@ -26,28 +24,17 @@ void CSetupDialog::DoDataExchange(CDataExchange* pDX)
 	CDialog::DoDataExchange(pDX);
 }
 
-
 BEGIN_MESSAGE_MAP(CSetupDialog, CDialog)
 	ON_BN_CLICKED(IDOK, &CSetupDialog::OnBnClickedOk)
 	ON_BN_CLICKED(IDC_BROWSE, &CSetupDialog::OnBnClickedBrowse)
 END_MESSAGE_MAP()
 
-
-// CSetupDialog 訊息處理常式
 #define BOOST_BAUDIDX_BASE		5
 void CSetupDialog::OnBnClickedOk()
 {
-	// TODO: 在此加入控制項告知處理常式程式碼
 	CString s;
 	GetDlgItem(IDC_BINSIZE_DELAY)->GetWindowText(s);
-	if(s.IsEmpty())
-	{
-		setting->delayBeforeBinsize = 0;
-	}
-	else
-	{
-		setting->delayBeforeBinsize = atoi(s);
-	}
+	setting->delayBeforeBinsize = (s.IsEmpty()) ? 0 : atoi(s);
 
 	int boostBaudIdx = ((CComboBox*)GetDlgItem(IDC_BOOST_BAUDRATE))->GetCurSel() + BOOST_BAUDIDX_BASE;
 	setting->boostBaudIndex = boostBaudIdx;
@@ -68,14 +55,7 @@ void CSetupDialog::OnBnClickedOk()
 	GetDlgItem(IDC_ALT)->GetWindowText(s);
 	setting->scatterCenterAlt = atof(s);
 	GetDlgItem(IDC_TIMEOUT)->GetWindowText(s);
-	if(s.IsEmpty())
-	{
-		setting->defaultTimeout = DefaultTimeout;
-	}
-	else
-	{
-		setting->defaultTimeout = atoi(s);
-	}
+	setting->defaultTimeout = (s.IsEmpty()) ? DefaultTimeout : atoi(s);
 
 	GetDlgItem(IDC_SCATTER_COUNT)->GetWindowText(s);
 	int tmp = atoi(s);
@@ -143,5 +123,4 @@ BOOL CSetupDialog::OnInitDialog()
 	GetDlgItem(IDC_SCATTER_COUNT)->SetWindowText(s);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }

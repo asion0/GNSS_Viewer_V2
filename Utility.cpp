@@ -766,7 +766,7 @@ int Utility::FindNextNoneSpaceChar(LPCSTR pszInput, bool forward)
 	}
 	index += (forward) ? 0 : 1;
 
-	return index ;
+	return index;
 }	
 
 bool CheckHex(LPCSTR pszInput)
@@ -879,4 +879,47 @@ CString Utility::GetNameAttachPid(LPCSTR name)
 	r.Format("%s%08X", name, pid);
 	//r.Format("%s", name);
 	return r;
+}
+
+void Utility::DoEvents()
+{
+    MSG msg;
+    BOOL result;
+
+    while(::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
+    {
+        result = ::GetMessage(&msg, NULL, 0, 0);
+        if(result == 0) // WM_QUIT
+        {                
+            ::PostQuitMessage(msg.wParam);
+            break;
+        }
+        else if (result == -1)
+        {
+             // Handle errors/exit application, etc.
+        }
+        else 
+        {
+            ::TranslateMessage(&msg);
+            :: DispatchMessage(&msg);
+        }
+    }
+}
+
+void Utility::GetErrorString(CString& msg, DWORD errorCode)
+{
+	LPVOID lpMsgBuf = NULL;
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER |
+		FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		errorCode,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+		(LPTSTR) &lpMsgBuf,
+		0,
+		NULL);
+
+	msg.Format("%s", lpMsgBuf);
+	LocalFree(lpMsgBuf);
 }

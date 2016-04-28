@@ -48,7 +48,8 @@ public:
 	// If once is false, it'll check com port empty again after read data.
 	DWORD ReadData(void* buffer, DWORD bufferSize, bool once = false);
 	DWORD GetString(void* buffer, DWORD bufferSize, DWORD timeOut);
-	DWORD GetBinary(void* buffer, DWORD bufferSize, DWORD timeout = 10000);
+	DWORD GetBinary(void* buffer, DWORD bufferSize, DWORD timeout = 2000);
+	DWORD GetBinaryAck(void* buffer, DWORD bufferSize, DWORD timeout = 2000);
 	DWORD GetBinaryBlock(void* buffer, DWORD bufferSize, DWORD blockSize);
 	DWORD GetBinaryBlockInSize(void* buffer, DWORD bufferSize, DWORD blockSize);
 
@@ -58,7 +59,7 @@ public:
 	static void SaveDebugString(bool backup = false);
 	static void SetDebugModeOn(bool on = true) { debugModeOn = on; };
 	static void SetDebugName(LPCSTR name) { debugName = name; };
-
+	DWORD errorCode;
 protected:
 	static const int debugSize = 4 * 1024 * 1024;
 	static char debugBuffer[debugSize];

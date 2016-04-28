@@ -12,7 +12,7 @@ IMPLEMENT_DYNAMIC(CAgps_config, CDialog)
 CAgps_config::CAgps_config(CWnd* pParent /*=NULL*/)
 	: CDialog(CAgps_config::IDD, pParent)
 {
-	enable = false ;
+	enable = false;
 	attribute = 0;
 }
 

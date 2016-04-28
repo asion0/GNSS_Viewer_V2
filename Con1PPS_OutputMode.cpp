@@ -135,3 +135,4 @@ void CCon1PPS_OutputMode::OnBnClickedRadioPpsAlignToUtc()
 	m_align_to_GPS.SetCheck(0);
 	m_align_to_UTC.SetCheck(1);
 }
+

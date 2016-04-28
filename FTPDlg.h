@@ -56,21 +56,10 @@ private:
 	CStatic m_ftp_title;
 	CString m_ephFileName;
 
-//	CString filepath;
-//	CString sPath;
-//	CString FileName[50];	
-//	void GetAllDatFile();
-//	int num;
-//	int NoOfFile ;
-//	int NumOfFile;
-//	bool pressclose;
-//	bool clickOK;
-//	bool upload_error;
-
-
-
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedErase();
-	afx_msg void OnStnClickedNameT();
+	afx_msg void OnStnClickedHostT();
+	afx_msg void OnStnClickedPwdT();
+	afx_msg void OnEnChangePwd();
 };

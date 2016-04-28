@@ -416,7 +416,7 @@ NMEA::GNSS_System NMEA::GetGNSSSystem(int prn)
 		return GetGNSSSystem3(prn);
 	}
 }
-
+//GL: 65~96; GP: 1~64, 183~188, 193~197; BD: others
 NMEA::GNSS_System NMEA::GetGNSSSystem0(int prn)
 {
 	if(prn==0)
@@ -440,6 +440,7 @@ NMEA::GNSS_System NMEA::GetGNSSSystem0(int prn)
 	return Beidou;
 }
 
+//GL: 201~300; GP: 101~200; BD: 1~100; GA: 301~400
 NMEA::GNSS_System NMEA::GetGNSSSystem1(int prn)
 {
 	if(prn==0)
@@ -465,6 +466,7 @@ NMEA::GNSS_System NMEA::GetGNSSSystem1(int prn)
 	return Beidou;
 }
 
+//GP: 1~85; BD: others
 NMEA::GNSS_System NMEA::GetGNSSSystem2(int prn)
 {
 	if(prn==0)
@@ -482,6 +484,7 @@ NMEA::GNSS_System NMEA::GetGNSSSystem2(int prn)
 	return Beidou;
 }
 
+//GL: 65~96; GP: 1~64, 183~188, 193~197; BD: others
 NMEA::GNSS_System NMEA::GetGNSSSystem3(int prn)
 {
 	if(prn==0)
@@ -533,9 +536,9 @@ int StrHeaderCompare(LPCSTR pt, LPCSTR header, int len)
 
 int NMEA::TrimTail(const char* buffer, int offset)
 {
-	for(int i = offset-1 ; i >0 ; i-- )
+	for(int i = offset - 1; i > 0; --i)
 	{
-		if (buffer[i] == '*' )
+		if (buffer[i]=='*')
 		{
 			offset = i + 3;
 			break;
@@ -610,7 +613,6 @@ NmeaType NMEA::MessageType(LPCSTR pt, int len)
 		else
 			return MSG_ERROR;
 	}
-
 	return returnType;
 }
 

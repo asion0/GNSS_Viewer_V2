@@ -306,103 +306,6 @@ DownloadErrocCode ProcessWlfResult(WlfResult w)
 	return err;
 }
 
-WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)
-{
-	typedef struct _WlfEntry
-	{
-		WlfResult result;
-		const char* string;
-	} WlfEntry;
-
-	WlfEntry feedbackTable[] = {
-		{ wlf_Ready, "READY"},
-		{ wlf_Ready1, "READY1"},
-		{ wlf_Ready2, "READY2"},
-		{ wlf_error41, "Error41"},
-		{ wlf_error42, "Error42"},
-		{ wlf_error43, "Error43"},
-		//^^^^^^^^^for Loader debug
-		{ wlf_error5, "Error5"},
-		{ wlf_error4, "Error4"},
-		{ wlf_error3, "Error3"},
-		{ wlf_error2, "Error2"},
-		{ wlf_error1, "Error1"},
-		{ wlf_resendbin, "Resendbin"},
-		{ wlf_reset, "Reset"},
-		{ wlf_resend, "Resend"},
-		{ wlf_end, "END"},
-		{ wlf_ok, "OK"},
-		{ wlf_None, "WAIT"},
-		{ wlf_None, ""},
-	};
-
-	WlfResult nReturn = wlf_ok;
-	//clock_t start = 0;
-	//clock_t timeDuration = 0;
-
-	//const int bufferSize = 256;
-	//char buff[bufferSize] = {0};
-	//char messages[100] = {0};
-	CString strAckCmd;
-	ScopeTimer t;
-	//start = clock();
-	while(1)
-	{
-		if(t.GetDuration() > (DWORD)TimeoutLimit && msgWnd != NULL)
-		{	//Time Out
-			msgWnd->PostMessage(UWM_SETTIMEOUT, t.GetDuration(), 0);
-		}
-
-		if(t.GetDuration() > (DWORD)TimeoutLimit)
-		{
-			nReturn = wlf_timeout;
-			break;
-		}
-
-		strAckCmd.Empty();
-		DWORD len = serial->GetString(strAckCmd.GetBuffer(1024), 1024, TimeoutLimit - t.GetDuration());
-		strAckCmd.ReleaseBuffer();
-
-		if(!ReadOK(len))
-		{	
-			continue;
-		}
-
-		if(len != 0)
-		{
-			nReturn = wlf_None;
-			int tableSize = sizeof(feedbackTable) / sizeof(feedbackTable[0]);
-			//while(buff[0] && tableSize--)
-			while(tableSize--)
-			{
-				//if(0==strcmp(buff, feedbackTable[tableSize].string)) 
-				if(0==strAckCmd.Compare(feedbackTable[tableSize].string)) 
-				{
-					nReturn = feedbackTable[tableSize].result;
-					break;
-				}
-			}
-
-			if(wlf_None != nReturn)
-			{
-				break;
-			}
-		}
-		else
-		{
-			Sleep(20);
-		}
-	}
-
-	if(nReturn > wlf_timeout)
-	{
-		AfxMessageBox("Unknow Error!");
-		Utility::Log(__FUNCTION__, "return", (int)nReturn);
-	}
-	Utility::Log(__FUNCTION__, "return", (int)nReturn);
-	return nReturn;
-}
-
 bool CGPSDlg::FirmwareUpdate(const CString& strFwPath)
 {
 	bool isSuccessful = false;
@@ -678,7 +581,9 @@ int CGPSDlg::SendRomBufferCustomerUpgrade(const U08* sData, int sDataSize, Binar
 }
 
 
-int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, FILE *f, 
+//int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, FILE *f, 
+//							int fbinSize, bool needSleep, CWnd* notifyWnd)
+int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, BinaryData &binData, 
 							int fbinSize, bool needSleep, CWnd* notifyWnd)
 {
 	int nFlashBytes = FlashBytes[m_nDownloadBufferIdx];
@@ -788,11 +693,11 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, FILE *f,
 			TotalByte += sentbytes;	
 
 			memset(buff, 0, buffSize);
-			int realRead = fread(&buff[headerSize], 1, sentbytes, f);
+			int realRead = binData.Read(&buff[headerSize], sentbytes);
 			if(realRead<sentbytes)
 			{
-				fseek(f, 0, SEEK_SET);
-				realRead = fread(&buff[realRead + headerSize], 1, sentbytes - realRead, f);
+				binData.Seek(0);
+				realRead = (int)binData.Read(&buff[realRead + headerSize], sentbytes - realRead);
 			}
 			int checkSum = CalcCheckSum16(&(buff[headerSize]), sentbytes);
 			//Fill packet
@@ -875,24 +780,51 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, FILE *f,
 	return RETURN_NO_ERROR;		
 }
 
+U08 GetPromBinCheckSum(CFile& f, int size)
+{
+	U08 c, cs = 0;
+	for(int i=0; i<size; ++i)
+	{
+		f.Read(&c, 1);
+		cs += c;
+	}
+	return cs;
+}
+
+U08 GetPromBinCheckSum(BinaryData& b, int size)
+{
+	U08 c, cs = 0;
+	for(int i=0; i<size; ++i)
+	{
+		b.Read(&c, 1);
+		cs += c;
+	}
+	return cs;
+}
+
 U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 {
+	
 	Param promTag;
 	int extraSize = ParserBinFile(prom_path, &promTag);
-
-
 	char messages[100] = {0};
 
-	FILE *f = NULL;
+	BinaryData binFile(prom_path);
+	//CFile f;
+	//FILE *f = NULL;
 
-	if(0 != fopen_s(&f, prom_path, "rb"))
+	if(binFile.Size() == 0)
+	//if(0 == f.Open(prom_path, CFile::modeRead))
+	//if(0 != fopen_s(&f, prom_path, "rb"))
 	{
 		return RETURN_ERROR;
 	}
 
-	fseek(f, 0, SEEK_END);
+	binFile.Seek(0);
+	//fseek(f, 0, SEEK_END);
 
-	long promLen = ftell(f) - extraSize;
+	DWORD promLen = (DWORD)binFile.Size() - extraSize;
+	//long promLen = ftell(f) - extraSize;
 	if(promTag.tagAddress==0)
 	{
 		promTag.tagAddress = (promLen>=0x70000) ? 0x000f7ffc : 0x00077ffc;
@@ -911,26 +843,29 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 	}
 
 	const U08* sData = preLoader.Ptr();
-	U08 mycheck = 0;
-	for(int i=0; i<preLoader.Size(); ++i)
-	{
-		mycheck += sData[i];
-	}
+	U08 mycheck = GetPromBinCheckSum(binFile, preLoader.Size());
+	//U08 mycheck = 0;
+	//for(int i=0; i<preLoader.Size(); ++i)
+	//{
+	//	mycheck += sData[i];
+	//}
 
-	fseek(f, BOOTLOADER_SIZE, SEEK_SET);
-	char c;
-	for(int i=0; i<promLen-BOOTLOADER_SIZE; ++i)
-	{
-		fread(&c, 1, 1, f);
-		mycheck = mycheck + c;
-	}
+	binFile.Seek(BOOTLOADER_SIZE);
+	mycheck += GetPromBinCheckSum(binFile, promLen-BOOTLOADER_SIZE);
+	//fseek(f, BOOTLOADER_SIZE, SEEK_SET);
+	//char c;
+	//for(int i=0; i<promLen-BOOTLOADER_SIZE; ++i)
+	//{
+	//	fread(&c, 1, 1, f);
+	//	mycheck = mycheck + c;
+	//}
 
 	bool bResendbin = true;
 	while(bResendbin)
 	{
 		unsigned long long check = promLen + mycheck + promTag.tagAddress;
 		sprintf_s(messages, sizeof(messages), "BINSIZE = %d Checksum = %d %lld %lld ", promLen, mycheck, promTag.tagAddress, check);
-		m_serial->SendData((U08*)messages, (U16)strlen(messages)+1);	
+		m_serial->SendData((U08*)messages, (U16)strlen(messages) + 1);	
 		Utility::Log(__FUNCTION__, messages, __LINE__);
 
 		WlfResult wlf = WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, BinSizeTimeout, &m_responseList);
@@ -946,7 +881,8 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 		default:
 			ProcessWlfResult(wlf);
 			Utility::LogFatal(__FUNCTION__, messages, __LINE__);
-			fclose(f);
+			//f.Close();
+			//fclose(f);
 			return RETURN_ERROR;		        
 			break;
 		}	//switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, TIME_OUT_MS, &m_responseList))	
@@ -960,20 +896,24 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 	int retryCount = 3;
 	do
 	{
-		fseek(f, BOOTLOADER_SIZE, SEEK_SET);
-		result = SendRomBuffer3(sData, bootLoaderSize, f, promLen, false, m_psoftImgDlDlg);
+		binFile.Seek(BOOTLOADER_SIZE);
+		result = SendRomBuffer3(sData, bootLoaderSize, binFile, promLen, false, m_psoftImgDlDlg);
+		//fseek(f, BOOTLOADER_SIZE, SEEK_SET);
+		//result = SendRomBuffer3(sData, bootLoaderSize, f, promLen, false, m_psoftImgDlDlg);
 	} while(result == RETURN_RETRY && (retryCount--) > 0);
 
 //---------------------------------------------------------------
-	mycheck = 0;
+	//mycheck = 0;
 	promLen = BOOTLOADER_SIZE;
 
-	fseek(f, 0, SEEK_SET);
-	for(int i=0; i<BOOTLOADER_SIZE; ++i)
-	{
-		fread(&c, 1, 1, f);
-		mycheck = mycheck + c;
-	}
+	binFile.Seek(0);
+	mycheck = GetPromBinCheckSum(binFile, BOOTLOADER_SIZE);
+	//fseek(f, 0, SEEK_SET);
+	//for(int i=0; i<BOOTLOADER_SIZE; ++i)
+	//{
+	//	fread(&c, 1, 1, f);
+	//	mycheck = mycheck + c;
+	//}
 
 	bResendbin = true;
 	while(bResendbin)
@@ -996,7 +936,8 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 		default:
 			ProcessWlfResult(wlf);
 			Utility::LogFatal(__FUNCTION__, messages, __LINE__);
-			fclose(f);
+			//f.Close();
+			//fclose(f);
 			return RETURN_ERROR;		        
 			break;
 		}	//switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, TIME_OUT_MS, &m_responseList))	
@@ -1010,20 +951,15 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 	retryCount = 3;
 	do
 	{
-		fseek(f, 0, SEEK_SET);
-		result = SendRomBuffer3(NULL, bootLoaderSize, f, promLen, false, m_psoftImgDlDlg);
+		binFile.Seek(0);
+		//fseek(f, 0, SEEK_SET);
+		result = SendRomBuffer3(NULL, bootLoaderSize, binFile, promLen, false, m_psoftImgDlDlg);
 	} while(result == RETURN_RETRY && (retryCount--) > 0);
-
-
-//---------------------------------------------------------------
-	fclose(f);
+	//f.Close();
+	//fclose(f);
 	BoostBaudrate(TRUE);
-
-// Alex wait
 	m_psoftImgDlDlg->PostMessage(UWM_SETPROMPT_MSG, IDS_ROMWRITINGOK_MSG);
-//	m_psoftImgDlDlg->m_msg.SetWindowText("Rom Writing is OK!");	
 
-	//free(prom_buff);
 	return RETURN_NO_ERROR;		
 }
 
@@ -1033,34 +969,28 @@ U08 CGPSDlg::PlRomNoAllocV8(const CString& prom_path)
 	int extraSize = ParserBinFile(prom_path, &promTag);
 	char messages[100] = {0};
 
-	FILE *f = NULL;
-
-	if(0 != fopen_s(&f, prom_path, "rb"))
+	//CFile f;
+	BinaryData binFile(prom_path);
+	//if(0 == f.Open(prom_path, CFile::modeRead))
+	if(binFile.Size() == 0)
 	{
 		::AfxMessageBox("PROM bin file not found!");
 		return RETURN_ERROR;
 	}
 
-	fseek(f, 0, SEEK_END);
-	long promLen = ftell(f) - extraSize;
-	//if(promTag.tagAddress==0)
-	//{
-	//	promTag.tagAddress = (promLen>=0x70000) ? 0x000f7ffc : 0x00077ffc;
-	//}
+	//DWORD promLen = (DWORD)f.GetLength();
+	DWORD promLen = (DWORD)binFile.Size();
 
-	fseek(f, 0, SEEK_SET);
-	U08 c;
-	U08 mycheck = 0;
-	for(int i=0; i<promLen; ++i)
-	{
-		fread(&c, 1, 1, f);
-		mycheck = mycheck + (c & 0xff);
-	}
+	//f.SeekToBegin();
+	binFile.Seek(0);
+	//U08 mycheck = GetPromBinCheckSum(f, promLen);
+	U08 mycheck = GetPromBinCheckSum(binFile, promLen);
+
 #ifdef TEST_SREC
-	::AfxMessageBox("Test01");
+	::AfxMessageBox("Press OK to start download.");
 #endif
-	//舊版FW在Loader上傳完畢後會丟出END，但是新版改由Loader自己丟。所以使用舊版FW搭配新版LOADER，
-	//會收到兩次END
+	//Old FW will return "END" itself after loader upload, but new FW will return "END" via loader. 
+	//Therefore, using the old FW with the new loader, it will receive "END" twice.
 	bool bResendbin = true;
 	while(bResendbin)
 	{
@@ -1069,10 +999,15 @@ U08 CGPSDlg::PlRomNoAllocV8(const CString& prom_path)
 		if(m_DownloadMode == InternalLoaderV8AddTag)
 		{
 			U32 tagAddress = 0xAAA56556;	//V8 tag address is 0xFCFFC ^ 0xAAAAAAAA
-			U32 tagValue = 0x55555F54;	//Skytraq tag is 0x0A01 ^ 0x55555555
+			U32 tagValue = 0x5555AAAA;	//default tag is 0xFFFF ^ 0x55555555 (No Tag)
+			//U32 tagValue = 0x55555A54;	//Skytraq DR tag is 0x0F01 ^ 0x55555555
 			if(m_customerId==OlinkStar)
 			{
 				tagValue = 0x55555E54;	//OLinkStar tag is 0x0B01 ^ 0x55555555
+			}
+			else
+			{
+				tagValue = 0x55555F54;	//Skytraq tag is 0x0A01 ^ 0x55555555
 			}
 			checkCode = promLen + mycheck + m_nDownloadBaudIdx + tagAddress + tagValue;
 			strBinsizeCmd.Format("BINSIZ2 = %d %d %u %u %u %u ", promLen, mycheck, m_nDownloadBaudIdx,
@@ -1109,29 +1044,28 @@ U08 CGPSDlg::PlRomNoAllocV8(const CString& prom_path)
 			default:
 				ProcessWlfResult(wlf);
 				Utility::LogFatal(__FUNCTION__, messages, __LINE__);
-				fclose(f);
+				//f.Close();
+				//fclose(f);
 				return RETURN_ERROR;		        
 				break;
 			}	//switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, TIME_OUT_MS, &m_responseList))	
 		} while(isEnd);
 	}	//while(bResendbin)
-// Alex wait
 	downloadTotalSize = promLen;
 	downloadProgress = 0;
 	m_psoftImgDlDlg->PostMessage(UWM_SETPROMPT_MSG, IDS_WAITROM_MSG);
-//	sprintf_s(messages, sizeof(messages), "Waiting for Rom Writing...");
-//	m_psoftImgDlDlg->m_msg.SetWindowText(messages);	
 	
-	Sleep(500);	//for GPSDO
 	int result = RETURN_NO_ERROR;
 	int retryCount = 1;
 	do
 	{
-		fseek(f, 0, SEEK_SET);
-		result = SendRomBuffer3(NULL, 0, f, promLen, false, m_psoftImgDlDlg);
+		//f.SeekToBegin();
+		binFile.Seek(0);
+		Sleep(500);	//for GPSDO
+		result = SendRomBuffer3(NULL, 0, binFile, promLen, false, m_psoftImgDlDlg);
 	} while(result == RETURN_RETRY && (retryCount--) > 0);
 
-	fclose(f);
+	//f.Close();
 	m_psoftImgDlDlg->PostMessage(UWM_SETPROMPT_MSG, IDS_ROMWRITINGOK_MSG);
 	return result;		
 }
@@ -1149,8 +1083,8 @@ U08 CGPSDlg::PlRomCustomerUpgrade(UINT rid)
 		mycheck = mycheck + (c & 0xff);
 	}
 
-	//舊版FW在Loader上傳完畢後會丟出END，但是新版改由Loader自己丟。所以使用舊版FW搭配新版LOADER，
-	//會收到兩次END
+	//Old FW will return "END" itself after loader upload, but new FW will return "END" via loader. 
+	//Therefore, using the old FW with the new loader, it will receive "END" twice.
 	bool bResendbin = true;
 	while(bResendbin)
 	{
@@ -1205,12 +1139,12 @@ U08 CGPSDlg::PlRomCustomerUpgrade(UINT rid)
 	downloadProgress = 0;
 	m_psoftImgDlDlg->PostMessage(UWM_SETPROMPT_MSG, IDS_WAITROM_MSG);
 	
-	Sleep(500);	//for GPSDO
 	int result = RETURN_NO_ERROR;
 	int retryCount = 1;
 	do
 	{
 		//fseek(f, 0, SEEK_SET);
+		Sleep(500);	//for GPSDO
 		result = SendRomBufferCustomerUpgrade(NULL, 0, prom, promLen, false, m_psoftImgDlDlg);
 	} while(result == RETURN_RETRY && (retryCount--) > 0);
 
@@ -1641,6 +1575,7 @@ bool CGPSDlg::Download()
 			return false;
 		} 
 
+		if(NULL == m_serial) return false;
 		if(isSuccessful)
 		{
 			if(NULL==m_psoftImgDlDlg)
@@ -1662,8 +1597,8 @@ bool CGPSDlg::Download()
 				add_msgtolist(strMsg);
 				DeleteNmeaMemery();
 				m_firstDataIn = false;
-				m_inputMode = NMEA_Mode;	
-				SetMsgType(NMEA_Mode);
+				m_inputMode = NmeaMessageMode;	
+				SetMsgType(NmeaMessageMode);
 			}
 			else
 			{
@@ -1682,6 +1617,7 @@ bool CGPSDlg::Download()
 			m_psoftImgDlDlg->SetFinish(true);	
 		}
 
+		if(NULL == m_serial) return false;
 		BoostBaudrate(TRUE);
 		if(g_setting.downloadTesting)
 		{
@@ -1837,8 +1773,8 @@ bool CGPSDlg::Download2()
 	add_msgtolist(strMsg);
 	DeleteNmeaMemery();
 	m_firstDataIn = false;
-	m_inputMode = NMEA_Mode;	
-	SetMsgType(NMEA_Mode);
+	m_inputMode = NmeaMessageMode;	
+	SetMsgType(NmeaMessageMode);
 
 	if(m_psoftImgDlDlg)
 	{

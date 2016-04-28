@@ -13,7 +13,7 @@ IMPLEMENT_DYNAMIC(CConAntennaDetection, CDialog)
 CConAntennaDetection::CConAntennaDetection(CWnd* pParent /*=NULL*/)
 	: CDialog(CConAntennaDetection::IDD, pParent)
 {
-	attr = 0 ;
+	attr = 0;
 	antenna_control = 0;
 }
 
