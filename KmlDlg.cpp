@@ -137,7 +137,6 @@ BOOL CKmlDlg::OnInitDialog()
 	m_color.SetCurSel(0);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 UINT ConvertToKml(LPVOID pParam)
 {	
@@ -639,13 +638,28 @@ double GetLat(D64 latitude, char ns)
 
 bool CKmlDlg::WriteToFile(U08 type)
 {	
+	static U16 last_hh = 0;
+	static U16 last_mm = 0;
+	static F32 last_ss = -1;
+
 	if(ut == Unknown)
 	{
 		if(IsFixed(msg_gpgga.GPSQualityIndicator))
 			ut = UsingGGA;
 		if(IsFixed(msg_gprmc.Status))
 			ut = UsingRMC;
-	}		
+	}
+	if(IsFixed(msg_gprmc.Status))
+		ut = UsingRMC;
+
+	if(ut == UsingGGA && last_hh == msg_gpgga.Hour && last_mm == msg_gpgga.Min && last_ss == msg_gpgga.Sec)
+	{
+		return false;
+	}
+	if(ut == UsingRMC && last_hh == msg_gprmc.Hour && last_mm == msg_gprmc.Min && last_ss == msg_gprmc.Sec)
+	{
+		return false;
+	}
 
 	if(ut == UsingGGA && (type==MSG_GGA || type==MSG_GNS) && IsFixed(msg_gpgga.GPSQualityIndicator))
 	{
@@ -653,6 +667,9 @@ bool CKmlDlg::WriteToFile(U08 type)
 		timeStr.Format("%02d:%02d:%05.2f", msg_gpgga.Hour, msg_gpgga.Min, msg_gpgga.Sec);
 		kml.PushOnePoint(GetLon(msg_gpgga.Longitude, msg_gpgga.Longitude_E_W), 
 			GetLat(msg_gpgga.Latitude, msg_gpgga.Latitude_N_S), msg_gpgga.Altitude, timeStr, GetGnssQualityMode(msg_gpgga.GPSQualityIndicator));
+		last_hh = msg_gpgga.Hour;
+		last_mm = msg_gpgga.Min;
+		last_ss = msg_gpgga.Sec;
 		return true;
 	}
 	else if (ut == UsingRMC && type==MSG_RMC && msg_gprmc.Status == 'A')
@@ -661,6 +678,9 @@ bool CKmlDlg::WriteToFile(U08 type)
 		timeStr.Format("%02d:%02d:%05.2f", msg_gprmc.Hour, msg_gprmc.Min, msg_gprmc.Sec);
 		kml.PushOnePoint(GetLon(msg_gprmc.Longitude, msg_gprmc.Longitude_E_W), 
 			GetLat(msg_gprmc.Latitude, msg_gprmc.Latitude_N_S), msg_gpgga.Altitude, timeStr, GetGnssQualityMode(msg_gprmc.ModeIndicator));
+		last_hh = msg_gprmc.Hour;
+		last_mm = msg_gprmc.Min;
+		last_ss = msg_gprmc.Sec;
 		return true;
 	}
 	return false;

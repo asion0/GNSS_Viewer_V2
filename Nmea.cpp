@@ -19,9 +19,9 @@ int NMEA::LSB(char lsb)
 	{
 		return (lsb - 'A' + 0xA);
 	}
-	else
+	else if(lsb>='a' && lsb<='f')
 	{
-//		ASSERT(FALSE);
+		return (lsb - 'a' + 0xA);
 	}
 	return 0;
 }

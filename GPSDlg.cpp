@@ -7,7 +7,6 @@
 #include "LogFilterDlg.h"
 #include "KmlDlg.h"
 #include "log2nmea.h"
-//#include "PositionFinderDlg.h"
 #include "skytraqkml.h"
 #include "ConPinningParameter.h"
 #include "ConMultiMode.h"
@@ -21,16 +20,13 @@
 #include "Proprietary_nmea.h"
 #include "Device_Adding.h"
 #include "geoid.h"
-//#include "ConGNSSSelectionforNAV.h"
 #include "ConNMEAComport.h"
 #include "Con_NMEA_TalkerID.h"
-//#include "GetGNSSEphemeris.h"
 #include "SetGNSSEphemeris.h"
 #include "GetTimeCorrection.h"
 #include "SetTimeCorrections.h"
 #include "WaitAckDlg.h"
 #include "CompressDlg.h"
-
 #include "SoftImDwDlg.h"
 #include "ConPosPinning.h"
 #include "BinaryMSG.h"
@@ -47,7 +43,6 @@
 #include "FirmwareDownloadDlg.h"
 #include "ParallelDownloadDlg.h"
 #include "ExternalSrecDlg.h"
-
 #include "Con1PPS_OutputMode.h"
 #include "NmeaChecksumCalDlg.h"
 #include "BinaryChecksumCalDlg.h"
@@ -126,7 +121,7 @@ void U32toBuff(U08 *buf,U32 v)
 
 void CGPSDlg::DeleteNmeaMemery()
 {
-	memset(&m_gpgllMsg, 0 ,sizeof(GPGLL));
+	memset(&m_gpgllMsg, 0, sizeof(GPGLL));
 	memset(&m_gpgllMsgCopy1, 0, sizeof(GPGLL));
 	memset(&m_gpgllMsgCopy, 0, sizeof(GPGLL));
 
@@ -2124,14 +2119,17 @@ void CGPSDlg::Terminate(void)
 {
 	SwitchToConnectedStatus(FALSE);
 
-	m_serial->CancelTransmission();
-	Sleep(100);
+	if(m_serial!=NULL)
+	{
+		m_serial->CancelTransmission();
+		Sleep(100);
 
-	TerminateGPSThread();
-	m_serial->Close();
+		TerminateGPSThread();
+		m_serial->Close();
 
-	delete m_serial;
-	m_serial = NULL;
+		delete m_serial;
+		m_serial = NULL;
+	}
 	m_isPressCloseButton = true;
 
 	SetInputMode(NoOutputMode);
@@ -6749,22 +6747,6 @@ void CGPSDlg::On1ppstimingQueryppsoutputmode()
 	}
 }
 
-U08 CGPSDlg::parse_psti_others(const char *buff, int psti_id)
-{
-	const char *ptr = buff;
-	U08 retVal=TRUE;
-	char comma[100];
-	U08 comma_number;
-	comma_number=comma_count(ptr, comma);
-	switch (psti_id)
-	{
-	case 0x3: //interference flag
-		break;
-	}
-
-	return retVal;
-}
-
 void CGPSDlg::BoostBaudrate(BOOL bRestore, BoostMode mode, bool isForce)
 {
 	if(bRestore)
@@ -7698,4 +7680,15 @@ LRESULT CGPSDlg::OnUpdateRtkInfo(WPARAM wParam, LPARAM lParam)
 	m_rtkRatio.SetWindowText(temp);
 
 	return 0;
+}
+
+void CGPSDlg::ShowFormatError(U08* cmd, U08* ack)
+{
+	CString txt;
+	if(cmd[4]==0x6A && cmd[5]==0x06)
+	{
+		int cmdLen = ConvertLeonU16(ack + 7);
+		txt.Format("Format Error! Viewer/FW Length: %d/%d", ConvertLeonU16(cmd + 2), cmdLen);
+		add_msgtolist(txt);	
+	}
 }

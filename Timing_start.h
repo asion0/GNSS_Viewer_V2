@@ -14,6 +14,7 @@ enum
 {
 	CMD_ACK = 0x01,
 	CMD_NACK = 0x02,
+	CMD_FORMAT_ERROR = 0x03,
 	CMD_TIMEOUT = 0x09,
 
 };

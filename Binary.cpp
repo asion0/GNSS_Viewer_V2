@@ -295,18 +295,18 @@ bool CGPSDlg::SaveEphemeris2(U08* buff, WORD id)
 	return false;
 }
 
-U08  CGPSDlg::IsSuccessful(U08* buff, int tail, bool show_msg)
+CGPSDlg::CmdErrorCode CGPSDlg::IsSuccessful(U08* buff, int tail, bool show_msg)
 {	
 	if(buff[0]==0xa0 && buff[1]==0xa1 &&
 		buff[tail-1]==0x0d && buff[tail]==0x0a && buff[4]==0x83 && buff[5]==0x0)
 	{		
-		return 0;
+		return Ack0;
 	}
 	if((buff[0]==0xa0) && (buff[1]==0xa1) &&
 		(buff[tail-1]==0x0d)&&(buff[tail]==0x0a) && (buff[4]==0x83))
 	{
 		_cprintf("Received ACK...\n");			
-		return 1;
+		return Ack;
 	}
 	else if((buff[0]==0xa0) && (buff[1]==0xa1) &&
 		(buff[tail-1]==0x0d)&&(buff[tail]==0x0a) && (buff[4]==0x84))
@@ -316,9 +316,14 @@ U08  CGPSDlg::IsSuccessful(U08* buff, int tail, bool show_msg)
 		{
 			add_msgtolist("Received NACK...");
 		}
-		return 2;
+		return NACK;
 	}
-	return 0;
+	else if((buff[0]==0xa0) && (buff[1]==0xa1) &&
+		(buff[tail-1]==0x0d)&&(buff[tail]==0x0a) && (buff[4]==0x85))
+	{
+		return FormatError;
+	}
+	return Ack0;
 }
 
 bool CGPSDlg::SendToTarget(U08* message, U16 length, const char* Msg, bool quick)
@@ -344,8 +349,8 @@ bool CGPSDlg::SendToTarget(U08* message, U16 length, const char* Msg, bool quick
 		U08 len = buff[2] <<8 | buff[3];
 		int k1 = len + 5;
 		int k2 = len + 6;		
-		U08 ack = IsSuccessful(buff, k2, (Msg!=NULL));	
-		if(ack == 1)
+		CmdErrorCode ack = IsSuccessful(buff, k2, (Msg!=NULL));	
+		if(ack == Ack)
 		{
 			if(m_bShowBinaryCmdData)
 			{
@@ -358,8 +363,17 @@ bool CGPSDlg::SendToTarget(U08* message, U16 length, const char* Msg, bool quick
 			}
 			return true;
 		}
-		else if(ack == 2)
+		else if(ack == NACK)
 		{
+			return false;
+		}
+		else if(ack == FormatError)
+		{
+			if(m_bShowBinaryCmdData)
+			{
+				add_msgtolist("FormatError: " + theApp.GetHexString(buff, buff[2] <<8 | buff[3] + 7));	
+			}
+			ShowFormatError(message, buff);
 			return false;
 		}
 
@@ -407,8 +421,8 @@ bool CGPSDlg::SendToTargetNoWait(U08* message, U16 length, LPCSTR Msg)
 		U08 len = buff[2] << 8 | buff[3];
 		int k1 = len + 5;
 		int k2 = len + 6;		
-		U08 ack = IsSuccessful(buff, k2);		
-		if(ack == 1)
+		CmdErrorCode ack = IsSuccessful(buff, k2);		
+		if(ack == Ack)
 		{
 			if(m_bShowBinaryCmdData)
 			{
@@ -421,7 +435,7 @@ bool CGPSDlg::SendToTargetNoWait(U08* message, U16 length, LPCSTR Msg)
 			}
 			return true;
 		}
-		else if(ack == 2)
+		else if(ack == NACK)
 		{
 			return false;
 		}
@@ -448,7 +462,7 @@ bool CGPSDlg::CheckGPS(U08* message, U16 length, char* Msg)
 		U08 len = buff[2] << 8 | buff[3];
 		int k1 = len + 5;
 		int k2 = len + 6;			
-		if(IsSuccessful(buff, k2))
+		if(IsSuccessful(buff, k2) > Ack0)
 		{
 			if(Msg[0] != 0)
 			{
@@ -462,10 +476,6 @@ bool CGPSDlg::CheckGPS(U08* message, U16 length, char* Msg)
 			return false;
 		}
 	}
-}
-
-void CGPSDlg::CancelRead()
-{
 }
 
 UINT LogReadBatchControlThread(LPVOID pParam)
@@ -669,12 +679,12 @@ bool CGPSDlg::DatalogReadAll(int startId, int offset, U08 *datalog, long size, l
 	} //while(1)
 	return false;
 }
-
+/*
 BOOL CGPSDlg::OpenDataLogFile(UINT nOpenFlags)
 {
 	return dataLogFile.Open(datalogFilename, nOpenFlags);
 }
-
+*/
 void CGPSDlg::LogReadBatchControl()
 {
 	if(!dataLogFile.Open(datalogFilename, CFile::modeReadWrite | CFile::modeCreate))
@@ -2145,7 +2155,7 @@ void CGPSDlg::OnClockOffsetPredictOld()
 	CreateGPSThread();
 }
 
-CGPSDlg::CmdErrorCode CGPSDlg::GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U08 cAckSub, DWORD timeOut, bool silent, bool noWaitAck)
+CGPSDlg::CmdErrorCode CGPSDlg::GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U08 cAckSub, DWORD timeOut, bool silent, bool noWaitAck, int cmdSize, int cmdLen)
 {
 	ScopeTimer t;
 	bool alreadyAck = noWaitAck;
@@ -2184,6 +2194,21 @@ CGPSDlg::CmdErrorCode CGPSDlg::GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U
 			}
 			add_msgtolist("Received NACK...");
 			return NACK;
+		}
+		if((*ackCmd)[4] == 0x85)
+		{	//NACK
+			if(m_bShowBinaryCmdData)
+			{
+				add_msgtolist("FormatError: " + theApp.GetHexString(ackCmd->Ptr(), len));	
+			}
+
+			if(cmdSize > 0 && cmdLen > 0)
+			{
+				CString txt;
+				txt.Format("Format Error! Viewer / FW Length: %d/%d", ConvertLeonU16(ackCmd->Ptr(5 + cmdSize)), cmdLen);
+				add_msgtolist(txt);
+			}
+			continue;
 		}
 		if( (*ackCmd)[4] == 0x83)
 		{	//Get ACK
@@ -2273,7 +2298,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPositionRate(CmdExeMode nMode, void* outputD
 	cmd.SetU08(1, cmdTable[QueryPositionRateCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryPositionRateCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryPositionRateCmd, &cmd, &ackCmd))
 	{
 		if(nMode==Return)
 		{
@@ -2546,7 +2571,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryDatum(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(1, cmdTable[QueryDatumCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryDatumCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryDatumCmd, &cmd, &ackCmd))
 	{
 		U16 datumIdx = MAKEWORD(ackCmd[6], ackCmd[5]);
 		CString strMsg = "Query Datum Successful...";
@@ -2561,28 +2586,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryDatum(CmdExeMode nMode, void* outputData)
 	}
 	return Timeout;
 }
-/*
-CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareVersionRomCode(CmdExeMode nMode, void* outputData)
-{
-	BinaryCommand cmd(cmdTable[QuerySwVerRomCmd].cmdSize);
-	cmd.SetU08(1, cmdTable[QuerySwVerRomCmd].cmdId);
-	cmd.SetU08(2, cmdTable[QuerySwVerRomCmd].cmdSubId);
 
-	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QuerySwVerRomCmd, &cmd, &ackCmd))
-	{
-		CString strMsg = "Query Version Successful...";
-		add_msgtolist(strMsg);
-		strMsg.Format("%s%d.%d.%d", "Kernel Version ", ackCmd[7], ackCmd[8], ackCmd[9]);
-		add_msgtolist(strMsg);
-		strMsg.Format("%s%d.%d.%d", "Software Version ", ackCmd[11], ackCmd[12], ackCmd[13]);
-		add_msgtolist(strMsg);
-		strMsg.Format("%s%d.%d.%d", "Revision ", ackCmd[15] + 2000, ackCmd[16], ackCmd[17]);
-		add_msgtolist(strMsg);
-	}
-	return Timeout;
-}
-*/
 CGPSDlg::CmdErrorCode CGPSDlg::QuerySha1String(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QuerySha1StringCmd].cmdSize);
@@ -2595,7 +2599,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySha1String(CmdExeMode nMode, void* outputDat
 		return Timeout;
 	}
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QuerySha1StringCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QuerySha1StringCmd, &cmd, &ackCmd))
 	{
 		CString strMsg, strSha;
 		const int Sha1Length = 32;
@@ -2621,7 +2625,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryConstellationCapability(CmdExeMode nMode, vo
 		return Timeout;
 	}
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryConstellationCapabilityCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryConstellationCapabilityCmd, &cmd, &ackCmd))
 	{
 		CString strMsg;
 		U16 mode = MAKEWORD(ackCmd[7], ackCmd[6]);
@@ -2688,7 +2692,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryVersionExtension(CmdExeMode nMode, void* out
 		return Timeout;
 	}
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryVersionExtensionCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryVersionExtensionCmd, &cmd, &ackCmd))
 	{
 		CString strMsg, strSha;
 		const int Sha1Length = 32;
@@ -2721,7 +2725,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareVersionSystemCode(CmdExeMode nMode, 
 		return Timeout;
 	}
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QuerySwVerSysCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QuerySwVerSysCmd, &cmd, &ackCmd))
 	{
 		CString strExt;
 		if(Ack==QueryVersionExtension(Return, &strExt))
@@ -2750,7 +2754,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareCrcRomCode(CmdExeMode nMode, void* o
 	cmd.SetU08(2, cmdTable[QuerySwCrcRomCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QuerySwCrcRomCmd, &cmd, &ackCmd, 5000))
+	if(Ack == ExcuteBinaryCommand(QuerySwCrcRomCmd, &cmd, &ackCmd, 5000))
 	{
 		CString strMsg = "Query CRC Successful...";
 		add_msgtolist(strMsg);
@@ -2767,7 +2771,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareCrcSystemCode(CmdExeMode nMode, void
 	cmd.SetU08(2, cmdTable[QuerySwCrcSysCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QuerySwCrcSysCmd, &cmd, &ackCmd, m_nDefaultTimeout))
+	if(Ack == ExcuteBinaryCommand(QuerySwCrcSysCmd, &cmd, &ackCmd, m_nDefaultTimeout))
 	{
 		if(nMode==Return)
 		{
@@ -2790,7 +2794,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryWaasStatus(CmdExeMode nMode, void* outputDat
 	cmd.SetU08(2, cmdTable[QueryWaasStatusCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryWaasStatusCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryWaasStatusCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Waas Status Successful...";
 		add_msgtolist(strMsg);
@@ -2806,7 +2810,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPositionPinning(CmdExeMode nMode, void* outp
 	cmd.SetU08(1, cmdTable[QueryPositionPinningCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryPositionPinningCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryPositionPinningCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Position Pinning Successful...";
 		add_msgtolist(strMsg);
@@ -2844,7 +2848,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::Query1ppsMode(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(1, cmdTable[Query1ppsModeCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(Query1ppsModeCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(Query1ppsModeCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query GPS Measurement Mode Successful...";
 		add_msgtolist(strMsg);
@@ -2872,7 +2876,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPowerMode(CmdExeMode nMode, void* outputData
 	cmd.SetU08(1, cmdTable[QueryPowerModeCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryPowerModeCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryPowerModeCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Power Mode Successful...";
 		add_msgtolist(strMsg);
@@ -2896,7 +2900,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPowerSavingParameters(CmdExeMode nMode, void
 	cmd.SetU08(1, cmdTable[QueryPowerSavingParametersCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryPowerSavingParametersCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryPowerSavingParametersCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Power Saving Parameters Successful...";
 		add_msgtolist(strMsg);
@@ -2939,7 +2943,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryV8PowerSavingParametersRom(CmdExeMode nMode,
 	cmd.SetU08(2, cmdTable[QueryV8RomPowerSaveParameters].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryV8RomPowerSaveParameters, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryV8RomPowerSaveParameters, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Power Saving Parameters Successful...";
 		add_msgtolist(strMsg);
@@ -2968,7 +2972,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryV8PowerSavingParameters(CmdExeMode nMode, vo
 	cmd.SetU08(2, cmdTable[QueryV8PowerSaveParameters].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryV8PowerSaveParameters, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryV8PowerSaveParameters, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Power Saving Parameters Successful...";
 		add_msgtolist(strMsg);
@@ -3010,7 +3014,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryProprietaryMessage(CmdExeMode nMode, void* o
 	cmd.SetU08(1, cmdTable[QueryProprietaryMessageCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryProprietaryMessageCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryProprietaryMessageCmd, &cmd, &ackCmd))
 	{
 		add_msgtolist("Query Proprietary Message Successful...");
 		DWORD enable = MAKELONG(MAKEWORD(ackCmd[8], ackCmd[7]), MAKEWORD(ackCmd[6], ackCmd[5]));
@@ -3032,7 +3036,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryTiming(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(1, cmdTable[QueryTimingCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryTimingCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryTimingCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Timing Successful...";
 		add_msgtolist(strMsg);
@@ -3100,7 +3104,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryDopMask(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(1, cmdTable[QueryDopMaskCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryDopMaskCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryDopMaskCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query DOP Mask Successful...";
 		add_msgtolist(strMsg);
@@ -3139,7 +3143,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryElevationAndCnrMask(CmdExeMode nMode, void* 
 	cmd.SetU08(1, cmdTable[QueryElevationAndCnrMaskCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryElevationAndCnrMaskCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryElevationAndCnrMaskCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Elevation and CNR Mask Successful...";
 		add_msgtolist(strMsg);
@@ -3172,7 +3176,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryAntennaDetection(CmdExeMode nMode, void* out
 	cmd.SetU08(1, cmdTable[QueryAntennaDetectionCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryAntennaDetectionCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryAntennaDetectionCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Antenna Detection Successful...";
 		add_msgtolist(strMsg);
@@ -3214,7 +3218,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryNoisePower(CmdExeMode nMode, void* outputDat
 	cmd.SetU08(1, cmdTable[QueryNoisePowerCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryNoisePowerCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryNoisePowerCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Noise Power Successful...";
 		add_msgtolist(strMsg);
@@ -3230,7 +3234,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryDrInfo(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(1, cmdTable[QueryDrInfoCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryDrInfoCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryDrInfoCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query DR Info Successful...";
 		add_msgtolist(strMsg);
@@ -3260,7 +3264,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryDrHwParameter(CmdExeMode nMode, void* output
 	cmd.SetU08(1, cmdTable[QueryDrHwParameterCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryDrHwParameterCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryDrHwParameterCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query DR HW Parameter Successful...";
 		add_msgtolist(strMsg);
@@ -3334,7 +3338,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssSelectionForNavigationSystem(CmdExeMode 
 	cmd.SetU08(1, cmdTable[QueryGnssSelectionForNavigationSystemCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryGnssSelectionForNavigationSystemCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryGnssSelectionForNavigationSystemCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Gnss Selection for Navigation System Successful...";
 		add_msgtolist(strMsg);
@@ -3367,7 +3371,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssKnumberSlotCnr(CmdExeMode nMode, void* o
 	cmd.SetU08(1, cmdTable[QueryGnssKnumberSlotCnrCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryGnssKnumberSlotCnrCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryGnssKnumberSlotCnrCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query GLONASS K-Num, Slot, CNR Successful...";
 		add_msgtolist(strMsg);
@@ -3387,7 +3391,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySbas(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(2, cmdTable[QuerySbasCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QuerySbasCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QuerySbasCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query SBAS Successful...";
 		add_msgtolist(strMsg);
@@ -3437,7 +3441,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySagps(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(2, cmdTable[QuerySagpsCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QuerySagpsCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QuerySagpsCmd, &cmd, &ackCmd))
 	{
 		if(nMode==Return)
 		{
@@ -3472,7 +3476,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryQzss(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(2, cmdTable[QueryQzssCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryQzssCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryQzssCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query QZSS Successful...";
 		add_msgtolist(strMsg);
@@ -3491,7 +3495,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryDgps(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(2, cmdTable[QueryDgpsCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryDgpsCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryDgpsCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query DGPS Successful...";
 		add_msgtolist(strMsg);
@@ -3517,7 +3521,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySmoothMode(CmdExeMode nMode, void* outputDat
 	cmd.SetU08(2, cmdTable[QuerySmoothModeCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QuerySmoothModeCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QuerySmoothModeCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query carrier smooth mode successful...";
 		add_msgtolist(strMsg);
@@ -3541,7 +3545,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryTimeStamping(CmdExeMode nMode, void* outputD
 	cmd.SetU08(2, cmdTable[QueryTimeStampingCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryTimeStampingCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryTimeStampingCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query time stamping successful...";
 		add_msgtolist(strMsg);
@@ -3594,7 +3598,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGpsTime(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(2, cmdTable[QueryGpsTimeCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryGpsTimeCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryGpsTimeCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query GPS time successful...";
 		add_msgtolist(strMsg);
@@ -3627,7 +3631,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryNoisePowerControl(CmdExeMode nMode, void* ou
 	cmd.SetU08(2, cmdTable[QueryNoisePowerControlCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryNoisePowerControlCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryNoisePowerControlCmd, &cmd, &ackCmd))
 	{
 		CString strMsg;
 		strMsg = "Query Noise Power Control Successful...";
@@ -3655,7 +3659,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryInterferenceDetectControl(CmdExeMode nMode, 
 	cmd.SetU08(2, cmdTable[QueryInterferenceDetectControlCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryInterferenceDetectControlCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryInterferenceDetectControlCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Interference Detect Control Successful...";
 		add_msgtolist(strMsg);
@@ -3690,7 +3694,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryNmeaBinaryOutputDestination(CmdExeMode nMode
 	cmd.SetU08(2, cmdTable[QueryNmeaBinaryOutputDestinationCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryNmeaBinaryOutputDestinationCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryNmeaBinaryOutputDestinationCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query NMEA Binary Output Dest. Successful...";
 		add_msgtolist(strMsg);
@@ -3717,7 +3721,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryParameterSearchEngineNumber(CmdExeMode nMode
 	cmd.SetU08(2, cmdTable[QueryParameterSearchEngineNumberCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryParameterSearchEngineNumberCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryParameterSearchEngineNumberCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Param. Search Engine Num. Successful...";
 		add_msgtolist(strMsg);
@@ -3754,7 +3758,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssKnumberSlotCnr2(CmdExeMode nMode, void* 
 	cmd.SetU08(2, cmdTable[QueryGnssKnumberSlotCnr2Cmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryGnssKnumberSlotCnr2Cmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryGnssKnumberSlotCnr2Cmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query GLONASS K-Num, Slot, CNR Successful...";
 		add_msgtolist(strMsg);
@@ -3808,7 +3812,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssSelectionForNavigationSystem2(CmdExeMode
 	cmd.SetU08(2, cmdTable[QueryGnssSelectionForNavigationSystem2Cmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryGnssKnumberSlotCnrCmdQueryGnssSelectionForNavigationSystem2Cmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryGnssKnumberSlotCnrCmdQueryGnssSelectionForNavigationSystem2Cmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Gnss Sel for Nav System Successful...";
 		add_msgtolist(strMsg);
@@ -3841,7 +3845,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssNmeaTalkId(CmdExeMode nMode, void* outpu
 	cmd.SetU08(1, cmdTable[QueryGnssNmeaTalkIdCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryGnssNmeaTalkIdCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryGnssNmeaTalkIdCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Gnss NMEA Talk ID Successful...";
 		add_msgtolist(strMsg);
@@ -3991,7 +3995,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRegister(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(5, LOBYTE(LOWORD(m_regAddress)));
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryRegisterCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryRegisterCmd, &cmd, &ackCmd))
 	{
 		U32 data = MAKELONG(MAKEWORD(ackCmd[8], ackCmd[7]), MAKEWORD(ackCmd[6], ackCmd[5]));
 		if(nMode==Return)
@@ -4015,7 +4019,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPositionFixNavigationMask(CmdExeMode nMode, 
 	cmd.SetU08(2, cmdTable[QueryPositionFixNavigationMaskCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryPositionFixNavigationMaskCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryPositionFixNavigationMaskCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Position Fix Navigation Mask Successful...";
 		add_msgtolist(strMsg);
@@ -4033,7 +4037,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryNavigationMode(CmdExeMode nMode, void* outpu
 	cmd.SetU08(1, cmdTable[QueryNavigationModeCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryNavigationModeCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryNavigationModeCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Navigation Mode Successful";
 		add_msgtolist(strMsg);
@@ -4076,7 +4080,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryNavigationModeV8(CmdExeMode nMode, void* out
 	cmd.SetU08(2, cmdTable[QueryNavigationModeV8Cmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryNavigationModeV8Cmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryNavigationModeV8Cmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Navigation Mode Successful";
 		add_msgtolist(strMsg);
@@ -4086,7 +4090,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryNavigationModeV8(CmdExeMode nMode, void* out
 			strMsg.SetString("Navigation Mode: Auto");
 			break;
 		case 1:
-			strMsg.SetString("Navigation Mode: Pedestrain");
+			strMsg.SetString("Navigation Mode: Pedestrian");
 			break;
 		case 2:
 			strMsg.SetString("Navigation Mode: Car");
@@ -4124,7 +4128,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssBootStatus(CmdExeMode nMode, void* outpu
 		return Timeout;
 	}
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryGnssBootStatusCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryGnssBootStatusCmd, &cmd, &ackCmd))
 	{
 		m_bootInfo = ackCmd;
 
@@ -4179,7 +4183,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryDrMultiHz(CmdExeMode nMode, void* outputData
 	cmd.SetU08(2, cmdTable[QueryDrMultiHzCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryDrMultiHzCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryDrMultiHzCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Get DR Multi-Hz Successful";
 		strMsg.Format("DR Update Rate = %d Hz", ackCmd[6]);
@@ -4195,7 +4199,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryNmeaIntervalV8(CmdExeMode nMode, void* outpu
 	cmd.SetU08(2, cmdTable[QueryNmeaIntervalV8Cmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryNmeaIntervalV8Cmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryNmeaIntervalV8Cmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query NMEA Message Interval Successful";
 		add_msgtolist(strMsg);
@@ -4278,7 +4282,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryNmeaInterval2V8(CmdExeMode nMode, void* outp
 	cmd.SetU08(3, 0x02);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryNmeaInterval2V8Cmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryNmeaInterval2V8Cmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query NMEA Message Interval Successful";
 		add_msgtolist(strMsg);
@@ -4319,7 +4323,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryEricssonInterval(CmdExeMode nMode, void* out
 	cmd.SetU08(3, 0x02);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryEricssonIntervalCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryEricssonIntervalCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Ericsson Sentence Interval Successful";
 		add_msgtolist(strMsg);
@@ -4355,7 +4359,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySerialNumber(CmdExeMode nMode, void* outputD
 	cmd.SetU08(3, 0x02);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QuerySerialNumberCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QuerySerialNumberCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Serial Number successful";
 		add_msgtolist(strMsg);
@@ -4386,7 +4390,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGeofenceResult(CmdExeMode nMode, void* outpu
 	cmd.SetU08(2, cmdTable[QueryGeofenceResultCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryGeofenceResultCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryGeofenceResultCmd, &cmd, &ackCmd))
 	{
 		CString strMsg;
 		strMsg = "Query geofencing result successful...";
@@ -4419,7 +4423,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGeofenceResultEx(CmdExeMode nMode, void* out
 	cmd.SetU08(2, cmdTable[QueryGeofenceResultCmdEx].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryGeofenceResultCmdEx, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryGeofenceResultCmdEx, &cmd, &ackCmd))
 	{
 		CString strMsg;
 		strMsg = "Query geofencing result successful...";
@@ -4458,7 +4462,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGeofence(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(2, cmdTable[QueryGeofenceCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryGeofenceCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryGeofenceCmd, &cmd, &ackCmd))
 	{
 		CString strMsg;
 		strMsg = "Query geofencing data successful...";
@@ -4506,7 +4510,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGeofenceEx(CmdExeMode nMode, void* outputDat
 	cmd.SetU08(3, m_nGeofecingNo);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryGeofenceCmdEx, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryGeofenceCmdEx, &cmd, &ackCmd))
 	{
 		CString strMsg;
 		strMsg.Format("Query geofencing data %d successful...", m_nGeofecingNo);
@@ -4553,7 +4557,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkMode(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(2, cmdTable[QueryRtkModeCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryRtkModeCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryRtkModeCmd, &cmd, &ackCmd))
 	{
 		CString strMsg;
 		strMsg = "Query RTK mode successful...";
@@ -4580,7 +4584,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPstmDeviceAddress(CmdExeMode nMode, void* ou
 	cmd.SetU08(3, 0x02);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryPstmDeviceAddressCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryPstmDeviceAddressCmd, &cmd, &ackCmd))
 	{
 		CString strMsg;
 		strMsg = "Query PSTM device address successful...";
@@ -4599,7 +4603,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPstnLatLonDigits(CmdExeMode nMode, void* out
 	cmd.SetU08(3, 0x04);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryPstnLatLonDigitsCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryPstnLatLonDigitsCmd, &cmd, &ackCmd))
 	{
 		CString strMsg;
 		strMsg = "Query PSTM LAT/LON fractional digits successful...";
@@ -4718,7 +4722,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkParameters(CmdExeMode nMode, void* output
 	cmd.SetU08(2, cmdTable[QueryRtkParametersCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryRtkParametersCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryRtkParametersCmd, &cmd, &ackCmd))
 	{
 		CString strMsg;
 		strMsg = "Query RTK parameters successful...";
@@ -4762,7 +4766,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryChannelDoppler(CmdExeMode nMode, void* outpu
 		cmd.SetU08(2, (U08)i);
 
 		BinaryData ackCmd;
-		if(!ExcuteBinaryCommand(QueryChannelDopplerCmd, &cmd, &ackCmd))
+		if(Ack == ExcuteBinaryCommand(QueryChannelDopplerCmd, &cmd, &ackCmd))
 		{
 			U32 data = MAKELONG(MAKEWORD(ackCmd[8], ackCmd[7]), MAKEWORD(ackCmd[6], ackCmd[5]));
 			S16 prn = MAKEWORD(ackCmd[6], ackCmd[5]);
@@ -4810,7 +4814,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryClockOffset(CmdExeMode nMode, void* outputDa
 		cmd.SetU08(7, LOBYTE(ChannelTable[i]));
 
 		BinaryData ackCmd;
-		if(!ExcuteBinaryCommand(QueryChannelClockOffsetCmd, &cmd, &ackCmd))
+		if(Ack == ExcuteBinaryCommand(QueryChannelClockOffsetCmd, &cmd, &ackCmd))
 		{
 			S32 data = MAKELONG(MAKEWORD(ackCmd[8], ackCmd[7]), MAKEWORD(ackCmd[6], ackCmd[5]));
 			strMsg.Format(" %3d, %5d, %2.6fppm", ChannelTable[i], data, data / (96.25 * 16.367667));
@@ -4835,7 +4839,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRefTimeSyncToGpsTime(CmdExeMode nMode, void*
 	cmd.SetU08(2, cmdTable[QueryRefTimeSyncToGpsTimeCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryRefTimeSyncToGpsTimeCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryRefTimeSyncToGpsTimeCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Ref Time Sync To Gps Time Successful";
 		add_msgtolist(strMsg);
@@ -4854,7 +4858,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySearchEngineSleepCriteria(CmdExeMode nMode, 
 	cmd.SetU08(2, cmdTable[QuerySearchEngineSleepCriteriaCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QuerySearchEngineSleepCriteriaCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QuerySearchEngineSleepCriteriaCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "QuerySearchEngineSleepCriteriaCmd Successful";
 		add_msgtolist(strMsg);
@@ -4871,7 +4875,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryDatumIndex(CmdExeMode nMode, void* outputDat
 	cmd.SetU08(2, cmdTable[QueryDatumIndexCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryDatumIndexCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryDatumIndexCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "QueryDatumIndex Successful";
 		add_msgtolist(strMsg);
@@ -4894,7 +4898,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySignalDisturbanceStatus(CmdExeMode nMode, vo
 	cmd.SetU08(2, cmdTable[QuerySignalDisturbanceStatusCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QuerySignalDisturbanceStatusCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QuerySignalDisturbanceStatusCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "QuerySignalDisturbanceStatus Successful";
 		add_msgtolist(strMsg);
@@ -4911,7 +4915,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySignalDisturbanceData(CmdExeMode nMode, void
 	cmd.SetU08(2, cmdTable[QuerySignalDisturbanceDataCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QuerySignalDisturbanceDataCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QuerySignalDisturbanceDataCmd, &cmd, &ackCmd))
 	{
 		const int FieldLen = 7;
 		int chCnt = (MAKEWORD(ackCmd[3], ackCmd[2]) - 2) / FieldLen;
@@ -5096,7 +5100,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryUartPass(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(3, 0x02);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryUartPassCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryUartPassCmd, &cmd, &ackCmd))
 	{
 		if(nMode==Return && outputData)
 		{
@@ -5129,7 +5133,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssNavSol(CmdExeMode nMode, void* outputDat
 	cmd.SetU08(2, cmdTable[QueryGnssNavSolCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryGnssNavSolCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryGnssNavSolCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query GNSS constellation type Successful";
 		add_msgtolist(strMsg);
@@ -5175,13 +5179,13 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryCustomerID(CmdExeMode nMode, void* outputDat
 	BinaryData ackCmd;
 	if(Return==nMode && outputData)
 	{
-		if(!ExcuteBinaryCommand(QueryCustomerIDCmd, &cmd, &ackCmd, 300, true))
+		if(Ack == ExcuteBinaryCommand(QueryCustomerIDCmd, &cmd, &ackCmd, 300, true))
 		{
 			*((U32*)outputData) = MAKELONG(MAKEWORD(ackCmd[8], ackCmd[7]),MAKEWORD(ackCmd[6], ackCmd[5]));
 		}
 		return Timeout;
 	}
-	if(!ExcuteBinaryCommand(QueryCustomerIDCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryCustomerIDCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Customer ID Successful...";
 		add_msgtolist(strMsg);
@@ -5199,7 +5203,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::Query1ppsFreqencyOutput(CmdExeMode nMode, void* o
 	cmd.SetU08(2, cmdTable[Query1ppsFreqencyOutputCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(Query1ppsFreqencyOutputCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(Query1ppsFreqencyOutputCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query 1PPS Freqency Output Successful...";
 		add_msgtolist(strMsg);
@@ -5216,7 +5220,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryBinaryMeasurementDataOut(CmdExeMode nMode, v
 	cmd.SetU08(1, cmdTable[QueryBinaryMeasurementDataOutCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryBinaryMeasurementDataOutCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryBinaryMeasurementDataOutCmd, &cmd, &ackCmd))
 	{
 		CString strMsg = "Query Binary Measurement Data Out Successful...";
 		add_msgtolist(strMsg);
@@ -5298,7 +5302,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryCableDelay(CmdExeMode nMode, void* outputDat
 	cmd.SetU08(1, cmdTable[QueryCableDelayCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(!ExcuteBinaryCommand(QueryCableDelayCmd, &cmd, &ackCmd))
+	if(Ack == ExcuteBinaryCommand(QueryCableDelayCmd, &cmd, &ackCmd))
 	{
 		CString strMsg;
 		strMsg = "Query 1PPS Cable Delay Successful...";

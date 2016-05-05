@@ -212,13 +212,14 @@
 // .202 20160419 Support DJI NAVIGATION DATA MESSAGE(ID: 0x7A, CUSTOMER ID: 0xB, SID: 0x80), Report from Andrew, Roger.
 // .203 20160422 Modify RTK Mode and operational function, add Baseline length, Request from Andrew, Ryan.
 // .203 20160422 Remove GPS Measurement Mode command, Request from Andrew, Oliver.
-// .204
+// .204 20160428 Add FormatError ACK support, Request from Andrew.
+// .205 20160429 Fix Ack error issue, Request from Ken.
 
 
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.203"
+#define APP_VERSION				"2.0.205"
 #define APP_TITLE				""
 #define APP_MODULE				"Venus 8"
 
