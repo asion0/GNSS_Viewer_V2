@@ -83,10 +83,13 @@ bool CSerial::OpenByBaudrate(LPCSTR comPort, int baudrate)
 	portName.Format("\\\\.\\%s", comPort);
 
 	int tryCnt = 10;
+	Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 	while(TRUE)
 	{
+		Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 		m_comDeviceHandle = CreateFile(portName, GENERIC_READ | GENERIC_WRITE,
-				0, NULL, OPEN_EXISTING, 0, 0);
+				0, NULL, OPEN_EXISTING,  0, 0);
+		Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 
 		if(m_comDeviceHandle==INVALID_HANDLE_VALUE)
 		{
@@ -97,14 +100,17 @@ bool CSerial::OpenByBaudrate(LPCSTR comPort, int baudrate)
 			}
 			else
 			{
+				Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 				Sleep(50);
 				continue;
 			}
 		}
 		break;
 	}
+	Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 
 	ComInitial();
+	Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 
 	if(!SetupComm(m_comDeviceHandle, InQueueSize, OutQueueSize))
 	{
@@ -117,14 +123,18 @@ bool CSerial::OpenByBaudrate(LPCSTR comPort, int baudrate)
 	{
 		return false;
 	}
+	Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 
 	if(!ResetPortNoDelay(baudrate))
 	{
 		return false;
 	}
 
+	Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 	m_OverlappedRead.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 	m_OverlappedWrite.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 
 	m_isOpened = true;
 	CString t(comPort);
@@ -449,10 +459,14 @@ DWORD CSerial::GetBinary(void *buffer, DWORD bufferSize, DWORD timeout)
 		DWORD bytesinbuff = comStat.cbInQue;
 		while(bytesinbuff)
 		{
+			if(t.GetDuration() > timeout)
+			{
+				return READ_ERROR;
+			}
 			if(m_cancelTransmission)
 			{
 				m_cancelTransmission = false;
-				return -1;
+				return READ_ERROR;
 			}
 			BOOL bb = ReadFile(m_comDeviceHandle, bufferIter, 1, &dwBytesDoRead, 0);
 			if(dwBytesDoRead == 0)

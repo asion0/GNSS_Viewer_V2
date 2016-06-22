@@ -6,43 +6,47 @@
 #include "ConDauDlg.h"
 #include "GPSDlg.h"
 
+#define SMA  6370000000
+#define IF1  2930000000
+
 CConDauDlg* pDauDlg;
 // CConDauDlg ¹ï¸Ü¤è¶ô
-U16 EllipseList;
-U08 EllipseIndex;
-S32 DeltaX;
-S32 DeltaY;
-S32 DeltaZ;
-U32 Semi_Major_Axis;
-U32 Inversed_Flattening;
+static U16 EllipseList;
+static U08 EllipseIndex;
+static S32 DeltaX;
+static S32 DeltaY;
+static S32 DeltaZ;
+static U32 Semi_Major_Axis;
+static U32 Inversed_Flattening;
 
-EL el[24] = {
+static EL el[24] = {
 	{0, 0},
-	{6377563396-sma, 2993249646-IF1},
-	{6377340189-sma, 2993249646-IF1},
-	{6378160000-sma, 2982500000-IF1},
-	{6377483865-sma, 2991528128-IF1},
-	{6377397155-sma, 2991528128-IF1},
-	{6378206400-sma, 2949786982-IF1},
-	{6378249145-sma, 2934650000-IF1},
-	{6377276345-sma, 3008017000-IF1},
-	{6377298556-sma, 3008017000-IF1},
-	{6377301243-sma, 3008017000-IF1},
-	{6377295664-sma, 3008017000-IF1},
-	{6377304063-sma, 3008017000-IF1},
-	{6377309613-sma, 3008017000-IF1},
-	{6378155000-sma, 2983000000-IF1},
-	{6378200000-sma, 2983000000-IF1},
-	{6378270000-sma, 2970000000-IF1},
-	{6378160000-sma, 2982470000-IF1},
-	{6378388000-sma, 2970000000-IF1},
-	{6378245000-sma, 2983000000-IF1},
-	{6378137000-sma, 2982572221-IF1},
-	{6378160000-sma, 2982500000-IF1},
-	{6378135000-sma, 2982600000-IF1},
-	{6378137000-sma, 2982572235-IF1} };
+	{6377563396-SMA, 2993249646-IF1},
+	{6377340189-SMA, 2993249646-IF1},
+	{6378160000-SMA, 2982500000-IF1},
+	{6377483865-SMA, 2991528128-IF1},
+	{6377397155-SMA, 2991528128-IF1},
+	{6378206400-SMA, 2949786982-IF1},
+	{6378249145-SMA, 2934650000-IF1},
+	{6377276345-SMA, 3008017000-IF1},
+	{6377298556-SMA, 3008017000-IF1},
+	{6377301243-SMA, 3008017000-IF1},
+	{6377295664-SMA, 3008017000-IF1},
+	{6377304063-SMA, 3008017000-IF1},
+	{6377309613-SMA, 3008017000-IF1},
+	{6378155000-SMA, 2983000000-IF1},
+	{6378200000-SMA, 2983000000-IF1},
+	{6378270000-SMA, 2970000000-IF1},
+	{6378160000-SMA, 2982470000-IF1},
+	{6378388000-SMA, 2970000000-IF1},
+	{6378245000-SMA, 2983000000-IF1},
+	{6378137000-SMA, 2982572221-IF1},
+	{6378160000-SMA, 2982500000-IF1},
+	{6378135000-SMA, 2982600000-IF1},
+	{6378137000-SMA, 2982572235-IF1} 
+};
 
-DRL datum[]= {
+static DRL datum[] = {
 	{   0,    0,    0, el[23].a, el[23].I_F,23},
 	{-118,  -14,  218, el[7].a,  el[7].I_F ,7},
 	{-134,   -2,  210, el[7].a,  el[7].I_F,7 },
@@ -368,17 +372,15 @@ void CConDauDlg::OnBnClickedOk()
 	OnOK();
 }
 
-int datum_count;
+static int datum_count;
 
 UINT CigDauThread_Continue(LPVOID pParam)
 {
-
 	U08 messages[26];	
-	int i,j;	    
+	int i, j;	    
 
 	for(j=0;j<datum_count;j++)
 	{
-
 		DeltaX              = datum[j].DeltaX;
 		DeltaY              = datum[j].DeltaY;
 		DeltaZ              = datum[j].DeltaZ;
@@ -387,19 +389,18 @@ UINT CigDauThread_Continue(LPVOID pParam)
 		Inversed_Flattening = datum[j].Inversd_Flattening;
 		attribute = 0;
 
-
 		memset(messages, 0, 26); 
-		messages[0]  =(U08)0xa0;
-		messages[1]  =(U08)0xa1;
-		messages[2]  =0;
-		messages[3]  =19;
-		messages[4]  =0x29; //msgid
-		messages[5]  = EllipseList>>8 &0xff;
-		messages[6]  = EllipseList    &0xff;
-		messages[7]  = EllipseIndex;
-		messages[8]  = DeltaX>>8      &0xff;
-		messages[9]  = DeltaX         &0xff;
-		messages[10]  = DeltaY>>8      &0xff;
+		messages[0] = (U08)0xa0;
+		messages[1] = (U08)0xa1;
+		messages[2] = 0;
+		messages[3] = 19;
+		messages[4] = 0x29; //msgid
+		messages[5] = EllipseList >>8 &0xff;
+		messages[6] = EllipseList    &0xff;
+		messages[7] = EllipseIndex;
+		messages[8] = DeltaX>>8      &0xff;
+		messages[9] = DeltaX         &0xff;
+		messages[10] = DeltaY>>8      &0xff;
 		messages[11] = DeltaY         &0xff;
 		messages[12] = DeltaZ>>8      &0xff;
 		messages[13] = DeltaZ         &0xff;

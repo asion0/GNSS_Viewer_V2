@@ -39,6 +39,8 @@ void CDevice_Adding::OnBnClickedOk()
 	CString tmp;
 	m_cbo_baudrate.GetLBText(m_cbo_baudrate.GetCurSel(),tmp);
 	m_baudrate = atoi(tmp);
+
+	Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 	OnOK();
 }
 

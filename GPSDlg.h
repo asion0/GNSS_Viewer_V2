@@ -19,29 +19,21 @@
 #include "MsgList.h"
 #include "SerialAgents.h"
 
-#define WGS84_RA    (6378137.0)                   // semi-major earth axis(ellipsoid equatorial radius)
-#define WGS84_INV_F (298.257223563)               // inverse flattening of WGS-84
-#define WGS84_F     (1.0/WGS84_INV_F)             // inverse flattening of WGS-84
-#define WGS84_RB    (WGS84_RA*(1.0-WGS84_F))      // semi-major earth axis(ellipsoid polar radius)
-#define WGS84_E2    (2.0*WGS84_F-WGS84_F*WGS84_F) // eccentricity squared: (RA*RA-RB*RB)/RA*RA
-#define WGS84_E2P   (WGS84_E2/(1.0-WGS84_E2))     // eccentricity squared: (RA*RA-RB*RB)/RB*RB
-#define sma  6370000000
-#define IF   293000000000
-#define IF1  2930000000
-
-#define UWM_SETPROGRESS		(WM_USER + 0x0005)
-#define UWM_SETPROMPT_MSG	(WM_USER + 0x0019)
-#define UWM_SETTIMEOUT		(WM_USER + 0x0062)
-#define UWM_KERNEL_REBOOT	(WM_USER + 0x134)
-#define UWM_FIRST_NMEA		(WM_USER + 0x135)
-#define UWM_SHOW_TIME		(WM_USER + 0x136)
-#define UWM_UPDATE_UI		(WM_USER + 0x137)
-#define UWM_SHOW_RMC_TIME   (WM_USER + 0x138)
+#define UWM_SETPROGRESS			(WM_USER + 0x005)
+#define UWM_SETPROMPT_MSG		(WM_USER + 0x019)
+#define UWM_SETTIMEOUT			(WM_USER + 0x062)
+#define UWM_KERNEL_REBOOT		(WM_USER + 0x134)
+#define UWM_FIRST_NMEA			(WM_USER + 0x135)
+#define UWM_SHOW_TIME			(WM_USER + 0x136)
+#define UWM_UPDATE_UI			(WM_USER + 0x137)
+#define UWM_SHOW_RMC_TIME		(WM_USER + 0x138)
 #define UWM_GPSDO_HI_DOWNLOAD   (WM_USER + 0x139)
 #define UWM_UPDATE_RTK_INFO		(WM_USER + 0x13A)
+#define UWM_UPDATE_PSTI030		(WM_USER + 0x13B)
+#define UWM_UPDATE_PSTI031		(WM_USER + 0x13C)
+#define UWM_UPDATE_PSTI032		(WM_USER + 0x13D)
 
 #define GNSS_CHANEL_LIMIT	16
-
 
 enum DownloadErrocCode
 {
@@ -95,7 +87,6 @@ typedef struct DatumReferenceList
 	U08 EllipsoidIndex;
 } DRL;
 
-
 typedef struct {
 	U08 Timing_mode;
 	U32 Survey_Length;
@@ -118,6 +109,26 @@ struct LL2 {
 	double speed;
 	double alt;
 	UtcTime utc;
+};
+
+struct PSTI030_Data
+{
+	F32 rtkAge;
+	F32 rtkRatio;
+};
+
+struct PSTI031_Data
+{
+	F32 baseline;
+};
+
+struct PSTI032_Data
+{
+	F32 eastProjection;
+	F32 northProjection;
+	F32 upProjection;
+	F32 baselineLength;
+	F32 baselineCourse;
 };
 
 // Copy from HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceClasses
@@ -176,6 +187,7 @@ class CCommonConfigDlg;
 class CGPSDlg : public CDialog
 {
 public:
+	static CGPSDlg* gpsDlg;
 	// Construction
 	CGPSDlg(CWnd* pParent = NULL);	// standard constructor
 	~CGPSDlg();
@@ -234,10 +246,14 @@ public:
 		CustomerUpgrade
 	} m_DownloadMode;
 
+	enum InfoTabStat {
+		BasicInfo = 0,
+		RtkInfo,
+	};
+
 	static UINT UWM_PLAYNMEA_EVENT;
 	static UINT UWM_SAVENMEA_EVENT;
 	static UINT UWM_UPDATE_EVENT;
-	static CGPSDlg* gpsDlg;
 #if (SPECIAL_TEST)
 	U08* specCmd;
 	U32	 specSize;
@@ -251,6 +267,7 @@ public:
 
 protected:
 	enum { IDD = IDD_GPS_DIALOG };
+	InfoTabStat m_InfoTabStat;
 	HICON m_hIcon;
 	CString m_lastGpEphFile;
 	CString m_lastGlEphFile;
@@ -273,6 +290,23 @@ protected:
 	CColorStatic m_rtkAge;	
 	CColorStatic m_rtkRatio;	
 
+	CBitmapButton m_CoorSwitch1Btn;
+	CBitmapButton m_CoorSwitch2Btn;
+
+#if(_TAB_LAYOUT_)
+	CColorStatic m_date2;	
+	CColorStatic m_time2;	
+	CColorStatic m_eastProjection;	
+	CColorStatic m_baselineLength;	
+	CColorStatic m_northProjection;	
+	CColorStatic m_baselineCourse;	
+	CColorStatic m_upProjection;
+#endif
+
+	PSTI030_Data m_psti030;
+	PSTI031_Data m_psti031;
+	PSTI032_Data m_psti032;
+
 	CComboBox m_ComPortCombo;
 	CComboBox m_BaudRateCombo;	
 	CComboBox m_coordinate;
@@ -291,9 +325,6 @@ protected:
 	CEdit m_clock_offset;
 	CEdit m_noise;
 	CColorStatic m_centerAlt;
-	//CEdit m_scatterAlt;
-
-
 
 	CBitmapButton m_ConnectBtn;
 	CBitmapButton m_PlayBtn;
@@ -326,6 +357,7 @@ protected:
 	CBitmapButton m_DownloadBtn;
 	CBitmapButton m_EarthSettingBtn;
 	CBitmapButton m_ScatterSettingBtn;
+
 	CStatic m_connectT;
 	CListCtrl m_kNumList;
 	CToolTipCtrl m_tip;
@@ -412,8 +444,9 @@ public:
 		GetDlgItem(IDC_TTFF)->SetWindowText(str);
 	}
 
-	CmdErrorCode IsSuccessful(U08* buff, int tail, bool show_msg = true);
-	//	U08 Rom(CString prom_path);
+	CmdErrorCode GetCommandReturnType(U08* buff, int tail, bool showMsg = true);
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
+
 	bool IsEphmsEmpty(BYTE* buffer);
 	bool CeheckOrigin(CString,int);	
 	bool CfgPortSendToTarget(U08*,U16,char*);
@@ -421,37 +454,27 @@ public:
 	bool CheckGPS(U08*,U16,char*);
 	bool CheckTimeOut(DWORD duration, DWORD timeOut = 10000,  bool silent = false);
 	bool CloseOpenUart();
-	//	bool FTPSetEphms(CFTPDlg *ftpDlg);
-	//	bool Flash(CString flash_path);
 	bool ListSoftVersion(unsigned char* ,int);
-	bool NmeaProc(const char*, int, NmeaType& );
-	//	bool OpenUart();
+	bool NmeaProc(const char*, int, NmeaType&);
+	void NmeaOutput(LPCSTR pt, int len);
+
 	bool SendMsg();
 	bool SendToTarget(U08* ,U16 ,const char*, bool quick = false);
 	bool SendToTargetNoAck(U08*,U16);
-	//	bool SendToTargetNoShow(U08*,U16,char*);
 	bool SendToTargetNoWait(U08*,U16,LPCSTR);
 	bool TIMEOUT_METHOD(time_t,time_t);
-	//	bool chk_gp(char* buff,int size);
-	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	U08 BinaryProc(unsigned char*,int);
-	//	void BaudrateError(void);
 	void CopyNmeaToUse();
 	void ClearQue();
-	//	void ConfigureRegister(U08*);
 	void Copy_NMEA_Memery();
-	//	void CreatWaitAck();
 	void CreateGPSThread();	
 	void DataLogDecompress(bool);
-	//	void Deg2Rad(double&);    
 	void DeleteNmeaMemery();
 	void GetLogStatus(U08*);
 	void GetRegister(U08*);	
-	//	void LogClear(U08*);
 	void LogConfigure();
 	void MSG_PROC();
 	void QueryMsg(unsigned char*);
-	//	void Rad2Deg(double&);
 	void Restart(U08*);
 	void ScanGPS();
 	void ScanGPS1();
@@ -459,9 +482,7 @@ public:
 	void ScatterPlot(CDC *dc);
 	void SetEphms(U08 continues);
 
-	//	void SetOrigiPort();
 	void SetPort(U08,int mode);
-	//	void SetRotationMatrix();
 #if(_MODULE_SUP_800_)
 	void ShowPsti004001();
 #endif
@@ -480,13 +501,17 @@ public:
 	void DisplayTime(int h, int m, int s);
 	void DisplayTime(int h, int m, D64 s);
 	void DisplayDate(int y, int m, int d);
+
+	void DisplayLongitude(LPCWSTR txt);
+	void DisplayLatitude(LPCWSTR txt);
+	void DisplayLongitude(D64 lon, U08 c);
+	void DisplayLatitude(D64 lat, U08 c);
 	void DisplayLongitude(int h, int m, double s, char c);
 	void DisplayLatitude(int h, int m, double s, char c);
+
 	void DisplaySpeed(D64 speed);
 	void DisplayDirection(D64 direction);
 	void DisplayStatus(GnssData::QualityMode m);
-	void DisplayLongitude(D64 lon, U08 c);
-	void DisplayLatitude(D64 lat, U08 c);
 	void DisplayAltitude(D64 alt);
 	void DisplayHdop(D64 hdop);
 
@@ -495,24 +520,15 @@ public:
 	void ShowTime(void);
 	void Terminate(void);
 	void TerminateGPSThread();
-	//	void WriteIni();
-	//	void WriteKMLPath(CFile& ,double ,double );
-	//	void WriteKMLini(CFile&  ,double ,double );	
-	//	void WritePOIPath(CFile& file ,vector<LLA_T> *lst );
-	//	void close_nmea_file();
-	//	void ConvertGpsTimeToUtc(S16, D64, UTC_T*);	    
-	//	void stop_write_nmea();
 	void Initialization();
 	void SetFacMsg(unsigned char*);	
 	void continue_write_nmea();
 
 private:
-
 	HANDLE handle_version;
 	HANDLE wait_version_complete;
 	U08 Soft_Version;
 	void Load_Menu();
-	//void refresh_scatterplot();
 
 	CDC bk_dc;
 	CDC bar_dc;
@@ -611,6 +627,7 @@ public:
 	int m_nSlaveSourceBaud;
 	int m_nSlaveTargetBaud;
 
+	bool CheckTagType();
 	bool Download();
 	bool Download2();
 	bool Download3();
@@ -641,9 +658,6 @@ public:
 	bool SaveEphemeris(U08* buff,U08 id);
 	bool SaveEphemeris2(U08* buff, WORD id);
 	void Refresh_EarthChart(CDC *earth_dc);
-	//void Refresh_ScatterChart(CDC *scatter_dc);
-	//	int GetComPort() { return m_comPort; }
-	//	int GetBaudrate() { return m_baudrate; }
 	int GetCustomerID()
 	{ return m_customerID; }
 	NMEA nmea;
@@ -674,14 +688,10 @@ private:
 	};
 
 	UINT GetBinFromResource(int baud);
-	//U08 PlRomNoAlloc(const CString& prom_path);
 	U08 PlRomNoAlloc2(const CString& prom_path);
 	U08 PlRomNoAllocV8(const CString& prom_path);
 	U08 PlRomCustomerUpgrade(UINT rid);
 	bool FirmwareUpdate(const CString& strFwPath);
-	//int SendRomBuffer3(const U08* sData, int sDataSize, FILE *f, int fbinSize, 
-	//	bool needSleep, CWnd* notifyWnd);
-	//int SendRomBuffer3(const U08* sData, int sDataSize, CFile& f, int fbinSize, 
 	int SendRomBuffer3(const U08* sData, int sDataSize, BinaryData &binData, int fbinSize, 
 		bool needSleep, CWnd* notifyWnd);
 	int SendRomBufferCustomerUpgrade(const U08* sData, int sDataSize, BinaryData &f, int fbinSize, 
@@ -702,10 +712,11 @@ public:
 	CmdErrorCode ExcuteBinaryCommand(int cmdIdx, BinaryCommand* cmd, BinaryData* ackCmd, DWORD timeOut = g_setting.defaultTimeout, bool silent = false);
 	CmdErrorCode ExcuteBinaryCommandNoWait(int cmdIdx, BinaryCommand* cmd);
 	CGPSDlg::CmdErrorCode GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U08 cAckSub, DWORD timeOut, bool silent, bool noWaitAck = false, int cmdSize = -1, int cmdLen = 0);
+	CmdErrorCode QueryRtkMode2(CmdExeMode nMode, void* outputData);
 
 	//Query Functions
 	int m_nDefaultTimeout;
-
+	BOOL m_bClearPsti032;
 protected:
 	typedef CmdErrorCode (CGPSDlg::*QueryFunction)(CmdExeMode, void*);
 	void GenericQuery(QueryFunction pfn);
@@ -749,6 +760,7 @@ protected:
 	CmdErrorCode QueryRefTimeSyncToGpsTime(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySearchEngineSleepCriteria(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDatumIndex(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryVeryLowSpeed(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryUartPass(CmdExeMode nMode, void* outputData);
 	CmdErrorCode GpsdoResetSlave(CmdExeMode nMode, void* outputData);
 	CmdErrorCode GpsdoEnterRom(CmdExeMode nMode, void* outputData);
@@ -776,12 +788,10 @@ protected:
 	CmdErrorCode QuerySignalDisturbanceData(CmdExeMode nMode, void* outputData);
 	CmdErrorCode ResetOdometer(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryCableDelay(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryGeofence(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGeofenceEx(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGeofenceResult(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGeofenceResultEx(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryRtkMode(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryRtkMode2(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryRtkParameters(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPstmDeviceAddress(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPstnLatLonDigits(CmdExeMode nMode, void* outputData);
@@ -905,6 +915,9 @@ protected:
 	afx_msg LRESULT OnUpdateUI(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnGpsdoHiDownload(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnUpdateRtkInfo(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnUpdatePsti030(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnUpdatePsti031(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnUpdatePsti032(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnMinihomerSettagecco();
 	afx_msg void OnMinihomerQuerytag();
 	afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
@@ -946,6 +959,7 @@ protected:
 	afx_msg void OnConfigLeapSeconds();
 	afx_msg void OnConfigParamSearchEngineSleepCriteria();
 	afx_msg void OnConfigDatumIndex();
+	afx_msg void OnConfigVeryLowSpeed();
 	afx_msg void OnConfigureNoisePowerControl();
 	afx_msg void OnConfigureInterferenceDetectControl();
 	afx_msg void OnConfigNMEABinaryOutputDestination();
@@ -965,7 +979,9 @@ protected:
 	afx_msg void OnTestExternalSrec();
 	afx_msg void OnIqPlot();
 	afx_msg void OnReadMemToFile();
+	afx_msg void OnWriteMemToFile();
 	afx_msg void OnUpgradeDownload();
+	afx_msg void OnPatch();
 	afx_msg void OnGetGlonassEphemeris();
 	afx_msg void OnSetGlonassEphemeris();
 	afx_msg void OnGetBeidouEphemeris();
@@ -989,6 +1005,11 @@ protected:
 	afx_msg void OnConfigureSignalDisturbanceStatus();
 	afx_msg void OnConfigureGpsUtcLeapSecondsInUtc();
 	afx_msg void OnGpsdoFirmwareDownload();
+	//afx_msg void OnStnClickedInformationT();
+	afx_msg void OnStnClickedInformationB();
+	//afx_msg void OnStnClickedRtkInfoT();
+	afx_msg void OnStnClickedRtkInfoB();
+	afx_msg void OnBnClickedCoorSwitch();
 
 	afx_msg void OnQueryPositionRate()
 	{ GenericQuery(&CGPSDlg::QueryPositionRate); }
@@ -1062,6 +1083,9 @@ protected:
 	{ GenericQuery(&CGPSDlg::QuerySearchEngineSleepCriteria); }
 	afx_msg void OnQueryDatumIndex()
 	{ GenericQuery(&CGPSDlg::QueryDatumIndex); }
+	afx_msg void OnQueryVeryLowSpeed()
+	{ GenericQuery(&CGPSDlg::QueryVeryLowSpeed); }
+
 	afx_msg void OnQueryUartPass()
 	{ GenericQuery(&CGPSDlg::QueryUartPass); }
 	afx_msg void OnGpsdoResetSlave()
@@ -1116,8 +1140,8 @@ protected:
 	{ GenericQuery(&CGPSDlg::ResetOdometer); }
 	afx_msg void OnQueryCableDelay()
 	{ GenericQuery(&CGPSDlg::QueryCableDelay); }
-	afx_msg void OnQueryGeofence()
-	{ m_nGeofecingNo = 0; GenericQuery(&CGPSDlg::QueryGeofence); }
+	//afx_msg void OnQueryGeofence()
+	//{ m_nGeofecingNo = 0; GenericQuery(&CGPSDlg::QueryGeofence); }
 	afx_msg void OnQueryGeofence1()
 	{ m_nGeofecingNo = 1; GenericQuery(&CGPSDlg::QueryGeofenceEx); }
 	afx_msg void OnQueryGeofence2()
@@ -1165,25 +1189,38 @@ protected:
 		Gallilo = 4,
 	};
 
+	enum CoorFormat
+	{
+		Degree = 0,
+		DegreeMinute,
+		DegreeMinuteSecond,
+	};
 
+	BOOL m_copyLatLon;
+	CoorFormat m_coorFormat;
 	void Show_EarthChart(CDC *dc);
 	void DrawGnssSatellite(CDC* dc, int id, int centerX, int centerY);
 	void DrawBdSatellite(CDC* dc, int id, int centerX, int centerY);
 	void DrawGaSatellite(CDC* dc, int id, int centerX, int centerY);
 
-	void parse_sti_03_message(const char *buff,int len) /* for timing module */;
-	void parse_sti_04_001_message(const char *buff, int len) /* for timing module */;
+	void parse_sti_03_message(const char *buff,int len); /* for timing module */
+	void parse_sti_04_001_message(const char *buff, int len); /* for timing module */
 	void parse_sti_message(const char *buff,int len);
-	void parse_sti_0_message(const char *buff,int len) /* for timing module */;
+	void parse_sti_0_message(const char *buff,int len); /* for timing module */
 	//	void parse_rtoem_message(const char *buff, int len);
 	void parse_psti_50(const char *buff);
-	void parse_sti_20_message(const char *buff,int len) /* for timing module */;
-#if(SHOW_RTK_BASELINE==1)
-	void parse_sti_31_message(const char *buff,int len) /* for RTK module */;
+	void parse_sti_20_message(const char *buff,int len); /* for timing module */
+
+#if(MORE_INFO || _TAB_LAYOUT_)
+	void parse_sti_30_message(const char *buff,int len); /* for RTK module */
 #endif
-#if(MORE_INFO==1)
-	void parse_sti_30_message(const char *buff,int len) /* for RTK module */;
+#if (SHOW_RTK_BASELINE || _TAB_LAYOUT_)
+	void parse_sti_31_message(const char *buff,int len); /* for RTK module */
 #endif
+#if(_TAB_LAYOUT_)
+	void parse_sti_32_message(const char *buff,int len); /* for RTK module moving base*/
+#endif
+
 	//	void Config_silab_baudrate(HANDLE *m_DeviceHandle);
 	//	void Config_silab_baudrate_flash(HANDLE *m_DeviceHandle);
 	void DoCommonConfig(CCommonConfigDlg* dlg);
@@ -1200,6 +1237,7 @@ protected:
 	U08 QueryChanelFreq(int chanel, U16 *prn, double *freq);
 	U08 PredictClockOffset(double *clk_offset);
 	//End
+	bool WriteRegister(U32 addr, U32 data, LPCSTR prompt = NULL);
 
 	//	int m_comPort;
 	//	int m_baudrate;
@@ -1234,11 +1272,8 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 
-public:
-	void NmeaOutput(LPCSTR pt, int len);
-
 protected:
 	bool ShowCommand(U08 *buffer, int length);
 	void ShowFormatError(U08* cmd, U08* ack);
-
+	void SwitchInfoTab();
 };

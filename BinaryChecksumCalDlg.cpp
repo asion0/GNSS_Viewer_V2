@@ -91,7 +91,7 @@ void BinaryChecksumCalDlg::OnBnClickedSend()
 	// TODO: 在此加入控制項告知處理常式程式碼
 	if(!CGPSDlg::gpsDlg->m_isConnectOn)
 	{
-		AfxMessageBox("Please connect to Sky Traq GPS");
+		AfxMessageBox("Please connect to GNSS device");
 		return;
 	}
 

@@ -19,6 +19,7 @@ public:
 		m_maxLine = max;
 		return oldMax;
 	}
+	//virtual BOOL PreTranslateMessage(MSG* pMsg);
 	void ProcessTextBuffer();
 protected:
 	bool m_scanTimer;
@@ -27,11 +28,13 @@ protected:
 	CCriticalSection m_textBufferCritSect;
 	static void CALLBACK AsyncMessageAdd(HWND hwnd, UINT uMsg, 
 				UINT_PTR idEvent, DWORD dwTime);
+	void DoCopy();
 
 
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 
 	DECLARE_MESSAGE_MAP()
 };

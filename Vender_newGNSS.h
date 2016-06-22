@@ -214,12 +214,20 @@
 // .203 20160422 Remove GPS Measurement Mode command, Request from Andrew, Oliver.
 // .204 20160428 Add FormatError ACK support, Request from Andrew.
 // .205 20160429 Fix Ack error issue, Request from Ken.
+// .206 20160509 Add command [Pinning Of Kernel Very Low Speed] to all version, Request from Ryan.
+// .207 20160511 Clear PSTI032 info; Correct Lon/Lat display, Request from Ken.
+// .208 20160512 Setup dialog add recentScatterCenter list, Request from Ken.
+// .208 20160512 Binary Measurement Data Out support 8Hz, Request from Andrew.
+// .208 20160516 Remove Query / Configure Datum in Binary menu, Request from Andrew.
+// .209 20160527 Modify [Pinning Of Kernel Very Low Speed] text, Request from Andrew.
+// .210 20160615 Add SWCFG_VENDOR_NSHP_FIX_TOOL for NS-HP user patch, Request from Andrew and Oliver.
+// .211 20160616 Add Write 0x50000000 to a File for Kayyui, Request from Andrew.
 
 
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.205"
+#define APP_VERSION				"2.0.211"
 #define APP_TITLE				""
 #define APP_MODULE				"Venus 8"
 
@@ -245,7 +253,7 @@
 //Define FIRMWARE_DOWNLOAD 0 to disable download UI in Viewer
 #define FIRMWARE_DOWNLOAD		1
 //Default scatter count
-#define MAX_SCATTER_COUNT		250
+#define MAX_SCATTER_COUNT		300
 
 #define ODOMETER_SUPPORT		0
 //#define BINARY_MESSAGE_INTERVAL	0
@@ -265,9 +273,11 @@
 //Show eCompass calibration UI in Viewer
 #define ECOMPASS_CALIBRATION	0
 #define TIMING_MODE				0
+//Information has multiple pages
+#define _TAB_LAYOUT_			0
 
 //#define _BAUTRATE_IDX_6_		891200
-#define OPEN_PINNING_RESERVE	0
+#define OPEN_PINNING_RESERVE	1
 #define RESET_MOTION_SENSOR		0
 #define _V8_SUPPORT				1
 #define GG12A					0
@@ -304,17 +314,145 @@
 #define SPECIAL_TEST			0		//Test ETEN case 20160202
 #define GEO_FENCING_CMD			1		//0 - old geo-fencing cmd, 1 - new geo-fencing cmd
 #define SHOW_RTK_BASELINE		0
+#define SHOW_PATCH_MENU			0		//Use for user patch.
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-#if defined(SWCFG_VENDOR_GNSS_ADDTAG)
+#if defined(SWCFG_VENDOR_NSHP_FIX_TOOL)
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef MAX_SCATTER_COUNT
+ #undef CLIENT_WIDTH
+ #undef CLIENT_HEIGHT
+ #undef SHOW_PATCH_MENU
+ #undef SHOW_PATCH_MENU		
+ #undef UPGRADE_DOWNLOAD		
+ #undef UPGRADE_CRC			
+ #undef UPGRADE_DUEDATE_Y		
+ #undef UPGRADE_DUEDATE_M	
+ #undef UPGRADE_DUEDATE_D	
+ #undef UPGRADE_ADD_TAG	
+ #undef UPGRADE_TAG_VALUE	
+
+ #define APP_CAPTION			"NS-HP Patch Tool"
+ #define APP_TITLE				""
+ #define GNSS_VIEWER			1
+ #define IS_DEBUG				0
+ #define BAUDRATE_DEFAULT		7
+ #define MAX_SCATTER_COUNT		100
+ #define CLIENT_WIDTH			292		//Viewer window client width
+ #define CLIENT_HEIGHT			398		//Viewer window client height
+ #define SHOW_PATCH_MENU		1
+ #define UPGRADE_DOWNLOAD		0
+ #define UPGRADE_CRC			0xFFFFFFFF
+ #define UPGRADE_DUEDATE_Y		2016
+ #define UPGRADE_DUEDATE_M		6
+ #define UPGRADE_DUEDATE_D		30
+ #define UPGRADE_ADD_TAG		1
+ #define UPGRADE_TAG_VALUE		0xA001
+
+#elif defined(SWCFG_VENDOR_GNSS_L2_NMEA)
  #undef APP_CAPTION
  #undef APP_TITLE
  #undef GNSS_VIEWER
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
+ #undef SHOW_ERROR_NMEA_NOTIFY
+ #undef MAX_SCATTER_COUNT
+ #undef MORE_INFO
+ #undef _TAB_LAYOUT_
+
+ #define APP_CAPTION			"GNSS Viewer"
+ #define APP_TITLE				"Internal Use L2 Test"
+ #define GNSS_VIEWER			1
+ #define IS_DEBUG				1
+ #define BAUDRATE_DEFAULT		7
+ #define TIMING_MODE			1
+ #define SHOW_ERROR_NMEA_NOTIFY 1
+ #define MAX_SCATTER_COUNT		1000
+ #define MORE_INFO				0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define _L2_NMEA_TEST_			1		//Test BDGSV2 L2 NMEA
+
+#elif defined(SWCFG_VENDOR_GNSS_NMEAPLAYER_NEW)
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef NMEA_INPUT
+ #undef SHOW_ERROR_NMEA_NOTIFY
+ #undef CLIENT_WIDTH
+ #undef CLIENT_HEIGHT
+ #undef MORE_INFO
+ #undef _TAB_LAYOUT_
+
+ #define APP_CAPTION			"GNSS Viewer"
+ #define APP_TITLE				"NMEA Player"
+ #define GNSS_VIEWER			1
+ #define IS_DEBUG				0
+ #define BAUDRATE_DEFAULT		7
+ #define TIMING_MODE			1
+ #define NMEA_INPUT				1
+ #define SHOW_ERROR_NMEA_NOTIFY 1
+ #define CLIENT_WIDTH			1008	
+ #define CLIENT_HEIGHT			614
+ #define MORE_INFO				0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+
+#elif defined(SWCFG_VENDOR_GNSS_GENERAL_NEW)
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef MORE_INFO
+ #undef _TAB_LAYOUT_
+
+ #define APP_CAPTION			"GNSS Viewer"
+ #define APP_TITLE				"Customer Release"
+ #define GNSS_VIEWER			1
+ #define IS_DEBUG				0
+ #define BAUDRATE_DEFAULT		7
+ #define TIMING_MODE			1
+ #define MORE_INFO				0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+
+#elif defined(SWCFG_VENDOR_GNSS_INTERNALUSE_NEW)
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef SHOW_ERROR_NMEA_NOTIFY
+ #undef MAX_SCATTER_COUNT
+ #undef MORE_INFO
+ #undef _TAB_LAYOUT_
+
+ #define APP_CAPTION			"GNSS Viewer"
+ #define APP_TITLE				"Internal Use"
+ #define GNSS_VIEWER			1
+ #define IS_DEBUG				1
+ #define BAUDRATE_DEFAULT		7
+ #define TIMING_MODE			1
+ #define SHOW_ERROR_NMEA_NOTIFY 1
+ #define MAX_SCATTER_COUNT		1000
+ #define MORE_INFO				0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+
+#elif defined(SWCFG_VENDOR_GNSS_ADDTAG)
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
  #undef CLIENT_WIDTH
  #undef CLIENT_HEIGHT
  #undef AUTO_QUERY_VERSION
@@ -325,9 +463,7 @@
  #define IS_DEBUG				0
  #define BAUDRATE_DEFAULT		7
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL 1
- #define SAINTMAX_UI			 1
+ #define SAINTMAX_UI			1
  #define CLIENT_WIDTH			577
  #define CLIENT_HEIGHT			341
  #define AUTO_QUERY_VERSION		1
@@ -340,7 +476,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
  #undef MORE_INFO
  #undef SHOW_RTK_BASELINE
  #undef CUSTOMER_ID
@@ -353,7 +488,6 @@
  #define IS_DEBUG				0
  #define BAUDRATE_DEFAULT		7
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
  #define MORE_INFO				0		//Please define _MORE_INFO_ for rc2 too.
  #define SHOW_RTK_BASELINE		0		//Please define SHOW_RTK_BASELINE for rc2 too.
  #define CUSTOMER_ID			Eten
@@ -367,8 +501,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef MORE_INFO
  #undef SHOW_RTK_BASELINE
 
@@ -379,8 +511,6 @@
  #define IS_DEBUG				0
  #define BAUDRATE_DEFAULT		7
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
  #define MORE_INFO				1		//Please define _MORE_INFO_ for rc2 too.
  #define SHOW_RTK_BASELINE		1		//Please define SHOW_RTK_BASELINE for rc2 too.
 
@@ -391,8 +521,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef CLIENT_WIDTH
  #undef CLIENT_HEIGHT
  #undef AUTO_QUERY_VERSION
@@ -403,8 +531,6 @@
  #define IS_DEBUG				0
  #define BAUDRATE_DEFAULT		7
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL 1
  #define SAINTMAX_UI			 1
  #define CLIENT_WIDTH			577
  #define CLIENT_HEIGHT			341
@@ -418,8 +544,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef NMEA_INPUT
  #undef SHOW_ERROR_NMEA_NOTIFY
  #undef MORE_INFO
@@ -433,8 +557,6 @@
  #define IS_DEBUG				0
  #define BAUDRATE_DEFAULT		7
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
  #define NMEA_INPUT				1
  #define SHOW_ERROR_NMEA_NOTIFY 1
  #define MORE_INFO				1		//Please define _MORE_INFO_ for rc2 too.
@@ -449,8 +571,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef MORE_INFO
 
  #define APP_CAPTION			"GNSS Viewer"
@@ -460,8 +580,6 @@
  #define IS_DEBUG				0
  #define BAUDRATE_DEFAULT		7
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
  #define MORE_INFO				1		//Please define _MORE_INFO_ for rc2 too.
 
 #elif defined(SWCFG_VENDOR_GNSS_TAKUJI)
@@ -471,8 +589,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef UPGRADE_DOWNLOAD
  #undef UPGRADE_CRC
  #undef UPGRADE_DUEDATE_Y		
@@ -487,8 +603,6 @@
  #define IS_DEBUG				0
  #define BAUDRATE_DEFAULT		7
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
  #define UPGRADE_DOWNLOAD		1
  #define UPGRADE_CRC			0xce72
  #define UPGRADE_DUEDATE_Y		2015
@@ -504,8 +618,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef _RESOURCE_LOADER_ID_
 
  #define APP_CAPTION			"GNSS Viewer"
@@ -514,8 +626,6 @@
  #define IS_DEBUG				0
  #define BAUDRATE_DEFAULT		7
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
  #define _RESOURCE_LOADER_ID_	1351
 
 #elif defined(SWCFG_VENDOR_GNSS_SUP800_GENERAL)
@@ -525,8 +635,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef SHOW_ERROR_NMEA_NOTIFY
  #undef _MODULE_SUP_800_
 
@@ -536,8 +644,6 @@
  #define IS_DEBUG				0
  #define BAUDRATE_DEFAULT		7
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
  #define SHOW_ERROR_NMEA_NOTIFY 1
  #define _MODULE_SUP_800_		1
 
@@ -548,8 +654,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef SHOW_ERROR_NMEA_NOTIFY
  #undef _MODULE_SUP_800_
 
@@ -559,8 +663,6 @@
  #define IS_DEBUG				1
  #define BAUDRATE_DEFAULT		7
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
  #define SHOW_ERROR_NMEA_NOTIFY 1
  #define _MODULE_SUP_800_		1
 
@@ -571,8 +673,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef CUSTOMER_DOWNLOAD
  #undef DefaultCuteomer
 
@@ -582,8 +682,6 @@
  #define IS_DEBUG				0
  #define BAUDRATE_DEFAULT		5
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
  #define CUSTOMER_DOWNLOAD		1
  #define DefaultCuteomer		OlinkStar
 
@@ -595,8 +693,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef CUSTOMER_DOWNLOAD
  #undef DefaultCuteomer
  #undef TIMING_MONITORING
@@ -610,8 +706,6 @@
  #define IS_DEBUG				0
  #define BAUDRATE_DEFAULT		5
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
  #define CUSTOMER_DOWNLOAD		0
  #define DefaultCuteomer		Ericsson
  #define TIMING_MONITORING		0
@@ -627,8 +721,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef CUSTOMER_DOWNLOAD
  #undef DefaultCuteomer
  #undef TIMING_MONITORING
@@ -641,8 +733,6 @@
  #define IS_DEBUG				0
  #define BAUDRATE_DEFAULT		5
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
  #define CUSTOMER_DOWNLOAD		0
  #define DefaultCuteomer		SWID
  #define TIMING_MONITORING	0
@@ -657,8 +747,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef CUSTOMER_DOWNLOAD
  #undef DefaultCuteomer
  #undef TIMING_MONITORING
@@ -671,8 +759,6 @@
  #define IS_DEBUG				0
  #define BAUDRATE_DEFAULT		5
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
  #define CUSTOMER_DOWNLOAD		0
  #define DefaultCuteomer			SWID
  #define TIMING_MONITORING	0
@@ -686,11 +772,10 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef SHOW_ERROR_NMEA_NOTIFY
  #undef MAX_SCATTER_COUNT
  #undef MORE_INFO
+ #undef _TAB_LAYOUT_
 
  #define APP_CAPTION			"GNSS Viewer"
  #define APP_TITLE				"Internal Use"
@@ -698,11 +783,10 @@
  #define IS_DEBUG				1
  #define BAUDRATE_DEFAULT		7
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
  #define SHOW_ERROR_NMEA_NOTIFY 1
  #define MAX_SCATTER_COUNT		1000
- #define MORE_INFO				1		//Please define _MORE_INFO_ for rc2 too.
+ #define MORE_INFO				0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
 
 #elif defined(SWCFG_VENDOR_GNSS_INTERNALUSE_GPS_183)
  #undef APP_CAPTION
@@ -711,8 +795,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef SHOW_ERROR_NMEA_NOTIFY
  #undef NMEA_PRN_TYPE
 
@@ -722,8 +804,6 @@
  #define IS_DEBUG				1
  #define BAUDRATE_DEFAULT		7
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
  #define SHOW_ERROR_NMEA_NOTIFY 1
  #define NMEA_PRN_TYPE			3
 
@@ -734,8 +814,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
 
  #define APP_CAPTION			"GNSS Viewer"
  #define APP_TITLE				"Customer Release"
@@ -743,8 +821,6 @@
  #define IS_DEBUG				0
  #define BAUDRATE_DEFAULT		7
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
 
 #elif defined(SWCFG_VENDOR_GNSS_FKHL)
  #undef APP_CAPTION
@@ -753,8 +829,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef NMEA_PRN_TYPE
 
  #define APP_CAPTION			"GNSS Viewer"
@@ -763,8 +837,6 @@
  #define IS_DEBUG				0
  #define BAUDRATE_DEFAULT		7
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
  #define NMEA_PRN_TYPE			1
 
 #elif defined(SWCFG_VENDOR_GNSS_FKHL_Test)
@@ -774,8 +846,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef NMEA_PRN_TYPE
  #undef NMEA_INPUT
 
@@ -785,8 +855,6 @@
  #define IS_DEBUG				0
  #define BAUDRATE_DEFAULT		7
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
  #define NMEA_PRN_TYPE			1
  #define NMEA_INPUT				1
 
@@ -797,8 +865,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef NMEA_INPUT
  #undef SHOW_ERROR_NMEA_NOTIFY
  #undef CLIENT_WIDTH
@@ -810,8 +876,6 @@
  #define IS_DEBUG				0
  #define BAUDRATE_DEFAULT		7
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
  #define NMEA_INPUT				1
  #define SHOW_ERROR_NMEA_NOTIFY 1
  #define CLIENT_WIDTH			1008	
@@ -824,8 +888,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
 
  #define APP_CAPTION			"GNSS Viewer"
  #define APP_TITLE				"Internal Use"
@@ -833,8 +895,6 @@
  #define IS_DEBUG				1
  #define BAUDRATE_DEFAULT		6
  #define TIMING_MODE			1
- #define OPEN_PINNING_RESERVE	1
- //#define BINARY_MESSAGE_INTERVAL	1
 
 #elif defined(SWCFG_VENDOR_CREATETAG)
  #undef APP_CAPTION
@@ -843,8 +903,6 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef OPEN_PINNING_RESERVE
- //#undef BINARY_MESSAGE_INTERVAL
  #undef _CREATE_LICENSE_TAG_
 
  #define APP_CAPTION			"GNSS Viewer"
@@ -853,19 +911,15 @@
  #define IS_DEBUG					0
  #define BAUDRATE_DEFAULT			7
  #define TIMING_MODE				1
- #define OPEN_PINNING_RESERVE		1
- //#define BINARY_MESSAGE_INTERVAL	1
  #define _CREATE_LICENSE_TAG_		1
 
 #elif defined(SWCFG_VENDOR_GENERAL_DR)
  #undef APP_TITLE				
  #undef BAUDRATE_DEFAULT
  #undef SOFTWARE_FUNCTION
- #undef OPEN_PINNING_RESERVE
 
  #define APP_TITLE				"Customer Release DR"
  #define BAUDRATE_DEFAULT		5
- #define OPEN_PINNING_RESERVE	1
  #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 
 #else

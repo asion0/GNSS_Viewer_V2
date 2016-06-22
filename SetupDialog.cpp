@@ -30,8 +30,86 @@ BEGIN_MESSAGE_MAP(CSetupDialog, CDialog)
 END_MESSAGE_MAP()
 
 #define BOOST_BAUDIDX_BASE		5
+BOOL ParsingLatLon(const CStringW& s, D64& lon, D64& lat)
+{
+	int pos = s.Find(',');
+	if(pos >= s.GetLength() || pos < 0)
+	{
+		return FALSE;
+	}
+	CStringW p1 = s.Left(pos);
+	CStringW p2 = s.Right(s.GetLength() - pos - 1);
+
+	BOOL newStyle = FALSE;
+	int signLon = 1, signLat = 1;
+	//121.0087235¢XE, 24.7848383¢XN
+
+	if(p1.GetLength() >= 2 && p2.GetLength() >= 2)
+	{
+		WCHAR c1 = p1[p1.GetLength() - 1];
+		WCHAR c2 = p2[p2.GetLength() - 1];
+		if(p1[p1.GetLength() - 2] == L'¢X' && p2[p2.GetLength() - 2] == L'¢X')
+		{
+			newStyle = TRUE;
+			if(c1 == 'E' || 'e')
+			{
+
+			}
+			else if(c1 == 'W' || 'w')
+			{
+				signLon = -1;
+			}
+			else
+			{
+				return FALSE;
+			}
+			if(c2 == 'N' || 'n')
+			{
+
+			}
+			else if(c1 == 'S' || 's')
+			{
+				signLat = -1;
+			}
+			else
+			{
+				return FALSE;
+			}
+			p1 = p1.Left(p1.GetLength() - 2);
+			p2 = p2.Left(p2.GetLength() - 2);
+		}
+	}
+	
+	lon = _wtof(p1);
+	lat = _wtof(p2);
+	if(newStyle)
+	{
+		lon *= signLon;
+		lat *= signLat;
+	}
+
+	return TRUE;
+}
+
 void CSetupDialog::OnBnClickedOk()
 {
+	if(((CButton*)GetDlgItem(IDC_SPY_CENTER))->GetCheck())
+	{
+		CStringW w;
+		::GetWindowTextW(GetDlgItem(IDC_LONLAT)->GetSafeHwnd(), w.GetBuffer(128), 128);
+		w.ReleaseBuffer();
+		D64 lat, lon;
+		if(!ParsingLatLon(w, lon, lat))
+		{
+			::AfxMessageBox("The scatter center point format error!", MB_OK);
+			return;
+		}
+		setting->scatterCenterLon = lon;
+		setting->scatterCenterLat = lat;
+		setting->AddRecentScatterCenter(CString(w));
+
+	}
+
 	CString s;
 	GetDlgItem(IDC_BINSIZE_DELAY)->GetWindowText(s);
 	setting->delayBeforeBinsize = (s.IsEmpty()) ? 0 : atoi(s);
@@ -48,10 +126,7 @@ void CSetupDialog::OnBnClickedOk()
 	setting->specifyCenter = ((CButton*)GetDlgItem(IDC_SPY_CENTER))->GetCheck();
 	setting->specifyCenterAlt = ((CButton*)GetDlgItem(IDC_SPY_ALT))->GetCheck();
 
-	GetDlgItem(IDC_LON)->GetWindowText(s);
-	setting->scatterCenterLon = atof(s);
-	GetDlgItem(IDC_LAT)->GetWindowText(s);
-	setting->scatterCenterLat = atof(s);
+
 	GetDlgItem(IDC_ALT)->GetWindowText(s);
 	setting->scatterCenterAlt = atof(s);
 	GetDlgItem(IDC_TIMEOUT)->GetWindowText(s);
@@ -122,5 +197,14 @@ BOOL CSetupDialog::OnInitDialog()
 	s.Format("%d", setting->scatterCount);
 	GetDlgItem(IDC_SCATTER_COUNT)->SetWindowText(s);
 
+	if(setting->recentScatterCenter.GetCount())
+	{
+		CComboBox *lonlat = (CComboBox *)GetDlgItem(IDC_LONLAT);
+		for(int i = setting->recentScatterCenter.GetCount() - 1; i >= 0 ; --i)
+		{
+			lonlat->AddString(setting->recentScatterCenter[i]);
+		}
+		lonlat->SetWindowText(setting->recentScatterCenter[setting->recentScatterCenter.GetCount() - 1]);
+	}
 	return TRUE;  // return TRUE unless you set the focus to a control
 }

@@ -717,7 +717,7 @@ protected:
 	F32 m_sttValue3;
 	F32 m_mvbLength;
 	U08 m_attribute;
-
+	BOOL m_newCmd;
 	void UpdateStatus();
 
 	DECLARE_MESSAGE_MAP()
@@ -866,6 +866,26 @@ public:
 
 protected:
 	U08 m_num;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigVeryLowSpeed 對話方塊
+class CConfigVeryLowSpeed : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigVeryLowSpeed)
+public:
+	CConfigVeryLowSpeed(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigVeryLowSpeed() {};
+
+	virtual void DoCommand();
+
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
+
+protected:
+	int m_nEnable;
+	int m_nAttribute;
 
 	DECLARE_MESSAGE_MAP()
 };

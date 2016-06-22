@@ -36,6 +36,13 @@ typedef matrix<float> Matrix;
 #define BUF_SIZE 4096
 #define BOOTLOADER_SIZE		0x10000
 
+#define WGS84_RA    (6378137.0)                   // semi-major earth axis(ellipsoid equatorial radius)
+#define WGS84_INV_F (298.257223563)               // inverse flattening of WGS-84
+#define WGS84_F     (1.0/WGS84_INV_F)             // inverse flattening of WGS-84
+#define WGS84_RB    (WGS84_RA*(1.0-WGS84_F))      // semi-major earth axis(ellipsoid polar radius)
+#define WGS84_E2    (2.0*WGS84_F-WGS84_F*WGS84_F) // eccentricity squared: (RA*RA-RB*RB)/RA*RA
+#define WGS84_E2P   (WGS84_E2/(1.0-WGS84_E2))     // eccentricity squared: (RA*RA-RB*RB)/RB*RB
+
 struct Setting
 {
 	Setting()
@@ -56,7 +63,7 @@ struct Setting
 			reg.WriteInt("setting_earthBitmap", earthBitmap);
 		}
 
-		if(IS_DEBUG &&reg.SetKey("Software\\GNSSViewer\\GPS", false))
+		if(IS_DEBUG && reg.SetKey("Software\\GNSSViewer\\GPS", false))
 		{
 			reg.WriteInt("setting_delayBeforeBinsize", delayBeforeBinsize);
 			reg.WriteInt("setting_boostBaudrateIndex", boostBaudIndex);
@@ -73,6 +80,14 @@ struct Setting
 			reg.WriteFloat("setting_scatterCenterAlt", scatterCenterAlt);
 			reg.WriteInt("setting_defaultTimeout", defaultTimeout);
 			reg.WriteInt("setting_scatterCount", scatterCount);
+
+			reg.WriteInt("recentScatterCenterCount", recentScatterCenter.GetCount());
+			for(int i = 0; i < recentScatterCenter.GetCount(); ++i)
+			{
+				CString key;
+				key.Format("recentScatterCenter%d", i);
+				reg.WriteString(key, recentScatterCenter[i]);
+			}
 		}	
 	}
 
@@ -100,6 +115,15 @@ struct Setting
 			scatterCenterAlt = reg.ReadFloat("setting_scatterCenterAlt", defaultCenterAlt);
 			defaultTimeout = reg.ReadInt("setting_defaultTimeout", DefaultTimeout);
 			scatterCount = reg.ReadInt("setting_scatterCount", MAX_SCATTER_COUNT);
+
+			int recentCount = reg.ReadInt("recentScatterCenterCount", 0);
+			for(int i = 0; i < recentCount; ++i)
+			{
+				CString key, data;
+				key.Format("recentScatterCenter%d", i);
+				data = reg.ReadString(key, "");
+				recentScatterCenter.Add(data);
+			}
 		}
 		else
 		{
@@ -140,6 +164,20 @@ struct Setting
 		}
 	}
 
+	void AddRecentScatterCenter(LPCSTR r)
+	{
+		for(int i = 0; i < recentScatterCenter.GetCount(); ++i)
+		{
+			if(recentScatterCenter[i] == r)
+			{
+				recentScatterCenter.RemoveAt(i);
+			}
+		}
+		if(recentScatterCenter.GetCount() > 9)
+			recentScatterCenter.RemoveAt(0);
+		recentScatterCenter.Add(r);
+	}
+
 	int GetBaudrateIndex() { return baudrate; }
 	int GetBaudrate() { return BaudrateTable[baudrate]; }
 	void SetBaudrateIndex(int b) { baudrate = b; }
@@ -171,6 +209,7 @@ struct Setting
 	double scatterCenterAlt;
 	int defaultTimeout;
 	int scatterCount;
+	CStringArray recentScatterCenter;
 
 protected:
 

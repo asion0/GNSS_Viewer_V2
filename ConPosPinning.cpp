@@ -5,9 +5,6 @@
 #include "GPS.h"
 #include "ConPosPinning.h"
 
-
-// CConPosPinning 對話方塊
-
 IMPLEMENT_DYNAMIC(CConPosPinning, CDialog)
 CConPosPinning::CConPosPinning(CWnd* pParent /*=NULL*/)
 	: CDialog(CConPosPinning::IDD, pParent)
@@ -29,17 +26,12 @@ void CConPosPinning::DoDataExchange(CDataExchange* pDX)
 	CDialog::DoDataExchange(pDX);
 }
 
-
 BEGIN_MESSAGE_MAP(CConPosPinning, CDialog)
 	ON_BN_CLICKED(IDOK, OnBnClickedOk)
 END_MESSAGE_MAP()
 
-
-// CConPosPinning 訊息處理常式
-
 void CConPosPinning::OnBnClickedOk()
 {
-	// TODO: 在此加入控制項告知處理常式程式碼
 	OnOK();
 }
 
@@ -49,6 +41,7 @@ BOOL CConPosPinning::OnInitDialog()
 
 	// disable;enable;
 	position_pinning.ResetContent();
+	//Old fw only has two mode, new has three.
 #ifdef OPEN_PINNING_RESERVE
 	position_pinning.AddString("Default");
 	position_pinning.AddString("Enable");
@@ -58,7 +51,5 @@ BOOL CConPosPinning::OnInitDialog()
 	position_pinning.AddString("Enable");
 #endif
 	position_pinning.SetCurSel(0);
-
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }

@@ -8,6 +8,13 @@ void Utility::Log(const char* str1, const char* str2, int n)
 	strLog.Format("%s, %s(%d)", str1, str2, n);
 	::OutputDebugString(strLog);
 }
+//
+//void Utility::LogDword(const char* str1, DWORD d, int n)
+//{
+//	CString strLog; 
+//	strLog.Format("%s, %d(%d)", str1, d, n);
+//	::OutputDebugString(strLog);
+//}
 
 void Utility::LogFatal(const char* str1, const char* str2, int n)
 {
@@ -75,6 +82,7 @@ DWORD Utility::GetRegValue(HKEY hKeyHandle, LPCTSTR lpSubkey, LPCTSTR lpRegName,
 	nRegvalue = _ttoi(strRegValue);
 	return dwRet;
 }
+
 DWORD Utility::SetRegValue(HKEY hKeyHandle, LPCTSTR lpSubkey, LPCTSTR lpRegName, LPCTSTR szRegvalue)
 {
 	HKEY    hKey;
@@ -94,7 +102,7 @@ DWORD Utility::SetRegValue(HKEY hKeyHandle, LPCTSTR lpSubkey, LPCTSTR lpRegName,
 						  &hKey,
 						  &dwReturn);
 
-	if( lRet != ERROR_SUCCESS)
+	if(lRet != ERROR_SUCCESS)
 	{
 		return lRet;
 	}
@@ -114,6 +122,7 @@ DWORD Utility::SetRegValue(HKEY hKeyHandle, LPCTSTR lpSubkey, LPCTSTR lpRegName,
 	}
 	return ERROR_SUCCESS;
 }
+
 DWORD Utility::SetRegValue(HKEY hKeyHandle, LPCTSTR lpSubkey, LPCTSTR lpRegName, int &nRegvalue)
 {
 	CString strRegValue;
@@ -213,7 +222,6 @@ BOOL Utility::ReadUFileToUText(LPCTSTR pszFile, CStringW& strOutText, BOOL& bBig
 	}
 	fNib.Close();
 	strOutText.ReleaseBuffer();
-
 	return TRUE;
 }
 
@@ -313,7 +321,6 @@ DWORD Utility::ExecuteExternalFileW(LPCWSTR csCmdLine, CString& strResult)
 		Sleep(100);
 	}
 	while(STILL_ACTIVE==dwResult);
-
 	return dwResult;
 }
 
@@ -325,7 +332,6 @@ BOOL Utility::ExecuteExeNoWait(LPCSTR csCmdLine)
 	ZeroMemory(&secattr,sizeof(secattr));
 	secattr.nLength = sizeof(secattr);
 	secattr.bInheritHandle = TRUE;
-
 
 	STARTUPINFOW sInfo; 
 	ZeroMemory(&sInfo, sizeof(sInfo));
@@ -570,6 +576,7 @@ BOOL Utility::RenameFile(LPCTSTR pszSrcFile, LPCTSTR pszNewName, BOOL bSilent, B
 	strDst.ReleaseBuffer();
 	return nRet==0;
 }
+
 CString Utility::GetFileExt(LPCTSTR pszPathname)
 {
 	CString strRet(pszPathname);

@@ -37,7 +37,7 @@
 #define IDB_DIRECTION                   182
 #define IDB_LATITUDE                    183
 #define IDB_LONGITUDE                   184
-#define IDB_PDOP                        185
+#define IDB_HDOP                        185
 #define IDB_SPEED                       187
 #define IDB_RESPONSE                    188
 #define IDI_MAINFRAME                   193
@@ -224,6 +224,18 @@
 #define IDR_UPGRADE_DOWNLOAD_PROM       480
 #define IDB_RTK_AGE                     481
 #define IDB_RTK_RATIO                   482
+#define IDB_INFORMATION_B               483
+#define IDB_RTK_INFO_T                  484
+#define IDB_RTK_INFO_B                  485
+#define IDB_EAST_PROJECTION             486
+#define IDB_BASELINE_LENGTH             487
+#define IDB_NORTH_PROJECTION            488
+#define IDB_BASELINE_COURSE             489
+#define IDB_UP_PROJECTION               490
+#define IDB_TIME2                       491
+#define IDB_DATE2                       492
+#define IDR_UPGRADE_DOWNLOAD_PROM2      493
+
 #define IDC_CONNECT                     1000
 #define IDC_CLOSE                       1001
 #define IDC_SETORIGIN                   1002
@@ -247,7 +259,7 @@
 #define IDC_LONGITUDE                   1011
 #define IDC_LATITUDE                    1012
 #define IDC_POWERSAVING_8               1012
-#define IDC_PDOP                        1013
+#define IDC_HDOP                        1013
 #define IDC_POWERSAVING_9               1013
 #define IDC_SPEED                       1014
 #define IDC_EDIT15                      1014
@@ -654,7 +666,7 @@
 #define IDC_ROVER_OPT_FUN               1244
 #define IDC_DATE_T                      1250
 #define IDC_TIME_T                      1251
-#define IDC_PDOP_T                      1252
+#define IDC_HDOP_T                      1252
 #define IDC_LONGITUDE_T                 1253
 #define IDC_LATITUDE_T                  1254
 #define IDC_SPEED_T                     1255
@@ -910,6 +922,27 @@
 #define IDC_STT_EDT4                    1402
 #define IDC_MVB_EDT1                    1402
 #define IDC_NUM                         1404
+#define IDC_INFORMATION_B               1405
+#define IDC_LONLAT                      1405
+#define IDC_RTK_INFO_T                  1406
+#define IDC_RTK_INFO_B                  1407
+#define IDC_EAST_PROJECTION             1408
+#define IDC_BASELINE_LENGTH             1409
+#define IDC_NORTH_PROJECTION            1410
+#define IDC_BASELINE_COURSE             1411
+#define IDC_UP_PROJECTION               1412
+#define IDC_TIME2                       1413
+#define IDC_DATE2                       1414
+#define IDC_EAST_PROJECTION_T           1415
+#define IDC_BASELINE_LENGTH_T           1416
+#define IDC_NORTH_PROJECTION_T          1417
+#define IDC_BASELINE_COURSE_T           1418
+#define IDC_UP_PROJECTION_T             1419
+#define IDC_TIME2_T                     1420
+#define IDC_DATE2_T                     1421
+#define IDC_COOR_SWITCH1                1422
+#define IDC_COOR_SWITCH2                1423
+#define IDD_CFG_VERY_LOW                1424
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_BINARY_SYSTEMRESTART         32811
@@ -1172,6 +1205,10 @@
 #define ID_CONFIG_PSCM_DEV_ADDR         33119
 #define ID_CONFIG_PSCM_LAT_LON          33120
 #define ID_READ_MEM_TO_FILE             33121
+#define ID_QUERY_VERY_LOW               33122
+#define ID_CONFIG_VERY_LOW              33123
+#define ID_PATCH			            33124
+#define ID_WRITE_MEM_TO_FILE            33125
 
 // Next default values for new objects
 // 
@@ -1179,7 +1216,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        478
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1405
+#define _APS_NEXT_CONTROL_VALUE         1406
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

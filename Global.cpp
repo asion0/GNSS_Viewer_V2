@@ -129,12 +129,12 @@ bool CheckInUse(int id, GPGSA* gsa)
 
 double Deg2Rad(double degree)
 {
-	return degree * (PI/180); 
+	return (degree * PI)/180; 
 }
 
 double Rad2Deg(double rad)
 {
-	return rad * (180/PI); 
+	return (rad * 180)/PI; 
 }
 float FixedPointToSingle(U32 FixedPointValue, int NumberOfFractionalBits)
 {

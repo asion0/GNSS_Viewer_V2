@@ -30,10 +30,6 @@ void ScatterData::SetOrigin()
 	{
 		m_lon = lon_deg;
 		m_lat = lat_deg;
-		//offset_x  = current_x; 
-		//offset_y  = current_y;	
-		//offset_x = enu_x.back();
-		//offset_y = enu_y.back();
 		ini_h = CGPSDlg::gpsDlg->m_gpggaMsg.Altitude + CGPSDlg::gpsDlg->m_gpggaMsg.GeoidalSeparation;
 	}
 	
@@ -42,10 +38,13 @@ void ScatterData::SetOrigin()
 		enu_x_it != enu_x.end(); 
 		++enu_x_it, ++enu_y_it)
 	{				
-		//*enu_x_it -= offset_x / 1000.0F;
-		//*enu_y_it -= offset_y / 1000.0F;
-		*enu_x_it -= enu_x.back();
-		*enu_y_it -= enu_y.back();
+		double tx = enu_x.back();
+		double ty = enu_y.back();
+		*enu_x_it -= tx;
+		*enu_y_it -= ty;
+
+		//*enu_x_it -= enu_x.back();
+		//*enu_y_it -= enu_y.back();
 	}		
 	UnlockEnuData();
 
@@ -216,8 +215,11 @@ CPic_Scatter::CPic_Scatter(void)
 {
 	int i=0, x=0, y=0;
 	//定義點圖的範圍大小
-	plot_x1 = 45; plot_y1 = 21;	//視窗左上角
-	plot_x2 = plot_x1+200; plot_y2 = plot_y1+200;
+	plot_x1 = 45; 
+	plot_y1 = 21;	
+	//視窗左上角
+	plot_x2 = plot_x1+200; 
+	plot_y2 = plot_y1+200;
 
 	plot_cross_x = (plot_x1 + plot_x2) / 2;
 	plot_cross_y = (plot_y1 + plot_y2) / 2;
@@ -240,7 +242,7 @@ CPic_Scatter::CPic_Scatter(void)
 }
 
 CPic_Scatter::~CPic_Scatter(void)
-	{
+{
 	
 }
 
@@ -251,7 +253,6 @@ END_MESSAGE_MAP()
 void CPic_Scatter::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
-	
 	Refresh_ScatterChart(&dc);
 }
 

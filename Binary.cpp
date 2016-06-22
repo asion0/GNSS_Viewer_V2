@@ -42,24 +42,14 @@ struct CommandEntry
 
 static CommandEntry cmdTable[] =
 {
-	//QuerySwVerRomCmd
-	//{ 0x02, 0x00, 2, 0x80, 0x00 },
 	//QuerySwVerSysCmd
 	{ 0x02, 0x01, 2, 0x80, 0x00 },
-	//QuerySwCrcRomCmd
-	//{ 0x03, 0x00, 2, 0x81, 0x00 },
 	//QuerySwCrcSysCmd
 	{ 0x03, 0x01, 2, 0x81, 0x00 },
-	//QueryPowerSavingParametersCmd
-	//{ 0x0D, 0xFF, 1, 0x86, 0x00 },
 	//QueryCustomerIDCmd,
 	{ 0x0D, 0xFF, 1, 0x85, 0x00 },
 	//QueryPositionRateCmd
 	{ 0x10, 0xFF, 1, 0x86, 0x00 },
-	//QueryGnssSelectionForNavigationSystemCmd,
-	//{ 0x11, 0xFF, 1, 0x87, 0x00 },
-	//QueryGnssKnumberSlotCnrCmd,
-	//{ 0x12, 0xFF, 1, 0x88, 0x00 },
 	//QueryPowerModeCmd
 	{ 0x15, 0xFF, 1, 0xB9, 0x00 },
 	//QueryDatalogLogStatusCmd,
@@ -74,12 +64,8 @@ static CommandEntry cmdTable[] =
 	{ 0x2F, 0xFF, 1, 0xB0, 0x00 },
 	//QueryAgpsStatusCmd,
 	{ 0x34, 0xFF, 8, 0xB2, 0x00 },
-	//QueryWaasStatusCmd
-	//{ 0x38, 0x00, 2, 0xB3, 0x00 },
 	//QueryPositionPinningCmd
 	{ 0x3A, 0xFF, 1, 0xB4, 0x00 },
-	//QueryNavigationModeCmd,
-	//{ 0x3D, 0xFF, 1, 0xB5, 0x00 },
 	//Query1ppsModeCmd
 	{ 0x3F, 0xFF, 1, 0xB6, 0x00 },
 	//QueryNoisePowerCmd,
@@ -114,8 +100,6 @@ static CommandEntry cmdTable[] =
 	{ 0x64, 0x0b, 2, 0x64, 0x85 },
 	//QueryV8PowerSaveParameters,
 	{ 0x64, 0x0D, 2, 0x64, 0x86 },
-	//QueryV8RomPowerSaveParameters,
-	//{ 0x64, 0x0D, 2, 0x86, 0x00 },
 	//QueryPositionFixNavigationMaskCmd,
 	{ 0x64, 0x12, 2, 0x64, 0x88 },
 	//QueryRefTimeSyncToGpsTimeCmd,
@@ -123,7 +107,7 @@ static CommandEntry cmdTable[] =
 	//QueryNavigationModeV8Cmd,
 	{ 0x64, 0x18, 2, 0x64, 0x8B },
 	//QueryGnssNavSolCmd,
-	{ 0x64, 0x1A, 2, 0x64, 0x8C }, 	//{ 0x64, 0x1A, 2, 0x8C, 0x00 },
+	{ 0x64, 0x1A, 2, 0x64, 0x8C }, 
 	//QueryTimeStampingCmd,
 	{ 0x64, 0x1E, 2, 0x64, 0x8D },
 	//QueryGpsTimeCmd,
@@ -138,22 +122,22 @@ static CommandEntry cmdTable[] =
 	{ 0x64, 0x2B, 2, 0x64, 0x94 },
 	//QuerySignalDisturbanceDataCmd,
 	{ 0x64, 0x2C, 2, 0x64, 0x95 },
-	//QueryGeofenceCmd,
-	{ 0x64, 0x30, 2, 0x64, 0x96 },
+	//QueryVeryLowSpeedCmd,
+	{ 0x64, 0x35, 3, 0x64, 0x99 },
 	//QueryGeofenceResultCmd,
 	{ 0x64, 0x31, 2, 0x64, 0x97 },
 	//QueryGeofenceCmdEx,
 	{ 0x64, 0x35, 3, 0x64, 0x99 },
 	//QueryGeofenceResultCmdEx,
 	{ 0x64, 0x36, 2, 0x64, 0x9A },
+	//QueryVeryLowSpeedCmd,
+	{ 0x64, 0x38, 3, 0x64, 0x9B },
 	//QuerySha1StringCmd
 	{ 0x64, 0x7E, 2, 0x64, 0xFF },
 	//QueryVersionExtensionCmd
 	{ 0x64, 0x7D, 2, 0x64, 0xFE },
 	//Query1ppsFreqencyOutputCmd,
 	{ 0x65, 0x04, 2, 0x65, 0x81 },
-	//QueryGnssSelectionForNavigationSystem2Cmd,
-	//{ 0x66, 0x02, 2, 0x66, 0x80 },
 	//QueryGnssKnumberSlotCnr2Cmd,
 	{ 0x66, 0x7F, 2, 0x66, 0xFF },
 	//QueryDgpsCmd,
@@ -196,15 +180,10 @@ static CommandEntry cmdTable[] =
 
 enum SqBinaryCmd
 {
-	//QuerySwVerRomCmd = 0,
 	QuerySwVerSysCmd = 0,
-	//QuerySwCrcRomCmd,
 	QuerySwCrcSysCmd,
-	//QueryPowerSavingParametersCmd,
 	QueryCustomerIDCmd,
 	QueryPositionRateCmd,
-	//QueryGnssSelectionForNavigationSystemCmd,
-	//QueryGnssKnumberSlotCnrCmd,
 	QueryPowerModeCmd,
 	QueryDatalogLogStatusCmd,
 	QueryBinaryMeasurementDataOutCmd,
@@ -212,9 +191,7 @@ enum SqBinaryCmd
 	QueryDopMaskCmd,
 	QueryElevationAndCnrMaskCmd,
 	QueryAgpsStatusCmd,
-	//QueryWaasStatusCmd,
 	QueryPositionPinningCmd,
-	//QueryNavigationModeCmd,
 	Query1ppsModeCmd,
 	QueryNoisePowerCmd,
 	QueryTimingCmd,
@@ -232,7 +209,6 @@ enum SqBinaryCmd
 	QueryNoisePowerControlCmd,
 	QueryParameterSearchEngineNumberCmd,
 	QueryV8PowerSaveParameters,
-	//QueryV8RomPowerSaveParameters,
 	QueryPositionFixNavigationMaskCmd,
 	QueryRefTimeSyncToGpsTimeCmd,
 	QueryNavigationModeV8Cmd,
@@ -248,10 +224,10 @@ enum SqBinaryCmd
 	QueryGeofenceResultCmd,
 	QueryGeofenceCmdEx,
 	QueryGeofenceResultCmdEx,
+	QueryVeryLowSpeedCmd,
 	QuerySha1StringCmd,
 	QueryVersionExtensionCmd,
 	Query1ppsFreqencyOutputCmd,
-	//QueryGnssSelectionForNavigationSystem2Cmd,
 	QueryGnssKnumberSlotCnr2Cmd,
 	QueryDgpsCmd,
 	QuerySmoothModeCmd,
@@ -295,7 +271,7 @@ bool CGPSDlg::SaveEphemeris2(U08* buff, WORD id)
 	return false;
 }
 
-CGPSDlg::CmdErrorCode CGPSDlg::IsSuccessful(U08* buff, int tail, bool show_msg)
+CGPSDlg::CmdErrorCode CGPSDlg::GetCommandReturnType(U08* buff, int tail, bool showMsg)
 {	
 	if(buff[0]==0xa0 && buff[1]==0xa1 &&
 		buff[tail-1]==0x0d && buff[tail]==0x0a && buff[4]==0x83 && buff[5]==0x0)
@@ -305,14 +281,12 @@ CGPSDlg::CmdErrorCode CGPSDlg::IsSuccessful(U08* buff, int tail, bool show_msg)
 	if((buff[0]==0xa0) && (buff[1]==0xa1) &&
 		(buff[tail-1]==0x0d)&&(buff[tail]==0x0a) && (buff[4]==0x83))
 	{
-		_cprintf("Received ACK...\n");			
 		return Ack;
 	}
 	else if((buff[0]==0xa0) && (buff[1]==0xa1) &&
 		(buff[tail-1]==0x0d)&&(buff[tail]==0x0a) && (buff[4]==0x84))
 	{
-		_cprintf("Received NACK...\n");		      
-		if(show_msg)
+		if(showMsg)
 		{
 			add_msgtolist("Received NACK...");
 		}
@@ -323,7 +297,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::IsSuccessful(U08* buff, int tail, bool show_msg)
 	{
 		return FormatError;
 	}
-	return Ack0;
+	return Timeout;
 }
 
 bool CGPSDlg::SendToTarget(U08* message, U16 length, const char* Msg, bool quick)
@@ -349,7 +323,7 @@ bool CGPSDlg::SendToTarget(U08* message, U16 length, const char* Msg, bool quick
 		U08 len = buff[2] <<8 | buff[3];
 		int k1 = len + 5;
 		int k2 = len + 6;		
-		CmdErrorCode ack = IsSuccessful(buff, k2, (Msg!=NULL));	
+		CmdErrorCode ack = GetCommandReturnType(buff, k2, (Msg!=NULL));	
 		if(ack == Ack)
 		{
 			if(m_bShowBinaryCmdData)
@@ -421,7 +395,7 @@ bool CGPSDlg::SendToTargetNoWait(U08* message, U16 length, LPCSTR Msg)
 		U08 len = buff[2] << 8 | buff[3];
 		int k1 = len + 5;
 		int k2 = len + 6;		
-		CmdErrorCode ack = IsSuccessful(buff, k2);		
+		CmdErrorCode ack = GetCommandReturnType(buff, k2);		
 		if(ack == Ack)
 		{
 			if(m_bShowBinaryCmdData)
@@ -462,7 +436,7 @@ bool CGPSDlg::CheckGPS(U08* message, U16 length, char* Msg)
 		U08 len = buff[2] << 8 | buff[3];
 		int k1 = len + 5;
 		int k2 = len + 6;			
-		if(IsSuccessful(buff, k2) > Ack0)
+		if(GetCommandReturnType(buff, k2) != Timeout)
 		{
 			if(Msg[0] != 0)
 			{
@@ -1086,7 +1060,7 @@ void CGPSDlg::parse_sti_03_message(const char *buff,int len) // for timing modul
 	m_odo_meter.SetWindowText(temp);
 }
 
-#if (SHOW_RTK_BASELINE==1)
+#if (SHOW_RTK_BASELINE || _TAB_LAYOUT_)
 void CGPSDlg::parse_sti_31_message(const char *buff,int len) // for timing module
 {
 	const char *ptr = buff;
@@ -1098,14 +1072,19 @@ void CGPSDlg::parse_sti_31_message(const char *buff,int len) // for timing modul
 
 	CString temp;
 	temp.Format("%.3f",atof(ptr));
+#if (SHOW_RTK_BASELINE)
 	m_bootStatus.SetWindowText(temp);
+#else
+	m_baselineLength.SetWindowText(temp);
+#endif
 }
 #endif
 
-#if (MORE_INFO==1)
+#if(MORE_INFO || _TAB_LAYOUT_)
 void CGPSDlg::parse_sti_30_message(const char *buff,int len) // for timing module
 {
 	const char *ptr = buff;
+	memset(&m_psti030, 0, sizeof(&m_psti030));
 
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
@@ -1135,19 +1114,52 @@ void CGPSDlg::parse_sti_30_message(const char *buff,int len) // for timing modul
 	if(ptr == NULL) return;
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
-
-	F32 rtkAge = (F32)atof(ptr);
-	//CString temp;
-	//temp.Format("%.1f", atof(ptr));
-	//m_rtkAge.SetWindowText(temp);
+	m_psti030.rtkAge = (F32)atof(ptr);
 
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
+	m_psti030.rtkRatio = (F32)atof(ptr);
 
-	F32 rtkRatio = (F32)atof(ptr);
-	//temp.Format("%.1f", atof(ptr));
-	//m_rtkRatio.SetWindowText(temp);
-	PostMessage(UWM_UPDATE_RTK_INFO, *(WPARAM*)&rtkAge, *(LPARAM*)&rtkRatio);
+	PostMessage(UWM_UPDATE_PSTI030, (WPARAM)&m_psti030, 0);
+}
+#endif
+#if(_TAB_LAYOUT_)
+void CGPSDlg::parse_sti_32_message(LPCSTR buff, int len) // for timing module
+{
+	const char *ptr = buff;
+	memset(&m_psti032, 0, sizeof(&m_psti032));
+
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+
+	if(ptr == NULL) return;
+	m_psti032.eastProjection = (F32)atof(ptr);
+
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	m_psti032.northProjection = (F32)atof(ptr);
+
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	m_psti032.upProjection = (F32)atof(ptr);
+
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	m_psti032.baselineLength = (F32)atof(ptr);
+
+	ptr = go_next_dot(ptr);
+	m_psti032.baselineCourse = (F32)atof(ptr);
+
+	PostMessage(UWM_UPDATE_PSTI032, (WPARAM)&m_psti032, 0);
 }
 #endif
 
@@ -1210,26 +1222,32 @@ void CGPSDlg::parse_sti_message(const char *buff,int len)
 	} 
 	else if(psti_id == 0)
 	{
-		parse_sti_0_message(buff,len);
+		parse_sti_0_message(buff, len);
 	}
 	else if(psti_id == 20)		// for dr
 	{
-		parse_sti_20_message(buff,len);
+		parse_sti_20_message(buff, len);
 	}
 	else if(psti_id == 3)		// for jamming interference
 	{
-		parse_sti_03_message(buff,len);
+		parse_sti_03_message(buff, len);
 	}
-#if (SHOW_RTK_BASELINE==1)
+#if (SHOW_RTK_BASELINE || _TAB_LAYOUT_)
 	else if(psti_id == 31)		// for jamming interference
 	{
-		parse_sti_31_message(buff,len);
+		parse_sti_31_message(buff, len);
 	}
 #endif
-#if (MORE_INFO==1)
+#if (MORE_INFO || _TAB_LAYOUT_)
 	else if(psti_id == 30)		// for jamming interference
 	{
-		parse_sti_30_message(buff,len);
+		parse_sti_30_message(buff, len);
+	}
+#endif
+#if (_TAB_LAYOUT_)
+	else if(psti_id == 32)		// for jamming interference
+	{
+		parse_sti_32_message(buff, len);
 	}
 #endif
 #if(_MODULE_SUP_800_)
@@ -2162,7 +2180,8 @@ CGPSDlg::CmdErrorCode CGPSDlg::GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U
 	while(1)
 	{
 		ackCmd->Clear();
-		if(NULL == m_serial) return Timeout;
+		if(NULL == m_serial) 
+			return Timeout;
 		DWORD len = m_serial->GetBinary(ackCmd->GetBuffer(), ackCmd->Size(), timeOut - t.GetDuration());
 		if(CGPSDlg::gpsDlg->CheckTimeOut(t.GetDuration(), timeOut, silent))
 		{	//Time Out
@@ -2249,7 +2268,8 @@ CGPSDlg::CmdErrorCode CGPSDlg::ExcuteBinaryCommand(int cmdIdx, BinaryCommand* cm
 		add_msgtolist("In : " + theApp.GetHexString(pCmd, inSize));	
 	}
 	ackCmd->Alloc(1024);
-	if(NULL == CGPSDlg::gpsDlg->m_serial) return Timeout;
+	if(NULL == CGPSDlg::gpsDlg->m_serial) 
+		return Timeout;
 	m_serial->ClearQueue();
 	m_serial->SendData(pCmd, inSize);
 
@@ -4454,7 +4474,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGeofenceResultEx(CmdExeMode nMode, void* out
 	}
 	return Timeout;
 }
-
+/*
 CGPSDlg::CmdErrorCode CGPSDlg::QueryGeofence(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QueryGeofenceCmd].cmdSize);
@@ -4501,7 +4521,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGeofence(CmdExeMode nMode, void* outputData)
 	}
 	return Timeout;
 }
-
+*/
 CGPSDlg::CmdErrorCode CGPSDlg::QueryGeofenceEx(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QueryGeofenceCmdEx].cmdSize);
@@ -4613,6 +4633,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPstnLatLonDigits(CmdExeMode nMode, void* out
 	}
 	return Timeout;
 }
+
 CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkMode2(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QueryRtkModeCmd2].cmdSize);
@@ -4620,9 +4641,16 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkMode2(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(2, cmdTable[QueryRtkModeCmd2].cmdSubId);
 
 	BinaryData ackCmd;
-	if(ExcuteBinaryCommand(QueryRtkModeCmd2, &cmd, &ackCmd))
+	CmdErrorCode err = ExcuteBinaryCommand(QueryRtkModeCmd2, &cmd, &ackCmd, (nMode == Display) ? 3000 : 1000);
+	if(err != Ack)
 	{
-		return Timeout;
+		return err;
+	}
+
+	if(Return == nMode)
+	{	//Return command length
+		*((U16*)outputData) = ConvertLeonU16(ackCmd.Ptr(2));
+		return err;
 	}
 
 	CString strMsg;
@@ -4902,7 +4930,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySignalDisturbanceStatus(CmdExeMode nMode, vo
 	{
 		CString strMsg = "QuerySignalDisturbanceStatus Successful";
 		add_msgtolist(strMsg);
-		strMsg.Format("Operation Type : %d (%s)", ackCmd[6], (ackCmd[6]==0) ? "disable" : "Enable");
+		strMsg.Format("Operation Type : %d (%s)", ackCmd[6], (ackCmd[6]==0) ? "Disable" : "Enable");
 		add_msgtolist(strMsg);
 	}
 	return Timeout;
@@ -5244,10 +5272,15 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryBinaryMeasurementDataOut(CmdExeMode nMode, v
 		{
 			strMsg.Format("Output Rate : 10Hz");
 		}
-		else
+		else if(ackCmd[5]==5)
 		{
 			strMsg.Format("Output Rate : 20Hz");
 		}
+		else if(ackCmd[5]==6)	//Add in 20160512, request from Andrew
+		{
+			strMsg.Format("Output Rate : 8Hz");
+		}
+
 		add_msgtolist(strMsg);
 
 		strMsg.Format("Meas Time : %s", (ackCmd[6]) ? "Enable" : "Disable");
@@ -6320,6 +6353,12 @@ void CGPSDlg::OnConfigDatumIndex()
 	DoCommonConfig(&dlg);
 }
 
+void CGPSDlg::OnConfigVeryLowSpeed()
+{
+	CConfigVeryLowSpeed dlg;
+	DoCommonConfig(&dlg);
+}
+
 void CGPSDlg::OnBinaryConfigureSBAS()
 {
 	CConfigSBAS dlg;
@@ -6533,6 +6572,38 @@ void CGPSDlg::OnConfigPstmLatLonDigits()
 {
 	CConfigPscmLatLonFractionalDigits dlg;
 	DoCommonConfig(&dlg);
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryVeryLowSpeed(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryVeryLowSpeedCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryVeryLowSpeedCmd].cmdId);
+	cmd.SetU08(2, cmdTable[QueryVeryLowSpeedCmd].cmdSubId);
+
+	BinaryData ackCmd;
+	if(Ack == ExcuteBinaryCommand(QueryVeryLowSpeedCmd, &cmd, &ackCmd))
+	{
+		if(nMode==Return)
+		{
+			*((U08*)outputData) = ackCmd[6];
+			return Ack;
+		}
+
+		CString strMsg = "Query kernel very low speed successful...";
+		add_msgtolist(strMsg);
+		strMsg = "Kernel Very low speed: ";
+		add_msgtolist(strMsg);
+		if(0==(ackCmd[6]))
+		{
+			strMsg = "Disable";
+		}
+		else if(1==(ackCmd[6]))
+		{
+			strMsg = "Enable";
+		}
+		add_msgtolist(strMsg);
+	}
+	return Timeout;
 }
 
 

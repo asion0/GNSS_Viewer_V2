@@ -2017,9 +2017,9 @@ UINT AFX_CDECL ConfigRtkThread(LPVOID param)
 {
 	bool restoreConnect = (((int)(param))==0);
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), configPrompt, false);
-
+	
+	//RTK base mode should be in 1 Hz update rate.
 	Sleep(1000);
-
 	BinaryData cmd(3);
 	*cmd.GetBuffer(0) = 0x0E;
 	*cmd.GetBuffer(1) = (U08)1;
@@ -2220,7 +2220,7 @@ IMPLEMENT_DYNAMIC(CConfigRtkMode2, CCommonConfigDlg)
 CConfigRtkMode2::CConfigRtkMode2(CWnd* pParent /*=NULL*/)
 : CCommonConfigDlg(IDD_RTK_MODE2, pParent)
 {
-
+	m_newCmd = TRUE;
 }
 
 BEGIN_MESSAGE_MAP(CConfigRtkMode2, CCommonConfigDlg)
@@ -2235,6 +2235,12 @@ END_MESSAGE_MAP()
 BOOL CConfigRtkMode2::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
+
+	U16 cmdLen = 0;
+	if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryRtkMode2(CGPSDlg::Return, &cmdLen))
+	{
+		m_newCmd = (cmdLen == 37) ? FALSE : TRUE;
+	}
 
 	((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);
 	((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->SetCurSel(0);
@@ -2273,8 +2279,15 @@ void CConfigRtkMode2::OnBnClickedOk()
 	m_sttValue2 = atof(txt);
 	((CEdit*)GetDlgItem(IDC_STT_EDT3))->GetWindowText(txt);
 	m_sttValue3 = (float)atof(txt);
-	((CEdit*)GetDlgItem(IDC_MVB_EDT1))->GetWindowText(txt);	
-	m_mvbLength = (float)atof(txt);
+	if(m_newCmd)
+	{
+		((CEdit*)GetDlgItem(IDC_MVB_EDT1))->GetWindowText(txt);	
+		m_mvbLength = (float)atof(txt);
+	}
+	else
+	{
+		((CEdit*)GetDlgItem(IDC_MVB_EDT1))->ShowWindow(FALSE);	
+	}
 
 	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
 
@@ -2284,7 +2297,8 @@ void CConfigRtkMode2::OnBnClickedOk()
 void CConfigRtkMode2::DoCommand()
 {
 	CWaitCursor wait;
-	BinaryData cmd(37);
+	BinaryData cmd((m_newCmd) ? 37 : 33);
+
 	*cmd.GetBuffer(0) = 0x6A;
 	*cmd.GetBuffer(1) = 0x06;
 	*cmd.GetBuffer(2) = (U08)m_rtkMode;
@@ -2322,13 +2336,16 @@ void CConfigRtkMode2::DoCommand()
 	*cmd.GetBuffer(29) = *(((U08*)(&m_sttValue3)) + 2);
 	*cmd.GetBuffer(30) = *(((U08*)(&m_sttValue3)) + 1);
 	*cmd.GetBuffer(31) = *(((U08*)(&m_sttValue3)) + 0);
-	//F32
-	*cmd.GetBuffer(32) = *(((U08*)(&m_mvbLength)) + 3);
-	*cmd.GetBuffer(33) = *(((U08*)(&m_mvbLength)) + 2);
-	*cmd.GetBuffer(34) = *(((U08*)(&m_mvbLength)) + 1);
-	*cmd.GetBuffer(35) = *(((U08*)(&m_mvbLength)) + 0);
+	if(m_newCmd)
+	{
+		//F32
+		*cmd.GetBuffer(32) = *(((U08*)(&m_mvbLength)) + 3);
+		*cmd.GetBuffer(33) = *(((U08*)(&m_mvbLength)) + 2);
+		*cmd.GetBuffer(34) = *(((U08*)(&m_mvbLength)) + 1);
+		*cmd.GetBuffer(35) = *(((U08*)(&m_mvbLength)) + 0);
+	}
 	//U08
-	*cmd.GetBuffer(36) = (U08)m_attribute;
+	*cmd.GetBuffer((m_newCmd) ? 36 : 32) = (U08)m_attribute;
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure RTK mode and operational function successful...";
@@ -2338,6 +2355,10 @@ void CConfigRtkMode2::DoCommand()
 	}
 	else
 	{
+		if(m_roverOpt != 2)
+		{	//Clear PSTI032 information
+			CGPSDlg::gpsDlg->m_bClearPsti032 = TRUE;
+		}
 		AfxBeginThread(ConfigThread, 0);
 	}
 }
@@ -2370,7 +2391,7 @@ void CConfigRtkMode2::UpdateStatus()
 		GetDlgItem(IDC_STT_EDT2)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_STT_EDT3)->ShowWindow(SW_HIDE);
 
-		if(roverOpt == 2)	//Moving base
+		if(roverOpt == 2 && m_newCmd)	//Moving base
 		{
 			GetDlgItem(IDC_DESC)->SetWindowText(baseDesc2);
 			GetDlgItem(IDC_MVB_SET)->ShowWindow(SW_SHOW);
@@ -2933,3 +2954,48 @@ void CConfigPscmLatLonFractionalDigits::DoCommand()
     AfxBeginThread(ConfigThread, 0);
 }
 
+// CConfigVeryLowSpeed 對話方塊
+IMPLEMENT_DYNAMIC(CConfigVeryLowSpeed, CCommonConfigDlg)
+
+CConfigVeryLowSpeed::CConfigVeryLowSpeed(CWnd* pParent /*=NULL*/)
+	: CCommonConfigDlg(IDD_CFG_VERY_LOW, pParent)
+{
+	m_nEnable = 0;
+	m_nAttribute = 0;
+}
+
+BEGIN_MESSAGE_MAP(CConfigVeryLowSpeed, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigVeryLowSpeed::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigVeryLowSpeed 訊息處理常式
+BOOL CConfigVeryLowSpeed::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigVeryLowSpeed::OnBnClickedOk()
+{
+	m_nEnable = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
+void CConfigVeryLowSpeed::DoCommand()
+{
+	BinaryData cmd(4);
+	*cmd.GetBuffer(0) = 0x64;
+	*cmd.GetBuffer(1) = 0x37;
+	*cmd.GetBuffer(2) = (U08)m_nEnable;
+	*cmd.GetBuffer(3) = (U08)m_nAttribute;
+
+	configCmd.SetData(cmd);
+	configPrompt = "Configure kernel very low speed successful...";
+    AfxBeginThread(ConfigThread, 0);
+}

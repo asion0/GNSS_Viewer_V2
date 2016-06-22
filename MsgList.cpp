@@ -24,6 +24,7 @@ BEGIN_MESSAGE_MAP(CMsgList, CListCtrl)
 	ON_WM_TIMER()
 	ON_WM_DESTROY()
 	ON_WM_SIZE()
+	ON_WM_RBUTTONUP()
 END_MESSAGE_MAP()
 
 // CMsgList 訊息處理常式
@@ -105,3 +106,37 @@ void CMsgList::ProcessTextBuffer()
 	GetItemRect(0, &r, LVIR_BOUNDS);
 	Scroll(CSize(0, (r.bottom - r.top) * GetItemCount()));	
 }
+
+void CMsgList::OnRButtonUp(UINT nFlags, CPoint point)
+{
+	return;
+	// TODO: 在此加入您的訊息處理常式程式碼和 (或) 呼叫預設值
+	const UINT_PTR IDM_SELECTALL = 0x80fb;
+	const UINT_PTR IDM_COPY = 0x80fc;
+	const UINT_PTR IDM_CLEAR = 0x80fd;
+	CMenu menu;
+	menu.CreatePopupMenu();
+	menu.InsertMenu(0, MF_BYPOSITION|MF_STRING, IDM_SELECTALL, "Select All");
+	menu.InsertMenu(1, MF_BYPOSITION|MF_STRING, IDM_COPY, "Copy");
+	menu.InsertMenu(2, MF_BYPOSITION|MF_STRING, IDM_CLEAR, "Clear");
+
+	this->ClientToScreen(&point);
+	UINT_PTR cmd = menu.TrackPopupMenu(TPM_LEFTALIGN|TPM_TOPALIGN|TPM_RETURNCMD, point.x, point.y, this);
+
+	if(IDM_COPY==cmd)
+	{
+		//DoCopy();
+	}
+	else if(IDM_CLEAR==cmd)
+	{
+		this->ClearAllText();
+		//ResetContent();
+	}	
+	else if(IDM_SELECTALL==cmd)
+	{
+		//SelectAll();	
+	}	
+	return;
+	//CListBox::OnRButtonUp(nFlags, point);
+}
+

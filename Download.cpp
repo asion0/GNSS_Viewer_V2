@@ -903,7 +903,6 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 	} while(result == RETURN_RETRY && (retryCount--) > 0);
 
 //---------------------------------------------------------------
-	//mycheck = 0;
 	promLen = BOOTLOADER_SIZE;
 
 	binFile.Seek(0);
@@ -1665,16 +1664,53 @@ bool CGPSDlg::Download()
 	return isSuccessful;
 }
 
+CString patchLog;
+U32 patchData = 0;
+U32 patchStatus = 0;
+bool CGPSDlg::CheckTagType()
+{
+	U32 t = m_regAddress;
+	U32 data = 0;
+	m_regAddress = 0xFCFFC;
+	bool suc = false;
+
+	CmdErrorCode ack = QueryRegister(Return, &data);
+	m_regAddress = t;
+
+	if( (data >> 16) == 0xA015 ||
+		(data >> 16) == 0xA006 ||
+		(data >> 16) == 0xA016 )
+	{
+		suc = true;
+	}
+	else
+	{
+		patchStatus += 0x04;
+	}
+	patchData = (data >> 16) ^ 0x55555555;
+
+	CString str;
+	if(ack != Ack) 
+	{
+		suc = false;
+		patchStatus += 0x02;
+	}
+	return suc;
+}
 
 bool CGPSDlg::Download2()
 {
+	patchLog = "";
+	patchData = 0;
+	patchStatus = 0;
 	if(UPGRADE_DUEDATE_Y > 0 && UPGRADE_DUEDATE_M > 0 && UPGRADE_DUEDATE_D)
 	{
 		CTime current = CTime::GetCurrentTime();
 		CTime dueDate(UPGRADE_DUEDATE_Y, UPGRADE_DUEDATE_M, UPGRADE_DUEDATE_D, 23, 59, 59);
 		if(current > dueDate)
 		{
-			::AfxMessageBox("Can't support upgrade!");
+			patchStatus += 0x01;
+			::AfxMessageBox("This tool has expired!");
 			return false;
 		}
 	}
@@ -1689,9 +1725,24 @@ bool CGPSDlg::Download2()
 	}
 	m_nDefaultTimeout = g_setting.defaultTimeout;
 
-	if(!hasAckVersion || (crcCode!=UPGRADE_CRC && crcCode!=0xb02c))
+	if(UPGRADE_CRC!=0xFFFFFFFF && (!hasAckVersion || (crcCode!=UPGRADE_CRC && crcCode!=0xb02c) ) )
 	{
 		::AfxMessageBox("Can't support upgrade!");
+		return false;
+	}
+
+	bool checkOK = false;
+	if(SHOW_PATCH_MENU)
+	{
+		checkOK = CheckTagType();
+	}
+
+	if(!checkOK)
+	{
+		::AfxMessageBox("Device does not support patch!");
+		patchLog.Format("PatchResult: %08X%08X", patchData, patchStatus);
+		add_msgtolist(patchLog);
+		AfxMessageBox(patchLog);
 		return false;
 	}
 	Sleep(100);
@@ -1717,6 +1768,12 @@ bool CGPSDlg::Download2()
 			SetMode();
 			CreateGPSThread();
 			m_gpsdoInProgress = false;
+			if(SHOW_PATCH_MENU)
+			{
+				patchLog.Format("PatchResult: %08X%08X", patchData, patchStatus);
+				add_msgtolist(patchLog);
+				AfxMessageBox(patchLog);
+			}
 			return false;
 		}
 		m_DownloadMode = CustomerUpgrade;
@@ -1751,6 +1808,12 @@ bool CGPSDlg::Download2()
 		{
 			add_msgtolist("Software Image Download Failed...");
 			::AfxMessageBox("Download failed!");
+			if(SHOW_PATCH_MENU)
+			{
+				patchLog.Format("PatchResult: %08X%08X", patchData, patchStatus);
+				add_msgtolist(patchLog);
+				AfxMessageBox(patchLog);
+			}
 			return false;
 		}
 	}
@@ -1765,6 +1828,12 @@ bool CGPSDlg::Download2()
 	{
 		add_msgtolist("Software Image Download Failed...");
 		::AfxMessageBox("Download failed!");
+		if(SHOW_PATCH_MENU)
+		{
+			patchLog.Format("PatchResult: %08X%08X", patchData, patchStatus);
+			add_msgtolist(patchLog);
+			AfxMessageBox(patchLog);
+		}
 		return false;
 	}
 
@@ -1793,7 +1862,12 @@ bool CGPSDlg::Download2()
 		SetBaudrate(5);
 		m_gpsdoInProgress = false;
 	}
-
+	if(SHOW_PATCH_MENU)
+	{
+		patchLog.Format("PatchResult: %08X%08X", patchData, patchStatus);
+		add_msgtolist(patchLog);
+		AfxMessageBox(patchLog);
+	}
 	SetMode();
 	m_firstDataIn = false;
 	ClearInformation();
