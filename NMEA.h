@@ -18,6 +18,7 @@ enum NmeaType
 	MSG_GLGSV,
 	MSG_BDGSV,
 	MSG_GAGSV,
+	MSG_GNGSV,
 
 	MSG_RMC,
 	MSG_GLL,
@@ -433,6 +434,7 @@ public:
 	void ShowGPGSVmsg2(GPGSV&, GPGSV&, GPGSV&, GPGSV&, const char* ,int);
 	void ShowGLGSVmsg(GPGSV&, const char*, int);
 	void ShowGAGSVmsg(GPGSV&, const char*, int);
+	void ShowGNGSVmsg(GPGSV&, GPGSV&, GPGSV&, GPGSV&, const char*, int);
 	void ShowBDGSVmsg(GPGSV&, const char*, int);
 	void ShowGLGSAmsg(GPGSA& msg_glgsa,const char* pt,int offset);
 	void ShowGPGSAmsg(GPGSA& msg_gpgsa,const char* pt,int offset);

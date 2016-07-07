@@ -156,6 +156,8 @@ static CommandEntry cmdTable[] =
 	{ 0x71, 0xFF, 5, 0xC0, 0x00 },
 	//QueryNmeaInterval2V8Cmd,
 	{ 0x7A, 0x01, 3, 0x7A, 0x01 },
+	//QueryDofunUniqueIdCmd,
+	{ 0x7A, 0x02, 3, 0x7A, 0x02 },
 	//QueryEricssonIntervalCmd,
 	{ 0x7A, 0x04, 3, 0x7A, 0x04 },
 	//QuerySerialNumberCmd,
@@ -237,6 +239,7 @@ enum SqBinaryCmd
 	QueryDrMultiHzCmd,
 	QueryRegisterCmd,
 	QueryNmeaInterval2V8Cmd,
+	QueryDofunUniqueIdCmd,
 	QueryEricssonIntervalCmd,
 	QuerySerialNumberCmd,
 	QueryUartPassCmd,
@@ -6359,6 +6362,19 @@ void CGPSDlg::OnConfigVeryLowSpeed()
 	DoCommonConfig(&dlg);
 }
 
+void CGPSDlg::OnConfigDofunUniqueId()
+{
+	CConfigDofunUniqueId dlg;
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnEraseDofunUniqueId()
+{
+	CConfigDofunUniqueId dlg;
+	DoCommonConfigDirect(&dlg, 0);
+
+}
+
 void CGPSDlg::OnBinaryConfigureSBAS()
 {
 	CConfigSBAS dlg;
@@ -6600,6 +6616,53 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryVeryLowSpeed(CmdExeMode nMode, void* outputD
 		else if(1==(ackCmd[6]))
 		{
 			strMsg = "Enable";
+		}
+		add_msgtolist(strMsg);
+	}
+	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryDofunUniqueId(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryDofunUniqueIdCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryDofunUniqueIdCmd].cmdId);
+	cmd.SetU08(2, cmdTable[QueryDofunUniqueIdCmd].cmdSubId);
+	cmd.SetU08(3, 0x04);
+
+	BinaryData ackCmd;
+	if(Ack == ExcuteBinaryCommand(QueryDofunUniqueIdCmd, &cmd, &ackCmd))
+	{
+		if(nMode==Return)
+		{
+			*((U08*)outputData) = ackCmd[6];
+			return Ack;
+		}
+
+		CString strMsg = "Query device uinque ID successful...";
+		add_msgtolist(strMsg);
+		strMsg = "ID: ";
+		for(int i = 0; i < 16; ++i)
+		{
+			strMsg += ackCmd[i + 7];
+		}
+		add_msgtolist(strMsg);
+
+		strMsg = "HEX: ";
+		for(int i = 0; i < 8; ++i)
+		{
+			CString s;
+			s.Format("%02X", ackCmd[i + 7]);
+			strMsg += s;
+			strMsg += (i != 7) ? " " : "-";
+		}
+		add_msgtolist(strMsg);
+		strMsg = "     ";
+		for(int i = 8; i < 16; ++i)
+		{
+			CString s;
+			s.Format("%02X", ackCmd[i + 7]);
+			strMsg += s;
+			strMsg += (i != 15) ? " " : "";
 		}
 		add_msgtolist(strMsg);
 	}

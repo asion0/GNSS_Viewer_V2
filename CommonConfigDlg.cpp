@@ -2999,3 +2999,112 @@ void CConfigVeryLowSpeed::DoCommand()
 	configPrompt = "Configure kernel very low speed successful...";
     AfxBeginThread(ConfigThread, 0);
 }
+
+// CConfigDofunUniqueId 對話方塊
+IMPLEMENT_DYNAMIC(CConfigDofunUniqueId, CCommonConfigDlg)
+
+CConfigDofunUniqueId::CConfigDofunUniqueId(CWnd* pParent /*=NULL*/)
+	: binData(UniqueIdLength), CCommonConfigDlg(IDD_CFG_DOFUN_UNIQUE_ID, pParent)
+{
+	m_nMode = 1;
+	//m_nAttribute = 0;
+}
+
+BEGIN_MESSAGE_MAP(CConfigDofunUniqueId, CCommonConfigDlg)
+	ON_EN_CHANGE(IDC_UNIQUE_ID, &CConfigDofunUniqueId::OnEnChangeInput)
+	ON_BN_CLICKED(IDOK, &CConfigDofunUniqueId::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigVeryLowSpeed 訊息處理常式
+BOOL CConfigDofunUniqueId::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	//((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);
+	//((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigDofunUniqueId::OnBnClickedOk()
+{
+	//m_nEnable = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
+	//m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
+void CConfigDofunUniqueId::OnEnChangeInput()
+{
+ 	CString strInput;
+	GetDlgItem(IDC_UNIQUE_ID)->GetWindowText(strInput);
+	//BinaryData b;
+	//if(!Utility::ConvertHexToBinary(strInput, b))
+	//{
+	//	GetDlgItem(IDC_PROMPT)->SetWindowText("Invalidate Format!");
+	//	GetDlgItem(IDOK)->EnableWindow(FALSE);
+	//	return;
+	//}
+	//if(b.Size() > UniqueIdLength)
+	//{
+	//	GetDlgItem(IDC_PROMPT)->SetWindowText("The device unique ID can't contain more than 16 bytes!");
+	//}
+	if(strInput.GetLength() != 16)
+	{
+		GetDlgItem(IDC_PROMPT)->SetWindowText("The device unique ID can only contain 16 bytes!");
+		GetDlgItem(IDOK)->EnableWindow(FALSE);
+		return;
+	}
+	else
+	{
+		GetDlgItem(IDC_PROMPT)->SetWindowText("The correct format.");
+	}
+
+	GetDlgItem(IDOK)->EnableWindow(TRUE);
+	for(int i=0; i<UniqueIdLength; ++i)
+	{
+		*binData.GetBuffer(i) = strInput[i];
+	}
+}
+
+INT_PTR CConfigDofunUniqueId::DoDirect(int type)
+{
+	switch(type)
+	{
+	case 0:
+		m_nMode = type;
+		break;
+	default:
+		return IDCANCEL;
+	}
+	return IDOK;
+}
+
+void CConfigDofunUniqueId::DoCommand()
+{
+	if(m_nMode == 1)
+	{
+		BinaryData cmd(19);
+		*cmd.GetBuffer(0) = 0x7A;
+		*cmd.GetBuffer(1) = 0x02;
+		*cmd.GetBuffer(2) = 0x03;
+		for(int i=0; i<UniqueIdLength; ++i)
+		{
+			*cmd.GetBuffer(3 + i) = binData[i];
+		}
+		configCmd.SetData(cmd);
+		configPrompt = "Configure device unique ID successful...";
+	}
+	else if(m_nMode == 0)
+	{
+		BinaryData cmd(3);
+		*cmd.GetBuffer(0) = 0x7A;
+		*cmd.GetBuffer(1) = 0x02;
+		*cmd.GetBuffer(2) = 0x05;
+
+		configCmd.SetData(cmd);
+		configPrompt = "Erase device unique ID successful...";
+	}
+
+    AfxBeginThread(ConfigThread, 0);
+}

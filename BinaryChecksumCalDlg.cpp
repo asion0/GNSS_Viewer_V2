@@ -1,4 +1,4 @@
-// BinaryChecksumCalDlg.cpp : 實作檔
+// BinaryChecksumCalDlg.cpp
 //
 
 #include "stdafx.h"
@@ -8,7 +8,7 @@
 #include "Serial.h"
 
 
-// BinaryChecksumCalDlg 對話方塊
+// BinaryChecksumCalDlg 
 
 IMPLEMENT_DYNAMIC(BinaryChecksumCalDlg, CDialog)
 
@@ -34,31 +34,22 @@ BEGIN_MESSAGE_MAP(BinaryChecksumCalDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// BinaryChecksumCalDlg 訊息處理常式
+// BinaryChecksumCalDlg 
 
 BOOL BinaryChecksumCalDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// TODO:  在此加入額外的初始化
-	//IDC_CHECKSUM, IDC_CONTEXT, IDC_BIN_SIZE
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void BinaryChecksumCalDlg::OnOK()
 {
-	// TODO: 在此加入特定的程式碼和 (或) 呼叫基底類別
-
 	CDialog::OnOK();
 }
 
 void BinaryChecksumCalDlg::OnEnChangeInput()
 {
-	// TODO:  如果這是 RICHEDIT 控制項，控制項將不會
-	// 傳送此告知，除非您覆寫 CDialog::OnInitDialog()
-	// 函式和呼叫 CRichEditCtrl().SetEventMask()
-	// 讓具有 ENM_CHANGE 旗標 ORed 加入遮罩。
  	CString strInput;
 	GetDlgItem(IDC_CONTEXT)->GetWindowText(strInput);
 
@@ -88,7 +79,6 @@ void BinaryChecksumCalDlg::OnEnChangeInput()
 
 void BinaryChecksumCalDlg::OnBnClickedSend()
 {
-	// TODO: 在此加入控制項告知處理常式程式碼
 	if(!CGPSDlg::gpsDlg->m_isConnectOn)
 	{
 		AfxMessageBox("Please connect to GNSS device");

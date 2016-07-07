@@ -416,7 +416,7 @@ bool CGPSDlg::NmeaProc(const char* buffer, int offset, NmeaType& nmeaType)
 		break;
 	case MSG_GPGSV:
 		nmea.ShowGPGSVmsg2(m_gpgsvMsgCopy, m_glgsvMsgCopy, m_bdgsvMsgCopy, m_gagsvMsgCopy, buffer, offset);
-		break;
+		break;	
 	case MSG_RMC:
 		nmea.ShowGPRMCmsg(m_gprmcMsgCopy, buffer, offset);
 		PostMessage(UWM_SHOW_RMC_TIME, 0, 0);
@@ -435,6 +435,9 @@ bool CGPSDlg::NmeaProc(const char* buffer, int offset, NmeaType& nmeaType)
 		break;
 	case MSG_GAGSV:
 		nmea.ShowGAGSVmsg(m_gagsvMsgCopy, buffer, offset);
+		break;
+	case MSG_GNGSV:
+		nmea.ShowGNGSVmsg(m_gpgsvMsgCopy, m_glgsvMsgCopy, m_bdgsvMsgCopy, m_gagsvMsgCopy, buffer, offset);
 		break;
 	case MSG_REBOOT:
 		this->DeleteNmeaMemery();
@@ -1195,6 +1198,8 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_CONFIG_PARAM_SRCH_ENG_SLP_CRT, OnConfigParamSearchEngineSleepCriteria)
 	ON_COMMAND(ID_CONFIG_DATUM_INDEX, OnConfigDatumIndex)
 	ON_COMMAND(ID_CONFIG_VERY_LOW, OnConfigVeryLowSpeed)
+	ON_COMMAND(ID_CONFIG_DF_UNIQUE_ID, OnConfigDofunUniqueId)
+	ON_COMMAND(ID_ERASE_DF_UNIQUE_ID, OnEraseDofunUniqueId)
 
 	ON_COMMAND(ID_BINARY_CONFIGURE_NOISE_PW_CTL, OnConfigureNoisePowerControl)
 	ON_COMMAND(ID_BINARY_CONFIGURE_ITF_DET_CTL, OnConfigureInterferenceDetectControl)
@@ -1266,6 +1271,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_CONFIG_SERIAL_NUMBER, OnConfigureSerialNumber)
 	ON_COMMAND(ID_QUERY_DATUM_INDEX, OnQueryDatumIndex)
 	ON_COMMAND(ID_QUERY_VERY_LOW, OnQueryVeryLowSpeed)
+	ON_COMMAND(ID_QUERY_DF_UNIQUE_ID, OnQueryDofunUniqueId)
 
 	ON_COMMAND(ID_QUERY_UARTPASS, OnQueryUartPass)
 	ON_COMMAND(ID_GPSDO_RESET_SLAVE, OnGpsdoResetSlave)
@@ -4759,7 +4765,6 @@ void CGPSDlg::Load_Menu()
 		CreateSubMenu(hMenu, menuItemEten, "&PSCM ");
 	}
 
-
 	//DRMenu
 	static MenuItemEntry menuItemDR[] =
 	{
@@ -4771,6 +4776,20 @@ void CGPSDlg::Load_Menu()
 	if ((SOFTWARE_FUNCTION & SW_FUN_DR) && !NMEA_INPUT)
 	{
 		CreateSubMenu(hMenu, menuItemDR, "&DR");
+	}
+
+	//DF_UNIQUE_IDMenu
+	static MenuItemEntry menuItemDofunUniqueId[] =
+	{
+		{ 1, MF_STRING, ID_ERASE_DF_UNIQUE_ID, "Erase Device Unique ID", NULL },
+		{ 1, MF_STRING, ID_QUERY_DF_UNIQUE_ID, "Query Device Unique ID", NULL },
+		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_STRING, ID_CONFIG_DF_UNIQUE_ID, "Configure Device Unique ID", NULL },
+		{ 0, 0, 0, NULL, NULL }	//End of table
+	};
+	if ((DOFUN_UNIQUE_ID) && !NMEA_INPUT)
+	{
+		CreateSubMenu(hMenu, menuItemDofunUniqueId, "&Unique ID");
 	}
 
 	// 1PPS Timing Menu

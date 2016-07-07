@@ -889,3 +889,27 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 };
+
+// CConfigDofunUniqueId 對話方塊
+class CConfigDofunUniqueId : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigDofunUniqueId)
+public:
+	CConfigDofunUniqueId(CWnd* pParent = NULL);   // 標準建構函式
+	virtual ~CConfigDofunUniqueId() {};
+
+	virtual void DoCommand();
+
+	afx_msg void OnEnChangeInput();
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
+	virtual INT_PTR DoDirect(int type);
+
+	enum {UniqueIdLength = 16 };
+protected:
+	//U08 m_uniqueId[UniqueIdLength];
+	BinaryData binData;
+	int m_nMode;
+
+	DECLARE_MESSAGE_MAP()
+};

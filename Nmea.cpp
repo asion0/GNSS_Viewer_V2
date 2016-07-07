@@ -570,6 +570,7 @@ NmeaType NMEA::MessageType(LPCSTR pt, int len)
 		{ "$GLGSV,", MSG_GLGSV },
 		{ "$BDGSV,", MSG_BDGSV },
 		{ "$GAGSV,", MSG_GAGSV },
+		{ "$GNGSV,", MSG_GNGSV },
 
 		{ "$GPRMC,", MSG_RMC },
 		{ "$GNRMC,", MSG_RMC },
@@ -972,6 +973,79 @@ void NMEA::ShowGAGSVmsg(GPGSV& gagsv, LPCSTR pt, int len)
 		gagsv_counter=0;
 	}
 }
+
+
+void NMEA::ShowGNGSVmsg(GPGSV& gpgsv, GPGSV& glgsv, GPGSV& bdgsv, GPGSV& gagsv, LPCSTR pt, int len)
+{
+	firstGsaIn = false;
+	GPGSV tmpGsv = { 0 };
+	GSVProc(tmpGsv, pt, len);
+
+	GPGSV* pGsv = NULL;
+	int* pGsv_counter = NULL;
+	Satellite* pSatellite = NULL;
+
+	GNSS_System g = GetGNSSSystem(tmpGsv.sates[0].SatelliteID);
+	switch(g)
+	{
+	case Gps:
+		gpgsv = tmpGsv;
+		pGsv = &gpgsv;
+		pGsv_counter = &gpgsv_counter;
+		pSatellite = satellites_gps;
+		break;
+	case Glonass:
+		glgsv = tmpGsv;
+		pGsv = &glgsv;
+		pGsv_counter = &glgsv_counter;
+		pSatellite = satellites_gnss;
+		break;
+	case Beidou:
+		bdgsv = tmpGsv;
+		pGsv = &bdgsv;
+		pGsv_counter = &gpgsv_counter;
+		pSatellite = satellites_bd;
+		break;
+	case Galileo:
+		gagsv = tmpGsv;
+		pGsv = &gagsv;
+		pGsv_counter = &gpgsv_counter;
+		pSatellite = satellites_ga;
+		break;
+	default:
+		break;
+	}
+
+	if(1 == tmpGsv.SequenceNum)
+	{
+		*pGsv_counter = 0;
+		memset(pSatellite, 0, sizeof(Satellite) * MAX_SATELLITE);
+	}
+
+	for(int i=0; i<4; ++i)
+	{
+		if(0 == pGsv->sates[i].SatelliteID)
+		{
+			continue;
+		}
+
+		pSatellite[*pGsv_counter].SatelliteID = pGsv->sates[i].SatelliteID;
+		pSatellite[*pGsv_counter].Elevation   = pGsv->sates[i].Elevation;
+		pSatellite[*pGsv_counter].Azimuth     = pGsv->sates[i].Azimuth;
+		pSatellite[*pGsv_counter].SNR         = pGsv->sates[i].SNR;   
+		(*pGsv_counter)++;
+		if(*pGsv_counter >= MAX_SATELLITE)
+		{
+			*pGsv_counter = 0;
+		}
+	}
+
+	if(pGsv->NumOfMessage == pGsv->SequenceNum)
+	{
+		*pGsv_counter=0;
+	}
+}
+
 
 void NMEA::ClearSatellites()
 {

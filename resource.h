@@ -235,7 +235,6 @@
 #define IDB_TIME2                       491
 #define IDB_DATE2                       492
 #define IDR_UPGRADE_DOWNLOAD_PROM2      493
-
 #define IDC_CONNECT                     1000
 #define IDC_CLOSE                       1001
 #define IDC_SETORIGIN                   1002
@@ -925,7 +924,9 @@
 #define IDC_INFORMATION_B               1405
 #define IDC_LONLAT                      1405
 #define IDC_RTK_INFO_T                  1406
+#define IDC_PROMPT                      1406
 #define IDC_RTK_INFO_B                  1407
+#define IDC_UNIQUE_ID                   1407
 #define IDC_EAST_PROJECTION             1408
 #define IDC_BASELINE_LENGTH             1409
 #define IDC_NORTH_PROJECTION            1410
@@ -943,6 +944,7 @@
 #define IDC_COOR_SWITCH1                1422
 #define IDC_COOR_SWITCH2                1423
 #define IDD_CFG_VERY_LOW                1424
+#define IDD_CFG_DOFUN_UNIQUE_ID         1425
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_BINARY_SYSTEMRESTART         32811
@@ -1207,8 +1209,11 @@
 #define ID_READ_MEM_TO_FILE             33121
 #define ID_QUERY_VERY_LOW               33122
 #define ID_CONFIG_VERY_LOW              33123
-#define ID_PATCH			            33124
+#define ID_PATCH                        33124
 #define ID_WRITE_MEM_TO_FILE            33125
+#define ID_QUERY_DF_UNIQUE_ID           33126
+#define ID_CONFIG_DF_UNIQUE_ID          33127
+#define ID_ERASE_DF_UNIQUE_ID			33128
 
 // Next default values for new objects
 // 
@@ -1216,7 +1221,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        478
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1406
+#define _APS_NEXT_CONTROL_VALUE         1408
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

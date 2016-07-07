@@ -222,12 +222,14 @@
 // .209 20160527 Modify [Pinning Of Kernel Very Low Speed] text, Request from Andrew.
 // .210 20160615 Add SWCFG_VENDOR_NSHP_FIX_TOOL for NS-HP user patch, Request from Andrew and Oliver.
 // .211 20160616 Add Write 0x50000000 to a File for Kayyui, Request from Andrew.
+// .212 20160704 Support GNGSV token for special customer output, Request from Leo.
+// .213 20160707 Add new command DEVICE UNIQUE ID for Dofun, Request from Andrew and Michael Chuang.
 
 
 #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				0
 #define APP_CAPTION				"GNSS Viewer"
-#define APP_VERSION				"2.0.211"
+#define APP_VERSION				"2.0.213"
 #define APP_TITLE				""
 #define APP_MODULE				"Venus 8"
 
@@ -315,9 +317,31 @@
 #define GEO_FENCING_CMD			1		//0 - old geo-fencing cmd, 1 - new geo-fencing cmd
 #define SHOW_RTK_BASELINE		0
 #define SHOW_PATCH_MENU			0		//Use for user patch.
+#define DOFUN_UNIQUE_ID			0		//Show DOFUN UNIQUE ID menu
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-#if defined(SWCFG_VENDOR_NSHP_FIX_TOOL)
+#if defined(SWCFG_VENDOR_GNSS_CUSTOMER_DOFUN_20160707)
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef MORE_INFO
+ #undef _TAB_LAYOUT_
+ #undef DOFUN_UNIQUE_ID
+
+ #define APP_CAPTION			"GNSS Viewer"
+ #define APP_TITLE				"Unique ID Release"
+ #define GNSS_VIEWER			1
+ #define IS_DEBUG				0
+ #define BAUDRATE_DEFAULT		7
+ #define TIMING_MODE			1
+ #define MORE_INFO				0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define DOFUN_UNIQUE_ID		1		
+
+#elif defined(SWCFG_VENDOR_NSHP_FIX_TOOL)
  #undef APP_CAPTION
  #undef APP_TITLE
  #undef GNSS_VIEWER

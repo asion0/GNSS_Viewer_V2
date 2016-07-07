@@ -761,6 +761,7 @@ protected:
 	CmdErrorCode QuerySearchEngineSleepCriteria(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDatumIndex(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryVeryLowSpeed(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryDofunUniqueId(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryUartPass(CmdExeMode nMode, void* outputData);
 	CmdErrorCode GpsdoResetSlave(CmdExeMode nMode, void* outputData);
 	CmdErrorCode GpsdoEnterRom(CmdExeMode nMode, void* outputData);
@@ -960,6 +961,8 @@ protected:
 	afx_msg void OnConfigParamSearchEngineSleepCriteria();
 	afx_msg void OnConfigDatumIndex();
 	afx_msg void OnConfigVeryLowSpeed();
+	afx_msg void OnConfigDofunUniqueId();
+	afx_msg void OnEraseDofunUniqueId();
 	afx_msg void OnConfigureNoisePowerControl();
 	afx_msg void OnConfigureInterferenceDetectControl();
 	afx_msg void OnConfigNMEABinaryOutputDestination();
@@ -1085,6 +1088,8 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryDatumIndex); }
 	afx_msg void OnQueryVeryLowSpeed()
 	{ GenericQuery(&CGPSDlg::QueryVeryLowSpeed); }
+	afx_msg void OnQueryDofunUniqueId()
+	{ GenericQuery(&CGPSDlg::QueryDofunUniqueId); }
 
 	afx_msg void OnQueryUartPass()
 	{ GenericQuery(&CGPSDlg::QueryUartPass); }

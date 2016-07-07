@@ -544,6 +544,11 @@ U08 CKmlDlg::NMEA_PROC(const char* buffer, int offset)
 		kml.msg_gagsv = &msg_gagsv;
 		kml.satellites_ga = nmea.satellites_ga;
 		break;
+	case MSG_GNGSV:
+		//nmea.ShowGAGSVmsg(msg_gagsv, buffer, offset);
+		//kml.msg_gagsv = &msg_gagsv;
+		//kml.satellites_ga = nmea.satellites_ga;
+		break;
 
 	default :
 		break;

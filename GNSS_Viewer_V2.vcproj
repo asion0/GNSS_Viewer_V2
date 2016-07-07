@@ -45,7 +45,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_GNSS_INTERNALUSE_NEW"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_GNSS_CUSTOMER_DOFUN_20160707"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -133,7 +133,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				WholeProgramOptimization="true"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_NSHP_FIX_TOOL"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_GNSS_CUSTOMER_DOFUN_20160707"
 				StringPooling="true"
 				MinimalRebuild="false"
 				RuntimeLibrary="0"
@@ -150,7 +150,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG;UPGRADE_DOWNLOAD2"
+				PreprocessorDefinitions="NDEBUG;_TAB_LAYOUT_"
 				Culture="1033"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
@@ -159,7 +159,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="Exe/GNSS_Viewer-AddTag.exe"
+				OutputFile="Exe/GNSS_Viewer-UniqueIdRelease-2.0.213.exe"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				EnableUAC="false"
