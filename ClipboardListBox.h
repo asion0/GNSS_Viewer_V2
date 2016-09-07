@@ -10,6 +10,10 @@ class CClipboardListBox : public CListBox
 public:
 	CClipboardListBox();
 	virtual ~CClipboardListBox();
+	virtual void PreSubclassWindow();
+
+	int OnToolHitTest(CPoint point, TOOLINFO * pTI) const;
+	BOOL OnToolTipText(UINT id, NMHDR * pNMHDR, LRESULT * pResult);
 
 	BOOL DeleteAllItems()
 	{
@@ -30,6 +34,7 @@ public:
 protected:
 	void DoCopy();
 	void SelectAll();
+
 	DECLARE_MESSAGE_MAP()
 public:
 	int SetCurSel(int nSelect);

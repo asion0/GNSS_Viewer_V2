@@ -60,6 +60,9 @@ BOOL CDevice_Adding::OnInitDialog()
 		}
 	}
 
+  m_cbo_baudrate.ResetContent();
+  g_setting.InitBaudrateCombo(&m_cbo_baudrate);
+
 	now_baudrate.Format("%d",m_baudrate);
 
 	for (int i=0;i<m_cbo_baudrate.GetCount();i++)

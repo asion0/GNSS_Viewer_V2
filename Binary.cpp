@@ -5,7 +5,6 @@
 #include "WaitReadLog.h"
 #include "Redir.h"
 #include "MaskedBitmap.h" 
-//#include "Config_Password.h"
 #include "Monitor_1PPS.h"
 #include "PositionRateDlg.h"
 #include "SysRestartDlg.h"
@@ -13,16 +12,12 @@
 #include "Pic_Earth.h"
 #include "Pic_Scatter.h"
 #include "Config1ppsPulseWidthDlg.h"
-#include "Con1PPS_PulseClkSource.h"
 #include "Timing_start.h"
 #include "Config_Proprietary.h"
 #include "ConAntennaDetection.h"
-#include "Con1PPS_Nmea_Delay.h"
 #include "Con1PPS_OutputMode.h"
-#include "ConNMEADlg.h"
 #include "ConfigNmeaIntervalDlg.h"
 #include "ConDauDlg.h"
-#include "ConDOPDlg.h"
 #include "ConSrePorDlg.h"
 #include "DrMultiHzDlg.h"
 #include "Config1ppsFrequenceOutput.h"
@@ -112,6 +107,8 @@ static CommandEntry cmdTable[] =
 	{ 0x64, 0x1E, 2, 0x64, 0x8D },
 	//QueryGpsTimeCmd,
 	{ 0x64, 0x20, 2, 0x64, 0x8E },
+  //QueryPstiCmd
+	{ 0x64, 0x22, 3, 0x64, 0x8F },
 	//QuerySearchEngineSleepCriteriaCmd,
 	{ 0x64, 0x26, 2, 0x64, 0x91 },
 	//QueryDatumIndexCmd,
@@ -132,6 +129,8 @@ static CommandEntry cmdTable[] =
 	{ 0x64, 0x36, 2, 0x64, 0x9A },
 	//QueryVeryLowSpeedCmd,
 	{ 0x64, 0x38, 3, 0x64, 0x9B },
+  //QueryPstiCmd2
+	{ 0x64, 0x3C, 3, 0x64, 0x9D },
 	//QuerySha1StringCmd
 	{ 0x64, 0x7E, 2, 0x64, 0xFF },
 	//QueryVersionExtensionCmd
@@ -217,6 +216,7 @@ enum SqBinaryCmd
 	QueryGnssNavSolCmd,
 	QueryTimeStampingCmd,
 	QueryGpsTimeCmd,
+  QueryPstiCmd,
 	QuerySearchEngineSleepCriteriaCmd,
 	QueryDatumIndexCmd,
 	QueryConstellationCapabilityCmd,
@@ -227,6 +227,7 @@ enum SqBinaryCmd
 	QueryGeofenceCmdEx,
 	QueryGeofenceResultCmdEx,
 	QueryVeryLowSpeedCmd,
+  QueryPstiCmd2,
 	QuerySha1StringCmd,
 	QueryVersionExtensionCmd,
 	Query1ppsFreqencyOutputCmd,
@@ -1043,8 +1044,9 @@ void CGPSDlg::parse_sti_20_message(const char *buff,int len) // for timing modul
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
 
-	temp.Format("%.2f",atof(ptr));
-	m_gyro_data.SetWindowText(temp);
+	temp.Format("%.2f", atof(ptr));
+	GetDlgItem(IDC_GYRO_DATA)->SetWindowText(temp);
+	//m_gyro_data.SetWindowText(temp);
 	
 }
 
@@ -1180,32 +1182,36 @@ void CGPSDlg::parse_sti_04_001_message(const char *buff,int len) // for timing m
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
 
-	this->m_psti004001.Valide = atoi(ptr);
+	this->m_psti004001Copy.Valide = atoi(ptr);
+if(m_psti004001Copy.Valide == 0)
+{
+  int a = 0;
+}
 
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
 
-	this->m_psti004001.Pitch = atof(ptr);
+	this->m_psti004001Copy.Pitch = atof(ptr);
 
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
 
-	this->m_psti004001.Roll = atof(ptr);
+	this->m_psti004001Copy.Roll = atof(ptr);
 
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
 
-	this->m_psti004001.Yaw = atof(ptr);
+	this->m_psti004001Copy.Yaw = atof(ptr);
 
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
 
-	this->m_psti004001.Pressure = atoi(ptr);
+	this->m_psti004001Copy.Pressure = atoi(ptr);
 
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
 
-	this->m_psti004001.Temperature = atof(ptr);
+	this->m_psti004001Copy.Temperature = atof(ptr);
 }
 #endif
 
@@ -1322,7 +1328,7 @@ void CGPSDlg::parse_sti_0_message(const char *buff,int len) // for timing module
 }
 #endif
 
-void CGPSDlg::On1ppstimingMonitoring1pps()
+void CGPSDlg::OnMonitoring1Pps()
 {
 	if(dia_monitor_1pps == NULL)
 	{
@@ -1382,7 +1388,6 @@ void CGPSDlg::parse_psti_50(const char *buff)		// gnss
 	ptr = NULL;
 }
 
-
 int position_update_rate;
 int position_update_attr;
 UINT Configurepositionrate(LPVOID param)
@@ -1394,13 +1399,18 @@ UINT Configurepositionrate(LPVOID param)
 	msg[2] = position_update_attr;
 
 	int len = CGPSDlg::gpsDlg->SetMessage(msg, sizeof(msg));
-
-	//CGPSDlg::gpsDlg->WaitEvent();
 	CGPSDlg::gpsDlg->ClearQue();
 	if(CGPSDlg::gpsDlg->SendToTarget(CGPSDlg::m_inputMsg,len,"Configure Position Rate Successful..."))
 	{
 		Sleep(200);
-		if(position_update_rate>40 && g_setting.GetBaudrate()<961600)				//Boost to 961600 when update rate > 40Hz.
+#if(_MODULE_SUP_800_)
+    // 20160810, request from Andrew, SUP800 fw can't support baud rate more than 230400
+		if(position_update_rate>20 && g_setting.GetBaudrate()<230400)				//Boost to 230400 when update rate > 20Hz.
+		{
+			CGPSDlg::gpsDlg->ConfigBaudrate(6, position_update_attr);	
+		}
+#else
+    if(position_update_rate > 40 && g_setting.GetBaudrate() < 961600)				//Boost to 961600 when update rate > 40Hz.
 		{
 			CGPSDlg::gpsDlg->ConfigBaudrate(8, position_update_attr);	
 		}
@@ -1412,6 +1422,7 @@ UINT Configurepositionrate(LPVOID param)
 		{
 			CGPSDlg::gpsDlg->ConfigBaudrate(6, position_update_attr);	
 		}
+#endif
 		else if(position_update_rate>10 && g_setting.GetBaudrate()<115200)				//Boost to 115200 when update rate > 10Hz.
 		{
 			CGPSDlg::gpsDlg->ConfigBaudrate(5, position_update_attr);	
@@ -1424,11 +1435,11 @@ UINT Configurepositionrate(LPVOID param)
 		{
 			CGPSDlg::gpsDlg->ConfigBaudrate(1, position_update_attr);	
 		}
-		else
-		{
-			CGPSDlg::gpsDlg->SendRestartCommand(1);
-			//CGPSDlg::gpsDlg->target_restart();
-		}
+		//else
+		//{
+        //Andrew request 20160901, doesn't need restart in this
+		  	//CGPSDlg::gpsDlg->SendRestartCommand(1);
+		//}
 	}
 
 	CGPSDlg::gpsDlg->SetMode();  
@@ -1465,18 +1476,16 @@ UINT ConfigureDrMultiHz(LPVOID param)
 		}
 		else
 		{
-			CGPSDlg::gpsDlg->SendRestartCommand(1);
-			//CGPSDlg::gpsDlg->target_restart();
+      //Andrew request 20160901, doesn't need restart in this
+			//CGPSDlg::gpsDlg->SendRestartCommand(1);
 		}
 	}
-
-	//CGPSDlg::gpsDlg->OnQuerypositionrate();
 	CGPSDlg::gpsDlg->SetMode();  
 	CGPSDlg::gpsDlg->CreateGPSThread();
 	return 0;	
 }
 
-void CGPSDlg::OnBinaryConfigurepositionrate()
+void CGPSDlg::OnConfigurePositionUpdateRate()
 {
 	if(!CheckConnect())
 	{
@@ -1655,10 +1664,7 @@ void CGPSDlg::OnBnClickedWarmstart()
 	m_initTtff = false;
 	if(IS_DEBUG == FALSE)
 	{
-
 		target_only_restart(2);
-
-		//CreateGPSThread();
 	}
 	else
 	{
@@ -1805,7 +1811,7 @@ UINT AFX_CDECL Configure1ppsPulseWidthThread(LPVOID param)
 	return 0;
 }
 
-void CGPSDlg::On1ppstimingConfigurePulseWidth()
+void CGPSDlg::OnConfigure1PpsPulseWidth()
 {
 	if(!CheckConnect())
 	{
@@ -1817,7 +1823,7 @@ void CGPSDlg::On1ppstimingConfigurePulseWidth()
 	INT_PTR nResult = dlg.DoModal();
 	if(nResult == IDOK) 
 	{
-		U08 msg[7] = {0};
+    U08 msg[7] = {0};
 		msg[0] = 0x65;
 		msg[1] = 0x01;
 		msg[2] = dlg.m_nPulseWidth >> 24 & 0xFF;
@@ -1827,8 +1833,7 @@ void CGPSDlg::On1ppstimingConfigurePulseWidth()
 		msg[6] = (U08)dlg.m_nAttribute;
 
 		int len = SetMessage(msg, sizeof(msg));
-
-        AfxBeginThread(Configure1ppsPulseWidthThread, 0);
+    AfxBeginThread(Configure1ppsPulseWidthThread, 0);
 	}
 	else
 	{
@@ -1891,7 +1896,7 @@ UINT AFX_CDECL Query1ppsPulseWidth(LPVOID param)
 	return TRUE;	
 }
 
-void CGPSDlg::On1ppsTimingQuery1ppsPulseWidth()
+void CGPSDlg::OnQuery1PpsPulseWidth()
 {
 	if(!CheckConnect())
 	{
@@ -1941,7 +1946,7 @@ void CGPSDlg::OnConfig1ppsFrequencyOutput()
 	AfxBeginThread(Config1ppsFrequencyOutputThread, 0);
 }
 
-void CGPSDlg::On1ppstimingEnterreferenceposition32977()
+void CGPSDlg::OnLineAssistance()
 {
 	CTiming_start dlg;
 
@@ -1952,7 +1957,7 @@ void CGPSDlg::On1ppstimingEnterreferenceposition32977()
 		CreateGPSThread();
 	}
 }
-
+/*
 UINT query_1PPS_pulse_clksrc_thread(LPVOID param)
 {
 	U08 buff[100];
@@ -2003,7 +2008,8 @@ UINT query_1PPS_pulse_clksrc_thread(LPVOID param)
 	CGPSDlg::gpsDlg->CreateGPSThread();
 	return 0;	
 }
-
+*/
+/*
 void CGPSDlg::On1ppstimingQueryppspulseclksrc()
 {
 	if(CheckConnect())	
@@ -2011,7 +2017,7 @@ void CGPSDlg::On1ppstimingQueryppspulseclksrc()
 		AfxBeginThread(query_1PPS_pulse_clksrc_thread, 0);
 	}
 }
-
+*/
 UINT AFX_CDECL ConfigureNoisePowerControlThread(LPVOID param)
 {
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(CGPSDlg::gpsDlg->m_inputMsg, 11, "Configure Noise Power Control Successful");
@@ -2736,6 +2742,58 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryVersionExtension(CmdExeMode nMode, void* out
 	return Timeout;
 }
 
+CGPSDlg::CmdErrorCode CGPSDlg::SendZenlandInitCmd(CmdExeMode nMode, void* outputData)
+{
+  //0xF2 0x0E 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x66 0x77 0x01 0x86 0x72 0x06 0x00 0x00
+  U08 cmd[] = { 0xF2, 0x0E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                0x00, 0x66, 0x77, 0x01, 0x86, 0x72, 0x06, 0x00, 0x00 };
+	BinaryData ackCmd;
+
+  m_serial->ClearQueue();
+  m_serial->SendData(cmd, sizeof(cmd), true);
+  ackCmd.Alloc(32);
+	DWORD len = m_serial->GetZenlaneResponse1(ackCmd.GetBuffer(), ackCmd.Size(), 2000);
+  CString strMsg = "Initialization successful...";
+  if(ackCmd[0] == 0xF2 && ackCmd[6] == 0x12 && ackCmd[10]==0x4b && ackCmd[11]==0x43 && ackCmd[12]==0x41)
+  {
+    add_msgtolist(strMsg);
+    return Ack;
+  }
+  else
+  {
+    strMsg = "Initialization no response";
+    add_msgtolist(strMsg);
+  }
+
+	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::SendZenlandQueryCmd(CmdExeMode nMode, void* outputData)
+{
+  //0xE7 0x0E 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x66 0x77 0x01 0x86 0x4F 0X06 0x00 0x00
+  U08 cmd[] = { 0xE7, 0x0E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                0x00, 0x66, 0x77, 0x01, 0x86, 0x4F, 0x06, 0x00, 0x00 };
+	BinaryData ackCmd;
+
+    m_serial->ClearQueue();
+	  m_serial->SendData(cmd, sizeof(cmd), true);
+    ackCmd.Alloc(32);
+		DWORD len = m_serial->GetZenlaneResponse1(ackCmd.GetBuffer(), ackCmd.Size(), 2000);
+    CString strMsg = "Send query command...";
+    add_msgtolist(strMsg);
+    //if(ackCmd[6] == 0x12 && ackCmd[10]==0x4b && ackCmd[11]==0x43 && ackCmd[12]==0x41)
+    //{
+    //  //add_msgtolist(strMsg);
+    //  return Ack;
+    //}
+    //else
+    //{
+    //  //strMsg = "Query no response";
+    //  //add_msgtolist(strMsg);
+    //}
+		return Ack;
+}
+
 CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareVersionSystemCode(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QuerySwVerSysCmd].cmdSize);
@@ -2769,6 +2827,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareVersionSystemCode(CmdExeMode nMode, 
 	}
 	return Timeout;
 }
+
 /*
 CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareCrcRomCode(CmdExeMode nMode, void* outputData)
 {
@@ -4130,6 +4189,9 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryNavigationModeV8(CmdExeMode nMode, void* out
 		case 6:
 			strMsg.SetString("Navigation Mode: Surveying and mapping");
 			break;
+		case 7:
+			strMsg.SetString("Navigation Mode: Quadcopter");
+			break;
 		default:
 			strMsg.Format("Navigation Mode: %d", ackCmd[6]);
 			break;
@@ -4533,44 +4595,56 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGeofenceEx(CmdExeMode nMode, void* outputDat
 	cmd.SetU08(3, m_nGeofecingNo);
 
 	BinaryData ackCmd;
-	if(Ack == ExcuteBinaryCommand(QueryGeofenceCmdEx, &cmd, &ackCmd))
+  CmdErrorCode err = ExcuteBinaryCommand(QueryGeofenceCmdEx, &cmd, &ackCmd, 800);
+	if(err != Ack)
 	{
-		CString strMsg;
-		strMsg.Format("Query geofencing data %d successful...", m_nGeofecingNo);
-		add_msgtolist(strMsg);
-		
-		U08 size = ackCmd[7];
-		if(size == 0)
-		{
-			strMsg.Format("No geofencing data");
-			add_msgtolist(strMsg);
-		}
-
-		const U08* ptr = ackCmd.Ptr(8);
-		for(int i = 0; i < size; ++i)
-		{
-			U08 temp1[8] = {0};
-			U08 temp2[8] = {0};
-			for(int j = 0; j < 8; ++j)
-			{
-				temp1[7 - j] = *ptr++;
-			}
-			for(int j = 0; j < 8; ++j)
-			{
-				temp2[7 - j] = *ptr++;
-			}
-			if(INVERT_LON_LAT)
-			{
-				strMsg.Format("%12.9lf, %12.9lf", *((double*)temp1), *((double*)temp2));
-			}
-			else
-			{
-				strMsg.Format("%12.9lf, %12.9lf", *((double*)temp2), *((double*)temp1));
-			}
-			add_msgtolist(strMsg);
-		}
+		return err;
 	}
-	return Timeout;
+
+	U08 size = ackCmd[7];
+  CStringArray* points = (CStringArray*)outputData;
+
+	CString strMsg;
+	strMsg.Format("Query geofencing data %d successful...", m_nGeofecingNo);
+	add_msgtolist(strMsg);
+	
+	if(size == 0)
+	{
+		strMsg.Format("No geofencing data");
+		add_msgtolist(strMsg);
+	}
+
+	const U08* ptr = ackCmd.Ptr(8);
+	for(int i = 0; i < size; ++i)
+	{
+		U08 temp1[8] = {0};
+		U08 temp2[8] = {0};
+		for(int j = 0; j < 8; ++j)
+		{
+			temp1[7 - j] = *ptr++;
+		}
+		for(int j = 0; j < 8; ++j)
+		{
+			temp2[7 - j] = *ptr++;
+		}
+		if(INVERT_LON_LAT)
+		{
+			strMsg.Format("%12.9lf, %12.9lf", *((double*)temp1), *((double*)temp2));
+		}
+		else
+		{
+			strMsg.Format("%12.9lf, %12.9lf", *((double*)temp2), *((double*)temp1));
+		}
+    if(Return == nMode)
+    {
+      points->Add(strMsg);
+    }
+    else
+    {
+		  add_msgtolist(strMsg);
+    }
+	}
+  return err;
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkMode(CmdExeMode nMode, void* outputData)
@@ -4635,6 +4709,93 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPstnLatLonDigits(CmdExeMode nMode, void* out
 		add_msgtolist(strMsg);
 	}
 	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti030(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryPstiCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryPstiCmd].cmdId);
+	cmd.SetU08(2, cmdTable[QueryPstiCmd].cmdSubId);
+	cmd.SetU08(3, 30);
+
+	BinaryData ackCmd;
+  CmdErrorCode err = ExcuteBinaryCommand(QueryPstiCmd, &cmd, &ackCmd, 800);
+	if(err != Ack)
+	{
+		return err;
+	}
+
+	if(Return == nMode)
+	{	//Return command length
+		*((U08*)outputData) = ackCmd[6];
+		return err;
+	}
+
+	CString strMsg;
+	strMsg = "Query PSTI030 Interval successful...";
+	add_msgtolist(strMsg);
+	strMsg.Format("PSTI030 Interval : %d", ackCmd[6]);
+	add_msgtolist(strMsg);
+
+	return err;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti032(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryPstiCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryPstiCmd].cmdId);
+	cmd.SetU08(2, cmdTable[QueryPstiCmd].cmdSubId);
+	cmd.SetU08(3, 32);
+
+	BinaryData ackCmd;
+  CmdErrorCode err = ExcuteBinaryCommand(QueryPstiCmd, &cmd, &ackCmd, 800);
+	if(err != Ack)
+	{
+		return err;
+	}
+
+	if(Return == nMode)
+	{	//Return command length
+		*((U08*)outputData) = ackCmd[6];
+		return err;
+	}
+
+	CString strMsg;
+	strMsg = "Query PSTI032 Interval successful...";
+	add_msgtolist(strMsg);
+	strMsg.Format("PSTI032 Interval : %d", ackCmd[6]);
+	add_msgtolist(strMsg);
+
+	return err;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti004(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryPstiCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryPstiCmd].cmdId);
+	cmd.SetU08(2, cmdTable[QueryPstiCmd].cmdSubId);
+	cmd.SetU08(3, 4);
+
+	BinaryData ackCmd;
+  CmdErrorCode err = ExcuteBinaryCommand(QueryPstiCmd, &cmd, &ackCmd, 800);
+	if(err != Ack)
+	{
+		return err;
+	}
+
+	if(Return == nMode)
+	{	//Return command length
+		*((U08*)outputData) = ackCmd[6];
+		return err;
+	}
+
+	CString strMsg;
+	strMsg = "Query PSTI004 Interval successful...";
+	add_msgtolist(strMsg);
+	strMsg.Format("PSTI004 Interval : %d", ackCmd[6]);
+	add_msgtolist(strMsg);
+
+	return err;
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkMode2(CmdExeMode nMode, void* outputData)
@@ -5401,7 +5562,7 @@ void CGPSDlg::OnSetFactoryDefaultReboot()
 {	
 	SetFactoryDefault(true);
 }
-
+/*
 void CGPSDlg::OnBinaryConfigurenmeaoutput()
 {   
 	if(!CheckConnect())
@@ -5417,7 +5578,7 @@ void CGPSDlg::OnBinaryConfigurenmeaoutput()
 		CreateGPSThread();
 	}
 }
-
+*/
 void CGPSDlg::OnConfigureNmeaIntervalV8()
 {
 	if(!CheckConnect())
@@ -5479,7 +5640,7 @@ void CGPSDlg::OnBinaryConfiguredatum()
 		CreateGPSThread();
 	}
 }
-
+/*
 void CGPSDlg::OnBinaryConfiguredopmask()
 {
 	if(!CheckConnect())
@@ -5495,6 +5656,7 @@ void CGPSDlg::OnBinaryConfiguredopmask()
 		CreateGPSThread();
 	}
 }
+*/
 /*
 void CGPSDlg::OnBinaryConfigureelevationmask()
 {	
@@ -6470,14 +6632,14 @@ void CGPSDlg::OnConfigureNoisePowerControl()
 	CConfigNoisePowerControlDlg dlg;
 	DoCommonConfig(&dlg);
 }
-
+/*
 void CGPSDlg::OnConfigPowerSavingParametersRom()
 {
 	ConfigPowerSavingParametersRomDlg dlg;
 	dlg.SetRomMode(true);
 	DoCommonConfig(&dlg);
 }
-
+*/
 void CGPSDlg::OnConfigPowerSavingParameters()
 {
 	ConfigPowerSavingParametersRomDlg dlg;
@@ -6587,6 +6749,27 @@ void CGPSDlg::OnConfigPstmDeviceAddress()
 void CGPSDlg::OnConfigPstmLatLonDigits()
 {
 	CConfigPscmLatLonFractionalDigits dlg;
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigPsti030()
+{
+	CConfigPstiInterval dlg;
+  dlg.SetPsti(30);
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigPsti032()
+{
+	CConfigPstiInterval dlg;
+  dlg.SetPsti(32);
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigPsti004()
+{
+	CConfigPstiInterval dlg;
+  dlg.SetPsti(04);
 	DoCommonConfig(&dlg);
 }
 

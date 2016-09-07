@@ -619,6 +619,7 @@ protected:
 	afx_msg void OnBnClickedAddPoint();
 	afx_msg void OnBnClickedAddPoints();
 	afx_msg void OnBnClickedClearAll();
+	afx_msg void OnBnClickedCopyResult();
 	DECLARE_MESSAGE_MAP()
 };
 
@@ -910,6 +911,33 @@ protected:
 	//U08 m_uniqueId[UniqueIdLength];
 	BinaryData binData;
 	int m_nMode;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigPstiInterval
+class CConfigPstiInterval : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigPstiInterval)
+public:
+	CConfigPstiInterval(CWnd* pParent = NULL);   
+	virtual ~CConfigPstiInterval() {};
+
+	virtual void DoCommand();
+
+	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
+
+  void SetPsti(int id) { m_nPstiId = id; }
+
+protected:
+  void AdjustValue(int nPos, CScrollBar* pScrollBar);
+
+	int m_nPstiId;
+	int m_nPstiInterval;
+	int m_nAttribute;
 
 	DECLARE_MESSAGE_MAP()
 };

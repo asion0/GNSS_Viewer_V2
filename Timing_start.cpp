@@ -1,4 +1,4 @@
-// Timing_start.cpp : 實作檔
+// Timing_start.cpp 
 //
 
 #include "stdafx.h"
@@ -9,8 +9,7 @@
 
 CTiming_start* pDlg_timing;
 
-// CTiming_start 對話方塊
-
+// CTiming_start 
 IMPLEMENT_DYNAMIC(CTiming_start, CDialog)
 
 CTiming_start::CTiming_start(CWnd* pParent /*=NULL*/)
@@ -18,7 +17,6 @@ CTiming_start::CTiming_start(CWnd* pParent /*=NULL*/)
 {
 	latitude = 0;
 	longitude = 0;
-
 }
 
 CTiming_start::~CTiming_start()
@@ -48,8 +46,7 @@ BEGIN_MESSAGE_MAP(CTiming_start, CDialog)
 END_MESSAGE_MAP()
 
 
-// CTiming_start 訊息處理常式
-
+// CTiming_start 
 U08 CTiming_start::Ftp_File(char *remote_file, const char *local_file)
 {
 	unsigned long time_out;
@@ -337,7 +334,7 @@ U08 CTiming_start::device_warmstart()
 
 UINT timing_thread(LPVOID param)
 {
-	U08 ret;
+	U08 ret = 1;
 	char text[100];
 	//int buad = 0;
 	
@@ -345,7 +342,7 @@ UINT timing_thread(LPVOID param)
 
 	//buad = CGPSDlg::gpsDlg->GetBaudrate();
 	CGPSDlg::gpsDlg->SetPort(g_setting.boostBaudIndex, 2);
-
+/*
 	ret = pDlg_timing->set_almanac();
 	if(ret)
 	{
@@ -356,8 +353,8 @@ UINT timing_thread(LPVOID param)
 		sprintf_s(text, sizeof(text), "set almanac fail.");
 	}
 	pDlg_timing->m_text.SetWindowText(text);
-	
 	pDlg_timing->m_progress.SetPos(40);
+*/	
 	
 	if(ret)
 	{
@@ -373,7 +370,7 @@ UINT timing_thread(LPVOID param)
 		pDlg_timing->m_text.SetWindowText(text);
 	}
 
-	pDlg_timing->m_progress.SetPos(70);
+	pDlg_timing->m_progress.SetPos(50);
 
 	if(ret)
 	{
@@ -428,12 +425,9 @@ BOOL CTiming_start::OnInitDialog()
 
 	pDlg_timing = this;
 
-	m_host.SetWindowText("60.250.205.31");
+	m_host.SetWindowText("agps.skytraq.com.tw");
 	m_name.SetWindowText("skytraq");
 	m_pwd.SetWindowText("skytraq");
-
-	// TODO:  在此加入額外的初始化
-
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
+
 }

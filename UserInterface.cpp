@@ -18,57 +18,7 @@ static int GnssBarChartGapX = 22;
 static int MaxGpsId = 61;
 static int HalfMaxGpsId = (MaxGpsId + 1) / 2;
 static int GnssIdStart = 65;
-/*
-void CGPSDlg::Refresh_EarthChart(CDC *earth_dc)
-{
-	static bool firstFixed = false;
-	UINT earthA[] = { IDB_EARTH1, IDB_EARTH2, IDB_EARTH3, IDB_EARTH4, IDB_EARTH5, IDB_EARTH6 };
-	CxImage img, img2;
-	img.LoadResource(FindResource(NULL, MAKEINTRESOURCE(IDB_EARTH), RT_BITMAP), 
-		CXIMAGE_FORMAT_BMP);
 
-	if(!firstFixed && CGPSDlg::gpsDlg->IsFixed())
-	{
-		double lon = CGPSDlg::gpsDlg->m_gpggaMsg.Longitude / 100.0;
-		lon *= (CGPSDlg::gpsDlg->m_gpggaMsg.Longitude_E_W=='W') ? -1.0 : 1.0;
-		lon += 180.0;
-		if(lon > 11 && lon < 142)	//Americas
-		{
-			usedEarth = (CGPSDlg::gpsDlg->m_gpggaMsg.Latitude_N_S=='N') ? 4 : 5;
-			firstFixed = true;
-			g_setting.earthBitmap = usedEarth;
-		}
-		else if(lon > 142.0 && lon < 251.0)	//Europe
-		{
-			usedEarth = (CGPSDlg::gpsDlg->m_gpggaMsg.Latitude_N_S=='N') ? 2 : 3;
-			firstFixed = true;
-			g_setting.earthBitmap = usedEarth;
-		}
-		else
-		{
-			usedEarth = (CGPSDlg::gpsDlg->m_gpggaMsg.Latitude_N_S=='N') ? 0 : 1;
-			firstFixed = true;
-			g_setting.earthBitmap = usedEarth;
-		}
-	}
-
-	img2.LoadResource(FindResource(NULL, MAKEINTRESOURCE(earthA[usedEarth]), "PNG"), 
-		CXIMAGE_FORMAT_PNG);
-
-	if(!img.IsValid())
-	{
-		return;
-	}
-
-	CRect rc(0,0,img.GetWidth(), img.GetHeight());
-	CMemDC memDC(*earth_dc, rc);
-	img.Draw(memDC.GetDC().GetSafeHdc(), 0, 0);
-	img2.Draw(memDC.GetDC().GetSafeHdc(), 8, 8);
-	memDC.GetDC().SetBkMode(TRANSPARENT);	
-
-	Show_EarthChart(&(memDC.GetDC()));
-}
-*/
 CGPSDlg::PrnType CGPSDlg::GetPrnType(int id)
 {
 	if(id <= 51 || (id >= 193 && id <= 197))
@@ -83,68 +33,6 @@ CGPSDlg::PrnType CGPSDlg::GetPrnType(int id)
 
 	return Unknown;
 }
-/*
-void DrawEarthSate(CDC* dc, UISetting* s, Satellite* sate, GPGSV* gsv, GPGSA* gsa, GPGGA* gga)
-{
-	int centerX = 250 / 2;
-	int centerY = 250 / 2;
-	int x = 0, y = 0;
-	double ele = 0.0;	       
-	int id = 0;
-
-	for(int i=0; i<gsv->NumOfSate; ++i)
-	{
-		id = sate[i].SatelliteID;
-		if(id == 0)
-		{
-			continue;	
-		}
-		//Elevation 仰角 0~90度
-		//Azimuth 方位角 0~359度
-		//Elevation = 75*cos(satellites[i].Elevation*PI/180);	
-		U16 azimuth = sate[i].Azimuth;
-		U16 elevation = sate[i].Elevation;
-		U16 qtyInd = gga->GPSQualityIndicator;
-
-		ele = 114.0 - ( 114.0 * elevation / 90.0);			
-		x = (int)(ele * sin(azimuth * PI / 180.0));
-		y = -(int)(ele * cos(azimuth * PI / 180.0));
-
-		x += centerX;
-		y += centerY;	
-
-		bool isInUse = IsFixed(qtyInd) && !CheckInUse(id, gsa);
-		CSnrBarChart::DrawBarChartId(dc, s, isInUse, x, y, id, true);
-	}
-}
-*/
-
-/*
-void CGPSDlg::Show_EarthChart(CDC *dc)
-{
-	if(pic_earth->m_gpCheck.GetCheck())
-	{
-		DrawEarthSate(dc, &gpUI, sate_gps, &m_gpgsvMsg, &m_gpgsaMsg, &m_gpggaMsg);
-	}
-
-	if(pic_earth->m_glCheck.GetCheck())
-	{
-		DrawEarthSate(dc, &glUI, sate_gnss, &m_glgsvMsg, &m_glgsaMsg, &m_gpggaMsg);
-	}
-
-	if(pic_earth->m_bdCheck.GetCheck())
-	{
-		DrawEarthSate(dc, &bdUI, sate_bd, &m_bdgsvMsg, &m_bdgsaMsg, &m_gpggaMsg);
-	}
-
-	if(pic_earth->m_gaCheck.GetCheck())
-	{
-		DrawEarthSate(dc, &gaUI, sate_ga, &m_gagsvMsg, &m_gagsaMsg, &m_gpggaMsg);
-	}
-
-}
-*/
-
 
 int CGPSDlg::CreateSubMenu(const HMENU hMenu, const MenuItemEntry* menuItemTable, LPCSTR pszSubMenuText)
 {

@@ -81,14 +81,13 @@ typedef struct {
   U16 stu;  
 } BIN_SV;
 
-typedef struct USER_SATELLITE_INFOMATION
+typedef struct
 {
 	U08 MessageID;
-    BIN_SV sv[12];
+  BIN_SV sv[12];
 	U16 GPSWeek;
 	U32 TOW;
-
-}USER_SATELLITE_INFOMATION, *pUSER_SATELLITE_INFOMATION, &rUSER_SATELLITE_INFOMATION;
+} USER_SATELLITE_INFOMATION;
 
 typedef struct {
   U16 prn;     // satellite id
@@ -97,15 +96,14 @@ typedef struct {
   U16 Dp;      // Doppler 
 } BIN_SMD;
 
-typedef struct SATELLITE_MEASUREMENT_DATA
+typedef struct
 {
 	U08 MessageID;	
 	BIN_SMD smd[12]; 
 	U16 GPSWeek;
 	U32 TOW;
 	U16 ClockOffset;
-
-}SATELLITE_MEASUREMENT_DATA, *pSATELLITE_MEASUREMENT_DATA, &rSATELLITE_MEASUREMENT_DATA;
+} SATELLITE_MEASUREMENT_DATA;
 
 
 typedef struct CHANNEL_DATA
@@ -151,21 +149,9 @@ typedef struct RECEIVER_NAV_DATA
 	F32 tdop;
 } RECEIVER_NAV_DATA_T;
 
-//struct UTC_TIME_T;
 struct POS_T;
 struct LLA_T;
 
-
-//void ECEF_USER_PVT_PROC(ECEF_USER_PVT& ecef_user_pvt,U08* pt);
-//void GEODETIC_USER_PVT_PROC(GEODETIC_USER_PVT& geod_user_pvt,U08* pt);
-//void USER_SATELLITE_INFOMATION_PROC(USER_SATELLITE_INFOMATION& sv_info,U08* pt);
-//void SATELLITE_MEASUREMENT_DATA_PROC(SATELLITE_MEASUREMENT_DATA& sm_data,U08* pt);
-//void SHOW_ECEF_USER_PVT(ECEF_USER_PVT& ecef_user_pvt,U08* pt,int len);
-//void SHOW_GEODETIC_USER_PVT(GEODETIC_USER_PVT& geod_user_pvt,U08* pt,int len);
-//void SHOW_USER_SATELLITE_INFOMATION(USER_SATELLITE_INFOMATION& sv_info,U08* pt,int len);
-//void SHOW_SATELLITE_MEASUREMENT_DATA(SATELLITE_MEASUREMENT_DATA& sm_data,U08* pt,int len);
-//void SHOW_USER_SATELLITE_INFOMATION(USER_SATELLITE_INFOMATION& sv_info,U08* pt,int len);
-//void SHOW_SATELLITE_MEASUREMENT_DATA(SATELLITE_MEASUREMENT_DATA& sm_data,U08* pt,int len);
 void CooCartesianToGeodetic( const POS_T* xyz_p, LLA_T* lla_p );
 U08 *decode_4bytes(U08 *src,U32 *dst);
 U08 *decode_2bytes(U08 *src,U16 *dst);

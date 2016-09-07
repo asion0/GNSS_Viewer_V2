@@ -34,8 +34,11 @@ public:
 
 	//Flow control
 	bool Open(int port = 2, int baudIndex = 5);
+#if(SPECIAL_BAUD_RATE)
+	bool OpenByBaudrate(LPCSTR comPort, int baudrate = 172800);
+#else
 	bool OpenByBaudrate(LPCSTR comPort, int baudrate = 115200);
-
+#endif
 	void Close();
 	void CancelTransmission() { m_cancelTransmission = true; }
 	void ResetTransmission() { m_cancelTransmission = false; }
@@ -49,11 +52,12 @@ public:
 	DWORD ReadData(void* buffer, DWORD bufferSize, bool once = false);
 	DWORD GetString(void* buffer, DWORD bufferSize, DWORD timeOut);
 	DWORD GetBinary(void* buffer, DWORD bufferSize, DWORD timeout = 2000);
+	DWORD GetZenlaneResponse1(void* buffer, DWORD bufferSize, DWORD timeout = 2000);
 	DWORD GetBinaryAck(void* buffer, DWORD bufferSize, DWORD timeout = 2000);
 	DWORD GetBinaryBlock(void* buffer, DWORD bufferSize, DWORD blockSize);
 	DWORD GetBinaryBlockInSize(void* buffer, DWORD bufferSize, DWORD blockSize);
 
-	DWORD SendData(const void* buffer, DWORD bufferSize, bool blockTransfer = false, int delayDuration = 0);
+	DWORD SendData(const void* buffer, DWORD bufferSize, bool blockTransfer = true, int delayDuration = 0);
 	//DWORD GetBinaryBlockInTime(void* buffer, DWORD bufferSize, DWORD timeout);
 	static inline void AddDebugString(const char* dbg);
 	static void SaveDebugString(bool backup = false);

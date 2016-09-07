@@ -681,7 +681,7 @@ void CConfigPositionFixNavigationMask::DoCommand()
 IMPLEMENT_DYNAMIC(ConfigRefTimeToGpsTimeDlg, CCommonConfigDlg)
 
 ConfigRefTimeToGpsTimeDlg::ConfigRefTimeToGpsTimeDlg(CWnd* pParent /*=NULL*/)
-	: CCommonConfigDlg(IDD_CONFIG_REF_TIME_TO_GPS_TIME, pParent)
+	: CCommonConfigDlg(IDD_CFG_REFTIME2GPSTIME, pParent)
 {
 
 }
@@ -977,7 +977,7 @@ void CConfigPowerMode::DoCommand()
 IMPLEMENT_DYNAMIC(CConfigParamSearchEngineSleepCriteria, CCommonConfigDlg)
 
 CConfigParamSearchEngineSleepCriteria::CConfigParamSearchEngineSleepCriteria(CWnd* pParent /*=NULL*/)
-: CCommonConfigDlg(IDD_CONFIG_PRM_SRCH_ENG_SLP_CRT, pParent)
+: CCommonConfigDlg(IDD_CFG_PRM_SRCH_ENG_SLP_CRT, pParent)
 {
 
 }
@@ -1772,7 +1772,8 @@ BEGIN_MESSAGE_MAP(CConfigGeofencing, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigGeofencing::OnBnClickedOk)
 	ON_BN_CLICKED(IDC_ADD1, &CConfigGeofencing::OnBnClickedAddPoint)
 	ON_BN_CLICKED(IDC_ADD2, &CConfigGeofencing::OnBnClickedAddPoints)
-	ON_BN_CLICKED(IDC_CLOCK, &CConfigGeofencing::OnBnClickedClearAll)
+	ON_BN_CLICKED(IDC_CLEAR, &CConfigGeofencing::OnBnClickedClearAll)
+	ON_BN_CLICKED(IDC_COPY, &CConfigGeofencing::OnBnClickedCopyResult)
 END_MESSAGE_MAP()
 
 void CConfigGeofencing::DoDataExchange(CDataExchange* pDX)
@@ -1781,27 +1782,44 @@ void CConfigGeofencing::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_POINTS, m_points);
 }
 
-// CConfigGeofencing 訊息處理常式
-
+// CConfigGeofencing
 BOOL CConfigGeofencing::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
 
-	CString txt;
+  CGPSDlg::CmdErrorCode ack = CGPSDlg::Timeout;
+	CStringArray points;
+  CString txt;
+
+  CGPSDlg::gpsDlg->m_nGeofecingNo = m_no;
+	ack = CGPSDlg::gpsDlg->QueryGeofenceEx(CGPSDlg::Return, &points);
+  if(ack != CGPSDlg::Ack)
+	{
+    txt.Format("Not supported Configure geo-fencing data!");
+		AfxMessageBox(txt);
+    this->OnCancel();
+		return TRUE;
+  }
+
 	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
 	if(INVERT_LON_LAT)
 	{
 		GetDlgItem(IDC_COOR_TEXT1)->SetWindowText("Latitude");
 		GetDlgItem(IDC_COOR_TEXT2)->SetWindowText("Longitude");
-		GetDlgItem(IDC_POINTS_PMT)->SetWindowText("2. Add multiple coordinates, separated by commas and rows(Ctrl + Enter).\r\ne.g.:\r\n24.784915663,121.008697445\r\n24.784965052,121.008810556\r\n24.784854644,121.008853770\r\n24.784811388,121.008751459");
+		GetDlgItem(IDC_POINTS_PMT)->SetWindowText("2. Add multiple coordinates, separated by \r\ncommas and rows(Ctrl + Enter).\r\ne.g.:\r\n24.784915663,121.008697445\r\n24.784965052,121.008810556\r\n24.784854644,121.008853770\r\n24.784811388,121.008751459");
 	}
 	else
 	{
 		GetDlgItem(IDC_COOR_TEXT1)->SetWindowText("Longitude");
 		GetDlgItem(IDC_COOR_TEXT2)->SetWindowText("Latitude");
-		GetDlgItem(IDC_POINTS_PMT)->SetWindowText("2. Add multiple coordinates, separated by commas and rows(Ctrl + Enter).\r\ne.g.:\r\n121.008697445,24.784915663\r\n121.008810556,24.784965052\r\n121.008853770,24.784854644\r\n121.008751459,24.784811388");
+		GetDlgItem(IDC_POINTS_PMT)->SetWindowText("2. Add multiple coordinates, separated by \r\ncommas and rows(Ctrl + Enter).\r\ne.g.:\r\n121.008697445,24.784915663\r\n121.008810556,24.784965052\r\n121.008853770,24.784854644\r\n121.008751459,24.784811388");
 	}
 
+
+  for(int i = 0; i < points.GetCount(); ++i)
+  {
+    m_points.AddString(points.GetAt(i));
+  }
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
@@ -1852,7 +1870,8 @@ void CConfigGeofencing::OnBnClickedAddPoints()
 
 bool CConfigGeofencing::AddPoint(const CString s)
 {
-	const int MaxCount = (m_no==0) ? 10 : 16;
+	//const int MaxCount = (m_no==0) ? 10 : 16;
+	const int MaxCount = 10;
 	if(m_points.GetCount() == MaxCount)
 	{
 		CString msg;
@@ -1869,27 +1888,39 @@ void CConfigGeofencing::OnBnClickedClearAll()
 	m_points.ResetContent();
 }
 
+void CConfigGeofencing::OnBnClickedCopyResult()
+{
+  //IDC_POINT_LIST GetDlgItem(IDC_POINT_LIST)->GetWindowText(s);
+  //IDC_POINTS m_points
+  int count = m_points.GetCount();
+  if(count == 0)
+  {
+		::AfxMessageBox("The result is empty!");
+		return;  
+  }
+  CString txt, edTxt;
+	for(int i = 0; i < count; ++i)
+	{
+		m_points.GetText(i, txt);
+		edTxt += txt;
+    if(i != count - 1)
+    {
+      edTxt += "\r\n";
+    }
+  }
+  GetDlgItem(IDC_POINT_LIST)->SetWindowText(edTxt);
+	m_points.ResetContent();
+}
+
 void CConfigGeofencing::OnBnClickedOk()
 {	
 	CString txt;
 	int count = m_points.GetCount();
 	if(count < 3)
 	{
-		txt.Format("You can not set up less than 3 points.");
+		txt.Format("You can not set less than 3 points.");
 		::AfxMessageBox(txt);
 		return;
-
-		/*
-		txt.Format("Set up less than 3 points will clear this geo-fencing data. Are you sure?");
-		if(IDYES == ::AfxMessageBox(txt, MB_YESNO))
-		{
-			count = 0;
-		}
-		else
-		{
-			return;
-		}
-		*/
 	}
 
 	lons.clear();
@@ -1980,7 +2011,7 @@ void CConfigGeofencing::DoCommand()
     AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigRtkMode 對話方塊
+// CConfigRtkMode 
 IMPLEMENT_DYNAMIC(CConfigRtkMode, CCommonConfigDlg)
 
 CConfigRtkMode::CConfigRtkMode(CWnd* pParent /*=NULL*/)
@@ -1993,7 +2024,7 @@ BEGIN_MESSAGE_MAP(CConfigRtkMode, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigRtkMode::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigRtkMode 訊息處理常式
+// CConfigRtkMode 
 
 BOOL CConfigRtkMode::OnInitDialog()
 {
@@ -3107,4 +3138,151 @@ void CConfigDofunUniqueId::DoCommand()
 	}
 
     AfxBeginThread(ConfigThread, 0);
+}
+
+// CConfigPstiInterval
+IMPLEMENT_DYNAMIC(CConfigPstiInterval, CCommonConfigDlg)
+
+CConfigPstiInterval::CConfigPstiInterval(CWnd* pParent /*=NULL*/)
+	: CCommonConfigDlg(IDD_CFG_PSTI_INTERVAL, pParent)
+{
+	m_nPstiId = 0;
+	m_nPstiInterval = 1;
+	m_nAttribute = 0;
+}
+
+BEGIN_MESSAGE_MAP(CConfigPstiInterval, CCommonConfigDlg)
+	ON_WM_HSCROLL()
+	ON_WM_VSCROLL()
+	ON_BN_CLICKED(IDOK, &CConfigPstiInterval::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigPstiInterval
+BOOL CConfigPstiInterval::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+  CString txt;
+  txt.Format("Configure PSTI%03d Interval", m_nPstiId);
+	SetWindowText(txt);
+
+  txt.Format("Set interval to 0 to disable PSTI%03d output.", m_nPstiId);
+	GetDlgItem(IDC_PROMPT)->SetWindowText(txt);
+
+  CGPSDlg::CmdErrorCode ack = CGPSDlg::Timeout;
+  U08 interval = 0;
+  switch(m_nPstiId)
+  {
+  case 4:
+	  ack = CGPSDlg::gpsDlg->QueryPsti004(CGPSDlg::Return, &interval);
+    break;
+  case 30:
+	  ack = CGPSDlg::gpsDlg->QueryPsti030(CGPSDlg::Return, &interval);
+    break;
+  case 32:
+	  ack = CGPSDlg::gpsDlg->QueryPsti032(CGPSDlg::Return, &interval);
+    break;
+  default:
+    break;
+  }
+
+  if(ack != CGPSDlg::Ack)
+	{
+    txt.Format("Not supported Configure PSTI%03d Interval!", m_nPstiId);
+		AfxMessageBox(txt);
+    this->OnCancel();
+		return TRUE;
+	}
+  m_nPstiInterval = interval;
+
+	((CSpinButtonCtrl*)GetDlgItem(IDC_SPIN1))->SetRange(0, 255);
+	((CSliderCtrl*)GetDlgItem(IDC_SLIDER1))->SetRange(0, 255);
+	((CSliderCtrl*)GetDlgItem(IDC_SLIDER1))->SetTicFreq(15);
+
+	txt.Format("%d", m_nPstiInterval);
+	GetDlgItem(IDC_EDIT1)->SetWindowText(txt);
+  ((CSpinButtonCtrl*)GetDlgItem(IDC_SPIN1))->SetPos(m_nPstiInterval);
+	((CSliderCtrl*)GetDlgItem(IDC_SLIDER1))->SetPos(m_nPstiInterval);
+
+  ((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+	
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigPstiInterval::AdjustValue(int nPos, CScrollBar* pScrollBar)
+{
+	if(nPos == -1)
+	{
+		nPos = ((CSliderCtrl*)pScrollBar)->GetPos();
+	}
+
+	CString strNum;
+	strNum.Format("%d", nPos);
+
+	switch(pScrollBar->GetDlgCtrlID())
+	{
+	case IDC_SLIDER1:
+		GetDlgItem(IDC_EDIT1)->SetWindowText(strNum);
+		((CSpinButtonCtrl*)GetDlgItem(IDC_SPIN1))->SetPos(nPos);
+		break;
+
+	case IDC_SPIN1:
+		GetDlgItem(IDC_EDIT1)->SetWindowText(strNum);
+		((CSliderCtrl*)GetDlgItem(IDC_SLIDER1))->SetPos(nPos);
+		break;
+	default:
+		ASSERT(FALSE);
+	}
+}
+
+void CConfigPstiInterval::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+{   
+	if(NULL==pScrollBar)
+	{
+		CCommonConfigDlg::OnHScroll(nSBCode, nPos, pScrollBar);
+		return;
+	}
+	if(SB_ENDSCROLL!=nSBCode)
+	{
+		AdjustValue(-1, pScrollBar);
+	}
+	CCommonConfigDlg::OnHScroll(nSBCode, nPos, pScrollBar);
+}
+
+void CConfigPstiInterval::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+{
+	if(NULL==pScrollBar)
+	{
+		CCommonConfigDlg::OnVScroll(nSBCode, nPos, pScrollBar);
+		return;
+	}
+	if(SB_ENDSCROLL!=nSBCode)
+	{
+		AdjustValue(nPos, pScrollBar);
+	}
+	CCommonConfigDlg::OnVScroll(nSBCode, nPos, pScrollBar);
+}
+
+void CConfigPstiInterval::OnBnClickedOk()
+{
+	CString txt;
+	GetDlgItem(IDC_EDIT1)->GetWindowText(txt);
+	m_nPstiInterval = atoi(txt);
+  m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
+void CConfigPstiInterval::DoCommand()
+{
+	BinaryData cmd(5);
+	*cmd.GetBuffer(0) = 0x64;
+	*cmd.GetBuffer(1) = 0x21;
+	*cmd.GetBuffer(2) = (U08)m_nPstiId;
+	*cmd.GetBuffer(3) = (U08)m_nPstiInterval;
+	*cmd.GetBuffer(4) = (U08)m_nAttribute;
+
+	configCmd.SetData(cmd);
+  configPrompt.Format("Configure PSTI%03d interval successful..", m_nPstiId);
+  AfxBeginThread(ConfigThread, 0);
 }

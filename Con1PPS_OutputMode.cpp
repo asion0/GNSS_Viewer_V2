@@ -26,9 +26,8 @@ void CCon1PPS_OutputMode::DoDataExchange(CDataExchange* pDX)
 
 	//DDX_CBIndex(pDX,IDC_1PPS_MODE_ATTR,attr);
 	DDX_Control(pDX,IDC_RADIO_PPS_NO_OUTPUT,m_no_output);
-	DDX_Control(pDX,IDC_RADIO_PPS_OUTPUT_HAVE_GPS_TIME,m_output_gps_time);
+	DDX_Control(pDX,IDC_HAVE_GPS_TIME,m_output_gps_time);
 	DDX_Control(pDX,IDC_RADIO_PPS_OUTPUT_ALIGN,m_output_align);
-	DDX_Control(pDX,IDC_RADIO_PPS_OUTPUT_HAVE_GPS_TIME,m_output_gps_time);
 	DDX_Control(pDX,IDC_RADIO_PPS_ALIGN_TO_GPS,m_align_to_GPS);
 	DDX_Control(pDX,IDC_RADIO_PPS_ALIGN_TO_UTC,m_align_to_UTC);
 	DDX_Control(pDX, IDC_1PPS_MODE_ATTR, m_attr);
@@ -41,7 +40,7 @@ void CCon1PPS_OutputMode::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CCon1PPS_OutputMode, CDialog)
 	ON_BN_CLICKED(IDC_RADIO_PPS_NO_OUTPUT, &CCon1PPS_OutputMode::OnBnClickedRadioPpsNoOutput)
 	//ON_BN_CLICKED(IDC_RADIO_PPS_OUTPUT_ALWAYS, &CCon1PPS_OutputMode::OnBnClickedRadioPpsOutputAlways)
-	ON_BN_CLICKED(IDC_RADIO_PPS_OUTPUT_HAVE_GPS_TIME, &CCon1PPS_OutputMode::OnBnClickedRadioPpsOutputHaveGpsTime)
+	ON_BN_CLICKED(IDC_HAVE_GPS_TIME, &CCon1PPS_OutputMode::OnBnClickedOutputHaveGpsTime)
 	ON_BN_CLICKED(IDC_RADIO_PPS_OUTPUT_ALIGN, &CCon1PPS_OutputMode::OnBnClickedRadioPpsOutputAlign)
 	ON_BN_CLICKED(IDOK, OnBnClickedOk)
 	ON_BN_CLICKED(IDC_RADIO_PPS_ALIGN_TO_GPS, &CCon1PPS_OutputMode::OnBnClickedRadioPpsAlignToGps)
@@ -79,7 +78,7 @@ void CCon1PPS_OutputMode::OnBnClickedRadioPpsNoOutput()
 }
 
 
-void CCon1PPS_OutputMode::OnBnClickedRadioPpsOutputHaveGpsTime()
+void CCon1PPS_OutputMode::OnBnClickedOutputHaveGpsTime()
 {
 	m_no_output.SetCheck(0);
 	m_output_gps_time.SetCheck(1);

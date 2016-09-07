@@ -76,7 +76,7 @@ U16 customerCrc = 0;
 UINT CGPSDlg::GetBinFromResource(int baud)
 {
 	UINT* promTable = NULL;
-#if (!GG12A)
+
 	UINT glonassPromTable[] = { 
 				(IDR_GNSS_PRELOADER_4800),
 				(IDR_GNSS_PRELOADER_9600),
@@ -86,9 +86,6 @@ UINT CGPSDlg::GetBinFromResource(int baud)
 				(IDR_GNSS_PRELOADER_115200),
 				(IDR_GNSS_PRELOADER_230400),
 			};
-	promTable = glonassPromTable;
-#endif
-#if (GG12A)
 	UINT gg12aPromTable[] = {
 				(IDR_GG12A_PRELOADER_4800),
 				(IDR_GG12A_PRELOADER_9600),
@@ -98,9 +95,34 @@ UINT CGPSDlg::GetBinFromResource(int baud)
 				(IDR_GG12A_PRELOADER_115200),
 				(IDR_GG12A_PRELOADER_230400),
 			};
-	promTable = gg12aPromTable;
-#endif
+	UINT gpsPromTable[] = {
+			(IDR_GPS_PRELOADER_4800),
+			(IDR_GPS_PRELOADER_9600),
+			(IDR_GPS_PRELOADER_19200),
+			(IDR_GPS_PRELOADER_38400),
+			(IDR_GPS_PRELOADER_57600),
+			(IDR_GPS_PRELOADER_115200),
+			(IDR_GPS_PRELOADER_230400),
+		};
 
+	switch(m_DownloadMode)
+	{
+		case InternalLoaderV6Gps:
+		case InternalLoaderV6GpsAddTag:
+		case InternalLoaderV6GpsDelTag:
+			promTable = gpsPromTable;
+			break;
+		case InternalLoaderV6Gnss:
+		case InternalLoaderV6GnssAddTag:
+		case InternalLoaderV6GnssDelTag:
+			promTable = glonassPromTable;
+			break;
+		case InternalLoaderV6Gg12a:
+			promTable = gg12aPromTable;
+			break;
+		default:
+			ASSERT(FALSE);
+	}
 	return promTable[baud];
 }
 
@@ -802,6 +824,17 @@ U08 GetPromBinCheckSum(BinaryData& b, int size)
 	return cs;
 }
 
+U08 GetPromBinCheckSum(const U08* b, int size)
+{
+	U08 cs = 0;
+	for(int i=0; i<size; ++i)
+	{
+		cs += *b;
+		b++;
+	}
+	return cs;
+}
+
 U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 {
 	
@@ -843,7 +876,7 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 	}
 
 	const U08* sData = preLoader.Ptr();
-	U08 mycheck = GetPromBinCheckSum(binFile, preLoader.Size());
+	U08 mycheck = GetPromBinCheckSum(sData, preLoader.Size());
 	//U08 mycheck = 0;
 	//for(int i=0; i<preLoader.Size(); ++i)
 	//{
@@ -1442,8 +1475,11 @@ bool CGPSDlg::Download()
 			}
 		}
 		else if(m_DownloadMode == InternalLoaderV8 && crcCode==0xe463)
-		{	//V8 ROM Code A must use external loader.
-			m_DownloadMode = RomExternalDownload;
+		{	
+      if(!g_setting.downloadRomInternal)
+      { //V8 ROM Code A must use external loader.
+			  m_DownloadMode = RomExternalDownload;
+      }
 		}
 
 		if(!DOWNLOAD_IMMEDIATELY)
@@ -1459,12 +1495,10 @@ bool CGPSDlg::Download()
 			}
 			
 			CmdErrorCode err = GpsdoEnterDownload(Return, NULL);
-			//CmdErrorCode err = GpsdoEnterDownloadHigh(Return, NULL);
 			m_nDownloadBaudIdx = 5;
 			SetBaudrate(m_nDownloadBaudIdx);		//115200 bps
 			Sleep(1000);
-			//U08 b = 0;
-			//QueryUartPass(Return, &b);
+
 			if(Ack != err)
 			{
 				::AfxMessageBox("Can't download GPSDO Slave!");
@@ -1677,9 +1711,10 @@ bool CGPSDlg::CheckTagType()
 	CmdErrorCode ack = QueryRegister(Return, &data);
 	m_regAddress = t;
 
-	if( (data >> 16) == 0xA015 ||
-		(data >> 16) == 0xA006 ||
-		(data >> 16) == 0xA016 )
+	if( (data >> 16) == 0x901)
+	//if( (data >> 16) == 0xA015 ||
+	//	(data >> 16) == 0xA006 ||
+	//	(data >> 16) == 0xA016 )
 	{
 		suc = true;
 	}

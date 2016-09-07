@@ -27,7 +27,7 @@ protected:
 public:
 	afx_msg void OnBnClickedRadioPpsNoOutput();
 	afx_msg void OnBnClickedRadioPpsOutputAlways();
-	afx_msg void OnBnClickedRadioPpsOutputHaveGpsTime();
+	afx_msg void OnBnClickedOutputHaveGpsTime();
 	afx_msg void OnBnClickedRadioPpsOutputAlign();
 	virtual BOOL OnInitDialog();
 	CComboBox m_attr;

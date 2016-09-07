@@ -12,26 +12,26 @@
 #include "Agps_config.h"
 #include "FTPDlg.h"
 #include "Registry.h"
-#include "Con_binary_msg_interval.h"
 #include "ClipboardListBox.h"
 #include "Label.h"
 #include "ColorStatic.h"
 #include "MsgList.h"
 #include "SerialAgents.h"
 
-#define UWM_SETPROGRESS			(WM_USER + 0x005)
-#define UWM_SETPROMPT_MSG		(WM_USER + 0x019)
-#define UWM_SETTIMEOUT			(WM_USER + 0x062)
-#define UWM_KERNEL_REBOOT		(WM_USER + 0x134)
-#define UWM_FIRST_NMEA			(WM_USER + 0x135)
-#define UWM_SHOW_TIME			(WM_USER + 0x136)
-#define UWM_UPDATE_UI			(WM_USER + 0x137)
-#define UWM_SHOW_RMC_TIME		(WM_USER + 0x138)
-#define UWM_GPSDO_HI_DOWNLOAD   (WM_USER + 0x139)
-#define UWM_UPDATE_RTK_INFO		(WM_USER + 0x13A)
-#define UWM_UPDATE_PSTI030		(WM_USER + 0x13B)
-#define UWM_UPDATE_PSTI031		(WM_USER + 0x13C)
-#define UWM_UPDATE_PSTI032		(WM_USER + 0x13D)
+#define UWM_SETPROGRESS			  (WM_USER + 0x100)
+#define UWM_SETPROMPT_MSG		  (WM_USER + 0x101)
+#define UWM_SETTIMEOUT			  (WM_USER + 0x102)
+#define UWM_KERNEL_REBOOT		  (WM_USER + 0x103)
+#define UWM_FIRST_NMEA			  (WM_USER + 0x104)
+#define UWM_SHOW_TIME			    (WM_USER + 0x105)
+#define UWM_UPDATE_UI			    (WM_USER + 0x106)
+#define UWM_SHOW_RMC_TIME		  (WM_USER + 0x107)
+#define UWM_GPSDO_HI_DOWNLOAD (WM_USER + 0x108)
+#define UWM_UPDATE_RTK_INFO		(WM_USER + 0x109)
+#define UWM_UPDATE_PSTI030		(WM_USER + 0x10A)
+#define UWM_UPDATE_PSTI031		(WM_USER + 0x10B)
+#define UWM_UPDATE_PSTI032		(WM_USER + 0x10C)
+#define UWM_DO_ZENLANE_CMD    (WM_USER + 0x10D)
 
 #define GNSS_CHANEL_LIMIT	16
 
@@ -165,6 +165,15 @@ enum {
 	ECOM_CALIB_TIMER,
 	DELAY_QUERY_TIMER,
 	DELAY_PLUGIN_TIMER,
+  ZENLANE_INIT_TIMER,
+  ZENLANE_QUERY_TIMER,
+};
+
+enum { 
+  DO_NOTHING = 0,
+  DO_QUERY_VERSION,
+  DO_ZENLANE_INIT,
+  DO_ZENLANE_QUERY,
 };
 
 class CSoftImDwDlg;
@@ -713,6 +722,12 @@ public:
 	CmdErrorCode ExcuteBinaryCommandNoWait(int cmdIdx, BinaryCommand* cmd);
 	CGPSDlg::CmdErrorCode GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U08 cAckSub, DWORD timeOut, bool silent, bool noWaitAck = false, int cmdSize = -1, int cmdLen = 0);
 	CmdErrorCode QueryRtkMode2(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryPsti030(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryPsti032(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryPsti004(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryGeofenceEx(CmdExeMode nMode, void* outputData);
+
+  U08 m_nGeofecingNo;
 
 	//Query Functions
 	int m_nDefaultTimeout;
@@ -726,6 +741,9 @@ protected:
 	CmdErrorCode QuerySha1String(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryConstellationCapability(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryVersionExtension(CmdExeMode nMode, void* outputData);
+	CmdErrorCode SendZenlandInitCmd(CmdExeMode nMode, void* outputData);
+	CmdErrorCode SendZenlandQueryCmd(CmdExeMode nMode, void* outputData);
+
 	CmdErrorCode QuerySoftwareVersionSystemCode(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySoftwareCrcSystemCode(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPositionPinning(CmdExeMode nMode, void* outputData);
@@ -789,7 +807,6 @@ protected:
 	CmdErrorCode QuerySignalDisturbanceData(CmdExeMode nMode, void* outputData);
 	CmdErrorCode ResetOdometer(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryCableDelay(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryGeofenceEx(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGeofenceResult(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGeofenceResultEx(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryRtkMode(CmdExeMode nMode, void* outputData);
@@ -835,16 +852,16 @@ protected:
 	afx_msg void OnConfigureSerialPort();
 	afx_msg void OnSetFactoryDefaultNoReboot();
 	afx_msg void OnSetFactoryDefaultReboot();
-	afx_msg void OnBinaryConfigurenmeaoutput();
+	//afx_msg void OnBinaryConfigurenmeaoutput();
 	afx_msg void OnConfigureNmeaIntervalV8();
 	afx_msg void OnConfigureEricssonSentecneInterval();
 	afx_msg void OnConfigureSerialNumber();
 	afx_msg void OnBinaryConfiguredatum();
-	afx_msg void OnBinaryConfiguredopmask();
+	//afx_msg void OnBinaryConfiguredopmask();
 	afx_msg void OnConverterDecompress();	
 	afx_msg void OnCovDecopre();
 	afx_msg void OnConverterCompress();
-	afx_msg void OnLoggerConvert();	
+	//afx_msg void OnLoggerConvert();	
 	afx_msg void OnDatalogClearControl();
 	afx_msg void OnDatalogLogconfigurecontrol();	
 	afx_msg void OnSoftwareimagedownloadLoaderimage();
@@ -881,7 +898,7 @@ protected:
 	afx_msg void OnBinaryConfigurebinarymsginterval();
 	afx_msg void OnBinaryConfigureBinaryInterval();
 	afx_msg void OnBinaryPositionfinder();
-	afx_msg void OnBinaryConfigurepositionrate();
+	afx_msg void OnConfigurePositionUpdateRate();
 	afx_msg void OnBinaryConfigDrMultiHz();
 	afx_msg void OnDatalogLogReadBatch();
 	afx_msg void OnBinaryConfigurepositionpinning();
@@ -893,16 +910,16 @@ protected:
 	afx_msg void OnBinaryQuery1pps();
 	afx_msg void OnBinaryConfigurepowermode();
 	afx_msg void OnBinaryConfiguremultipath();
-	afx_msg void OnWaasWaas();
+	//afx_msg void OnWaasWaas();
 	afx_msg void OnGetGpsAlmanac();
 	afx_msg void OnBinaryQuerybinarymsginterval();
 	afx_msg void OnBinaryResetodometer();
 	afx_msg void OnConfigTiming();
 	afx_msg void OnConfigTimingCableDelay();
-	afx_msg void OnConfigure1ppstimingConfigure1pps();
+	afx_msg void OnConfigureDopMask();
 	afx_msg void OnConfigElevationAndCnrMask();
-	afx_msg void On1ppstimingMonitoring1pps();
-	afx_msg void On1ppstimingConfigureproprietarynmea();
+	afx_msg void OnMonitoring1Pps();
+	afx_msg void OnConfigureProprietaryNmea();
 	afx_msg void OnSetGpsAlmanac();
 	afx_msg void OnMinihomerActivate();
 	afx_msg LRESULT OnMyDeviceChange(WPARAM wParam, LPARAM lParam);
@@ -919,6 +936,8 @@ protected:
 	afx_msg LRESULT OnUpdatePsti030(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnUpdatePsti031(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnUpdatePsti032(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnDoZenlaneCmd(WPARAM wParam, LPARAM lParam);
+
 	afx_msg void OnMinihomerSettagecco();
 	afx_msg void OnMinihomerQuerytag();
 	afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
@@ -931,26 +950,25 @@ protected:
 	afx_msg void OnSetGlonassAlmanac();
 	afx_msg void OnGetBeidouAlmanac();
 	afx_msg void OnSetBeidouAlmanac();
-	afx_msg void OnEphemerisSetgpsglonass();
-	afx_msg void OnEphemerisSetgpsglonassAlmanac();
+	//afx_msg void OnEphemerisSetgpsglonass();
+	//afx_msg void OnEphemerisSetgpsglonassAlmanac();
 	afx_msg void OnEphemerisGettimecorrections();
 	afx_msg void OnEphemerisSettimecorrections();
 	afx_msg void OnConfigProprietaryMessage();
 	afx_msg void OnConfigPowerSavingParameters();
-	afx_msg void OnConfigPowerSavingParametersRom();
+	//afx_msg void OnConfigPowerSavingParametersRom();
 	afx_msg void OnBinaryConfigureantennadetection();
-	afx_msg void On1ppstimingConfigureppsoutputmode();	//new
-	afx_msg void On1ppstimingQueryppsoutputmode();
+	afx_msg void OnConfigure1PpsOutputMode();	//new
+	afx_msg void OnQuery1PpsOutputMode();
 	afx_msg void OnConfigGnssDozeMode();
 	afx_msg void OnBnClickedECompassCalibration();
-	afx_msg void On1ppstimingConfigurePulseWidth();
-	afx_msg void On1ppsTimingQuery1ppsPulseWidth();
+	afx_msg void OnConfigure1PpsPulseWidth();
+	afx_msg void OnQuery1PpsPulseWidth();
 	afx_msg void OnConfigQueryGnssNavSol();
 	afx_msg void OnConfigBinaryMeasurementDataOut();
 	afx_msg void OnConfig1ppsFrequencyOutput();
-	afx_msg void On1ppstimingConfigureppspulseclksrc();
-	afx_msg void On1ppstimingEnterreferenceposition32977();
-	afx_msg void On1ppstimingQueryppspulseclksrc();
+	afx_msg void OnLineAssistance();
+	//afx_msg void On1ppstimingQueryppspulseclksrc();
 	afx_msg void OnBinaryConfigureSBAS();
 	afx_msg void OnBinaryConfigureSAGPS();
 	afx_msg void OnBinaryConfigureQZSS();
@@ -1013,6 +1031,9 @@ protected:
 	//afx_msg void OnStnClickedRtkInfoT();
 	afx_msg void OnStnClickedRtkInfoB();
 	afx_msg void OnBnClickedCoorSwitch();
+	afx_msg void OnConfigPsti030();
+	afx_msg void OnConfigPsti032();
+	afx_msg void OnConfigPsti004();
 
 	afx_msg void OnQueryPositionRate()
 	{ GenericQuery(&CGPSDlg::QueryPositionRate); }
@@ -1169,6 +1190,12 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryPstmDeviceAddress); }
 	afx_msg void OnQueryPstnLatLonDigits()
 	{ GenericQuery(&CGPSDlg::QueryPstnLatLonDigits); }
+	afx_msg void OnQueryPsti030()
+	{ GenericQuery(&CGPSDlg::QueryPsti030); }
+	afx_msg void OnQueryPsti032()
+	{ GenericQuery(&CGPSDlg::QueryPsti032); }
+	afx_msg void OnQueryPsti004()
+	{ GenericQuery(&CGPSDlg::QueryPsti004); }
 
 	struct MenuItemEntry {
 		BOOL showOption;
@@ -1237,6 +1264,8 @@ protected:
 	void SwitchToConnectedStatus(BOOL bSwitch);
 	void SetFactoryDefault(bool isReboot);
 	void GetGPSStatus();
+	bool DoZenlandInit();
+	bool DoZenlandQuery();
 	void SetConnectTitle(bool isInConnect);
 	//Test Clock Offser
 	U08 QueryChanelFreq(int chanel, U16 *prn, double *freq);
@@ -1261,7 +1290,7 @@ protected:
 	CLabel m_fixed_status;
 
 	CEdit m_odo_meter;
-	CEdit m_gyro_data;
+	//CEdit m_gyro_data;
 	CEdit m_backward_indicator;
 	CStatic m_lbl_odo_meter;
 	CStatic m_lbl_gyro_data;
@@ -1273,11 +1302,10 @@ protected:
 	bool m_firstDataIn;
 	U32 m_customerID;
 	int m_dataLogDecompressMode;
-	U08 m_nGeofecingNo;
 
 	DECLARE_MESSAGE_MAP()
-
 protected:
+  int m_nDoFlag;
 	bool ShowCommand(U08 *buffer, int length);
 	void ShowFormatError(U08* cmd, U08* ack);
 	void SwitchInfoTab();

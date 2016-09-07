@@ -34,21 +34,63 @@ CString m_almanac_filename;
 CMonitor_1PPS *dia_monitor_1pps = NULL;
 
 int FlashBytes[] = { 8*1024, 16*1024, 24*1024, 32*1024 };
-
+#if(SPECIAL_BAUD_RATE)
+int Setting::BaudrateTable[] = {7200, 14400, 28800, 57600, 86400, 172800, 345600, 691200, 1382400};
+#elif (CUSTOMER_CWQX_160815)
+int Setting::BaudrateTable[] = {4800, 9600, 19200, 38400, 57600, 115200, 0, 0, 0, 0, 0, 1200, 2400};
+#else
 int Setting::BaudrateTable[] = {4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600};
-const int Setting::BaudrateTableSize = sizeof(Setting::BaudrateTable) / sizeof(Setting::BaudrateTable[0]);
+#endif
 
-void Setting::SetBaudrate(int b)
+int Setting::GetBaudrateTableSize()
 {
-	for(int i = 0; i < BaudrateTableSize; ++i)
+  return sizeof(Setting::BaudrateTable) / sizeof(Setting::BaudrateTable[0]);
+}
+
+int Setting::BaudrateIndex(int b)
+{
+  int idx = -1;
+	for(int i = 0; i < GetBaudrateTableSize(); ++i)
 	{
 		if(BaudrateTable[i] == b)
 		{
-			baudrate = i;
-			return;
+			idx = i;
+			return idx;
 		}
 	}
-	baudrate = -1;
+  return idx;
+}
+
+int Setting::SetBaudrateByValue(int b)
+{
+	baudrate = BaudrateIndex(b);
+  return baudrate;
+}
+
+void Setting::InitBaudrateCombo(CComboBox* c, bool addSPI, bool addI2C)
+{
+	c->ResetContent();
+	for(int i=0; i<GetBaudrateTableSize(); ++i)
+	{
+		CString strIdx;
+    if(Setting::BaudrateTable[i] != 0)
+    {
+		  strIdx.Format("%d", Setting::BaudrateTable[i]);
+    }
+    else
+    {
+      strIdx = "Reserve";
+    }
+		c->AddString(strIdx);
+	}
+  if(addSPI)
+  {
+	  c->AddString("SPI");
+  }
+	if(addI2C)
+  {
+    c->AddString("I2C");
+  }
 }
 
 U32 ConvertCharToU32(const char *src)

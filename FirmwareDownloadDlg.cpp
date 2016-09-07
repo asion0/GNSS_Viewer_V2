@@ -49,18 +49,14 @@ BOOL CFirmwareDownloadDlg::OnInitDialog()
 	icTypeCombo->AddString("Using external loader in binCmd");
 	icTypeCombo->AddString("OLinkStar download");
 
-	if(_V8_SUPPORT)
-	{
-		baudrateCombo->ResetContent();
-		for(int i=0; i<Setting::BaudrateTableSize; ++i)
-		{
-			CString strIdx;
-			strIdx.Format("%d", Setting::BaudrateTable[i]);
-			baudrateCombo->AddString(strIdx);
-		}
-	}
-	baudrateCombo->AddString("SPI");
-	baudrateCombo->AddString("I2C");
+  if(CUSTOMER_CWQX_160815)
+  {
+    g_setting.InitBaudrateCombo(baudrateCombo);
+  }
+  else
+  {
+    g_setting.InitBaudrateCombo(baudrateCombo, true, true);
+  }
 
 	CRegistry reg;
 	reg.SetRootKey(HKEY_CURRENT_USER);

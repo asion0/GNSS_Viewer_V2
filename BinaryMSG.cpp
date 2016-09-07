@@ -32,7 +32,7 @@ void ECEF_USER_PVT_PROC(ECEF_USER_PVT& ecef_user_pvt, U08* pt)
 	memcpy(&ecef_user_pvt.PDOP         , &pt[42], sizeof(U08));
 	memcpy(&ecef_user_pvt.HDOP         , &pt[43], sizeof(U08));
 	memcpy(&ecef_user_pvt.VDOP         , &pt[44], sizeof(U08));
-    memcpy(&ecef_user_pvt.TDOP         , &pt[45], sizeof(U08));    
+  memcpy(&ecef_user_pvt.TDOP         , &pt[45], sizeof(U08));    
 }
 
 void GEODETIC_USER_PVT_PROC(GEODETIC_USER_PVT& geod_user_pvt,U08* pt)
@@ -107,27 +107,7 @@ void SATELLITE_MEASUREMENT_DATA_PROC(SATELLITE_MEASUREMENT_DATA& sm_data,U08* pt
 	memcpy(&sm_data.TOW           , &pt[151],  sizeof(U32));
 	memcpy(&sm_data.ClockOffset   , &pt[155],  sizeof(U16));
 }
-/*
-void SHOW_ECEF_USER_PVT(ECEF_USER_PVT& ecef_user_pvt,U08* pt,int len)
-{
-	ECEF_USER_PVT_PROC(ecef_user_pvt,pt);
-}
 
-void SHOW_GEODETIC_USER_PVT(GEODETIC_USER_PVT& geod_user_pvt,U08* pt,int len)
-{	
-	GEODETIC_USER_PVT_PROC(geod_user_pvt,pt);
-}
-
-void SHOW_USER_SATELLITE_INFOMATION(USER_SATELLITE_INFOMATION& sv_info,U08* pt,int len)
-{   
-	USER_SATELLITE_INFOMATION_PROC(sv_info,pt);
-}
-
-void SHOW_SATELLITE_MEASUREMENT_DATA(SATELLITE_MEASUREMENT_DATA& sm_data,U08* pt,int len)
-{	
-	SATELLITE_MEASUREMENT_DATA_PROC(sm_data,pt);
-}
-*/
 void CooCartesianToGeodetic(const POS_T* xyz_p, LLA_T* lla_p)
 {
 	D64 p;
@@ -161,11 +141,8 @@ void CooCartesianToGeodetic(const POS_T* xyz_p, LLA_T* lla_p)
 	lla_p->alt = (F32)( (p / c_phi) - ( WGS84_RA / sqrt(1.0 - WGS84_E2*s_phi*s_phi ) ) );
 }
 
-
-
 static  void ecef2lla(const POS_T* xyz_p, LLA_T* lla_p)
 {
-
 	double ja = 6378137; // radius
 	double je = 8.1819190842622E-2;  // eccentricity
 
@@ -192,7 +169,6 @@ static  void ecef2lla(const POS_T* xyz_p, LLA_T* lla_p)
   {
 	  lon -= lon / (2 * PI);
   }
-  //lon = lon % (2*PI);
 
   // correction for altitude near poles left out.
   lla_p->lat = lat;
@@ -220,8 +196,6 @@ U08 *decode_1bytes(U08 *src,U08 *dst)
 	src+=1;
 	return src;
 }
-//extern Satellite satellites_gps[MAX_SATELLITE];
-//extern Satellite satellites_gnss[MAX_SATELLITE];
 
 void ShowMeasurementChannel(U08* src, bool convertOnly, CString* pStr)
 {
@@ -545,8 +519,7 @@ void ShowReceiverNav(U08 *src, bool convertOnly, CString* pStr)
 	ptr = decode_4bytes(ptr, &tmp[0]);
 	memcpy(&receiver.tdop, tmp, sizeof(F32));
 
-
-	int len = sprintf_s(g_msgBuff, sizeof(g_msgBuff), 
+  int len = sprintf_s(g_msgBuff, sizeof(g_msgBuff), 
 		"$navigation_status=%d,wn=%d,tow=%f,ecef_x=%f,ecef_y=%f,ecef_z=%f,ecef_vx=%f,ecef_vy=%f,ecef_vz=%f,clock_bias=%f,clock_drift=%f,gdop=%f,pdop=%f,hdop=%f,vdop=%f,tdop=%f",
 		receiver.nav_status, receiver.wn, receiver.tow, 
 		receiver.ecef_x, receiver.ecef_y, receiver.ecef_z,
@@ -566,7 +539,6 @@ void ShowReceiverNav(U08 *src, bool convertOnly, CString* pStr)
 	}
 
 	add2message(g_msgBuff, len);
-
 	switch(receiver.nav_status)
 	{
 	case 0:
@@ -612,10 +584,8 @@ void ShowReceiverNav(U08 *src, bool convertOnly, CString* pStr)
 	double lon_m = fmod( fabs(lla.lon), 1.0) * 60.0;
 
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude = lat_d * 100.0 + lat_m;
-	//CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude = lla.lat * R2D;
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude_N_S = (lla.lat >= 0) ? 'N' : 'S';
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude = lon_d * 100.0 + lon_m;
-	//CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude = lla.lon * R2D;
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude_E_W = (lla.lon >= 0) ? 'E' : 'W';
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Altitude = lla.alt;
 
@@ -633,10 +603,8 @@ void ShowBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 	UtcTime utc;
 	UtcConvertGpsToUtcTime(wn, ftow, &utc);
 
-
 	double lat = src[13]<<24 | src[14]<<16 | src[15]<<8 | src[16];
 	double lon = src[17]<<24 | src[18]<<16 | src[19]<<8 | src[20];
-
 	D64 flat = lat;
 	flat /= 10000000;
 	flat =((int)flat)*100 +(double)(flat - (int)flat)*60;
@@ -647,7 +615,6 @@ void ShowBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 
 	U32 alt_t =src[21]<<24 | src[22]<<16 | src[23]<<8 | src[24];
 	U32 alt = src[25]<<24 | src[26]<<16 | src[27]<<8 | src[28];
-
 
 	U32 gdop = src[29]<<8 | src[30];
 	U32 pdop = src[31]<<8 | src[32];
@@ -666,7 +633,6 @@ void ShowBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 	D64 fx = (D64)vx / 100;
 	D64 fy = (D64)vy / 100;
 	D64 fz = (D64)vz / 100;
-
 	D64 fv = sqrt(fx * fx + fy * fy + fz * fz);
 
 	char m_buff[512];
@@ -960,7 +926,6 @@ void ShowDjiBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 	F32 rtkFix = (F32)ConvertLeonU16(src + 88) / 10;
 	
 	CGPSDlg::gpsDlg->PostMessage(UWM_UPDATE_RTK_INFO, *(WPARAM*)&rtkAge, *(LPARAM*)&rtkFix);
-
 	D64 fv = sqrt(vx * vx + vy * vy + vz * vz);
 
 	char m_buff[512];

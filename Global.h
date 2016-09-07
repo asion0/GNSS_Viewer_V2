@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Utility.h"
 #include <vector>
 #include <list>
+#include "Utility.h"
 #include "matrix.h"
 #include "Registry.h"
 
@@ -80,6 +80,7 @@ struct Setting
 			reg.WriteFloat("setting_scatterCenterAlt", scatterCenterAlt);
 			reg.WriteInt("setting_defaultTimeout", defaultTimeout);
 			reg.WriteInt("setting_scatterCount", scatterCount);
+			reg.WriteInt("setting_downloadRomInternal", downloadRomInternal);
 
 			reg.WriteInt("recentScatterCenterCount", recentScatterCenter.GetCount());
 			for(int i = 0; i < recentScatterCenter.GetCount(); ++i)
@@ -115,6 +116,7 @@ struct Setting
 			scatterCenterAlt = reg.ReadFloat("setting_scatterCenterAlt", defaultCenterAlt);
 			defaultTimeout = reg.ReadInt("setting_defaultTimeout", DefaultTimeout);
 			scatterCount = reg.ReadInt("setting_scatterCount", MAX_SCATTER_COUNT);
+			downloadRomInternal = reg.ReadInt("setting_downloadRomInternal", FALSE);
 
 			int recentCount = reg.ReadInt("recentScatterCenterCount", 0);
 			for(int i = 0; i < recentCount; ++i)
@@ -129,7 +131,15 @@ struct Setting
 		{
 			delayBeforeBinsize = 0;
 			boostBaudIndex = BAUDRATE_DEFAULT;
-			autoQueryVersion = TRUE;
+      if(CUSTOMER_ZENLANE_160808)
+      {
+			  autoQueryVersion = FALSE;
+      }
+      else
+      {
+			  autoQueryVersion = TRUE;
+      }
+
 			boostEphemeris = FALSE;
 			checkNmeaError = SHOW_ERROR_NMEA_NOTIFY;
 			responseLog = FALSE;
@@ -141,6 +151,7 @@ struct Setting
 			scatterCenterAlt = defaultCenterAlt;
 			defaultTimeout = DefaultTimeout;
 			scatterCount = MAX_SCATTER_COUNT;
+      downloadRomInternal = FALSE;
 		}
 
 		if(reg.SetKey("Software\\GNSSViewer\\GPS", true))
@@ -178,18 +189,20 @@ struct Setting
 		recentScatterCenter.Add(r);
 	}
 
+	int BaudrateIndex(int b);
+	int BaudrateValue(int i){ return BaudrateTable[i]; }
 	int GetBaudrateIndex() { return baudrate; }
 	int GetBaudrate() { return BaudrateTable[baudrate]; }
 	void SetBaudrateIndex(int b) { baudrate = b; }
-	void SetBaudrate(int b);
+	int SetBaudrateByValue(int b);
 	int GetComPortIndex() { return comPort - 1; }
 	int GetComPort() { return comPort; }
 	void SetComPortIndex(int c) { comPort = c + 1; }
 	void SetComPort(int c) { comPort = c; }
-
+  void InitBaudrateCombo(CComboBox* c, bool addSPI = false, bool addI2C = false);
+	int GetBaudrateTableSize();
+  bool IsValidBaudrateIndex(int i) { return (i >= GetBaudrateTableSize()) ? false : (0 != BaudrateTable[i]); };
 	//General use
-	static int BaudrateTable[];
-	static const int BaudrateTableSize;
 	CString mainFwPath;
 	int earthBitmap;
 
@@ -200,6 +213,7 @@ struct Setting
 	BOOL boostEphemeris;
 	BOOL checkNmeaError;
 	BOOL downloadTesting;
+	BOOL downloadRomInternal;
 	BOOL responseLog;
 	CString responseLogPath;
 	BOOL specifyCenter;
@@ -212,11 +226,10 @@ struct Setting
 	CStringArray recentScatterCenter;
 
 protected:
-
+	static int BaudrateTable[];
 	//General use
 	int comPort;
 	int baudrate;
-
 };
 
 typedef struct UTC_TIME_T {

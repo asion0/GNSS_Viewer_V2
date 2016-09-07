@@ -122,8 +122,6 @@ void CGetEphemerisDlg::OnBnClickedOk()
 		return;
 	}		
 	g_SV = m_ephems.GetCurSel(); 
-	//g_doesNotChangeBaudrate = !g_setting.boostEphemeris;
-
 	AfxBeginThread(GetEphmsThread, (void*)ephType);
 	OnOK();
 }

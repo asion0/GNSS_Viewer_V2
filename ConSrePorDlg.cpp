@@ -7,15 +7,14 @@
 #include "ConSrePorDlg.h"
 #include "Serial.h"
 
-CConSrePorDlg* pCSPDlg;
-U08 comport;
-U08 baudrate;
+//CConSrePorDlg* pCSPDlg;
+static U08 comport;
+static U08 baudrate;
 
 UINT CigSrePorThread(LPVOID pParam)
 {   
-
 	U08 messages[11];    
-    U08 i;	  
+  U08 i;	  
 	memset(messages, 0, 11);
 	messages[0]=(U08)0xa0;
 	messages[1]=(U08)0xa1;
@@ -25,7 +24,7 @@ UINT CigSrePorThread(LPVOID pParam)
 	messages[5]=comport; 
 	messages[6]=baudrate; 
 	messages[7]=attribute;
-    U08 checksum = 0;
+  U08 checksum = 0;
 	for(i=0;i<(int)messages[3];i++)	checksum^=messages[i+4];	
 	messages[8]=checksum;
 	messages[9]=(U08)0x0d;
@@ -76,17 +75,10 @@ BOOL CConSrePorDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	pCSPDlg=this;
+	//pCSPDlg=this;
 	m_comport.SetCurSel(0);
 
-	m_baudrate.ResetContent();
-	for(int i=0; i<Setting::BaudrateTableSize; ++i)
-	{
-		CString strIdx;
-		strIdx.Format("%d", Setting::BaudrateTable[i]);
-		m_baudrate.AddString(strIdx);
-	}
-
+  g_setting.InitBaudrateCombo(&m_baudrate);
 
 	if(!IS_DEBUG)
 	{
@@ -105,6 +97,12 @@ void CConSrePorDlg::OnBnClickedOk()
 {
 	comport  = m_comport.GetCurSel();
 	baudrate = m_baudrate.GetCurSel();
+  if(!g_setting.IsValidBaudrateIndex(baudrate))
+  {
+    ::AfxMessageBox("Not supported baud rate!");
+    return;
+  }
+
 	attribute= m_attribute.GetCurSel();
 	AfxBeginThread(CigSrePorThread,0);	
 	OnOK();

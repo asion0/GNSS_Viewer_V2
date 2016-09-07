@@ -1,13 +1,11 @@
-// ConMultiMode.cpp : 實作檔
+// ConMultiMode.cpp 
 //
 
 #include "stdafx.h"
 #include "GPS.h"
 #include "ConMultiMode.h"
 
-
-// CConMultiMode 對話方塊
-
+// CConMultiMode 
 IMPLEMENT_DYNAMIC(CConMultiMode, CDialog)
 CConMultiMode::CConMultiMode(CWnd* pParent /*=NULL*/)
 	: CDialog(CConMultiMode::IDD, pParent)
@@ -37,15 +35,20 @@ BEGIN_MESSAGE_MAP(CConMultiMode, CDialog)
 END_MESSAGE_MAP()
 
 
-// CConMultiMode 訊息處理常式
+// CConMultiMode 
 
 void CConMultiMode::OnBnClickedOk()
 {
-	// TODO: 在此加入控制項告知處理常式程式碼
-	
+
 	if(((CButton*)GetDlgItem(IDC_BUILD_IN))->GetCheck())
 	{
 		mode = m_mode.GetCurSel();
+    CString txt;
+    m_mode.GetWindowText(txt);
+    if(txt == "Quadcopter")
+    {
+      mode = 7;
+    }
 	}
 	else	
 	{
@@ -60,7 +63,6 @@ BOOL CConMultiMode::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// TODO:  在此加入額外的初始化
 	m_mode.Clear();
 	((CButton*)GetDlgItem(IDC_BUILD_IN))->SetCheck(1);
 	OnBnClickedBuildIn();
@@ -70,12 +72,6 @@ BOOL CConMultiMode::OnInitDialog()
 		GetDlgItem(IDC_CUSTOM)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_CUSTOM_NAV)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_CUSTOM_T)->ShowWindow(SW_HIDE);
-
-/*		CRect rc1, rc2;
-		GetDlgItem(IDC_MULTI_MODE)->GetClientRect(rc1);
-		GetDlgItem(IDC_BUILD_IN)->GetClientRect(rc2);
-		rc1.top = rc2.top;
-		GetDlgItem(IDC_MULTI_MODE)->MoveWindow(rc1);	*/	
 	}
 
 	m_mode.AddString("Auto");
@@ -84,12 +80,14 @@ BOOL CConMultiMode::OnInitDialog()
 	m_mode.AddString("Marine");
 	m_mode.AddString("Ballon");
 	m_mode.AddString("Airborne");
-	m_mode.AddString("Surveying and mapping");
+  //20160801 Remove this item, requast from Andrew and Terrance
+	//m_mode.AddString("Surveying and mapping");
+  //20160808 Add new mode but skip index 6, requast from Terrance
+	m_mode.AddString("Quadcopter");
 	GetDlgItem(IDC_CUSTOM_NAV)->SetWindowText("0");
 
 	m_mode.SetCurSel(0);
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CConMultiMode::OnBnClickedCustom()
