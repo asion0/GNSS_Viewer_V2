@@ -3,9 +3,9 @@
 #include "GPSDlg.h"
 #include "CommonConfigDlg.h"
 
-// CCommonConfigDlg 對話方塊
-BinaryCommand configCmd;
-CString configPrompt;
+// CCommonConfigDlg 
+static BinaryCommand configCmd;
+static CString configPrompt;
 
 UINT AFX_CDECL ConfigThread(LPVOID param)
 {
@@ -13,7 +13,6 @@ UINT AFX_CDECL ConfigThread(LPVOID param)
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), configPrompt, restoreConnect);
 	return 0;
 }
-
 
 IMPLEMENT_DYNAMIC(CCommonConfigDlg, CDialog)
 
@@ -56,7 +55,7 @@ INT_PTR CCommonConfigDlg::DoDirect(int type)
 	return IDCANCEL;
 }
 
-// CConfigDGPS 對話方塊
+// CConfigDGPS 
 IMPLEMENT_DYNAMIC(CConfigDGPS, CCommonConfigDlg)
 
 CConfigDGPS::CConfigDGPS(CWnd* pParent /*=NULL*/)
@@ -69,7 +68,7 @@ BEGIN_MESSAGE_MAP(CConfigDGPS, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigDGPS::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigDGPS 訊息處理常式
+// CConfigDGPS 
 BOOL CConfigDGPS::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -109,10 +108,10 @@ void CConfigDGPS::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure DGPS Successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigSmoothMode 對話方塊
+// CConfigSmoothMode 
 IMPLEMENT_DYNAMIC(CConfigSmoothMode, CCommonConfigDlg)
 
 CConfigSmoothMode::CConfigSmoothMode(CWnd* pParent /*=NULL*/)
@@ -125,7 +124,7 @@ BEGIN_MESSAGE_MAP(CConfigSmoothMode, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigSmoothMode::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigDGPS 訊息處理常式
+// CConfigDGPS 
 BOOL CConfigSmoothMode::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -153,10 +152,10 @@ void CConfigSmoothMode::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure carrier smooth mode successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigTimeStamping 對話方塊
+// CConfigTimeStamping 
 IMPLEMENT_DYNAMIC(CConfigTimeStamping, CCommonConfigDlg)
 
 CConfigTimeStamping::CConfigTimeStamping(CWnd* pParent /*=NULL*/)
@@ -169,7 +168,7 @@ BEGIN_MESSAGE_MAP(CConfigTimeStamping, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigTimeStamping::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigDGPS 訊息處理常式
+// CConfigDGPS 
 BOOL CConfigTimeStamping::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -200,10 +199,10 @@ void CConfigTimeStamping::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure time stamping successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigSBAS 對話方塊
+// CConfigSBAS 
 IMPLEMENT_DYNAMIC(CConfigSBAS, CCommonConfigDlg)
 
 CConfigSBAS::CConfigSBAS(CWnd* pParent /*=NULL*/)
@@ -230,7 +229,7 @@ BEGIN_MESSAGE_MAP(CConfigSBAS, CCommonConfigDlg)
 	ON_BN_CLICKED(IDC_ENABLE_ALL, OnBnClickedEnableAll)
 END_MESSAGE_MAP()
 
-// CConfigSBAS 訊息處理常式
+// CConfigSBAS 
 BOOL CConfigSBAS::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -334,10 +333,10 @@ void CConfigSBAS::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure SBAS successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigSAEE 對話方塊
+// CConfigSAEE 
 IMPLEMENT_DYNAMIC(CConfigSAEE, CCommonConfigDlg)
 
 CConfigSAEE::CConfigSAEE(CWnd* pParent /*=NULL*/)
@@ -351,7 +350,7 @@ BEGIN_MESSAGE_MAP(CConfigSAEE, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigSAEE::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigSAEE 訊息處理常式
+// CConfigSAEE 
 BOOL CConfigSAEE::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -399,10 +398,10 @@ void CConfigSAEE::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure SAEE successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigQZSS 對話方塊
+// CConfigQZSS 
 IMPLEMENT_DYNAMIC(CConfigQZSS, CCommonConfigDlg)
 
 CConfigQZSS::CConfigQZSS(CWnd* pParent /*=NULL*/)
@@ -417,7 +416,7 @@ BEGIN_MESSAGE_MAP(CConfigQZSS, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigQZSS::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigQZSS 訊息處理常式
+// CConfigQZSS 
 BOOL CConfigQZSS::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -456,10 +455,10 @@ void CConfigQZSS::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure QZSS Successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigInterferenceDetectControl 對話方塊
+// CConfigInterferenceDetectControl 
 IMPLEMENT_DYNAMIC(CConfigInterferenceDetectControl, CCommonConfigDlg)
 
 CConfigInterferenceDetectControl::CConfigInterferenceDetectControl(CWnd* pParent /*=NULL*/)
@@ -473,7 +472,7 @@ BEGIN_MESSAGE_MAP(CConfigInterferenceDetectControl, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigInterferenceDetectControl::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigInterferenceDetectControl 訊息處理常式
+// CConfigInterferenceDetectControl 
 BOOL CConfigInterferenceDetectControl::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -502,10 +501,10 @@ void CConfigInterferenceDetectControl::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure InterferenceDetectControl successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigNMEABinaryOutputDestination 對話方塊
+// CConfigNMEABinaryOutputDestination 
 IMPLEMENT_DYNAMIC(CConfigNMEABinaryOutputDestination, CCommonConfigDlg)
 
 CConfigNMEABinaryOutputDestination::CConfigNMEABinaryOutputDestination(CWnd* pParent /*=NULL*/)
@@ -520,7 +519,7 @@ BEGIN_MESSAGE_MAP(CConfigNMEABinaryOutputDestination, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigNMEABinaryOutputDestination::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigNMEABinaryOutputDestination 訊息處理常式
+// CConfigNMEABinaryOutputDestination 
 BOOL CConfigNMEABinaryOutputDestination::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -564,10 +563,10 @@ void CConfigNMEABinaryOutputDestination::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure NMEABinaryOutputDestination successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigParameterSearchEngineNumber 對話方塊
+// CConfigParameterSearchEngineNumber 
 IMPLEMENT_DYNAMIC(CConfigParameterSearchEngineNumber, CCommonConfigDlg)
 
 CConfigParameterSearchEngineNumber::CConfigParameterSearchEngineNumber(CWnd* pParent /*=NULL*/)
@@ -582,7 +581,7 @@ BEGIN_MESSAGE_MAP(CConfigParameterSearchEngineNumber, CCommonConfigDlg)
 	ON_CBN_SELCHANGE(IDC_MODE, &CConfigParameterSearchEngineNumber::OnCbnSelchangeMode)
 END_MESSAGE_MAP()
 
-// CConfigParameterSearchEngineNumber 訊息處理常式
+// CConfigParameterSearchEngineNumber 
 BOOL CConfigParameterSearchEngineNumber::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -624,10 +623,10 @@ void CConfigParameterSearchEngineNumber::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure ParameterSearchEngineNumber successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigPositionFixNavigationMask 對話方塊
+// CConfigPositionFixNavigationMask 
 IMPLEMENT_DYNAMIC(CConfigPositionFixNavigationMask, CCommonConfigDlg)
 
 CConfigPositionFixNavigationMask::CConfigPositionFixNavigationMask(CWnd* pParent /*=NULL*/)
@@ -642,7 +641,7 @@ BEGIN_MESSAGE_MAP(CConfigPositionFixNavigationMask, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigPositionFixNavigationMask::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigPositionFixNavigationMask 訊息處理常式
+// CConfigPositionFixNavigationMask 
 BOOL CConfigPositionFixNavigationMask::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -674,10 +673,10 @@ void CConfigPositionFixNavigationMask::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure PositionFixNavigationMask successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// ConfigRefTimeToGpsTimeDlg 對話方塊
+// ConfigRefTimeToGpsTimeDlg 
 IMPLEMENT_DYNAMIC(ConfigRefTimeToGpsTimeDlg, CCommonConfigDlg)
 
 ConfigRefTimeToGpsTimeDlg::ConfigRefTimeToGpsTimeDlg(CWnd* pParent /*=NULL*/)
@@ -690,7 +689,7 @@ BEGIN_MESSAGE_MAP(ConfigRefTimeToGpsTimeDlg, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &ConfigRefTimeToGpsTimeDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// ConfigRefTimeToGpsTimeDlg 訊息處理常式
+// ConfigRefTimeToGpsTimeDlg 
 BOOL ConfigRefTimeToGpsTimeDlg::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -734,10 +733,10 @@ void ConfigRefTimeToGpsTimeDlg::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure RefTimeSyncToGpsTime successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// ConfigGnssConstellationTypeDlg 對話方塊
+// ConfigGnssConstellationTypeDlg 
 IMPLEMENT_DYNAMIC(ConfigGnssConstellationTypeDlg, CCommonConfigDlg)
 
 ConfigGnssConstellationTypeDlg::ConfigGnssConstellationTypeDlg(CWnd* pParent /*=NULL*/)
@@ -750,7 +749,7 @@ BEGIN_MESSAGE_MAP(ConfigGnssConstellationTypeDlg, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &ConfigGnssConstellationTypeDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// ConfigRefTimeToGpsTimeDlg 訊息處理常式
+// ConfigRefTimeToGpsTimeDlg 
 BOOL ConfigGnssConstellationTypeDlg::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -799,36 +798,97 @@ void ConfigGnssConstellationTypeDlg::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure GnssNavSol Successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// ConfigBinaryMeasurementDataOutDlg 對話方塊
+// ConfigBinaryMeasurementDataOutDlg 
 IMPLEMENT_DYNAMIC(ConfigBinaryMeasurementDataOutDlg, CCommonConfigDlg)
 
 ConfigBinaryMeasurementDataOutDlg::ConfigBinaryMeasurementDataOutDlg(CWnd* pParent /*=NULL*/)
 	: CCommonConfigDlg(IDD_CONFIG_BIN_MEA_DAT_OUT, pParent)
 {
-
+  m_newCmd = TRUE;
 }
 
 BEGIN_MESSAGE_MAP(ConfigBinaryMeasurementDataOutDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDC_MEAS_TIME, &ConfigBinaryMeasurementDataOutDlg::OnBnClickedMeasTime)
+	ON_BN_CLICKED(IDC_RAW_MEAS, &ConfigBinaryMeasurementDataOutDlg::OnBnClickedRawMeas)
+	ON_BN_CLICKED(IDC_EXT_RAW_MEAS, &ConfigBinaryMeasurementDataOutDlg::OnBnClickedExtRawMeas)
 	ON_BN_CLICKED(IDOK, &ConfigBinaryMeasurementDataOutDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// ConfigRefTimeToGpsTimeDlg 訊息處理常式
+// ConfigBinaryMeasurementDataOutDlg
 BOOL ConfigBinaryMeasurementDataOutDlg::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
-	((CComboBox*)GetDlgItem(IDC_OUTPUT_RATE))->SetCurSel(0);
 
+	U16 cmdLen = 7;
+	if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryBinaryMeasurementDataOut(CGPSDlg::Return, &cmdLen))
+	{
+	  m_newCmd = (cmdLen == 7) ? FALSE : TRUE;
+	}
+	((CComboBox*)GetDlgItem(IDC_OUTPUT_RATE))->SetCurSel(0);
 	((CButton*)GetDlgItem(IDC_MEAS_TIME))->SetCheck(1);
 	((CButton*)GetDlgItem(IDC_RAW_MEAS))->SetCheck(1);
 	((CButton*)GetDlgItem(IDC_SV_CH))->SetCheck(1);
 	((CButton*)GetDlgItem(IDC_RCV_STATE))->SetCheck(1);
+	((CButton*)GetDlgItem(IDC_EXT_RAW_MEAS))->SetCheck(0);
 	((CButton*)GetDlgItem(IDC_GPS))->SetCheck(1);
 	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
-
+	UpdateStatus();
 	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+BOOL ConfigBinaryMeasurementDataOutDlg::CheckLegal()
+{
+	BOOL measTime = ((CButton*)GetDlgItem(IDC_MEAS_TIME))->GetCheck();
+	BOOL rawMeas = ((CButton*)GetDlgItem(IDC_RAW_MEAS))->GetCheck();
+	BOOL extRawMeas = ((CButton*)GetDlgItem(IDC_EXT_RAW_MEAS))->GetCheck();
+
+  if((measTime || rawMeas) && extRawMeas)
+  {
+    return FALSE;
+  }
+  return TRUE;
+}
+
+void ConfigBinaryMeasurementDataOutDlg::OnBnClickedMeasTime()
+{
+	if(!m_newCmd)
+  {
+    return;
+  }
+	if(((CButton*)GetDlgItem(IDC_MEAS_TIME))->GetCheck() && !CheckLegal())
+  {
+    ::AfxMessageBox("You can not enable Meas Time or Raw Meas when Extended Raw Meas is enabled!");
+    ((CButton*)GetDlgItem(IDC_MEAS_TIME))->SetCheck(FALSE);
+  }
+}
+
+void ConfigBinaryMeasurementDataOutDlg::OnBnClickedRawMeas()
+{
+	if(!m_newCmd)
+  {
+    return;
+  }
+	if(((CButton*)GetDlgItem(IDC_RAW_MEAS))->GetCheck() && !CheckLegal())
+  {
+    ::AfxMessageBox("You can not enable Meas Time or Raw Meas when Extended Raw Meas is enabled!");
+    ((CButton*)GetDlgItem(IDC_RAW_MEAS))->SetCheck(FALSE);
+  }
+}
+
+void ConfigBinaryMeasurementDataOutDlg::OnBnClickedExtRawMeas()
+{
+	if(!m_newCmd)
+  {
+    return;
+  }
+	if(((CButton*)GetDlgItem(IDC_EXT_RAW_MEAS))->GetCheck() && !CheckLegal())
+  {
+    ::AfxMessageBox("You can not enable Meas Time or Raw Meas when Extended Raw Meas is enabled!");
+    ((CButton*)GetDlgItem(IDC_EXT_RAW_MEAS))->SetCheck(FALSE);
+  }
 }
 
 void ConfigBinaryMeasurementDataOutDlg::OnBnClickedOk()
@@ -838,6 +898,7 @@ void ConfigBinaryMeasurementDataOutDlg::OnBnClickedOk()
 	m_rawMeas = ((CButton*)GetDlgItem(IDC_RAW_MEAS))->GetCheck();
 	m_svChStatus = ((CButton*)GetDlgItem(IDC_SV_CH))->GetCheck();
 	m_rcvChStatus = ((CButton*)GetDlgItem(IDC_RCV_STATE))->GetCheck();
+	m_extRawMeas = ((CButton*)GetDlgItem(IDC_EXT_RAW_MEAS))->GetCheck();
 
 	m_subFrame = 0;
 	if(((CButton*)GetDlgItem(IDC_GPS))->GetCheck())
@@ -861,9 +922,14 @@ void ConfigBinaryMeasurementDataOutDlg::OnBnClickedOk()
 	OnOK();
 }
 
+void ConfigBinaryMeasurementDataOutDlg::UpdateStatus()
+{
+  ((CButton*)GetDlgItem(IDC_EXT_RAW_MEAS))->ShowWindow((m_newCmd) ? SW_SHOW : SW_HIDE);
+}
+
 void ConfigBinaryMeasurementDataOutDlg::DoCommand()
 {
-	BinaryData cmd(8);
+	BinaryData cmd((m_newCmd) ? 9 : 8);
 	*cmd.GetBuffer(0) = 0x1E;
 	*cmd.GetBuffer(1) = (U08)m_rate;
 	*cmd.GetBuffer(2) = (U08)m_measTime;
@@ -871,14 +937,18 @@ void ConfigBinaryMeasurementDataOutDlg::DoCommand()
 	*cmd.GetBuffer(4) = (U08)m_svChStatus;
 	*cmd.GetBuffer(5) = (U08)m_rcvChStatus;
 	*cmd.GetBuffer(6) = (U08)m_subFrame;
-	*cmd.GetBuffer(7) = (U08)m_attribute;
+	if(m_newCmd)
+  {
+	  *cmd.GetBuffer(7) = (U08)m_extRawMeas;
+  }
+	*cmd.GetBuffer((m_newCmd) ? 8 : 7) = (U08)m_attribute;
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure BinaryMeasurementDataOut successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigLeapSeconds 對話方塊
+// CConfigLeapSeconds 
 IMPLEMENT_DYNAMIC(CConfigLeapSeconds, CCommonConfigDlg)
 
 CConfigLeapSeconds::CConfigLeapSeconds(CWnd* pParent /*=NULL*/)
@@ -891,7 +961,7 @@ BEGIN_MESSAGE_MAP(CConfigLeapSeconds, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigLeapSeconds::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// ConfigRefTimeToGpsTimeDlg 訊息處理常式
+// ConfigRefTimeToGpsTimeDlg 
 BOOL CConfigLeapSeconds::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -926,10 +996,10 @@ void CConfigLeapSeconds::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure GPS/UTC leap seconds successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigPowerMode 對話方塊
+// CConfigPowerMode 
 IMPLEMENT_DYNAMIC(CConfigPowerMode, CCommonConfigDlg)
 
 CConfigPowerMode::CConfigPowerMode(CWnd* pParent /*=NULL*/)
@@ -942,7 +1012,7 @@ BEGIN_MESSAGE_MAP(CConfigPowerMode, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigPowerMode::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// ConfigRefTimeToGpsTimeDlg 訊息處理常式
+// ConfigRefTimeToGpsTimeDlg 
 BOOL CConfigPowerMode::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -970,10 +1040,10 @@ void CConfigPowerMode::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure PowerMode Successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigParamSearchEngineSleepCRiteria 對話方塊
+// CConfigParamSearchEngineSleepCRiteria 
 IMPLEMENT_DYNAMIC(CConfigParamSearchEngineSleepCriteria, CCommonConfigDlg)
 
 CConfigParamSearchEngineSleepCriteria::CConfigParamSearchEngineSleepCriteria(CWnd* pParent /*=NULL*/)
@@ -986,7 +1056,7 @@ BEGIN_MESSAGE_MAP(CConfigParamSearchEngineSleepCriteria, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigParamSearchEngineSleepCriteria::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigParamSearchEngineSleepCRiteria 訊息處理常式
+// CConfigParamSearchEngineSleepCRiteria 
 BOOL CConfigParamSearchEngineSleepCriteria::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -1021,10 +1091,10 @@ void CConfigParamSearchEngineSleepCriteria::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure ParamSearchEngineSleepCRiteria successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigDatumIndex 對話方塊
+// CConfigDatumIndex 
 IMPLEMENT_DYNAMIC(CConfigDatumIndex, CCommonConfigDlg)
 
 CConfigDatumIndex::CConfigDatumIndex(CWnd* pParent /*=NULL*/)
@@ -1037,7 +1107,7 @@ BEGIN_MESSAGE_MAP(CConfigDatumIndex, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigDatumIndex::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigParamSearchEngineSleepCRiteria 訊息處理常式
+// CConfigParamSearchEngineSleepCRiteria
 BOOL CConfigDatumIndex::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -1075,10 +1145,10 @@ void CConfigDatumIndex::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure DatumIndex successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CSUP800EraseUserDataDlg 對話方塊
+// CSUP800EraseUserDataDlg 
 IMPLEMENT_DYNAMIC(CSUP800EraseUserDataDlg, CCommonConfigDlg)
 
 CSUP800EraseUserDataDlg::CSUP800EraseUserDataDlg(CWnd* pParent /*=NULL*/)
@@ -1091,7 +1161,7 @@ BEGIN_MESSAGE_MAP(CSUP800EraseUserDataDlg, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CSUP800EraseUserDataDlg::OnBnClickedErase)
 END_MESSAGE_MAP()
 
-// CSUP800EraseUserDataDlg 訊息處理常式
+// CSUP800EraseUserDataDlg 
 BOOL CSUP800EraseUserDataDlg::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -1123,10 +1193,10 @@ void CSUP800EraseUserDataDlg::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "SUP800 erase user data successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CSUP800WriteUserDataDlg 對話方塊
+// CSUP800WriteUserDataDlg 
 IMPLEMENT_DYNAMIC(CSUP800WriteUserDataDlg, CCommonConfigDlg)
 
 CSUP800WriteUserDataDlg::CSUP800WriteUserDataDlg(CWnd* pParent /*=NULL*/)
@@ -1141,7 +1211,7 @@ BEGIN_MESSAGE_MAP(CSUP800WriteUserDataDlg, CCommonConfigDlg)
 	ON_BN_CLICKED(IDC_LOAD, &CSUP800WriteUserDataDlg::OnBnClickedLoad)
 END_MESSAGE_MAP()
 
-// CSUP800WriteUserDataDlg 訊息處理常式
+// CSUP800WriteUserDataDlg 
 BOOL CSUP800WriteUserDataDlg::OnInitDialog()
 {
 	//CCommonConfigDlg::OnInitDialog();
@@ -1192,15 +1262,11 @@ void CSUP800WriteUserDataDlg::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "SUP800 write user data successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
 void CSUP800WriteUserDataDlg::OnEnChangeInput()
 {
-	// TODO:  如果這是 RICHEDIT 控制項，控制項將不會
-	// 傳送此告知，除非您覆寫 CDialog::OnInitDialog()
-	// 函式和呼叫 CRichEditCtrl().SetEventMask()
-	// 讓具有 ENM_CHANGE 旗標 ORed 加入遮罩。
  	CString strInput;
 	GetDlgItem(IDC_DATA)->GetWindowText(strInput);
 	CWnd* pBtn = GetDlgItem(IDC_WRITE);
@@ -1267,7 +1333,7 @@ void CSUP800WriteUserDataDlg::OnBnClickedLoad()
 	OnEnChangeInput();
 }
 
-// CSUP800ReadUserDataDlg 對話方塊
+// CSUP800ReadUserDataDlg 
 IMPLEMENT_DYNAMIC(CSUP800ReadUserDataDlg, CCommonConfigDlg)
 
 CSUP800ReadUserDataDlg::CSUP800ReadUserDataDlg(CWnd* pParent /*=NULL*/)
@@ -1281,7 +1347,7 @@ BEGIN_MESSAGE_MAP(CSUP800ReadUserDataDlg, CCommonConfigDlg)
 	ON_BN_CLICKED(IDC_SAVE, &CSUP800ReadUserDataDlg::OnBnClickedSave)
 END_MESSAGE_MAP()
 
-// CSUP800ReadUserDataDlg 訊息處理常式
+// CSUP800ReadUserDataDlg 
 BOOL CSUP800ReadUserDataDlg::OnInitDialog()
 {
 	//CCommonConfigDlg::OnInitDialog();
@@ -1394,7 +1460,7 @@ void CSUP800ReadUserDataDlg::DoCommand()
 	GetDlgItem(IDC_SAVE)->EnableWindow(TRUE);
 }
 
-// CConfigureSignalDisturbanceStatusDlg 對話方塊
+// CConfigureSignalDisturbanceStatusDlg 
 IMPLEMENT_DYNAMIC(CConfigureSignalDisturbanceStatusDlg, CCommonConfigDlg)
 
 CConfigureSignalDisturbanceStatusDlg::CConfigureSignalDisturbanceStatusDlg(CWnd* pParent /*=NULL*/)
@@ -1407,7 +1473,7 @@ BEGIN_MESSAGE_MAP(CConfigureSignalDisturbanceStatusDlg, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigureSignalDisturbanceStatusDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigureSignalDisturbanceStatusDlg 訊息處理常式
+// CConfigureSignalDisturbanceStatusDlg 
 BOOL CConfigureSignalDisturbanceStatusDlg::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -1433,10 +1499,10 @@ void CConfigureSignalDisturbanceStatusDlg::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "ConfigureSignalDisturbanceStatus successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigureGpsUtcLeapSecondsInUtcDlg 對話方塊
+// CConfigureGpsUtcLeapSecondsInUtcDlg 
 IMPLEMENT_DYNAMIC(CConfigureGpsUtcLeapSecondsInUtcDlg, CCommonConfigDlg)
 
 CConfigureGpsUtcLeapSecondsInUtcDlg::CConfigureGpsUtcLeapSecondsInUtcDlg(CWnd* pParent /*=NULL*/)
@@ -1449,7 +1515,7 @@ BEGIN_MESSAGE_MAP(CConfigureGpsUtcLeapSecondsInUtcDlg, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigureGpsUtcLeapSecondsInUtcDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigureSignalDisturbanceStatusDlg 訊息處理常式
+// CConfigureGpsUtcLeapSecondsInUtcDlg 
 BOOL CConfigureGpsUtcLeapSecondsInUtcDlg::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -1498,10 +1564,10 @@ void CConfigureGpsUtcLeapSecondsInUtcDlg::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "ConfigureGpsUtcLeapSecondsInUtc successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigNoisePowerControlDlg 對話方塊
+// CConfigNoisePowerControlDlg 
 IMPLEMENT_DYNAMIC(CConfigNoisePowerControlDlg, CCommonConfigDlg)
 
 CConfigNoisePowerControlDlg::CConfigNoisePowerControlDlg(CWnd* pParent /*=NULL*/)
@@ -1516,7 +1582,7 @@ BEGIN_MESSAGE_MAP(CConfigNoisePowerControlDlg, CCommonConfigDlg)
 	ON_CBN_SELCHANGE(IDC_DEFAULT, &CConfigNoisePowerControlDlg::OnCbnSelchangeMode)
 END_MESSAGE_MAP()
 
-// CConfigureSignalDisturbanceStatusDlg 訊息處理常式
+// CConfigNoisePowerControlDlg 
 BOOL CConfigNoisePowerControlDlg::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -1580,10 +1646,10 @@ void CConfigNoisePowerControlDlg::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "ConfigureNoisePower successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// ConfigPowerSavingParametersRomDlg 對話方塊
+// ConfigPowerSavingParametersRomDlg 
 IMPLEMENT_DYNAMIC(ConfigPowerSavingParametersRomDlg, CCommonConfigDlg)
 
 ConfigPowerSavingParametersRomDlg::ConfigPowerSavingParametersRomDlg(CWnd* pParent /*=NULL*/)
@@ -1605,7 +1671,7 @@ BEGIN_MESSAGE_MAP(ConfigPowerSavingParametersRomDlg, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &ConfigPowerSavingParametersRomDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// ConfigPowerSavingParametersRomDlg 訊息處理常式
+// ConfigPowerSavingParametersRomDlg
 void ConfigPowerSavingParametersRomDlg::DoDataExchange(CDataExchange* pDX)
 {
 	DDX_Text(pDX, IDC_POWERSAVING_1, m_param[0]);
@@ -1672,10 +1738,10 @@ void ConfigPowerSavingParametersRomDlg::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "ConfigPowerSavingParametersRom successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CIqPlot 對話方塊
+// CIqPlot 
 IMPLEMENT_DYNAMIC(CIqPlot, CCommonConfigDlg)
 
 U08 CIqPlot::m_gnssType = 1;
@@ -1694,7 +1760,7 @@ BEGIN_MESSAGE_MAP(CIqPlot, CCommonConfigDlg)
 	ON_BN_CLICKED(IDC_SEND, &CIqPlot::OnBnClickedSend)
 END_MESSAGE_MAP()
 
-// CIqPlot 訊息處理常式
+// CIqPlot 
 BOOL CIqPlot::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -1756,10 +1822,10 @@ void CIqPlot::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Config IQ successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigGeofencing 對話方塊
+// CConfigGeofencing 
 IMPLEMENT_DYNAMIC(CConfigGeofencing, CCommonConfigDlg)
 
 CConfigGeofencing::CConfigGeofencing(CWnd* pParent /*=NULL*/)
@@ -2008,7 +2074,7 @@ void CConfigGeofencing::DoCommand()
 	{
 		configPrompt.Format("Configure geo-fencing data %d successful...", m_no);
 	}
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
 // CConfigRtkMode 
@@ -2083,7 +2149,7 @@ void CConfigRtkMode::DoCommand()
 	}
 }
 
-// CConfigRtkParameters 對話方塊
+// CConfigRtkParameters 
 IMPLEMENT_DYNAMIC(CConfigRtkParameters, CCommonConfigDlg)
 
 CConfigRtkParameters::CConfigRtkParameters(CWnd* pParent /*=NULL*/)
@@ -2096,8 +2162,7 @@ BEGIN_MESSAGE_MAP(CConfigRtkParameters, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigRtkParameters::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigRtkParameters 訊息處理常式
-
+// CConfigRtkParameters 
 BOOL CConfigRtkParameters::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -2200,10 +2265,10 @@ void CConfigRtkParameters::DoCommand()
 	*cmd.GetBuffer(66) = (U08)m_attribute;
 	configCmd.SetData(cmd);
 	configPrompt = "Configure RTK parameters successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigRtkReset 對話方塊
+// CConfigRtkReset 
 IMPLEMENT_DYNAMIC(CConfigRtkReset, CCommonConfigDlg)
 
 CConfigRtkReset::CConfigRtkReset(CWnd* pParent /*=NULL*/)
@@ -2216,8 +2281,7 @@ BEGIN_MESSAGE_MAP(CConfigRtkReset, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigRtkReset::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigRtkReset 訊息處理常式
-
+// CConfigRtkReset 
 BOOL CConfigRtkReset::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -2242,10 +2306,10 @@ void CConfigRtkReset::DoCommand()
 	*cmd.GetBuffer(2) = (U08)m_mode;
 	configCmd.SetData(cmd);
 	configPrompt = "Reset RTK engine successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigRtkMode2 對話方塊
+// CConfigRtkMode2 
 IMPLEMENT_DYNAMIC(CConfigRtkMode2, CCommonConfigDlg)
 
 CConfigRtkMode2::CConfigRtkMode2(CWnd* pParent /*=NULL*/)
@@ -2261,8 +2325,7 @@ BEGIN_MESSAGE_MAP(CConfigRtkMode2, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigRtkMode2::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigRtkMode 訊息處理常式
-
+// CConfigRtkMode 
 BOOL CConfigRtkMode2::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -2493,7 +2556,6 @@ void CConfigRtkMode2::UpdateStatus()
 		GetDlgItem(IDC_STT_EDT3)->ShowWindow(SW_SHOW);
 		GetDlgItem(IDC_DESC)->SetWindowText(roverDesc1);
 	}
-
 }
 
 void CConfigRtkMode2::OnCbnSelChangeRtkMode()
@@ -2511,7 +2573,7 @@ void CConfigRtkMode2::OnCbnSelChangeRoverOpt()
 	UpdateStatus();
 }
 
-// CConfigMessageOut 對話方塊
+// CConfigMessageOut 
 IMPLEMENT_DYNAMIC(CConfigMessageOut, CCommonConfigDlg)
 
 CConfigMessageOut::CConfigMessageOut(CWnd* pParent /*=NULL*/)
@@ -2524,8 +2586,7 @@ BEGIN_MESSAGE_MAP(CConfigMessageOut, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigMessageOut::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigRtkReset 訊息處理常式
-
+// CConfigRtkReset 
 BOOL CConfigMessageOut::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -2550,7 +2611,7 @@ void CConfigMessageOut::DoCommand()
 	*cmd.GetBuffer(2) = m_nAttribute;
 	configCmd.SetData(cmd);
 	configPrompt = "Configure Message successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
 INT_PTR CConfigMessageOut::DoDirect(int type)
@@ -2569,7 +2630,7 @@ INT_PTR CConfigMessageOut::DoDirect(int type)
 	return IDOK;
 }
 
-// CConfigSubSecRegister 對話方塊
+// CConfigSubSecRegister 
 IMPLEMENT_DYNAMIC(CConfigSubSecRegister, CCommonConfigDlg)
 
 CConfigSubSecRegister::CConfigSubSecRegister(CWnd* pParent /*=NULL*/)
@@ -2582,8 +2643,7 @@ BEGIN_MESSAGE_MAP(CConfigSubSecRegister, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigSubSecRegister::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigRtkReset 訊息處理常式
-
+// CConfigRtkReset 
 BOOL CConfigSubSecRegister::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -2633,10 +2693,10 @@ void CConfigSubSecRegister::DoCommand()
 	*cmd.GetBuffer(3) = m_nPllDiv;
 	configCmd.SetData(cmd);
 	configPrompt = "Configure SubSec Register Successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigTiming 對話方塊
+// CConfigTiming 
 IMPLEMENT_DYNAMIC(CConfigTiming, CCommonConfigDlg)
 
 CConfigTiming::CConfigTiming(CWnd* pParent /*=NULL*/)
@@ -2650,8 +2710,7 @@ BEGIN_MESSAGE_MAP(CConfigTiming, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigTiming::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigRtkMode 訊息處理常式
-
+// CConfigRtkMode 
 BOOL CConfigTiming::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -2797,7 +2856,7 @@ void CConfigTiming::OnCbnSelChangeMode()
 	UpdateStatus();
 }
 
-// CConfigTimingCableDelay 對話方塊
+// CConfigTimingCableDelay 
 IMPLEMENT_DYNAMIC(CConfigTimingCableDelay, CCommonConfigDlg)
 
 CConfigTimingCableDelay::CConfigTimingCableDelay(CWnd* pParent /*=NULL*/)
@@ -2810,8 +2869,7 @@ BEGIN_MESSAGE_MAP(CConfigTimingCableDelay, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigTimingCableDelay::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigRtkMode 訊息處理常式
-
+// CConfigRtkMode 
 BOOL CConfigTimingCableDelay::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -2852,7 +2910,7 @@ void CConfigTimingCableDelay::DoCommand()
 	AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigGpsMeasurementMode 對話方塊
+// CConfigGpsMeasurementMode 
 IMPLEMENT_DYNAMIC(CConfigGpsMeasurementMode, CCommonConfigDlg)
 
 CConfigGpsMeasurementMode::CConfigGpsMeasurementMode(CWnd* pParent /*=NULL*/)
@@ -2865,8 +2923,7 @@ BEGIN_MESSAGE_MAP(CConfigGpsMeasurementMode, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigGpsMeasurementMode::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigRtkMode 訊息處理常式
-
+// CConfigRtkMode 
 BOOL CConfigGpsMeasurementMode::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -2899,7 +2956,7 @@ void CConfigGpsMeasurementMode::DoCommand()
 	AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigPscmDeviceAddress 對話方塊
+// CConfigPscmDeviceAddress
 IMPLEMENT_DYNAMIC(CConfigPscmDeviceAddress, CCommonConfigDlg)
 
 CConfigPscmDeviceAddress::CConfigPscmDeviceAddress(CWnd* pParent /*=NULL*/)
@@ -2912,8 +2969,7 @@ BEGIN_MESSAGE_MAP(CConfigPscmDeviceAddress, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigPscmDeviceAddress::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigPscmDeviceAddress 訊息處理常式
-
+// CConfigPscmDeviceAddress 
 BOOL CConfigPscmDeviceAddress::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -2939,10 +2995,10 @@ void CConfigPscmDeviceAddress::DoCommand()
 	*cmd.GetBuffer(3) = (U08)m_num;
 	configCmd.SetData(cmd);
 	configPrompt = "Configure Pscm Device Address Successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigPscmLatLonFractionalDigits 對話方塊
+// CConfigPscmLatLonFractionalDigits 
 IMPLEMENT_DYNAMIC(CConfigPscmLatLonFractionalDigits, CCommonConfigDlg)
 
 CConfigPscmLatLonFractionalDigits::CConfigPscmLatLonFractionalDigits(CWnd* pParent /*=NULL*/)
@@ -2955,8 +3011,7 @@ BEGIN_MESSAGE_MAP(CConfigPscmLatLonFractionalDigits, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigPscmLatLonFractionalDigits::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigRtkReset 訊息處理常式
-
+// CConfigRtkReset 
 BOOL CConfigPscmLatLonFractionalDigits::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -2982,10 +3037,10 @@ void CConfigPscmLatLonFractionalDigits::DoCommand()
 	*cmd.GetBuffer(3) = (U08)m_num;
 	configCmd.SetData(cmd);
 	configPrompt = "Configure Pscm LAT/LON Fractional Digits Successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigVeryLowSpeed 對話方塊
+// CConfigVeryLowSpeed 
 IMPLEMENT_DYNAMIC(CConfigVeryLowSpeed, CCommonConfigDlg)
 
 CConfigVeryLowSpeed::CConfigVeryLowSpeed(CWnd* pParent /*=NULL*/)
@@ -2999,7 +3054,7 @@ BEGIN_MESSAGE_MAP(CConfigVeryLowSpeed, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigVeryLowSpeed::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigVeryLowSpeed 訊息處理常式
+// CConfigVeryLowSpeed 
 BOOL CConfigVeryLowSpeed::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -3028,17 +3083,16 @@ void CConfigVeryLowSpeed::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure kernel very low speed successful...";
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
-// CConfigDofunUniqueId 對話方塊
+// CConfigDofunUniqueId 
 IMPLEMENT_DYNAMIC(CConfigDofunUniqueId, CCommonConfigDlg)
 
 CConfigDofunUniqueId::CConfigDofunUniqueId(CWnd* pParent /*=NULL*/)
 	: binData(UniqueIdLength), CCommonConfigDlg(IDD_CFG_DOFUN_UNIQUE_ID, pParent)
 {
 	m_nMode = 1;
-	//m_nAttribute = 0;
 }
 
 BEGIN_MESSAGE_MAP(CConfigDofunUniqueId, CCommonConfigDlg)
@@ -3046,7 +3100,7 @@ BEGIN_MESSAGE_MAP(CConfigDofunUniqueId, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigDofunUniqueId::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigVeryLowSpeed 訊息處理常式
+// CConfigVeryLowSpeed 
 BOOL CConfigDofunUniqueId::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -3136,8 +3190,7 @@ void CConfigDofunUniqueId::DoCommand()
 		configCmd.SetData(cmd);
 		configPrompt = "Erase device unique ID successful...";
 	}
-
-    AfxBeginThread(ConfigThread, 0);
+  AfxBeginThread(ConfigThread, 0);
 }
 
 // CConfigPstiInterval
@@ -3183,6 +3236,7 @@ BOOL CConfigPstiInterval::OnInitDialog()
 	  ack = CGPSDlg::gpsDlg->QueryPsti032(CGPSDlg::Return, &interval);
     break;
   default:
+    ASSERT(FALSE);
     break;
   }
 

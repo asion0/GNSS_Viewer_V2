@@ -238,6 +238,13 @@
 // .223 20160905 Modify Zenlane protocol. request from Leo.
 // .224 20160905 Modify block transfer in Zenlane protocol. request from Leo.
 // .225 20160907 Add [Configure/Query PSTI0004 Interval] command, requast from Andrew.
+// .226 20160914 Modify for Glonass RTK version(support 0xE5 output, change bin output format), requast from Andrew, Ryan.
+// .226 20160914 1. Add new command to ¡§Re-calculate GLONASS IFB¡¨, the structure is as follow:
+// .226 20160914    A0 A1 00 02 6B 04 6F 0D 0A
+// .226 20160914 2. Modify binary command 0x1E to add Extended_ Raw_Meas Enabling field.
+// .226 20160914 3. Modify binary command 0x89 to add Extended_ Raw_Meas Enabling field.
+// .226 20160914 4. Parse EXT_RAW_MEAS ¡V Extended Raw Measurement Data v.1 (0xE5), the protocol is defined in attached file.
+// .227 20160919 Add [UART Pass through] to RTK menu, request from Andrew and Ryan.
 
 #define SW_FUN_DATALOG		        0x0001
 #define SW_FUN_AGPS				        0x0002
@@ -247,7 +254,7 @@
 #define IS_DEBUG				          0
 //title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 #define APP_CAPTION				        "GNSS Viewer"
-#define APP_VERSION				        "2.0.225"
+#define APP_VERSION				        "2.0.227"
 #define APP_TITLE				          ""
 #define APP_MODULE				        "Venus 8"
 

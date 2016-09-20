@@ -117,7 +117,7 @@ BinaryData buffer(bufferSize);
 U08* bufferPtr = buffer.GetBuffer(0);
 DWORD writeTime = 0;
 
-bool CSaveNmea::SaveData(void* p, int len)
+bool CSaveNmea::SaveData(const void* p, int len)
 {
 	DWORD t = ::GetTickCount();
 	if((bufferPtr - buffer.GetBuffer(0) + len) > bufferSize)
@@ -137,7 +137,7 @@ bool CSaveNmea::SaveData(void* p, int len)
 	return true;
 }
 
-bool CSaveNmea::SaveText(void* p, int len)
+bool CSaveNmea::SaveText(const void* p, int len)
 {
 	if(sthis==NULL || !IsNmeaFileOpen())
 	{
@@ -151,7 +151,7 @@ bool CSaveNmea::SaveText(void* p, int len)
 	return SaveData(p, len);
 }
 
-bool CSaveNmea::SaveBinary(void* p, int len)
+bool CSaveNmea::SaveBinary(const void* p, int len)
 {
 	if(sthis==NULL || !IsNmeaFileOpen())
 	{

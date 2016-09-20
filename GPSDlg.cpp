@@ -99,7 +99,7 @@ CFont CGPSDlg::messageFont;
 //	::OutputDebugString(dbg_buf);
 //}
 
-void add2message(char* buffer, int offset)
+void add2message(const char* buffer, int offset)
 {
 	static char msg[1024] = { 0 };
 	memcpy(msg, buffer, offset);
@@ -382,9 +382,6 @@ bool CGPSDlg::NmeaProc(const char* buffer, int offset, NmeaType& nmeaType)
 
 	switch(nmeaType)
 	{
-	case MSG_Unknown:
-		return false;
-		break;
 	case MSG_GLL:
 		nmea.ShowGPGLLmsg(m_gpgllMsgCopy, buffer, offset);
 		break;
@@ -441,8 +438,11 @@ bool CGPSDlg::NmeaProc(const char* buffer, int offset, NmeaType& nmeaType)
 	case MSG_REBOOT:
 		this->DeleteNmeaMemery();
 		break;
+	case MSG_Unknown:
+	case MSG_ERROR:
+		return false;
 	default:
-		break;
+		return false;
 	}
 
 	if(nmea.GetFirstGsaIn())
@@ -474,31 +474,39 @@ U08 CGPSDlg::BinaryProc(U08* buffer, int len)
 	U08 sid = buffer[6];
 	switch(msgType)
 	{
-	case 0xDC:		// measurement time
+	case 0xDC:  // MEAS_TIME¡V Measurement time information (0xDC) (Periodic) 
 		ShowMeasurementTime(buffer);
 		ShowTime();
 		break;
-	case 0xDD:		// raw measurement
+	case 0xDD:  // RAW_MEAS¡V Raw measurements from each channel (0xDD) (Periodic) 
 		ShowMeasurementChannel(buffer);
 		break;
-	case 0xDE:		// SV_CH status
+	case 0xDE:  // SV_CH_STATUS¡V SV and channel status (0xDE) (Periodic) 
 		ShowMeasurementSv(buffer);
 		break;
-	case 0xDF:		// receiver state
+	case 0xDF:  // RCV_STATE¡V Receiver navigation status (0xDF) (Periodic) 
 		ShowReceiverNav(buffer);
 		break;
 	case 0xE0:		// sub frame data
 	case 0xE1:		// sub frame data
 	case 0xE2:		// sub frame data
 	case 0xE3:		// sub frame data
-	case 0xE4:		// sub frame data
 		ShowSubframe(buffer);
+		break;
+	case 0xE4:		// sub frame data
+    //20160913 Don't show SBAS subframe data, request from Ryan and Andrew
+#if(IS_DEBUG)
+		ShowSubframe(buffer);
+#endif
+		break;
+	case 0xE5:		// EXT_RAW_MEAS Extended Raw Measurement Data v.1 (0xE5) (Periodic)
+		ExtRawMeas(buffer);
 		break;
 	case BINMSG_ECEF_USER_PVT:		//0xA8
 		ShowBinaryOutput(buffer);
 		ShowTime();
 		break;	
-	case 0x7A:		//0xA8
+	case 0x7A:		//Customize 0xA8
 		if(id == 0x0B && sid == 0x80)
 		{
 			ShowDjiBinaryOutput(buffer);
@@ -1308,7 +1316,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_QUERY_RTK_PARAM, OnQueryRtkParameters)
 	ON_COMMAND(ID_CONFIG_RTK_PARAM, OnConfigRtkParameters)
 	ON_COMMAND(ID_RTK_RESET, OnRtkReset)
-
+ 
 	ON_COMMAND(ID_QUERY_PSCM_DEV_ADDR, OnQueryPstmDeviceAddress)
 	ON_COMMAND(ID_QUERY_PSCM_LAT_LON, OnQueryPstnLatLonDigits)
 	ON_COMMAND(ID_CONFIG_PSCM_DEV_ADDR, OnConfigPstmDeviceAddress)
@@ -1343,9 +1351,11 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_QUERY_PSTI032, OnQueryPsti032)
 	ON_COMMAND(ID_CONFIG_PSTI030, OnConfigPsti030)
 	ON_COMMAND(ID_CONFIG_PSTI032, OnConfigPsti032)
-  //20160906 Add
+  //20160906 Added
 	ON_COMMAND(ID_QUERY_PSTI004, OnQueryPsti004)
 	ON_COMMAND(ID_CONFIG_PSTI004, OnConfigPsti004)
+  //20160914 Added
+	ON_COMMAND(ID_RECALC_GLONASS_IFB, OnReCalcuteGlonassIfb)
 
 END_MESSAGE_MAP()
 
@@ -1399,9 +1409,7 @@ CGPSDlg::~CGPSDlg()
 	SafelyDelPtr(m_earthPanel);
 	SafelyDelPtr(m_scatterPanel);
 	SafelyDelPtr(m_downloadPanel);
-
 	SafelyDelWnd(m_pScanDlg);
-
 
 	if(hScanGPS)
 	{
@@ -1604,9 +1612,7 @@ void CGPSDlg::Initialization()
 	m_nmeaFileSize = 0;
 	m_nmeaList.InsertColumn(0,"Message");
 	m_nmeaList.SetColumnWidth(0, 1550);
-
-	comboFont.CreatePointFont(100, "Times New Roman");
-	m_nmeaList.SetFont(&comboFont, TRUE);
+  InitMessageBox(NmeaMessageMode);
 
 	messageFont.CreatePointFont(80, "Courier New");
 	m_responseList.SetFont(&messageFont, TRUE);
@@ -1725,6 +1731,22 @@ void CGPSDlg::Initialization()
 #endif
 	m_CoorSwitch1Btn.Invalidate();
 	m_CoorSwitch2Btn.Invalidate();
+}
+
+void CGPSDlg::InitMessageBox(MsgMode mode)
+{
+  if(NmeaMessageMode == mode)
+  {
+    comboFont.DeleteObject();
+	  comboFont.CreatePointFont(100, "Times New Roman");
+	  m_nmeaList.SetFont(&comboFont, TRUE);
+  }
+  else if(BinaryMessageMode == mode)
+  {
+    comboFont.DeleteObject();
+	  comboFont.CreatePointFont(100, "Courier New");
+	  m_nmeaList.SetFont(&comboFont, TRUE);
+  }
 }
 
 void CGPSDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -4438,8 +4460,8 @@ void CGPSDlg::Load_Menu()
 	//File Menu
 	static MenuItemEntry menuItemFile[] =
 	{
-		{ !NMEA_INPUT, MF_STRING, ID_FILE_SAVENMEA, "&Save NMEA", NULL },
-		{ !NMEA_INPUT, MF_STRING, ID_FILE_BINARY, "&Save Binary", NULL },
+		{ !NMEA_INPUT, MF_STRING, ID_FILE_SAVENMEA, "&Save Message", NULL },
+		{ !NMEA_INPUT, MF_STRING, ID_FILE_BINARY, "&Save Device Output", NULL },
 		{ 1, MF_STRING, ID_FILE_CLEANNEMA, "&Clear Message Screen", NULL },
 		{ NMEA_INPUT, MF_STRING, ID_FILE_PLAYNMEA, "&Play NMEA", NULL },
 		//{ IS_DEBUG, MF_STRING, ID_VERIFY_FIRMWARE, "&Verify Firmware", NULL },
@@ -4447,7 +4469,7 @@ void CGPSDlg::Load_Menu()
 		{ UPGRADE_DOWNLOAD, MF_STRING, ID_UPGRADE_DOWNLOAD, "Upgrade", NULL },
 		{ SHOW_PATCH_MENU, MF_STRING, ID_PATCH, "Patch!", NULL },
 
-		{ IS_DEBUG, MF_STRING, ID_GPSDO_FW_DOWNLOAD, "Master/Slave Firmware Download", NULL },
+		//{ IS_DEBUG, MF_STRING, ID_GPSDO_FW_DOWNLOAD, "Master/Slave Firmware Download", NULL },
 		{ IS_DEBUG, MF_STRING, ID_FILE_SETUP, "&Setup", NULL },
 		{ 1, MF_STRING, ID_FILE_EXIT, "&Exit", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
@@ -4546,18 +4568,18 @@ void CGPSDlg::Load_Menu()
 		//{ 1, MF_STRING, ID_GPSDO_ENTER_DWN_H, "High-Speed Slave Download(Master Only)!", NULL },
 		{ 1, MF_STRING, ID_QUERY_UARTPASS, "Query UART Pass Through Status", NULL },
 		{ 1, MF_STRING, ID_GPSDO_RESET_SLAVE, "Reset Slave MCU(Master Only)", NULL },
-		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 1, MF_STRING, ID_GPSDO_ENTER_ROM, "Enter Slave ROM Download(Master Only)", NULL },
 		{ 1, MF_STRING, ID_GPSDO_LEAVE_ROM, "Back To Normal Mode from ROM Download", NULL },
-		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 1, MF_STRING, ID_GPSDO_ENTER_DWN, "Enter Slave Download(Master Only)", NULL },
 		{ 1, MF_STRING, ID_GPSDO_LEAVE_DWN, "Back To Normal Mode from Slave Download", NULL },
-		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		//{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		//{ 1, MF_STRING, ID_GPSDO_LEAVE_DWN_H, "Back To Normal Mode from Slave Download", NULL },
-		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 1, MF_STRING, ID_GPSDO_ENTER_UART, "Enter Slave UART Pass Through(Master Only)", NULL },
 		{ 1, MF_STRING, ID_GPSDO_LEAVE_UART, "Back To Normal Mode from UART Pass through", NULL },
-		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
 	static MenuItemEntry Sup800Menu[] =
@@ -4635,7 +4657,7 @@ void CGPSDlg::Load_Menu()
 		{ _V8_SUPPORT, MF_POPUP, 0, "SUP800 User Data Storage", Sup800Menu },
 		{ IS_DEBUG, MF_POPUP, 0, "Signal Disturbance Test", SignalDisturbanceMenu },
 		{ IS_DEBUG, MF_POPUP, 0, "Geofencing", GeoFencingMenu },
-		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 1, MF_STRING, ID_QUERY_SBAS, "Query SBAS", NULL },
 		{ 1, MF_STRING, ID_QUERY_SAEE, "Query SAEE", NULL },
 		{ 1, MF_STRING, ID_QUERY_QZSS, "Query QZSS", NULL },
@@ -4681,7 +4703,7 @@ void CGPSDlg::Load_Menu()
 		{ 1, MF_STRING, ID_CONFIG_VERY_LOW, "Configure Kernel Very Low Speed", NULL },
 		{ 1, MF_POPUP, 0, "Configure PSTI Interval", ConfigPstiInterval },
 
-		{ IS_DEBUG, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ IS_DEBUG, MF_SEPARATOR, 0, NULL, NULL },
 		{ IS_DEBUG, MF_STRING, ID_CONFIG_GPS_LEAP_IN_UTC, "Configure GPS/UTC Leap Seconds In UTC", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CLOCK_OFFSET_PREDICT, "Clock Offset Predict(New)", NULL },
 		//{ IS_DEBUG, MF_STRING, ID_CLOCK_OFFSET_PREDICT_OLD, "Clock Offset Predict(Old)", NULL },
@@ -4697,11 +4719,14 @@ void CGPSDlg::Load_Menu()
 	static MenuItemEntry menuItemRtk[] =
 	{
 		{ IS_DEBUG, MF_STRING, ID_RTK_RESET, "Reset RTK engine", NULL },
-		{ IS_DEBUG, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_STRING, ID_RECALC_GLONASS_IFB, "Re-calculate GLONASS IFB", NULL },
+		{ 1, MF_STRING, ID_GPSDO_ENTER_UART, "Enter Slave UART Pass Through(Master Only)", NULL },
+		{ 1, MF_STRING, ID_GPSDO_LEAVE_UART, "Back To Normal Mode from UART Pass through", NULL },
+		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 1, MF_STRING, ID_QUERY_RTK_MODE, "Query RTK Mode", NULL },
 		{ 1, MF_STRING, ID_QUERY_RTK_MODE2, "Query RTK And Operational Function", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_PARAM, "Query RTK Parameters", NULL },
-		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 1, MF_STRING, ID_CONFIG_RTK_MODE, "Configure RTK Mode", NULL },
 		{ 1, MF_STRING, ID_CONFIG_RTK_MODE2, "Configure RTK Mode And Operational Function", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CONFIG_RTK_PARAM, "Configure RTK Parameters", NULL },
@@ -4715,9 +4740,10 @@ void CGPSDlg::Load_Menu()
 
 	static MenuItemEntry menuItemEten[] =
 	{
+		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 1, MF_STRING, ID_QUERY_PSCM_DEV_ADDR, "Query PSCM Device Address", NULL },
 		{ 1, MF_STRING, ID_QUERY_PSCM_LAT_LON, "Query PSCM Longitude/Latitude Fractional Digits", NULL },
-		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 1, MF_STRING, ID_CONFIG_PSCM_DEV_ADDR, "Configure PSCM Device Address", NULL },
 		{ 1, MF_STRING, ID_CONFIG_PSCM_LAT_LON, "Configure PSCM Longitude/Latitude Fractional Digits", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
@@ -4731,7 +4757,7 @@ void CGPSDlg::Load_Menu()
 	static MenuItemEntry menuItemDR[] =
 	{
 		{ 1, MF_STRING, ID_QUERY_DR_MULTIHZ, "Query DR Multi-Hz", NULL },
-		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 1, MF_STRING, ID_CONFIG_DR_MULTIHZ, "Configure DR Multi-Hz", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
@@ -4745,7 +4771,7 @@ void CGPSDlg::Load_Menu()
 	{
 		{ 1, MF_STRING, ID_ERASE_DF_UNIQUE_ID, "Erase Device Unique ID", NULL },
 		{ 1, MF_STRING, ID_QUERY_DF_UNIQUE_ID, "Query Device Unique ID", NULL },
-		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 1, MF_STRING, ID_CONFIG_DF_UNIQUE_ID, "Configure Device Unique ID", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
@@ -4760,7 +4786,7 @@ void CGPSDlg::Load_Menu()
 		{ TIMING_MONITORING, MF_STRING, ID_MONITORING_1PPS, "Monitoring 1PPS", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CFG_PRPTY_NMEA, "Configure Proprietary NMEA", NULL },
 		{ 1, MF_STRING, ID_ON_LINE_ASSIST, "On Line Assistance", NULL },
-		{ 1, MF_SEPARATOR, 0, NULL, NULL }	,
+		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 1, MF_STRING, ID_QUERY_TIMING, "Query Timing", NULL },
 		{ 1, MF_STRING, ID_QUERY_CABLEDELAY, "Query Cable Delay", NULL },
 		{ 1, MF_STRING, ID_QUERY_1PPS_PULSE_WIDTH, "Query 1PPS Pulse Width", NULL },
@@ -7772,7 +7798,7 @@ bool CGPSDlg::ShowCommand(U08 *buffer, int length)
 	{
 		if(m_bShowBinaryCmdData)
 		{
-			add_msgtolist("Ack : " + theApp.GetHexString(buffer, length));
+			add_msgtolist("NACK : " + theApp.GetHexString(buffer, length));
 		}
 		return true;
 	}
@@ -7850,7 +7876,17 @@ void CGPSDlg::MSG_PROC()
     }
 		//Get one line from stream.
     if(m_serial == NULL) break;
-		length = m_serial->GetBinary(buffer, sizeof(buffer) - 1);
+
+    if(CUSTOMER_ZENLANE_160808)
+    {
+#if CUSTOMER_ZENLANE_160808
+		  length = m_serial->GetZenlaneMessage(buffer, sizeof(buffer) - 1);
+#endif
+    }
+    else
+    {
+		  length = m_serial->GetBinary(buffer, sizeof(buffer) - 1);
+    }
 		buffer[length + 1] = 0;
 
 		if(ReadOK(length))
@@ -7864,7 +7900,7 @@ void CGPSDlg::MSG_PROC()
 		}
     if(CUSTOMER_ZENLANE_160808)
     {
-      if(buffer[0] == 0xE9 && buffer[1] == 0x0E && buffer[1] == 0x01)
+      if(buffer[0] == 0xE9 && buffer[1] == 0x0E && buffer[2] == 0x01)
       {
         memcpy(&buffer[0], &buffer[19], length - 19);
       }
@@ -7884,11 +7920,13 @@ void CGPSDlg::MSG_PROC()
 				{
 					continue;
 				}
+
 				//Switch to Binary message mode
 				if (message_mode==0)
 				{
 					m_nmeaList.ClearAllText();
-				}
+          InitMessageBox(BinaryMessageMode);
+        }
 				message_mode = 1;
 
 				BinaryProc(buffer, length + 1);
@@ -7900,6 +7938,7 @@ void CGPSDlg::MSG_PROC()
 				if (message_mode==1)
 				{
 					m_nmeaList.ClearAllText();
+          InitMessageBox(NmeaMessageMode);
 				}
 				if(!m_isConnectOn)
 				{
@@ -7928,7 +7967,9 @@ void CGPSDlg::MSG_PROC()
 			}
 			break;
 		case BinaryMessageMode:
-			BinaryProc(buffer, length);
+			BinaryProc(buffer, length + 1);
+			Copy_NMEA_Memery();
+			SetNmeaUpdated(true);
 			break;
 		default:
 			break;
@@ -8072,9 +8113,16 @@ LRESULT CGPSDlg::OnUpdatePsti032(WPARAM wParam, LPARAM lParam)
 void CGPSDlg::ShowFormatError(U08* cmd, U08* ack)
 {
 	CString txt;
-	if(cmd[4]==0x6A && cmd[5]==0x06)
+	//if(cmd[4]>0x6A && cmd[5]==0x06)
+  if(cmd[4] >= 0x60)
 	{
 		int cmdLen = ConvertLeonU16(ack + 7);
+		txt.Format("Format Error! Viewer/FW Length: %d/%d", ConvertLeonU16(cmd + 2), cmdLen);
+		add_msgtolist(txt);	
+	}
+  else
+	{
+		int cmdLen = ConvertLeonU16(ack + 6);
 		txt.Format("Format Error! Viewer/FW Length: %d/%d", ConvertLeonU16(cmd + 2), cmdLen);
 		add_msgtolist(txt);	
 	}

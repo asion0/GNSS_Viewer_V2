@@ -3,7 +3,7 @@
 #include "BinaryMSG.h"
 #include "GPSDlg.h"
 
-extern void add2message(char* buffer, int offset);
+extern void add2message(const char* buffer, int offset);
 
 static char g_msgBuff[512] = {0};
 
@@ -199,8 +199,53 @@ U08 *decode_1bytes(U08 *src,U08 *dst)
 
 void ShowMeasurementChannel(U08* src, bool convertOnly, CString* pStr)
 {
-	U08 nmeas = src[6];
-	U08* ptr = &src[7];
+  static CString strBuffer("", 512);
+	U08* ptr = &src[5];
+
+  U08 iod = 0;
+  U08 nmeas = 0;
+
+	ptr = decode_1bytes(ptr, &iod);
+	ptr = decode_1bytes(ptr, &nmeas);
+
+  strBuffer.Format("$RAW_MEAS(0xDD),IOD=%d,NMEAS=%d", iod, nmeas);
+	if(convertOnly && pStr)
+	{
+		*pStr += strBuffer;
+		*pStr += "\r\n";
+	}
+  else
+  {
+    add2message(strBuffer, strBuffer.GetLength());
+  }
+
+  if(nmeas == 0)
+  {
+    return;
+  }
+
+  strBuffer.Format(" SVID|CN0|   PseudoRange|    CarrierCycle|DopFreq|Indicator|");
+	if(convertOnly && pStr)
+	{
+		*pStr += strBuffer;
+		*pStr += "\r\n";
+	}
+  else
+  {
+    add2message(strBuffer, strBuffer.GetLength());
+  }
+
+  strBuffer.Format(" ----+---+--------------+----------------+-------+---------+");
+	if(convertOnly && pStr)
+	{
+		*pStr += strBuffer;
+		*pStr += "\r\n";
+	}
+  else
+  {
+    add2message(strBuffer, strBuffer.GetLength());
+  }
+
 	CHANNEL_DATA_T channel = {0};
 	U32 tmp[2];
 	for (int i=0; i<nmeas; ++i)
@@ -210,27 +255,129 @@ void ShowMeasurementChannel(U08* src, bool convertOnly, CString* pStr)
 		ptr = decode_4bytes(ptr, &tmp[1]);
 		ptr = decode_4bytes(ptr, &tmp[0]);
 		memcpy(&channel.pseudo_range, tmp, sizeof(D64));
-
 		ptr = decode_4bytes(ptr, &tmp[1]);
 		ptr = decode_4bytes(ptr, &tmp[0]);
 		memcpy(&channel.carrier_cycle,tmp, sizeof(D64));
-
 		ptr = decode_4bytes(ptr, &tmp[0]);
 		memcpy(&channel.doppler_freq, tmp, sizeof(F32));
-
 		ptr = decode_1bytes(ptr, &channel.indicator);
 
-		int len = sprintf_s(g_msgBuff, sizeof(g_msgBuff), 
-			"$SVID=%d,cn0=%d,pseudo_range=%.3f,carrier_cycle=%.3f,doppler_freq=%.0f,indicator=%d",
-			channel.prn, channel.cn0, channel.pseudo_range, channel.carrier_cycle, 
+    strBuffer.Format("  %3d|%3d| %13.3lf| % 15.3lf| %6.0f|     0x%02X|",
+      channel.prn, channel.cn0, channel.pseudo_range, channel.carrier_cycle, 
 			channel.doppler_freq, channel.indicator);
+
 		if(convertOnly && pStr)
 		{
-			*pStr += g_msgBuff;
+			*pStr += strBuffer;
 			*pStr += "\r\n";
 			continue;
 		}
-		add2message(g_msgBuff, len);
+    add2message(strBuffer, strBuffer.GetLength());
+	}
+	return;
+}
+
+void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
+{
+  static CString strBuffer("", 512);
+	U08* ptr = &src[5];
+
+  U08 ver = 0;
+  U08 iod = 0;
+  U16 weeks = 0;
+  U32 tow = 0;
+  U16 measPeriod = 0;
+  U08 measIndFlag = 0;
+  U08 reserve = 0;
+  U08 nmeas = 0;
+
+	ptr = decode_1bytes(ptr, &ver);
+	ptr = decode_1bytes(ptr, &iod);
+	ptr = decode_2bytes(ptr, &weeks);
+	ptr = decode_4bytes(ptr, &tow);
+	ptr = decode_2bytes(ptr, &measPeriod);
+	ptr = decode_1bytes(ptr, &measIndFlag);
+	ptr = decode_1bytes(ptr, &reserve);
+	ptr = decode_1bytes(ptr, &nmeas);
+
+  strBuffer.Format("$EXT_RAW_MEAS(0xE5),V%d,IOD=%d,WN=%d,TOW=%d,MeasPeriod=%d,MeasIndicator=0x%02X,NMEAS=%d",
+    ver, iod, weeks, tow, measPeriod, measIndFlag, nmeas);
+	if(convertOnly && pStr)
+	{
+		*pStr += strBuffer;
+		*pStr += "\r\n";
+	}
+  else
+  {
+    add2message(strBuffer, strBuffer.GetLength());
+  }
+
+  if(nmeas == 0)
+  {
+    return;
+  }
+
+  strBuffer.Format(" GnTp|SgTp|SVID|FrqID|LTInd|CN0|   PseudoRange|       AccCrrCyc|DopFreq|PRSdDv|ACCSdDv|DFSdDv| ChInd|");
+	if(convertOnly && pStr)
+	{
+		*pStr += strBuffer;
+		*pStr += "\r\n";
+	}
+  else
+  {
+    add2message(strBuffer, strBuffer.GetLength());
+  }
+
+  strBuffer.Format(" ----+----+----+-----+-----+---+--------------+----------------+-------+------+-------+------+------+");
+	if(convertOnly && pStr)
+	{
+		*pStr += strBuffer;
+		*pStr += "\r\n";
+	}
+  else
+  {
+    add2message(strBuffer, strBuffer.GetLength());
+  }
+
+	ExtMeasChannelData channel = { 0 };
+  U32 tmp[2] = { 0 };
+	for (int i=0; i<nmeas; ++i)
+	{
+		ptr = decode_1bytes(ptr, &channel.typeNsingel);
+		ptr = decode_1bytes(ptr, &channel.svid);
+		ptr = decode_1bytes(ptr, &channel.freqIdNlockTimeInd);
+		ptr = decode_1bytes(ptr, &channel.cn0);
+		ptr = decode_4bytes(ptr, &tmp[1]);
+		ptr = decode_4bytes(ptr, &tmp[0]);
+		memcpy(&channel.pseduRange, tmp, sizeof(D64));
+		ptr = decode_4bytes(ptr, &tmp[1]);
+		ptr = decode_4bytes(ptr, &tmp[0]);
+		memcpy(&channel.accCarrierCycle, tmp, sizeof(D64));
+		ptr = decode_4bytes(ptr, &tmp[0]);
+		memcpy(&channel.dopplerFreq, tmp, sizeof(F32));
+		ptr = decode_1bytes(ptr, &channel.prStdDeviation);
+		ptr = decode_1bytes(ptr, &channel.accStdDeviation);
+		ptr = decode_1bytes(ptr, &channel.dfDeviation);
+	  ptr = decode_2bytes(ptr, &channel.chInd);
+	  ptr = decode_1bytes(ptr, &reserve);
+	  ptr = decode_1bytes(ptr, &reserve);
+
+    //"$GnTp|SgTp|SVID|
+    // FrqID|LTInd|CN0|  
+    // PseudoRange|      AccCrrCyc|DopplerFreq|
+    // PRSdDv|ACCSdDv|DFSdDv| ChInd|");
+      strBuffer.Format("   %2d|  %2d| %3d|%5d|%5d|%3d| %13.3lf| % 15.3lf| % 6.0f|%6d|%7d|%6d|0x%04X|",
+        channel.typeNsingel & 0xF, channel.typeNsingel >> 4, channel.svid, 
+        channel.freqIdNlockTimeInd & 0x0f, channel.freqIdNlockTimeInd >> 4, channel.cn0,
+        channel.pseduRange, channel.accCarrierCycle, channel.dopplerFreq, 
+        channel.prStdDeviation, channel.accStdDeviation, channel.dfDeviation, channel.chInd);
+		if(convertOnly && pStr)
+		{
+			*pStr += strBuffer;
+			*pStr += "\r\n";
+			continue;
+		}
+    add2message(strBuffer, strBuffer.GetLength());
 	}
 	return;
 }
@@ -241,33 +388,30 @@ void ShowSubframe(U08 *src, bool convertOnly, CString* pStr)
 	LPCSTR subFrameType = NULL;
 	if(msgType==0xE0)
 	{
-		subFrameType = "GPS_SUBFRAME";
+		subFrameType = "GPS_SUBFRAME(0xE0)";
 	}
 	else if(msgType==0xE1)
 	{
-		subFrameType = "GLONASS_STRING";
+		subFrameType = "GLONASS_STRING(0xE1)";
 	}	
 	else if(msgType==0xE2)
 	{
-		subFrameType = "BEIDOU2_D1_SUBFRAME";
+		subFrameType = "BEIDOU2_D1_SUBFRAME(0xE2)";
 	}	
 	else if(msgType==0xE3)
 	{
-		subFrameType = "BEIDOU2_D2_SUBFRAME";
+		subFrameType = "BEIDOU2_D2_SUBFRAME(0xE3)";
 	}	
+#if(IS_DEBUG)
 	else if(msgType==0xE4)
 	{
-		subFrameType = "SBAS_SUBFRAME";
+		subFrameType = "SBAS_SUBFRAME(0xE3)";
 	}
-	else
-	{
-		subFrameType = "Unknown_SUBFRAME";
-	}
-
+#endif
 	U08 prn = src[5];
 	U08 subFrmId = src[6];
 	sprintf_s(g_msgBuff, sizeof(g_msgBuff), 
-		"$%s,SVID=%d, SFID=%d, data=",
+		"$%s,SVID=%d,SFID=%d,data=",
 		subFrameType, prn, subFrmId);
 
 	WORD packetLen = MAKEWORD(src[3], src[2]);
@@ -293,26 +437,30 @@ void ShowSubframe(U08 *src, bool convertOnly, CString* pStr)
 
 void ShowMeasurementTime(U08 *src, bool convertOnly, CString* pStr)
 {
-	U16 wn;
-	U32 tow;
-	U16 period;
+  static CString strBuffer("", 512);
 	U08 *ptr = &src[6];
+
+	U16 wn = 0;
+	U32 tow = 0;
+	U16 period = 0;
+
 	ptr = decode_2bytes(ptr, &wn);
 	ptr = decode_4bytes(ptr, &tow);
 	ptr = decode_2bytes(ptr, &period);
-	
-	int len = sprintf_s(g_msgBuff, sizeof(g_msgBuff),
-		"$wn=%d,tow=%d,period=%d", 
-		wn, tow, period);
+
+  strBuffer.Format("$MEAS_TIME(0xDC),WN=%d,TOW=%d,Period=%d",
+    wn, tow, period);
 
 	if(convertOnly && pStr)
 	{
-		*pStr = g_msgBuff;
+		*pStr = strBuffer;
 		*pStr += "\r\n";
 		return;
 	}
-
-	add2message(g_msgBuff, len);
+  else
+  {
+    add2message(strBuffer, strBuffer.GetLength());
+  }
 
 	UtcTime utc;
 	UtcConvertGpsToUtcTime(wn, (tow / 1000.0), &utc);
@@ -332,13 +480,56 @@ void ShowMeasurementTime(U08 *src, bool convertOnly, CString* pStr)
 
 void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 {
+  static CString strBuffer("", 512);
+	U08* ptr = &src[5];
+
+  U08 iod = 0;
+  U08 nsvs = 0;
+
+	ptr = decode_1bytes(ptr, &iod);
+	ptr = decode_1bytes(ptr, &nsvs);
+
+  strBuffer.Format("$SV_CH_STATUS(0xDE),IOD=%d,NSVS=%d", iod, nsvs);
+	if(convertOnly && pStr)
+	{
+		*pStr += strBuffer;
+		*pStr += "\r\n";
+	}
+  else
+  {
+    add2message(strBuffer, strBuffer.GetLength());
+  }
+
+  if(nsvs == 0)
+  {
+    return;
+  }
+
+  strBuffer.Format(" ChId|SVID|SvInd| URA|CN0|ELE| AZI|ChInd|");
+	if(convertOnly && pStr)
+	{
+		*pStr += strBuffer;
+		*pStr += "\r\n";
+	}
+  else
+  {
+    add2message(strBuffer, strBuffer.GetLength());
+  }
+
+  strBuffer.Format(" ----+----+-----+----+---+---+----+-----+");
+	if(convertOnly && pStr)
+	{
+		*pStr += strBuffer;
+		*pStr += "\r\n";
+	}
+  else
+  {
+    add2message(strBuffer, strBuffer.GetLength());
+  }
+
 	int fixed_gps_c = 0, fixed_glonass_c = 0, fixed_beidou_c = 0, fixed_galileo_c = 0;
 	int gps_c = 0, glonass_c = 0, beidou_c = 0, galileo_c = 0;
-
-	U08 svs = src[6];
-	U08 *ptr = &src[7];
 	SV_CH_DATA_T sv;
-
 	if(!convertOnly)
 	{
 		memset(CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID));
@@ -347,7 +538,7 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 		memset(CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID));
 	}
 
-	for (int i=0; i<svs; ++i)
+	for (int i=0; i<nsvs; ++i)
 	{
 		ptr = decode_1bytes(ptr, &sv.channel_id);
 		ptr = decode_1bytes(ptr, &sv.prn);
@@ -358,27 +549,22 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 		ptr = decode_2bytes(ptr, (U16*)&sv.azimuth);
 		ptr = decode_1bytes(ptr, &sv.channel_status);
 
-		int len = sprintf_s(g_msgBuff, sizeof(g_msgBuff), 
-			"$channel_id=%d,SVID=%d,SV_status=%d,URA=%d,cn0=%d,elevation=%d,azimuth=%d,channel_status=%d",
+		//int len = sprintf_s(g_msgBuff, sizeof(g_msgBuff), 
+		//	"$channel_id=%d,SVID=%d,SV_status=%d,URA=%d,cn0=%d,elevation=%d,azimuth=%d,channel_status=%d",
+		//	sv.channel_id, sv.prn, sv.SV_status, sv.URA,sv.cn0, 
+		//	sv.elevation, sv.azimuth, sv.channel_status);
+    strBuffer.Format("%5d|%4d| 0x%02X|%4d|%3d|%3d|%4d| 0x%02X|",
 			sv.channel_id, sv.prn, sv.SV_status, sv.URA,sv.cn0, 
 			sv.elevation, sv.azimuth, sv.channel_status);
 
-		if(convertOnly)
-		{
-			if(pStr)
-			{
-				*pStr += g_msgBuff;
-				*pStr += "\r\n";
-			}
-			continue;
-		}
+	  if(convertOnly && pStr)
+	  {
+		  *pStr += strBuffer;
+		  *pStr += "\r\n";
+		  continue;
+	  }
+    add2message(strBuffer, strBuffer.GetLength());
 
-		if(convertOnly)
-		{
-			return;
-		}
-
-		add2message(g_msgBuff, len);
 		if(NMEA::Glonass == NMEA::GetGNSSSystem(sv.prn))
 		{
 			if(glonass_c==0)
@@ -465,7 +651,10 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 
 void ShowReceiverNav(U08 *src, bool convertOnly, CString* pStr)
 {
+  static CString strBuffer("", 512);
 	U08 *ptr = &src[6];
+  U08 iod = src[5];
+
 	U32 tmp[2];
 	RECEIVER_NAV_DATA_T receiver;
 
@@ -519,27 +708,31 @@ void ShowReceiverNav(U08 *src, bool convertOnly, CString* pStr)
 	ptr = decode_4bytes(ptr, &tmp[0]);
 	memcpy(&receiver.tdop, tmp, sizeof(F32));
 
-  int len = sprintf_s(g_msgBuff, sizeof(g_msgBuff), 
-		"$navigation_status=%d,wn=%d,tow=%f,ecef_x=%f,ecef_y=%f,ecef_z=%f,ecef_vx=%f,ecef_vy=%f,ecef_vz=%f,clock_bias=%f,clock_drift=%f,gdop=%f,pdop=%f,hdop=%f,vdop=%f,tdop=%f",
-		receiver.nav_status, receiver.wn, receiver.tow, 
+  //int len = sprintf_s(g_msgBuff, sizeof(g_msgBuff), 
+		//"$navigation_status=%d,wn=%d,tow=%f,ecef_x=%f,ecef_y=%f,ecef_z=%f,ecef_vx=%f,ecef_vy=%f,ecef_vz=%f,clock_bias=%f,clock_drift=%f,gdop=%f,pdop=%f,hdop=%f,vdop=%f,tdop=%f",
+		//receiver.nav_status, receiver.wn, receiver.tow, 
+		//receiver.ecef_x, receiver.ecef_y, receiver.ecef_z,
+		//receiver.ecef_vx, receiver.ecef_vy, receiver.ecef_vz,
+		//receiver.clock_bias, receiver.clock_drift,
+		//receiver.gdop, receiver.pdop, receiver.hdop, 
+		//receiver.vdop, receiver.tdop);
+  strBuffer.Format("$RCV_STATE(0xDF),IOD=%d,NavState=%d,WN=%d,TOW=%lf,ECEF_x=%lf,ECEF_y=%lf,ECEF_z=%lf," \
+    "ECEF_vx=%f,ECEF_vy=%f,ECEF_vz=%f,ClockBias=%lf,ClockDrift=%f,GDOP=%f,PDOP=%f,HDOP=%f,VDOP=%f,TDOP=%f",
+		iod, receiver.nav_status, receiver.wn, receiver.tow, 
 		receiver.ecef_x, receiver.ecef_y, receiver.ecef_z,
 		receiver.ecef_vx, receiver.ecef_vy, receiver.ecef_vz,
 		receiver.clock_bias, receiver.clock_drift,
 		receiver.gdop, receiver.pdop, receiver.hdop, 
 		receiver.vdop, receiver.tdop);
 
-	if(convertOnly)
+	if(convertOnly && pStr)
 	{
-		if(pStr)
-		{
-			*pStr += g_msgBuff;
-			*pStr += "\r\n";
-		}
-		return;
+		*pStr += strBuffer;
+		*pStr += "\r\n";
 	}
+  add2message(strBuffer, strBuffer.GetLength());
 
-	add2message(g_msgBuff, len);
-	switch(receiver.nav_status)
+  switch(receiver.nav_status)
 	{
 	case 0:
 		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '0';

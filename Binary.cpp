@@ -299,6 +299,10 @@ CGPSDlg::CmdErrorCode CGPSDlg::GetCommandReturnType(U08* buff, int tail, bool sh
 	else if((buff[0]==0xa0) && (buff[1]==0xa1) &&
 		(buff[tail-1]==0x0d)&&(buff[tail]==0x0a) && (buff[4]==0x85))
 	{
+		if(showMsg)
+		{
+			add_msgtolist("Received FormatError...");
+		}
 		return FormatError;
 	}
 	return Timeout;
@@ -1183,10 +1187,6 @@ void CGPSDlg::parse_sti_04_001_message(const char *buff,int len) // for timing m
 	if(ptr == NULL) return;
 
 	this->m_psti004001Copy.Valide = atoi(ptr);
-if(m_psti004001Copy.Valide == 0)
-{
-  int a = 0;
-}
 
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
@@ -2224,7 +2224,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U
 			return NACK;
 		}
 		if((*ackCmd)[4] == 0x85)
-		{	//NACK
+		{	//FormatError
 			if(m_bShowBinaryCmdData)
 			{
 				add_msgtolist("FormatError: " + theApp.GetHexString(ackCmd->Ptr(), len));	
@@ -2236,7 +2236,8 @@ CGPSDlg::CmdErrorCode CGPSDlg::GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U
 				txt.Format("Format Error! Viewer / FW Length: %d/%d", ConvertLeonU16(ackCmd->Ptr(5 + cmdSize)), cmdLen);
 				add_msgtolist(txt);
 			}
-			continue;
+			add_msgtolist("Received FormatError...");
+			return FormatError;
 		}
 		if( (*ackCmd)[4] == 0x83)
 		{	//Get ACK
@@ -5412,85 +5413,101 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryBinaryMeasurementDataOut(CmdExeMode nMode, v
 	cmd.SetU08(1, cmdTable[QueryBinaryMeasurementDataOutCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(Ack == ExcuteBinaryCommand(QueryBinaryMeasurementDataOutCmd, &cmd, &ackCmd))
+  CmdErrorCode err = ExcuteBinaryCommand(QueryBinaryMeasurementDataOutCmd, &cmd, &ackCmd);
+	if(err != Ack)
 	{
-		CString strMsg = "Query Binary Measurement Data Out Successful...";
-		add_msgtolist(strMsg);
-		if(ackCmd[5]==0)
-		{
-			strMsg.Format("Output Rate : 1Hz");	
-		}
-		else if(ackCmd[5]==1)
-		{
-			strMsg.Format("Output Rate : 2Hz");
-		}
-		else if(ackCmd[5]==2)
-		{
-			strMsg.Format("Output Rate : 4Hz");
-		}
-		else if(ackCmd[5]==3)
-		{
-			strMsg.Format("Output Rate : 5Hz");
-		}
-		else if(ackCmd[5]==4)
-		{
-			strMsg.Format("Output Rate : 10Hz");
-		}
-		else if(ackCmd[5]==5)
-		{
-			strMsg.Format("Output Rate : 20Hz");
-		}
-		else if(ackCmd[5]==6)	//Add in 20160512, request from Andrew
-		{
-			strMsg.Format("Output Rate : 8Hz");
-		}
+    return err;
+  }
 
-		add_msgtolist(strMsg);
+  if(Return == nMode)
+	{	//Return command length
+		*((U16*)outputData) = ConvertLeonU16(ackCmd.Ptr(2));
+		return err;
+  }
 
-		strMsg.Format("Meas Time : %s", (ackCmd[6]) ? "Enable" : "Disable");
-		add_msgtolist(strMsg);
-
-		strMsg.Format("Raw Meas : %s", (ackCmd[7]) ? "Enable" : "Disable");
-		add_msgtolist(strMsg);
-
-		strMsg.Format("SV CH Status : %s", (ackCmd[8]) ? "Enable" : "Disable");
-		add_msgtolist(strMsg);
-
-		strMsg.Format("RCV State : %s", (ackCmd[9]) ? "Enable" : "Disable");
-		add_msgtolist(strMsg);
-		//20160419 Modify BinaryMeasurementDataOut command format, remove constellation field, Report from Andrew, Oliver.
-/*
-		CString strOutput;
-		if(ackCmd[10] & 0x01)
-		{
-			strOutput += "GPS + ";
-		}
-		if(ackCmd[10] & 0x02)
-		{
-			strOutput += "GLONASS + ";
-		}
-		if(ackCmd[10] & 0x04)
-		{
-			strOutput += "Galileo + ";
-		}
-		if(ackCmd[10] & 0x08)
-		{
-			strOutput += "Beidou + ";
-		}
-
-		if(ackCmd[10]==0)
-		{
-			add_msgtolist("None");
-		}
-		else
-		{
-			add_msgtolist("Subframe for different constellation :");
-			strOutput = strOutput.Left(strOutput.GetLength() - 2);
-			add_msgtolist(strOutput);
-		}
-*/
+	U16 cmdLen = ConvertLeonU16(ackCmd.Ptr(2));
+	CString strMsg = "Query Binary Measurement Data Out Successful...";
+	add_msgtolist(strMsg);
+	if(ackCmd[5]==0)
+	{
+		strMsg.Format("Output Rate : 1Hz");	
 	}
-	return Timeout;
+	else if(ackCmd[5]==1)
+	{
+		strMsg.Format("Output Rate : 2Hz");
+	}
+	else if(ackCmd[5]==2)
+	{
+		strMsg.Format("Output Rate : 4Hz");
+	}
+	else if(ackCmd[5]==3)
+	{
+		strMsg.Format("Output Rate : 5Hz");
+	}
+	else if(ackCmd[5]==4)
+	{
+		strMsg.Format("Output Rate : 10Hz");
+	}
+	else if(ackCmd[5]==5)
+	{
+		strMsg.Format("Output Rate : 20Hz");
+	}
+	else if(ackCmd[5]==6)	//Add in 20160512, request from Andrew
+	{
+		strMsg.Format("Output Rate : 8Hz");
+	}
+	add_msgtolist(strMsg);
+
+	strMsg.Format("Meas Time : %s", (ackCmd[6]) ? "Enable" : "Disable");
+	add_msgtolist(strMsg);
+
+	strMsg.Format("Raw Meas : %s", (ackCmd[7]) ? "Enable" : "Disable");
+	add_msgtolist(strMsg);
+
+	strMsg.Format("SV CH Status : %s", (ackCmd[8]) ? "Enable" : "Disable");
+	add_msgtolist(strMsg);
+
+	strMsg.Format("RCV State : %s", (ackCmd[9]) ? "Enable" : "Disable");
+	add_msgtolist(strMsg);
+
+	if(cmdLen == 8)
+	{	//The length in old style is 7, new is 8. 20160914 changed by Ryan
+	  strMsg.Format("Extended Raw Meas : %s", (ackCmd[11]) ? "Enable" : "Disable");
+	  add_msgtolist(strMsg);
+	}
+
+	//20160419 Modify BinaryMeasurementDataOut command format, remove constellation field, Report from Andrew, Oliver.
+/*
+	CString strOutput;
+	if(ackCmd[10] & 0x01)
+	{
+		strOutput += "GPS + ";
+	}
+	if(ackCmd[10] & 0x02)
+	{
+		strOutput += "GLONASS + ";
+	}
+	if(ackCmd[10] & 0x04)
+	{
+		strOutput += "Galileo + ";
+	}
+	if(ackCmd[10] & 0x08)
+	{
+		strOutput += "Beidou + ";
+	}
+
+	if(ackCmd[10]==0)
+	{
+		add_msgtolist("None");
+	}
+	else
+	{
+		add_msgtolist("Subframe for different constellation :");
+		strOutput = strOutput.Left(strOutput.GetLength() - 2);
+		add_msgtolist(strOutput);
+	}
+*/
+	return Ack;
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::QueryCableDelay(CmdExeMode nMode, void* outputData)
@@ -5562,23 +5579,7 @@ void CGPSDlg::OnSetFactoryDefaultReboot()
 {	
 	SetFactoryDefault(true);
 }
-/*
-void CGPSDlg::OnBinaryConfigurenmeaoutput()
-{   
-	if(!CheckConnect())
-	{
-		return;
-	}
 
-	SetInputMode(NoOutputMode);
-	CConNMEADlg dlg;
-	if(dlg.DoModal() != IDOK)		
-	{
-		SetMode();  
-		CreateGPSThread();
-	}
-}
-*/
 void CGPSDlg::OnConfigureNmeaIntervalV8()
 {
 	if(!CheckConnect())
@@ -6852,6 +6853,16 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryDofunUniqueId(CmdExeMode nMode, void* output
 	return Timeout;
 }
 
+CGPSDlg::CmdErrorCode CGPSDlg::ReCalcuteGlonassIfb(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(2);
+	cmd.SetU08(1, 0x6A);
+	cmd.SetU08(2, 0x0A);
+
+	ClearQue();
+	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Re-calculate GLONASS IFB successful");	
+	return Timeout;
+}
 
 
 

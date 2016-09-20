@@ -34,9 +34,9 @@ public:
 
 	static bool IsNmeaFileOpen() { return isNmeaFileOpen; }
 	static bool IsPressNmeaCommend() { return isPressNmeaCommend; }
-	static bool SaveData(void* p, int len);
-	static bool SaveText(void* p, int len);
-	static bool SaveBinary(void* p, int len);
+	static bool SaveData(const void* p, int len);
+	static bool SaveText(const void* p, int len);
+	static bool SaveBinary(const void* p, int len);
 	static void SetBinaryMode(bool b) { isBinaryMode = b; }
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV ¤ä´©

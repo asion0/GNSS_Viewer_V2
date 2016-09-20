@@ -264,7 +264,6 @@ DWORD CSerial::SendData(const void* buffer, DWORD bufferSize, bool blockTransfer
 		return 0;
 	}
 
-//	DWORD sendUnit = SendUnit;
 	DWORD sentBytes = 0;
 	DWORD leftSize = bufferSize;
 	char* bufferIter = (char*)buffer;
@@ -433,7 +432,6 @@ BufferContentType CheckBufferContent(U08 current, U08 previous, U08 bufferStart,
 
 DWORD CSerial::GetBinary(void *buffer, DWORD bufferSize, DWORD timeout)
 {	
-	//timeout = 0xFFFFFFFF;
 	U08* bufferIter = (U08*)buffer;
 	DWORD totalSize = 0;
 	ScopeTimer t;
@@ -532,6 +530,123 @@ DWORD CSerial::GetBinary(void *buffer, DWORD bufferSize, DWORD timeout)
 	} //while(total < size - 1)
 	return totalSize;
 }
+
+#if CUSTOMER_ZENLANE_160808
+DWORD CSerial::GetZenlaneMessage(void *buffer, DWORD bufferSize, DWORD timeout)
+{	
+	U08* bufferIter = (U08*)buffer;
+	DWORD totalSize = 0;
+	ScopeTimer t;
+	bool cmdHeaderCome = false;
+	while(totalSize < bufferSize - 1)
+	{ 
+		if(t.GetDuration() > timeout)
+		{
+			return READ_ERROR;
+		}
+
+		if(m_cancelTransmission)
+		{
+			m_cancelTransmission = false;
+			return READ_ERROR;
+		}
+
+		DWORD dwBytesDoRead = 0;
+		DWORD dwErrorFlags = 0;
+		COMSTAT comStat;
+		BOOL b2 = ClearCommError(m_comDeviceHandle, &dwErrorFlags, &comStat);
+		if(!b2)
+		{
+			DWORD err = ::GetLastError();
+			return -1;
+		}
+		if(comStat.cbInQue == 0) 
+		{
+			Sleep(2);
+			continue;
+		}
+
+		DWORD bytesinbuff = comStat.cbInQue;
+		while(bytesinbuff)
+		{
+			if(t.GetDuration() > timeout)
+			{
+				return READ_ERROR;
+			}
+			if(m_cancelTransmission)
+			{
+				m_cancelTransmission = false;
+				return READ_ERROR;
+			}
+			BOOL bb = ReadFile(m_comDeviceHandle, bufferIter, 1, &dwBytesDoRead, 0);
+			if(dwBytesDoRead == 0)
+			{	//Read fail.
+				DWORD dwErr = ::GetLastError();
+				continue;
+			}
+			if(totalSize > 0 && *bufferIter == 0)
+			{
+				return READ_ERROR;
+			}
+			if(totalSize > 0)
+			{	//not first char.
+				if(!cmdHeaderCome && *bufferIter==0xa1 && *(bufferIter-1)==0xa0)
+				{
+					bufferIter -= totalSize;
+					*bufferIter = 0xa0; 
+					++bufferIter;
+					*bufferIter = 0xa1; 
+					++bufferIter;
+					totalSize = 2;
+					cmdHeaderCome = true;
+					continue;
+				}
+				else if(*bufferIter==0x0a && *(bufferIter-1)==0x0d)
+				{
+					unsigned char *chk_ptr = bufferIter - totalSize;
+					
+					if (*chk_ptr == 0xa0)
+					{
+						int tmp_len = *(chk_ptr + 2);
+						tmp_len = tmp_len << 8 | *(chk_ptr+3);
+						if (totalSize == tmp_len + 6) 
+						{
+							*(bufferIter+1) = 0;
+							return totalSize + 1;
+						}
+						cmdHeaderCome = false;
+					}
+					else
+					{
+						return totalSize;
+					}
+				}
+			  ++totalSize;
+			  if (totalSize >=  bufferSize - 1)
+			  {	//Check 
+				  *(bufferIter+1) = 0;
+				  break;
+        }	
+      
+			  ++bufferIter;
+			  --bytesinbuff;
+			}
+      else if(*bufferIter == '$')
+      {
+			  ++totalSize;
+			  if (totalSize >=  bufferSize - 1)
+			  {	//Check 
+				  *(bufferIter+1) = 0;
+				  break;
+        }	
+			  ++bufferIter;
+			  --bytesinbuff;
+      }
+		} //while(bytesinbuff)
+	} //while(total < size - 1)
+	return totalSize;
+}
+#endif
 
 DWORD CSerial::GetZenlaneResponse1(void *buffer, DWORD bufferSize, DWORD timeout)
 {	

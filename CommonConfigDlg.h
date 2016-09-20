@@ -283,7 +283,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// ConfigBinaryMeasurementDataOutDlg 對話方塊
+// ConfigBinaryMeasurementDataOutDlg
 class ConfigBinaryMeasurementDataOutDlg : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(ConfigBinaryMeasurementDataOutDlg)
@@ -292,22 +292,30 @@ public:
 	virtual ~ConfigBinaryMeasurementDataOutDlg() {};
 
 	virtual void DoCommand();
-
-	afx_msg void OnBnClickedOk();
 	virtual BOOL OnInitDialog();
+
+  afx_msg void OnBnClickedMeasTime();
+  afx_msg void OnBnClickedRawMeas();
+  afx_msg void OnBnClickedExtRawMeas();
+	afx_msg void OnBnClickedOk();
 protected:
 	U08 m_rate;
 	U08 m_measTime;
 	U08 m_rawMeas;
 	U08 m_svChStatus;
 	U08 m_rcvChStatus;
+	U08 m_extRawMeas;
 	U08 m_subFrame;
 	U08 m_attribute;
+
+	BOOL m_newCmd;
+	void UpdateStatus();
+  BOOL CheckLegal();
 
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigLeapSeconds 對話方塊
+// CConfigLeapSeconds 
 class CConfigLeapSeconds : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigLeapSeconds)
@@ -691,12 +699,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigRtkMode2 對話方塊
+// CConfigRtkMode2 
 class CConfigRtkMode2 : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigRtkMode2)
 public:
-	CConfigRtkMode2(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigRtkMode2(CWnd* pParent = NULL);
 	virtual ~CConfigRtkMode2() {};
 
 	virtual void DoCommand();

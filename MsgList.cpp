@@ -84,14 +84,10 @@ void CMsgList::ProcessTextBuffer()
 	{
 		return;
 	}
-	//const int MaxCount = 300;
-	if(m_maxLine < GetItemCount())
+
+  if(m_maxLine < GetItemCount())
 	{
 		DeleteAllItems();
-		//for(int i=m_maxLine/2; i>0; --i)
-		//{
-		//	DeleteItem(0);
-		//}
 	}
 
 	m_textBufferCritSect.Lock();

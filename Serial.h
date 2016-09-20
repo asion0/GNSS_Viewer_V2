@@ -52,12 +52,15 @@ public:
 	DWORD ReadData(void* buffer, DWORD bufferSize, bool once = false);
 	DWORD GetString(void* buffer, DWORD bufferSize, DWORD timeOut);
 	DWORD GetBinary(void* buffer, DWORD bufferSize, DWORD timeout = 2000);
+#if CUSTOMER_ZENLANE_160808
+	DWORD GetZenlaneMessage(void* buffer, DWORD bufferSize, DWORD timeout = 2000);
+#endif
 	DWORD GetZenlaneResponse1(void* buffer, DWORD bufferSize, DWORD timeout = 2000);
 	DWORD GetBinaryAck(void* buffer, DWORD bufferSize, DWORD timeout = 2000);
 	DWORD GetBinaryBlock(void* buffer, DWORD bufferSize, DWORD blockSize);
 	DWORD GetBinaryBlockInSize(void* buffer, DWORD bufferSize, DWORD blockSize);
 
-	DWORD SendData(const void* buffer, DWORD bufferSize, bool blockTransfer = true, int delayDuration = 0);
+	DWORD SendData(const void* buffer, DWORD bufferSize, bool blockTransfer = false, int delayDuration = 0);
 	//DWORD GetBinaryBlockInTime(void* buffer, DWORD bufferSize, DWORD timeout);
 	static inline void AddDebugString(const char* dbg);
 	static void SaveDebugString(bool backup = false);

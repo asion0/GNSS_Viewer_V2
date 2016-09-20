@@ -720,12 +720,14 @@ private:
 public:
 	CmdErrorCode ExcuteBinaryCommand(int cmdIdx, BinaryCommand* cmd, BinaryData* ackCmd, DWORD timeOut = g_setting.defaultTimeout, bool silent = false);
 	CmdErrorCode ExcuteBinaryCommandNoWait(int cmdIdx, BinaryCommand* cmd);
-	CGPSDlg::CmdErrorCode GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U08 cAckSub, DWORD timeOut, bool silent, bool noWaitAck = false, int cmdSize = -1, int cmdLen = 0);
+	CmdErrorCode GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U08 cAckSub, DWORD timeOut, bool silent, bool noWaitAck = false, int cmdSize = -1, int cmdLen = 0);
 	CmdErrorCode QueryRtkMode2(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPsti030(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPsti032(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPsti004(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGeofenceEx(CmdExeMode nMode, void* outputData);
+	CmdErrorCode ReCalcuteGlonassIfb(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryBinaryMeasurementDataOut(CmdExeMode nMode, void* outputData);
 
   U08 m_nGeofecingNo;
 
@@ -797,7 +799,6 @@ protected:
 	CmdErrorCode QueryGnssNavSol(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryCustomerID(CmdExeMode nMode, void* outputData);
 	CmdErrorCode Query1ppsFreqencyOutput(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryBinaryMeasurementDataOut(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySerialNumber(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDgps(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySmoothMode(CmdExeMode nMode, void* outputData);
@@ -1196,6 +1197,8 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryPsti032); }
 	afx_msg void OnQueryPsti004()
 	{ GenericQuery(&CGPSDlg::QueryPsti004); }
+	afx_msg void OnReCalcuteGlonassIfb()
+	{ GenericQuery(&CGPSDlg::ReCalcuteGlonassIfb); }
 
 	struct MenuItemEntry {
 		BOOL showOption;
@@ -1309,4 +1312,6 @@ protected:
 	bool ShowCommand(U08 *buffer, int length);
 	void ShowFormatError(U08* cmd, U08* ack);
 	void SwitchInfoTab();
+  void InitMessageBox(MsgMode mode);
+
 };

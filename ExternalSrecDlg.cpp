@@ -131,7 +131,6 @@ bool CExternalSrecDlg::DownloadLoader(CString externalSrecFile)
 	const int bufferSize = 256;
 	char messages[100] = "$LOADER DOWNLOAD";
 
-	//GetLoaderDownloadCmd(messages, sizeof(messages));
 	const int retryCount = 3;
 	for (int i=1; i<retryCount; i++)
 	{
@@ -215,7 +214,7 @@ bool CExternalSrecDlg::DownloadLoader(CString externalSrecFile)
 	return true;
 }
 
-//增加訊息到response list
+//add message to response list
 void CExternalSrecDlg::AddMsgToList(LPCTSTR msg)
 {
 	CListBox* list = (CListBox*)GetDlgItem(IDC_LIST);
@@ -250,6 +249,5 @@ void CExternalSrecDlg::OnOK()
 
 void CExternalSrecDlg::OnDestroy()
 {
-
 	CDialog::OnDestroy();
 }

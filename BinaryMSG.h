@@ -105,7 +105,6 @@ typedef struct
 	U16 ClockOffset;
 } SATELLITE_MEASUREMENT_DATA;
 
-
 typedef struct CHANNEL_DATA
 {
 	U08 prn;
@@ -114,8 +113,22 @@ typedef struct CHANNEL_DATA
 	D64 carrier_cycle;
 	F32 doppler_freq;
 	U08 indicator;
-
 } CHANNEL_DATA_T;
+
+struct ExtMeasChannelData
+{
+	U08 typeNsingel;
+	U08 svid;
+	U08 freqIdNlockTimeInd;
+	U08 cn0;
+  D64 pseduRange;
+  D64 accCarrierCycle;
+	F32 dopplerFreq;
+	U08 prStdDeviation;
+	U08 accStdDeviation;
+	U08 dfDeviation;
+	U16 chInd;
+};
 
 typedef struct SV_CH_DATA
 {
@@ -164,3 +177,4 @@ void ShowMeasurementSv(U08 *src, bool convertOnly = false, CString* pStr = NULL)
 void ShowReceiverNav(U08 *src, bool convertOnly = false, CString* pStr = NULL);
 void ShowBinaryOutput(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowDjiBinaryOutput(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ExtRawMeas(U08 *src, bool convertOnly = false, CString* pStr = NULL);

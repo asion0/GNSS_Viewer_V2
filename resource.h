@@ -764,6 +764,8 @@
 #define IDC_RCV_STATE                   1308
 #define IDC_SLIDER7                     1309
 #define IDC_LINE_COUNT                  1309
+#define IDC_RCV_STATE2                  1309
+#define IDC_EXT_RAW_MEAS                1309
 #define IDC_SLIDER8                     1310
 #define IDC_PLAY_INV_SL                 1310
 #define IDC_SLIDER9                     1311
@@ -1161,6 +1163,7 @@
 #define ID_CONFIG_PSTI032               33132
 #define ID_QUERY_PSTI004                33133
 #define ID_CONFIG_PSTI004               33134
+#define ID_RECALC_GLONASS_IFB           33135
 
 // Next default values for new objects
 // 
