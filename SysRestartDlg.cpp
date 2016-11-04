@@ -275,16 +275,6 @@ void CSysRestartDlg::Restart()
 	messages[19]=checksum; //checksum right	    
 	messages[20]=(unsigned char)0x0d;
 	messages[21]=(unsigned char)0x0a;
-	CGPSDlg::gpsDlg->ExecuteConfigureCommand(messages, 22, "System Restart Successful...");
-
-	//for(int i=0;i<22;i++)	_cprintf("%x ",messages[i]);	
-	/*
-	CGPSDlg::gpsDlg->ClearQue();
-	CGPSDlg::gpsDlg->SendToTarget(messages, 22, "System Restart Successful...");	
-	CGPSDlg::gpsDlg->SetMode(); 
-	//CGPSDlg::gpsDlg->InvalidateRect(CRect(330,210,330+700,363),TRUE);
-	//CGPSDlg::gpsDlg->InvalidateRect(CRect(332,20,497,210),TRUE);	
-	CGPSDlg::gpsDlg->CreateGPSThread();
-	*/
-	CGPSDlg::gpsDlg->m_CloseBtn.ShowWindow(1);
+	CGPSDlg::gpsDlg->ExecuteConfigureCommand(messages, 22, "System Restart successfully.");
+	CGPSDlg::gpsDlg->m_CloseBtn.ShowWindow(SW_SHOW);
 }

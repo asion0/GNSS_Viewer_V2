@@ -67,7 +67,7 @@ int CGPSDlg::CreateSubMenu(const HMENU hMenu, const MenuItemEntry* menuItemTable
 	AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, pszSubMenuText);
 	return 0;
 }
-
+/*
 void CGPSDlg::DrawGnssSatellite(CDC* dc, int id, int centerX, int centerY)
 {
 	for(int i=0;i<m_glgsvMsg.NumOfSate;i++)
@@ -250,3 +250,5 @@ void CGPSDlg::DrawGaSatellite(CDC* dc, int id, int centerX, int centerY)
 
 
 
+
+*/

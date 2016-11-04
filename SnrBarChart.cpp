@@ -196,7 +196,8 @@ void CSnrBarChart::DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGS
 		}
 		dx += cellOffset;
 
-		bool isInUse = IsFixed(gga->GPSQualityIndicator) && !CheckInUse(id, gsa);
+		//bool isInUse = IsFixed(gga->GPSQualityIndicator) && !CheckInUse(id, gsa);
+		bool isInUse = !CheckInUse(id, gsa);
 		DrawBarChartId(dc, s, isInUse, dx, dy, id); 
 
 		U16 snrValue = sate[arrayIdx].SNR;
@@ -426,7 +427,161 @@ void CSnrBarChartGpsGlonass::ShowBoxChart(CDC *dc)
 	DrawSnr(dc, n, uiSetting, gsvData, gsaData, ggaData, sateStatus);
 	DrawSnr(dc, n, uiSetting2, gsvData2, gsaData2, ggaData2, sateStatus2);
 }
+//============================================================================
+CSnrBarChartBeidouL2::CSnrBarChartBeidouL2(void) 
+{
+	m_startBarChart = StartGnssBarChart;
+	m_minId = 1;
+	m_maxId = 31;
+	m_titleText = "Beidou";
+	SetUISetting(&bdUI);
+	SetUISetting2(&gaUI);
+}
 
+CSnrBarChartBeidouL2::~CSnrBarChartBeidouL2(void) 
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CSnrBarChartBeidouL2, CSnrBarChart)
+	ON_WM_PAINT()
+END_MESSAGE_MAP()
+
+void CSnrBarChartBeidouL2::OnPaint()
+{
+	RefreshBarChart();
+}
+
+int CSnrBarChartBeidouL2::GetGsv2Snr(int id)
+{
+  if(sateStatus2 == NULL)
+    return 0;
+
+  for(int i = 0; i < MAX_SATELLITE; ++i)
+  {
+    if(sateStatus2[i].SatelliteID == id)
+      return sateStatus2[i].SNR;
+  }
+  return 0;
+}
+
+void CSnrBarChartBeidouL2::DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGSA* gsa, GPGGA* gga, Satellite* sate)
+{
+	BITMAP bm = {0};
+	bm.bmWidth = bm.bmHeight = 20;
+	int cellOffset = BarChartIdGap / 2;
+
+	//Sort the satellite prn. 
+	int sateCount = GetNoneZeroCount(sate);
+	if(sateCount==0)
+	{
+		return;
+	}
+
+	vector< pair<int, int> > sateArray(sateCount);
+	for(int i=0; i<sateCount; ++i)
+	{
+		sateArray[i] = make_pair(i, sate[i].SatelliteID);
+	}
+	struct sort_pred {
+		bool operator()(const std::pair<int,int> &left, const std::pair<int,int> &right) 
+		{ return left.second < right.second; }
+	};
+	std::sort(sateArray.begin(), sateArray.end(), sort_pred());
+
+	CFont* oldFont = dc->SelectObject(&(s->idFont));	
+	CBrush* oldBrush = dc->SelectObject(&(s->noUseSnrBarBrush));	
+	CPen* oldPen = dc->SelectObject(&(s->noUseSnrBarPen));	
+
+	for(int i=0; i<sateCount; ++i)
+	{
+		int arrayIdx = sateArray[i].first;
+		int id = sate[arrayIdx].SatelliteID;
+		int dx = 0, dy = 0;
+		int index = startId + i;
+
+		if(index < MaxCountInRaw)
+		{	
+			dx = m_startBarChart.x + index * (BarChartIdGap + bm.bmWidth * 2);
+			dy = m_startBarChart.y;
+		}
+		else
+		{
+			ASSERT(FALSE);
+		}
+		dx += cellOffset;
+
+		//bool isInUse = IsFixed(gga->GPSQualityIndicator) && !CheckInUse(id, gsa);
+		bool isInUse = !CheckInUse(id, gsa);
+		DrawBarChartId(dc, s, isInUse, dx + bm.bmWidth / 2, dy, id); 
+
+		U16 snrValue = sate[arrayIdx].SNR;
+		if(snrValue == INVALIDATE_SNR)
+		{
+			continue;
+		}
+    const int sgap = 1;
+		//Draw gray rectangle out line.
+		dc->SelectObject(&(s->inUseSnrBarPen));
+		dc->SelectObject(&(s->noUseSnrBarBrush));
+		CRect barRect(dx + (bm.bmWidth - SnrBar.cx) / 2 + sgap, dy - SnrBar.cy - 2,
+					dx + (bm.bmWidth + SnrBar.cx) / 2 + sgap, dy - 1);
+		dc->Rectangle(barRect);
+
+		//Draw snr bar.
+		dc->SelectObject((isInUse) ? &(s->inUseSnrBarBrush) : &(s->noUseSnrBarBrush));
+		dc->SelectObject((isInUse) ? &(s->inUseSnrBarPen) : &(s->noUseSnrBarPen));
+		barRect.SetRect(dx + (bm.bmWidth - SnrBar.cx) / 2 + sgap, dy - 1 - snrValue,
+			dx + (bm.bmWidth + SnrBar.cx) / 2 + sgap, dy - 1);
+		dc->Rectangle(barRect);
+
+		//Draw snr value text.
+		COLORREF cr = (isInUse) ? s->inUseBarTextColor : s->noUseBarTextColor;
+		if(isInUse && snrValue < 15)
+		{
+			cr = RGB(10, 10, 10);
+		}
+		dc->SetTextColor(cr);
+		CString idText;
+		idText.Format("%d", snrValue);
+		barRect.SetRect(dx + (bm.bmWidth - SnrBar.cx) / 2 + sgap, dy - 1 - SnrBar.cx,
+					dx + (bm.bmWidth + SnrBar.cx) / 2 + sgap, dy - 1);
+		dc->SelectObject(&(s->barFont));	
+		dc->DrawText(idText, barRect, DT_VCENTER | DT_CENTER);
+
+    snrValue = GetGsv2Snr(id);
+		//Draw l2 gray rectangle out line.
+		dc->SelectObject(&(uiSetting2->inUseSnrBarPen));
+		dc->SelectObject(&(uiSetting2->noUseSnrBarBrush));
+		barRect.SetRect(dx + (bm.bmWidth - SnrBar.cx) / 2 + bm.bmWidth - sgap, dy - SnrBar.cy - 2,
+					dx + (bm.bmWidth + SnrBar.cx) / 2 + bm.bmWidth - sgap, dy - 1);
+		dc->Rectangle(barRect);
+    //Draw l2 snr bar.
+		dc->SelectObject((isInUse) ? &(uiSetting2->inUseSnrBarBrush) : &(uiSetting2->noUseSnrBarBrush));
+		dc->SelectObject((isInUse) ? &(uiSetting2->inUseSnrBarPen) : &(uiSetting2->noUseSnrBarPen));
+		barRect.SetRect(dx + (bm.bmWidth - SnrBar.cx) / 2 + bm.bmWidth - sgap, dy - 1 - snrValue,
+			dx + (bm.bmWidth + SnrBar.cx) / 2 + bm.bmWidth - sgap, dy - 1);
+		dc->Rectangle(barRect);
+
+		//Draw l2 snr value text.
+		cr = (isInUse) ? uiSetting2->inUseBarTextColor : uiSetting2->noUseBarTextColor;
+		if(isInUse && snrValue < 15)
+		{
+			cr = RGB(10, 10, 10);
+		}
+		dc->SetTextColor(cr);
+		idText.Format("%d", snrValue);
+		barRect.SetRect(dx + (bm.bmWidth - SnrBar.cx) / 2 + bm.bmWidth - sgap, dy - 1 - SnrBar.cx ,
+					dx + (bm.bmWidth + SnrBar.cx) / 2 + bm.bmWidth - sgap, dy - 1);
+		dc->SelectObject(&(uiSetting2->barFont));	
+		dc->DrawText(idText, barRect, DT_VCENTER | DT_CENTER);
+	} 
+	startId += sateCount;
+
+	dc->SelectObject(oldFont);	
+	dc->SelectObject(oldBrush);	
+	dc->SelectObject(oldPen);	
+}
 //============================================================================
 CSnrBarChartBeidou::CSnrBarChartBeidou(void) 
 {

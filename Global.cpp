@@ -10,19 +10,6 @@ const double R2D = 57.2957795131;
 const COLORREF g_panelBkColor = RGB(250, 250, 250);
 Setting g_setting;
 
-U08 type;
-U08 attribute;
-U08 msgid;
-
-U08  slgga;	
-U08  slgsa;
-U08  slgsv;
-U08  slgll;
-U08  slrmc;
-U08  slvtg;
-U08  slzda;
-U08  slgns;
-
 HANDLE g_connectEvent = NULL;
 HANDLE g_closeEvent = NULL;
 CWaitReadLog* WRL = NULL;
@@ -823,6 +810,10 @@ static const S08 Nmea_quality_indicator[FIX_NMODE] = {
 		{
 			mode = StaticMode;
 		}
+    else
+    {
+			mode = PositionFix2d;
+    }
 	}
 	else if(gpInd=='N')
 	{

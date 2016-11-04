@@ -19,6 +19,7 @@ public:
 	CString fileName;
 	int sv;
 	U08 isGlonass;
+	U08 isDecode;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV ¤ä´©

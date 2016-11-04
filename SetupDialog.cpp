@@ -1,4 +1,4 @@
-// SetupDialog.cpp : 實作檔
+// SetupDialog.cpp
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "Pic_Scatter.h"
 #include "resource.h"
 
-// CSetupDialog 對話方塊
+// CSetupDialog
 IMPLEMENT_DYNAMIC(CSetupDialog, CDialog)
 
 CSetupDialog::CSetupDialog(CWnd* pParent /*=NULL*/)

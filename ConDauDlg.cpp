@@ -18,6 +18,7 @@ static S32 DeltaY;
 static S32 DeltaZ;
 static U32 Semi_Major_Axis;
 static U32 Inversed_Flattening;
+static U08 attribute;
 
 static EL el[24] = {
 	{0, 0},
@@ -302,7 +303,7 @@ UINT CigDauThread(LPVOID pParam)
 	messages[23]=checksum; //checksum right	    
 	messages[24]=(U08)0x0d;
 	messages[25]=(U08)0x0a;	
-	CGPSDlg::gpsDlg->ExecuteConfigureCommand(messages, 26, "Configure Datum Successful...");
+	CGPSDlg::gpsDlg->ExecuteConfigureCommand(messages, 26, "Configure Datum successfully");
 	return 0;
 }
 
@@ -362,7 +363,7 @@ void CConDauDlg::OnBnClickedOk()
 	EllipseList         = m_ellipsoidlist.GetCurSel();	
 	DeltaX              = datum[EllipseList].DeltaX;
 	DeltaY              = datum[EllipseList].DeltaY;
-    DeltaZ              = datum[EllipseList].DeltaZ;
+  DeltaZ              = datum[EllipseList].DeltaZ;
 	Semi_Major_Axis     = datum[EllipseList].Semi_Major_Axis;
 	EllipseIndex        = datum[EllipseList].EllipsoidIndex;
 	Inversed_Flattening = datum[EllipseList].Inversd_Flattening;
@@ -420,7 +421,7 @@ UINT CigDauThread_Continue(LPVOID pParam)
 		messages[24]=(U08)0x0d;
 		messages[25]=(U08)0x0a;	
 		CGPSDlg::gpsDlg->ClearQue();
-		CGPSDlg::gpsDlg->SendToTarget(messages, 26, "Configure Datum Successful...");	
+		CGPSDlg::gpsDlg->SendToTarget(messages, 26, "Configure Datum successfully", true);	
 	}
 
 	CGPSDlg::gpsDlg->SetMode(); 

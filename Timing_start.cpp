@@ -85,7 +85,7 @@ U08 CTiming_start::Ftp_File(char *remote_file, const char *local_file)
 #else
 		pConnect = sess.GetFtpConnection(sHost, sUsername, sPassword, 21, true);
 #endif
-		sprintf_s(text, textSize, "connect to %s successful!", sHost);
+		sprintf_s(text, textSize, "connect to %s successfully!", sHost);
 		m_text.SetWindowText(text);
 
 		sprintf_s(text, textSize, "Downloading %s from %s", remote_file,sHost);
@@ -203,7 +203,7 @@ U08 CTiming_start::set_eph_4()
 				//sprintf(msg,"set eph %d",)
 				for(j=0;j<RETRY_COUNT;j++)
 				{
-					ack = CGPSDlg::gpsDlg->SendToTarget(buff,SATELLITE_EPH_SIZE,"");
+					ack = CGPSDlg::gpsDlg->SendToTarget(buff, SATELLITE_EPH_SIZE, "", true);
 					if(ack == 1) break;
 				}
 				if(j == RETRY_COUNT)
@@ -233,7 +233,7 @@ U08 CTiming_start::gps_set_almanac(U08 *almanac)
 
 	CGPSDlg::gpsDlg->ClearQue();
 	int len = CGPSDlg::gpsDlg->SetMessage2(message, msg, sizeof(msg));
-	return CGPSDlg::gpsDlg->SendToTarget(message, len, "");
+	return CGPSDlg::gpsDlg->SendToTarget(message, len, "", true);
 }
 
 
@@ -309,7 +309,7 @@ U08 CTiming_start::target_warmstart(int year,U08 mon,U08 day,U08 hour,U08 minute
 
 	CGPSDlg::gpsDlg->ClearQue();
 	int len = CGPSDlg::gpsDlg->SetMessage2(messages, msg, sizeof(msg));
-	return CGPSDlg::gpsDlg->SendToTarget(messages, len,"System Restart Successful...");
+	return CGPSDlg::gpsDlg->SendToTarget(messages, len,"System Restart successfully", true);
 }
 
 U08 CTiming_start::device_warmstart()
@@ -336,32 +336,15 @@ UINT timing_thread(LPVOID param)
 {
 	U08 ret = 1;
 	char text[100];
-	//int buad = 0;
-	
 	pDlg_timing->m_progress.SetPos(0);
-
-	//buad = CGPSDlg::gpsDlg->GetBaudrate();
 	CGPSDlg::gpsDlg->SetPort(g_setting.boostBaudIndex, 2);
-/*
-	ret = pDlg_timing->set_almanac();
-	if(ret)
-	{
-		sprintf_s(text, sizeof(text),"set almanac successful.");
-	}
-	else
-	{
-		sprintf_s(text, sizeof(text), "set almanac fail.");
-	}
-	pDlg_timing->m_text.SetWindowText(text);
-	pDlg_timing->m_progress.SetPos(40);
-*/	
 	
 	if(ret)
 	{
 		ret = pDlg_timing->set_eph_4();
 		if(ret)
 		{
-			sprintf_s(text, sizeof(text), "set ephemeris successful.");
+			sprintf_s(text, sizeof(text), "set ephemeris successfully.");
 		}
 		else
 		{
@@ -377,7 +360,7 @@ UINT timing_thread(LPVOID param)
 		ret = pDlg_timing->device_warmstart();
 		if(ret)
 		{
-			sprintf_s(text, sizeof(text), "device warmstart successful.");
+			sprintf_s(text, sizeof(text), "device warmstart successfully.");
 		}
 		else
 		{
@@ -390,7 +373,7 @@ UINT timing_thread(LPVOID param)
 
 	if(ret)
 	{
-		sprintf_s(text, sizeof(text), "Timing setup successful.");
+		sprintf_s(text, sizeof(text), "Timing setup successfully.");
 		pDlg_timing->m_text.SetWindowText(text);
 	}
 

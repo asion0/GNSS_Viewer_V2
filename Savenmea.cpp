@@ -1,4 +1,4 @@
-// Savenmea.cpp : 實作檔
+// Savenmea.cpp
 //
 
 #include "stdafx.h"
@@ -7,11 +7,68 @@
 #include "GPSDlg.h"
 
 
-// CSaveNmea 對話方塊
+// CSaveNmea
+CString CSaveNmea::writeFilePath;	
 bool CSaveNmea::isNmeaFileOpen = false;	
 bool CSaveNmea::isPressNmeaCommend = false;
+bool CSaveNmea::isRestartAck = false;
 CSaveNmea* CSaveNmea::sthis = NULL;
-bool CSaveNmea::isBinaryMode = false;
+CSaveNmea::LogFunction CSaveNmea::logFunction = CSaveNmea::NMEA_Mode;
+
+static const int bufferSize = 64 * 1024;
+static const int bufferBlocks = 4;
+static BinaryData buffer[bufferBlocks];
+static U08* bufferPtr[bufferBlocks];
+static int writeIter = 0, flashIter = 0;
+static bool initialized = false;
+static DWORD writeTime = 0;
+static bool stopFlash = false;
+static CString strDbg("", 128);
+
+UINT AFX_CDECL FlashBufferThread(LPVOID param)
+{
+	DWORD t = 0;
+  while(!stopFlash)
+  {
+    if(writeIter == flashIter)
+    {
+      Sleep(100);
+      continue;
+    }
+
+    int flashLen = bufferPtr[flashIter] - buffer[flashIter].GetBuffer(0);
+    strDbg.Format("WriteFileB,%d,%d,%d\r\n", flashIter, writeIter, flashLen); ::OutputDebugString(strDbg);
+    t = ::GetTickCount();
+    if(CSaveNmea::sthis)
+    {
+      CSaveNmea::sthis->WriteFile(buffer[flashIter].GetBuffer(0), flashLen);
+      bufferPtr[flashIter] = buffer[flashIter].GetBuffer(0);
+      if(++flashIter == bufferBlocks)
+      {
+        flashIter = 0;
+      }
+      strDbg.Format("WriteFileA,%d\r\n", ::GetTickCount() - t); ::OutputDebugString(strDbg);
+    }
+  }
+  strDbg.Format("FlashBufferThread End\r\n"); ::OutputDebugString(strDbg);
+  return 0;
+}
+
+bool NextWritePtr()
+{
+  if(++writeIter == bufferBlocks)
+  {
+    writeIter = 0;
+  }
+
+  strDbg.Format("NextWritePtr,%d,%d,%d\r\n", flashIter, writeIter, ((writeIter - flashIter) + bufferBlocks) % bufferBlocks); ::OutputDebugString(strDbg);
+  if(flashIter == writeIter)
+  { //fatel error!
+    strDbg.Format("NextWritePtr fatel error!\r\n"); ::OutputDebugString(strDbg);
+    return false;
+  }
+  return true;
+}
 
 IMPLEMENT_DYNAMIC(CSaveNmea, CDialog)
 CSaveNmea::CSaveNmea(CWnd* pParent /*=NULL*/)
@@ -39,11 +96,49 @@ BEGIN_MESSAGE_MAP(CSaveNmea, CDialog)
 	ON_BN_CLICKED(IDC_CONTINUE, OnBnClickedContinue)
 	ON_BN_CLICKED(IDC_STOP, OnBnClickedStop)
 	ON_BN_CLICKED(IDC_CLOSE, OnBnClickedClose)
-	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 
-// CSaveNmea 訊息處理常式
+// CSaveNmea
+BOOL CSaveNmea::OnInitDialog()
+{
+	CDialog::OnInitDialog();
+  if(logFunction == HostLog_Mode)
+  {
+    GetDlgItem(IDC_CONTINUE)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_STOP)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_PROMPT)->SetWindowText("Restart does not ACK.");
+    GetDlgItem(IDC_PROMPT)->ShowWindow(SW_SHOW);
+
+    SetWindowText("Save HostLog");
+    GetDlgItem(IDC_FILENAME)->SetWindowText(writeFilePath);
+    GetDlgItem(IDC_FILESIZE)->SetWindowText("0 Bytes");
+    GetDlgItem(IDC_CONTINUE)->EnableWindow(FALSE);
+    GetDlgItem(IDC_STOP)->EnableWindow(TRUE);
+
+	  CTime t = CTime::GetCurrentTime();
+	  CString fileName;
+	  fileName.Format("Binary%02d-%02d-%02d_%02d%02d%02d.out", t.GetYear(), t.GetMonth(), t.GetDay(),
+		  t.GetHour(), t.GetMinute(), t.GetSecond());
+    
+    isRestartAck = FALSE;
+	  BinaryData binData(15);
+	  *(binData.GetBuffer(0)) = 1;
+	  *(binData.GetBuffer(1)) = 1;
+	  BinaryCommand binCmd(binData);
+	  CGPSDlg::gpsDlg->Restart(binCmd.GetBuffer(), FALSE);
+  }
+  else if(logFunction == Binary_Mode)
+  {
+
+  }
+  else if(logFunction == NMEA_Mode)
+  {
+
+  }
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
 void CSaveNmea::OnCancel()
 {
 	ShowWindow(SW_HIDE);
@@ -52,9 +147,6 @@ void CSaveNmea::OnCancel()
 void CSaveNmea::PostNcDestroy()
 {	
 	CDialog::PostNcDestroy();
-	//AfxGetMainWnd()->SendMessage(WM_USER_DIALOG_DESTROYED,0,0);
-//	delete this;
-//	CGPSDlg::gpsDlg->m_saveNmea = NULL;
 }
 
 void CSaveNmea::OnBnClickedContinue()
@@ -71,67 +163,116 @@ void CSaveNmea::OnBnClickedContinue()
 
 void CSaveNmea::OnBnClickedStop()
 {
-	//CGPSDlg::gpsDlg->stop_write_nmea();
-	//::PostMessage(m_notifyWindow, m_dialogEvent, StopWriteNmea, 1);
 	if(isNmeaFileOpen == true)
 	{
 		isNmeaFileOpen = false;	
 	}
-
 	GetDlgItem(IDC_CONTINUE)->EnableWindow(TRUE);
 	GetDlgItem(IDC_STOP)->EnableWindow(FALSE);
 }
 
+void CSaveNmea::StopSave() 
+{ 
+  isNmeaFileOpen = false;
+  NextWritePtr();
+  Sleep(500);
+  stopFlash = true;
+}
+
 void CSaveNmea::OnBnClickedClose()
 {
-	StopSave();
-	DestroyWindow();
-	::PostMessage(m_notifyWindow, m_dialogEvent, ClickClose, 0);
+  StopSave();
+
+  if(logFunction == HostLog_Mode)
+  {
+    OnOK();
+  }
+  else
+  {
+	  DestroyWindow();
+	  ::PostMessage(m_notifyWindow, m_dialogEvent, ClickClose, 0);
+  }
 }
 
 void CSaveNmea::Initialize(LPCSTR nmeaFile)
 {
+  switch(logFunction)
+  {
+  case NMEA_Mode:
+    SetWindowText("Save Message");
+    GetDlgItem(IDC_PROMPT)->ShowWindow(SW_HIDE);
+    break;
+  case Binary_Mode:
+    SetWindowText("Save Device Output");
+    GetDlgItem(IDC_PROMPT)->ShowWindow(SW_HIDE);
+    break;
+  case HostLog_Mode:
+    return;
+  }
+
 	GetDlgItem(IDC_FILENAME)->SetWindowText(nmeaFile);
 	GetDlgItem(IDC_FILESIZE)->SetWindowText("0 Bytes");
 	GetDlgItem(IDC_CONTINUE)->EnableWindow(FALSE);
 	GetDlgItem(IDC_STOP)->EnableWindow(TRUE);
 }
 
-void CSaveNmea::StartSave(LPCSTR title, LPCSTR filePath)
+
+void CSaveNmea::StartSave(LogFunction fun, LPCSTR title, LPCSTR filePath)
 {
-	m_filePath = filePath;
+  SetLogFunction(fun);
+	writeFilePath = filePath;
 	Initialize(title);
 
 	CFile f;
-	f.Open(m_filePath, CFile::modeReadWrite | CFile::modeCreate | CFile::shareDenyWrite);
+	f.Open(writeFilePath, CFile::modeReadWrite | CFile::modeCreate | CFile::shareDenyWrite);
 	CString nmeaFileTitle("\r\n");
 	f.Write(nmeaFileTitle, nmeaFileTitle.GetLength());
 	f.Close();
 
 	isNmeaFileOpen = true;	
+  CSerial::readCount = 0;
+
 	isPressNmeaCommend = true;
+  stopFlash = false;
+  ClearBuffer();
+  AfxBeginThread(FlashBufferThread, 0);
 }
 
-const int bufferSize = 32 * 1024;
-BinaryData buffer(bufferSize);
-U08* bufferPtr = buffer.GetBuffer(0);
-DWORD writeTime = 0;
+bool CSaveNmea::ClearBuffer()
+{
+  for(int i = 0; i < bufferBlocks; ++i)
+  {
+    if(!initialized)
+    {
+      buffer[i].Alloc(bufferSize);
+    }
+    bufferPtr[i] = buffer[i].GetBuffer(0);
+    writeIter = 0;
+    flashIter = 0;
+    writeTime = 0;
+  }
+  initialized = true;
+
+  return true;
+}
 
 bool CSaveNmea::SaveData(const void* p, int len)
 {
 	DWORD t = ::GetTickCount();
-	if((bufferPtr - buffer.GetBuffer(0) + len) > bufferSize)
+  strDbg.Format("SaveData,%d,%d,%02X %02X %02X %02X %02X %02X %02X\r\n", len, CSerial::readCount, ((U08*)p)[7], ((U08*)p)[8], ((U08*)p)[9], ((U08*)p)[10], ((U08*)p)[11], ((U08*)p)[12], ((U08*)p)[14]); ::OutputDebugString(strDbg);
+  CSerial::readCount = 0;
+
+	if((bufferPtr[writeIter] - buffer[writeIter].GetBuffer(0) + len) > bufferSize)
 	{
-		sthis->WriteFile(buffer.GetBuffer(0), bufferPtr - buffer.GetBuffer(0));
-		bufferPtr = buffer.GetBuffer(0);
+    strDbg.Format("SaveData1,%d,%d,%d\r\n", bufferPtr[writeIter] - buffer[writeIter].GetBuffer(0), len, bufferPtr[writeIter] - buffer[writeIter].GetBuffer(0) + len); ::OutputDebugString(strDbg);
+    NextWritePtr();
 	}
-	memcpy(bufferPtr, p, len);
-	bufferPtr += len;
-	
-	if(t - writeTime > 990)
-	{
-		sthis->WriteFile(buffer.GetBuffer(0), bufferPtr - buffer.GetBuffer(0));
-		bufferPtr = buffer.GetBuffer(0);
+	memcpy(bufferPtr[writeIter], p, len);
+	bufferPtr[writeIter] += len;
+	if((t < writeTime) || (t - writeTime > 500))
+  {
+    strDbg.Format("SaveData2,%d,%d,%d\r\n", t, writeTime, t - writeTime); ::OutputDebugString(strDbg);
+    NextWritePtr();
 		writeTime = t;
 	}
 	return true;
@@ -144,11 +285,16 @@ bool CSaveNmea::SaveText(const void* p, int len)
 		return false;
 	}
 	U08* buff = (U08*)p;
-	if(isBinaryMode)
+  if(logFunction != CSaveNmea::NMEA_Mode)
 	{
 		return false;
 	}
 	return SaveData(p, len);
+}
+
+void CSaveNmea::SetLogFunction(LogFunction f) 
+{ 
+  logFunction = f; 
 }
 
 bool CSaveNmea::SaveBinary(const void* p, int len)
@@ -157,46 +303,47 @@ bool CSaveNmea::SaveBinary(const void* p, int len)
 	{
 		return false;
 	}
-	U08* buff = (U08*)p;
-	if(!isBinaryMode && buff[0]==0xA0)
+	if(logFunction == NMEA_Mode)
 	{
 		return false;
-	}
-
-	if(isBinaryMode && buff[0]=='$')
-	{
-		return false;
-	}
-
-	if(isBinaryMode && len == 2 && buff[0]==0x0D && buff[0]==0x0A)
-	{
-		return false;
-	}
-
-	if(buff[len - 1] == 0)
-	{
-		len--;
 	}
 	return SaveData(p, len);
 }
 
 void CSaveNmea::WriteFile(void* p, int len)
 {
-	CString msg;
-	CFile f;
-	f.Open(m_filePath, CFile::modeReadWrite | CFile::shareDenyWrite);
-	f.SeekToEnd();
-	f.Write(p, len);
-	msg.Format("%d Bytes", f.GetLength());
-	f.Close();
-	GetDlgItem(IDC_FILESIZE)->SetWindowText(msg);
+  if(isRestartAck && CSaveNmea::sthis && CSaveNmea::sthis->GetSafeHwnd())
+  {
+    CSaveNmea::sthis->GetDlgItem(IDC_PROMPT)->SetWindowText("HostLog starts.");
+  }
+
+  CFileException fe;
+  try
+  {
+	  CString msg;
+	  CFile f;
+	  f.Open(writeFilePath, CFile::modeReadWrite | CFile::shareDenyWrite, &fe);
+	  f.SeekToEnd();
+	  f.Write(p, len);
+	  msg.Format("%d Bytes", f.GetLength());
+	  f.Close();
+    if(CSaveNmea::sthis && CSaveNmea::sthis->GetSafeHwnd())
+    {
+	    CSaveNmea::sthis->GetDlgItem(IDC_FILESIZE)->SetWindowText(msg);
+    }
+  }
+  catch(CFileException e)
+  {
+    CString s;
+    e.GetErrorMessage(s.GetBuffer(255), 255);
+  }
 }
 
-// CPlayNmea 對話方塊
+// CPlayNmea
 
 IMPLEMENT_DYNAMIC(CPlayNmea, CDialog)
 CPlayNmea::CPlayNmea(CWnd* pParent /*=NULL*/)
-	: CDialog(CPlayNmea::IDD, pParent)
+	: CDialog(IDD_PLAY_NMEA, pParent)
 {
 	m_dialogEvent = 0;
 	m_notifyWindow = NULL;
@@ -221,7 +368,7 @@ BEGIN_MESSAGE_MAP(CPlayNmea, CDialog)
 END_MESSAGE_MAP()
 
 
-// CPlayNmea 訊息處理常式
+// CPlayNmea 
 void CPlayNmea::OnCancel()
 {
 	ShowWindow(SW_HIDE);
@@ -280,7 +427,6 @@ int CPlayNmea::GetPlayInterval()
 
 void CPlayNmea::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
-	// TODO: 在此加入您的訊息處理常式程式碼和 (或) 呼叫預設值
 	if(pScrollBar->GetDlgCtrlID()==IDC_PLAY_INV_SL)
 	{
 
@@ -334,8 +480,8 @@ void CPlayNmea::OnBnClickedPlayControl()
 
 void CPlayNmea::OnBnClickedClose()
 {
-	::PostMessage(m_notifyWindow, m_dialogEvent, ClickClose, 0);
-	ShowWindow(SW_HIDE);
+  ::PostMessage(m_notifyWindow, m_dialogEvent, ClickClose, 0);
+  ShowWindow(SW_HIDE);
 }
 
 void CPlayNmea::OnBnClickedTimeSync()

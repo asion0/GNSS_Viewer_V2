@@ -246,7 +246,9 @@ bool NMEA::GSVProc(GPGSV& rgsv, LPCSTR pt, int len)
 	{
 		return false;
 	}
-	if(dot[0] != 6 || pt[len - 3] != '*')
+  //Modify for BDGSV2 20161017 Alex
+	//if(dot[0] != 6 || pt[len - 3] != '*')
+	if(!(dot[0] == 6 || dot[0] == 7 ) || pt[len - 3] != '*')
 	{
 		return 0;
 	}
@@ -571,6 +573,7 @@ NmeaType NMEA::MessageType(LPCSTR pt, int len)
 		{ "$BDGSV,", MSG_BDGSV },
 		{ "$GAGSV,", MSG_GAGSV },
 		{ "$GNGSV,", MSG_GNGSV },
+		{ "$BDGSV2,", MSG_BDGSV2 },
 
 		{ "$GPRMC,", MSG_RMC },
 		{ "$GNRMC,", MSG_RMC },
@@ -937,6 +940,45 @@ void NMEA::ShowBDGSVmsg(GPGSV& bdgsv, LPCSTR pt, int len)
 	}
 }
 
+#if(SUPPORT_L2_GSV2)
+void NMEA::ShowBDGSV2msg(GPGSV& bdgsv, LPCSTR pt, int len)
+{
+	firstGsaIn = false;
+	GPGSV tmpGsv = { 0 };
+	GSVProc(tmpGsv, pt, len);
+	bdgsv = tmpGsv;
+
+	if(1 == bdgsv.SequenceNum)
+	{
+		bdgsv_counter = 0;
+		memset(satellites2_bd, 0, sizeof(satellites2_bd));
+	}
+
+	for(int i=0; i<4; ++i)
+	{
+		if(0 == bdgsv.sates[i].SatelliteID)
+		{
+			continue;
+		}
+
+		satellites2_bd[bdgsv_counter].SatelliteID = bdgsv.sates[i].SatelliteID;
+		satellites2_bd[bdgsv_counter].Elevation = bdgsv.sates[i].Elevation;
+		satellites2_bd[bdgsv_counter].Azimuth = bdgsv.sates[i].Azimuth;
+		satellites2_bd[bdgsv_counter].SNR = bdgsv.sates[i].SNR;   
+		bdgsv_counter++;
+		if(bdgsv_counter >= MAX_SATELLITE)
+		{
+			bdgsv_counter = 0;
+		}
+	}
+
+	if(bdgsv.NumOfMessage == bdgsv.SequenceNum)
+	{
+		bdgsv_counter = 0;
+	}
+}
+#endif
+
 void NMEA::ShowGAGSVmsg(GPGSV& gagsv, LPCSTR pt, int len)
 {
 	firstGsaIn = false;
@@ -1053,5 +1095,8 @@ void NMEA::ClearSatellites()
 	memset(&satellites_gnss, 0, sizeof(satellites_gnss));
 	memset(&satellites_bd, 0, sizeof(satellites_bd));
 	memset(&satellites_ga, 0, sizeof(satellites_ga));
+#if(SUPPORT_L2_GSV2)
+	memset(&satellites2_bd, 0, sizeof(satellites2_bd));
+#endif
 }
 

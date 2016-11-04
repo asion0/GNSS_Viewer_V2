@@ -45,7 +45,7 @@ public:
 	POS_FIX_REC Last;
 	void PosFixAlgorithm();
 	void FULL_DATA();
-    void INC_DATA();
+  void INC_DATA();
 
 	FIX_FULL FixFull;
 	FIX_INC  FixInc;
@@ -64,20 +64,20 @@ public:
 
 	GPGLL msg_gpgll;
 
-    GPGSA msg_gpgsa;
+  GPGSA msg_gpgsa;
 	GPGSA msg_glgsa;
 	GPGSA msg_bdgsa;
 	GPGSA msg_gagsa;
-    GPGGA msg_gpgga;
+  GPGGA msg_gpgga;
 
-    GPGSV msg_gpgsv;
+  GPGSV msg_gpgsv;
 	GPGSV msg_glgsv;
-    GPGSV msg_bdgsv;
+  GPGSV msg_bdgsv;
 	GPGSV msg_gagsv;
 
-    GPZDA msg_gpzda;
-    GPRMC msg_gprmc;
-    GPVTG msg_gpvtg;
+  GPZDA msg_gpzda;
+  GPRMC msg_gprmc;
+  GPVTG msg_gpvtg;
 	NMEA nmea;
 
 	int GET_NMEA_SENTENCE(CFile&, U08*);

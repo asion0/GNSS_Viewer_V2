@@ -43,7 +43,7 @@ protected:
 	CPoint m_startBarChart;
 
 	virtual void ShowBoxChart(CDC *dc);
-	void DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGSA* gsa, 
+	virtual void DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGSA* gsa, 
 				GPGGA* gga, Satellite* sate);
 	void DrawSnrInRange(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, 
 				GPGSA* gsa, GPGGA* gga, Satellite* sate, int start, int end);
@@ -105,6 +105,34 @@ protected:
 	void DrawGpsSnr(CDC *dc, int& end);
 	void DrawGlonassSnr(CDC *dc, int& start);
 	bool CheckInUse2(int id);
+
+	afx_msg void OnPaint();
+
+	DECLARE_MESSAGE_MAP()
+};
+
+class CSnrBarChartBeidouL2 : public CSnrBarChart
+{
+public:
+	CSnrBarChartBeidouL2(void);
+	~CSnrBarChartBeidouL2(void);
+
+	void SetGsvData2(GPGSV* gsv) { gsvData2 = gsv; };
+	void SetGsaData2(GPGSA* gsa) { gsaData2 = gsa; };
+	void SetGgaData2(GPGGA* gga) { ggaData2 = gga; };
+	void SetSateStatus2(Satellite* sata) { sateStatus2 = sata; };
+	void SetUISetting2(UISetting* p) { uiSetting2 = p; }
+
+protected:
+	virtual void DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGSA* gsa, 
+				GPGGA* gga, Satellite* sate);
+  int GetGsv2Snr(int id);
+
+	GPGSV* gsvData2;
+	GPGSA* gsaData2;
+	GPGGA* ggaData2;
+	Satellite* sateStatus2;
+	UISetting* uiSetting2;
 
 	afx_msg void OnPaint();
 

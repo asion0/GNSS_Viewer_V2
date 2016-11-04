@@ -1,4 +1,4 @@
-// RawMeasmentOutputConvertDlg.cpp : 實作檔
+// RawMeasmentOutputConvertDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "GPS.h"
 
 #define UWM_RAW_PROGRESS		(WM_USER + 0x1039)
-// CRawMeasmentOutputConvertDlg 對話方塊
+// CRawMeasmentOutputConvertDlg
 const int MaxProgress = 1000;
 
 IMPLEMENT_DYNAMIC(CRawMeasmentOutputConvertDlg, CDialog)
@@ -35,8 +35,7 @@ BEGIN_MESSAGE_MAP(CRawMeasmentOutputConvertDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CRawMeasmentOutputConvertDlg 訊息處理常式
-
+// CRawMeasmentOutputConvertDlg
 void CRawMeasmentOutputConvertDlg::OnBnClickedBrowse()
 {
 	CFileDialog dlgFile(TRUE, _T("*.*"), NULL, 
@@ -60,8 +59,6 @@ void CRawMeasmentOutputConvertDlg::OnBnClickedBrowse()
 
 DWORD GetBinary(void *buffer, DWORD bufferSize, CFile& f)
 {	
-	//CFile f(strFile, CFile::modeRead);
-	
 	U08* bufferIter = (U08*)buffer;
 	DWORD totalSize = 0;
 	DWORD failCount = 10;
@@ -170,12 +167,17 @@ void BinaryProc(U08* buffer, int len, CFile& f)
 		//Show_Message(buffer,len);
 		ShowSubframe(buffer, true, &strOutput);
 		break;
+	case 0xE4:		// sub frame data
+    //20160913 Don't show SBAS subframe data, request from Ryan and Andrew
+#if(IS_DEBUG)
+		ShowSubframe(buffer);
+#endif
+		break;
+	case 0xE5:		// EXT_RAW_MEAS Extended Raw Measurement Data v.1 (0xE5) (Periodic)
+		ExtRawMeas(buffer);
+		break;
 	case BINMSG_ECEF_USER_PVT:
 		ShowBinaryOutput(buffer, true, &strOutput);
-//		ShowTime();
-		break;
-	case BINMSG_ERROR:
-//		add_msgtolist("Unknown: " + theApp.GetHexString(buffer, len));	
 		break;
 	default:
 //		add_msgtolist("Unknown: " + theApp.GetHexString(buffer, len));	
@@ -193,13 +195,11 @@ UINT RawMeasmentOutputConvertThread(LPVOID pParam)
 	CRawMeasmentOutputConvertDlg* pDlg = (CRawMeasmentOutputConvertDlg*)pParam;
 	int length = 0;	
 
-	static U08 buffer[1024] = {0};
+	static U08 buffer[COM_BUFFER_SIZE] = {0};
 	CFile f(pDlg->GetFilePath(), CFile::modeRead);
 	CString strOutput = pDlg->GetFilePath();
 	strOutput += ".txt";
 	CFile fo(strOutput, CFile::modeWrite | CFile::modeCreate);
-	//CProgressCtrl *p = (CProgressCtrl*)GetDlgItem(IDC_PROGRESS1);
-	//p->SetRange32(0, (int)f.GetLength());
 	ULONGLONG total = f.GetLength();
 	WPARAM progress = 0;
 	pDlg->PostMessage(UWM_RAW_PROGRESS, progress);
@@ -256,7 +256,6 @@ BOOL CRawMeasmentOutputConvertDlg::OnInitDialog()
 	OnBnClickedBrowse();
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 LRESULT CRawMeasmentOutputConvertDlg::OnRawProgress(WPARAM wParam, LPARAM lParam)
@@ -295,7 +294,6 @@ void CRawMeasmentOutputConvertDlg::UpdateConvertUI()
 
 void CRawMeasmentOutputConvertDlg::OnClose()
 {
-	// TODO: 在此加入您的訊息處理常式程式碼和 (或) 呼叫預設值
 	if(m_convertRunning)
 	{
 		::AfxMessageBox("Converter still running!");

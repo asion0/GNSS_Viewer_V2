@@ -10,6 +10,7 @@
 //CConSrePorDlg* pCSPDlg;
 static U08 comport;
 static U08 baudrate;
+static U08 attribute;
 
 UINT CigSrePorThread(LPVOID pParam)
 {   
@@ -30,7 +31,7 @@ UINT CigSrePorThread(LPVOID pParam)
 	messages[9]=(U08)0x0d;
 	messages[10]=(U08)0x0a;	
 	//for(int i=0;i<10;i++)	_cprintf("%x ",messages[i]);
-	bool b = CGPSDlg::gpsDlg->SendToTarget(messages, 11, "Configure Serial Port Successful...");	
+	bool b = CGPSDlg::gpsDlg->SendToTarget(messages, 11, "Configure Serial Port successfully", true);	
 	if(b)
 	{
 		CGPSDlg::gpsDlg->SetBaudrate(baudrate);	
@@ -103,8 +104,8 @@ void CConSrePorDlg::OnBnClickedOk()
     return;
   }
 
-	attribute= m_attribute.GetCurSel();
-	AfxBeginThread(CigSrePorThread,0);	
+	attribute = m_attribute.GetCurSel();
+	AfxBeginThread(CigSrePorThread, 0);	
 	OnOK();
 }
 

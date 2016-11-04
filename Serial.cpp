@@ -11,6 +11,7 @@ char *CSerial::debugPtr = debugBuffer;
 CString CSerial::debugWorking;
 bool CSerial::debugModeOn = false;
 CString CSerial::debugName("CSerial.log");
+DWORD CSerial::readCount = 0;
 inline void CSerial::AddDebugString(const char* dbg)
 {
 	if(!debugModeOn)
@@ -90,10 +91,8 @@ bool CSerial::OpenByBaudrate(LPCSTR comPort, int baudrate)
 	Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 	while(TRUE)
 	{
-		Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 		m_comDeviceHandle = CreateFile(portName, GENERIC_READ | GENERIC_WRITE,
 				0, NULL, OPEN_EXISTING,  0, 0);
-		Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 
 		if(m_comDeviceHandle==INVALID_HANDLE_VALUE)
 		{
@@ -111,11 +110,7 @@ bool CSerial::OpenByBaudrate(LPCSTR comPort, int baudrate)
 		}
 		break;
 	}
-	Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
-
 	ComInitial();
-	Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
-
 	if(!SetupComm(m_comDeviceHandle, InQueueSize, OutQueueSize))
 	{
 		return false;
@@ -127,18 +122,14 @@ bool CSerial::OpenByBaudrate(LPCSTR comPort, int baudrate)
 	{
 		return false;
 	}
-	Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 
-	if(!ResetPortNoDelay(baudrate))
+  if(!ResetPortNoDelay(baudrate))
 	{
 		return false;
 	}
 
-	Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 	m_OverlappedRead.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 	m_OverlappedWrite.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
 
 	m_isOpened = true;
 	CString t(comPort);
@@ -250,7 +241,9 @@ DWORD CSerial::ReadData(void* buffer, DWORD bufferSize, bool once)
 			}
 			return 0;
 		}
+    readCount += dwBytesDoRead;
 		bufferIter += dwBytesRead;
+    readCount += dwBytesRead;
 		totalSize += dwBytesRead;
 	} while(!once && totalSize < bufferSize);
 
@@ -435,6 +428,7 @@ DWORD CSerial::GetBinary(void *buffer, DWORD bufferSize, DWORD timeout)
 	U08* bufferIter = (U08*)buffer;
 	DWORD totalSize = 0;
 	ScopeTimer t;
+  int dbgMode = 0;
 	bool cmdHeaderCome = false;
 	while(totalSize < bufferSize - 1)
 	{ 
@@ -476,27 +470,52 @@ DWORD CSerial::GetBinary(void *buffer, DWORD bufferSize, DWORD timeout)
 				m_cancelTransmission = false;
 				return READ_ERROR;
 			}
-			BOOL bb = ReadFile(m_comDeviceHandle, bufferIter, 1, &dwBytesDoRead, 0);
+      BOOL bb = 0;
+      if(dbgMode)
+      {
+        static CFile* ff = NULL;
+        if(ff == NULL)
+        {
+          ff = new CFile("G:\\dbgIn.dat", CFile::modeRead);
+        }
+        if(ff)
+        {
+          dwBytesDoRead = ff->Read(bufferIter, 1);
+          bb = 1;
+        }
+        
+      }
+      else
+      {
+			  bb = ReadFile(m_comDeviceHandle, bufferIter, 1, &dwBytesDoRead, 0);
+      }
+
 			if(dwBytesDoRead == 0)
 			{	//Read fail.
 				DWORD dwErr = ::GetLastError();
 				continue;
 			}
-
+      readCount += dwBytesDoRead;
 			if(totalSize > 0)
 			{	//not first char.
-				if(!cmdHeaderCome && *bufferIter==0xa1 && *(bufferIter-1)==0xa0)
-				{
-					bufferIter -= totalSize;
-					*bufferIter = 0xa0; 
-					++bufferIter;
-					*bufferIter = 0xa1; 
-					++bufferIter;
-					totalSize = 2;
-					cmdHeaderCome = true;
-					continue;
-				}
-				else if(*bufferIter==0x0a && *(bufferIter-1)==0x0d)
+				//if(!cmdHeaderCome && *bufferIter==0xa1 && *(bufferIter-1)==0xa0)
+				//{
+				//	bufferIter -= totalSize;
+				//	*bufferIter = 0xa0; 
+				//	++bufferIter;
+				//	*bufferIter = 0xa1; 
+				//	++bufferIter;
+				//	totalSize = 2;
+				//	cmdHeaderCome = true;
+				//	continue;
+				//}
+				//else 
+        if(*bufferIter=='T' && *(bufferIter-1)=='S')
+        {
+          int a = 0;
+        }
+
+        if(*bufferIter==0x0a && *(bufferIter-1)==0x0d)
 				{
 					unsigned char *chk_ptr = bufferIter - totalSize;
 					
@@ -513,7 +532,7 @@ DWORD CSerial::GetBinary(void *buffer, DWORD bufferSize, DWORD timeout)
 					}
 					else
 					{
-						return totalSize;
+						return totalSize + 1;
 					}
 				}
 			}
@@ -584,6 +603,7 @@ DWORD CSerial::GetZenlaneMessage(void *buffer, DWORD bufferSize, DWORD timeout)
 				DWORD dwErr = ::GetLastError();
 				continue;
 			}
+      readCount += dwBytesDoRead;
 			if(totalSize > 0 && *bufferIter == 0)
 			{
 				return READ_ERROR;
@@ -701,7 +721,7 @@ DWORD CSerial::GetZenlaneResponse1(void *buffer, DWORD bufferSize, DWORD timeout
 				DWORD dwErr = ::GetLastError();
 				continue;
 			}
-
+      readCount += dwBytesDoRead;
 			if(totalSize > 0)
 			{	//not first char.
 				if(!cmdHeaderCome && *bufferIter==0xa1 && *(bufferIter-1)==0xa0)
@@ -754,11 +774,11 @@ DWORD CSerial::GetBinaryAck(void *buffer, DWORD bufferSize, DWORD timeout)
 {	
 	U08* bufferIter = (U08*)buffer;
 	DWORD totalSize = 0;
-	DWORD failCount = 10;
-	ScopeTimer clock;
+	ScopeTimer t;
+	bool cmdHeaderCome = false;
 	while(totalSize < bufferSize - 1)
 	{ 
-		if(clock.GetDuration() > timeout)
+		if(t.GetDuration() > timeout)
 		{
 			return READ_ERROR;
 		}
@@ -778,30 +798,35 @@ DWORD CSerial::GetBinaryAck(void *buffer, DWORD bufferSize, DWORD timeout)
 			DWORD err = ::GetLastError();
 			return -1;
 		}
-		if(comStat.cbInQue <= 0) 
+		if(comStat.cbInQue == 0) 
 		{
-			Sleep(10);
+			Sleep(2);
 			continue;
 		}
 
 		DWORD bytesinbuff = comStat.cbInQue;
 		while(bytesinbuff)
 		{
+			if(t.GetDuration() > timeout)
+			{
+				return READ_ERROR;
+			}
 			if(m_cancelTransmission)
 			{
 				m_cancelTransmission = false;
-				return -1;
+				return READ_ERROR;
 			}
 			BOOL bb = ReadFile(m_comDeviceHandle, bufferIter, 1, &dwBytesDoRead, 0);
-			if(dwBytesDoRead <= 0)
+			if(dwBytesDoRead == 0)
 			{	//Read fail.
 				DWORD dwErr = ::GetLastError();
 				continue;
 			}
+      readCount += dwBytesDoRead;
 
 			if(totalSize > 0)
 			{	//not first char.
-				if(*bufferIter==0xa1 && *(bufferIter-1)==0xa0)
+				if(!cmdHeaderCome && *bufferIter==0xa1 && *(bufferIter-1)==0xa0)
 				{
 					bufferIter -= totalSize;
 					*bufferIter = 0xa0; 
@@ -824,10 +849,11 @@ DWORD CSerial::GetBinaryAck(void *buffer, DWORD bufferSize, DWORD timeout)
 							*(bufferIter+1) = 0;
 							return totalSize + 1;
 						}
+						cmdHeaderCome = false;
 					}
 					else
 					{
-						return totalSize;
+						return totalSize + 1;
 					}
 				}
 			}
@@ -835,7 +861,6 @@ DWORD CSerial::GetBinaryAck(void *buffer, DWORD bufferSize, DWORD timeout)
 			if (totalSize >=  bufferSize - 1)
 			{	//Check 
 				*(bufferIter+1) = 0;
-
 				break;
 			}
 				
@@ -845,7 +870,6 @@ DWORD CSerial::GetBinaryAck(void *buffer, DWORD bufferSize, DWORD timeout)
 	} //while(total < size - 1)
 	return totalSize;
 }
-
 
 DWORD CSerial::GetBinaryBlock(void* buffer, DWORD bufferSize, DWORD blockSize)
 {	

@@ -66,6 +66,7 @@ public:
 	static void SaveDebugString(bool backup = false);
 	static void SetDebugModeOn(bool on = true) { debugModeOn = on; };
 	static void SetDebugName(LPCSTR name) { debugName = name; };
+	static DWORD readCount;
 	DWORD errorCode;
 protected:
 	static const int debugSize = 4 * 1024 * 1024;

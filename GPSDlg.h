@@ -7,7 +7,7 @@
 #include "DataLog.h"
 #include "NMEA.h"
 #include "ScanDlg.h"
-#include "CfgMsg.h"
+//#include "CfgMsg.h"
 #include "Savenmea.h"
 #include "Agps_config.h"
 #include "FTPDlg.h"
@@ -181,6 +181,7 @@ class CSerial;
 class CSnrBarChartGps;
 class CSnrBarChartGlonass;
 class CSnrBarChartGpsGlonass;
+class CSnrBarChartBeidouL2;
 class CSnrBarChartBeidou;
 class CSnrBarChartGalileo;
 class CSnrBarChart;
@@ -301,6 +302,7 @@ protected:
 
 	CBitmapButton m_CoorSwitch1Btn;
 	CBitmapButton m_CoorSwitch2Btn;
+	CBitmapButton m_AltitudeSwitchBtn;
 
 #if(_TAB_LAYOUT_)
 	CColorStatic m_date2;	
@@ -359,7 +361,10 @@ public:
 	Satellite sate_bd[MAX_SATELLITE];	
 	Satellite satecopy_ga[MAX_SATELLITE];
 	Satellite sate_ga[MAX_SATELLITE];	
-
+#if(SUPPORT_L2_GSV2)
+	Satellite satecopy2_bd[MAX_SATELLITE];
+	Satellite sate2_bd[MAX_SATELLITE];	
+#endif
 protected:
 	CBitmapButton m_SetOriginBtn;	
 	CBitmapButton m_ClearBtn;		
@@ -428,6 +433,9 @@ public:
 	//for Beidou
 	GPGSA m_bdgsaMsg, m_bdgsaMsgCopy, m_bdgsaMsgCopy1;
 	GPGSV m_bdgsvMsg, m_bdgsvMsgCopy, m_bdgsvMsgCopy1;
+#if(SUPPORT_L2_GSV2)
+	GPGSV m_bdgsv2Msg, m_bdgsv2MsgCopy, m_bdgsv2MsgCopy1;
+#endif
 	//for Galileo
 	GPGSA m_gagsaMsg, m_gagsaMsgCopy, m_gagsaMsgCopy1;
 	GPGSV m_gagsvMsg, m_gagsvMsgCopy, m_gagsvMsgCopy1;
@@ -484,7 +492,7 @@ public:
 	void LogConfigure();
 	void MSG_PROC();
 	void QueryMsg(unsigned char*);
-	void Restart(U08*);
+	void Restart(U08* messages, BOOL restoreConnection = TRUE);
 	void ScanGPS();
 	void ScanGPS1();
 	void ScanGPS2();
@@ -556,7 +564,7 @@ public:
 	int GetCoordinateSel() { return m_coordinate.GetCurSel(); }
 	int GetScaleSel() { return m_scale.GetCurSel(); }
 	int GetMapScaleSel() { return m_mapscale.GetCurSel(); }
-	bool IsFixed() { return ::IsFixed(m_gpggaMsg.GPSQualityIndicator); }
+	bool IsFixed() { return ::IsFixed(m_gpggaMsg.GPSQualityIndicator) || ::IsFixed(m_gprmcMsg.ModeIndicator); }
 	void SetNmeaUpdated(bool b);
 	bool SetFirstDataIn(bool b);
 	void SendRestartCommand(int mode);		
@@ -728,6 +736,7 @@ public:
 	CmdErrorCode QueryGeofenceEx(CmdExeMode nMode, void* outputData);
 	CmdErrorCode ReCalcuteGlonassIfb(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryBinaryMeasurementDataOut(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryRegister(CmdExeMode nMode, void* outputData);
 
   U08 m_nGeofecingNo;
 
@@ -770,7 +779,7 @@ protected:
 	CmdErrorCode QueryParameterSearchEngineNumber(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryAgpsStatus(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDatalogLogStatus(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryRegister(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryGetAlmanac(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPositionFixNavigationMask(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryChannelDoppler(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryNmeaIntervalV8(CmdExeMode nMode, void* outputData);
@@ -791,6 +800,9 @@ protected:
 	CmdErrorCode GpsdoEnterDownloadHigh(CmdExeMode nMode, void* outputData);
 	CmdErrorCode GpsdoEnterUart(CmdExeMode nMode, void* outputData);
 	CmdErrorCode GpsdoLeaveUart(CmdExeMode nMode, void* outputData);
+	CmdErrorCode InsdrEnterUart(CmdExeMode nMode, void* outputData);
+	CmdErrorCode InsdrEnterDownload(CmdExeMode nMode, void* outputData);
+	CmdErrorCode InsdrLeaveUart(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryNavigationModeV8(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGnssBootStatus(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDrMultiHz(CmdExeMode nMode, void* outputData);
@@ -912,6 +924,8 @@ protected:
 	afx_msg void OnBinaryConfigurepowermode();
 	afx_msg void OnBinaryConfiguremultipath();
 	//afx_msg void OnWaasWaas();
+	afx_msg void OnShowGpsAlmanac();
+	afx_msg void OnDecodeGpsAlmanac();
 	afx_msg void OnGetGpsAlmanac();
 	afx_msg void OnBinaryQuerybinarymsginterval();
 	afx_msg void OnBinaryResetodometer();
@@ -998,6 +1012,7 @@ protected:
 	afx_msg void OnConfigRefTimeSyncToGpsTime();
 	afx_msg void OnNmeaChecksumCalculator();
 	afx_msg void OnBinaryChecksumCalculator();
+	afx_msg void OnHostLog();
 	afx_msg void OnTestExternalSrec();
 	afx_msg void OnIqPlot();
 	afx_msg void OnReadMemToFile();
@@ -1032,9 +1047,15 @@ protected:
 	//afx_msg void OnStnClickedRtkInfoT();
 	afx_msg void OnStnClickedRtkInfoB();
 	afx_msg void OnBnClickedCoorSwitch();
+	afx_msg void OnBnClickedAltitudeSwitch();
 	afx_msg void OnConfigPsti030();
 	afx_msg void OnConfigPsti032();
 	afx_msg void OnConfigPsti004();
+	afx_msg void OnRtkOnOffGpsSv();
+	afx_msg void OnRtkOnOffSbasQzssSv();
+	afx_msg void OnRtkOnOffGlonassSv();
+	afx_msg void OnRtkOnOffBeidouSv();
+	afx_msg void OnQueryRtkReferencePosition();
 
 	afx_msg void OnQueryPositionRate()
 	{ GenericQuery(&CGPSDlg::QueryPositionRate); }
@@ -1131,6 +1152,12 @@ protected:
 	{ GenericQuery(&CGPSDlg::GpsdoEnterUart); }
 	afx_msg void OnGpsdoLeaveUart()
 	{ GenericQuery(&CGPSDlg::GpsdoLeaveUart); }
+  afx_msg void OnInsdrEnterUart()
+	{ GenericQuery(&CGPSDlg::InsdrEnterUart); }
+	afx_msg void OnInsdrEnterDownload()
+	{ GenericQuery(&CGPSDlg::InsdrEnterDownload); }
+	afx_msg void OnInsdrLeaveUart()
+	{ GenericQuery(&CGPSDlg::InsdrLeaveUart); }
 	afx_msg void OnQueryNavigationModeV8()
 	{ GenericQuery(&CGPSDlg::QueryNavigationModeV8); }
 	afx_msg void OnQueryGnssBootStatus()
@@ -1231,12 +1258,20 @@ protected:
 		DegreeMinuteSecond,
 	};
 
+	enum AltitudeFormat
+	{
+		Altitude = 0,
+		EllipsoidHeight,
+	};
+
 	BOOL m_copyLatLon;
 	CoorFormat m_coorFormat;
+	AltitudeFormat m_altFormat;
 	void Show_EarthChart(CDC *dc);
-	void DrawGnssSatellite(CDC* dc, int id, int centerX, int centerY);
-	void DrawBdSatellite(CDC* dc, int id, int centerX, int centerY);
-	void DrawGaSatellite(CDC* dc, int id, int centerX, int centerY);
+
+	//void DrawGnssSatellite(CDC* dc, int id, int centerX, int centerY);
+	//void DrawBdSatellite(CDC* dc, int id, int centerX, int centerY);
+	//void DrawGaSatellite(CDC* dc, int id, int centerX, int centerY);
 
 	void parse_sti_03_message(const char *buff,int len); /* for timing module */
 	void parse_sti_04_001_message(const char *buff, int len); /* for timing module */
@@ -1259,6 +1294,7 @@ protected:
 	//	void Config_silab_baudrate(HANDLE *m_DeviceHandle);
 	//	void Config_silab_baudrate_flash(HANDLE *m_DeviceHandle);
 	void DoCommonConfig(CCommonConfigDlg* dlg);
+	void DoCommonConfigNoDisconnect(CCommonConfigDlg* dlg);
 	void DoCommonConfigDirect(CCommonConfigDlg* dlg, int type);
 	//Functions for combain GPS / GNSS Viewer UI Layout.
 	int CreateSubMenu(const HMENU hMenu, const MenuItemEntry* menuItemTable, LPCSTR pszSubMenuText);
@@ -1285,9 +1321,14 @@ protected:
 	CLabel m_wgs84_x,m_wgs84_y,m_wgs84_z;
 	CLabel m_enu_e,m_enu_n,m_enu_u;
 	CSnrBarChartGpsGlonass* gpsSnrBar;
-	//	CSnrBarChartGlonass* gnssSnrBar;
-	CSnrBarChartBeidou* bdSnrBar;
+	CSnrBarChartGlonass* gnssSnrBar;
 	CSnrBarChartGalileo* gaSnrBar;
+
+#if(SUPPORT_L2_GSV2)
+	CSnrBarChartBeidouL2* bdSnrBar;
+#else
+	CSnrBarChartBeidou* bdSnrBar;
+#endif
 	CPic_Scatter* pic_scatter;
 	CPic_Earth* pic_earth;
 	CLabel m_fixed_status;

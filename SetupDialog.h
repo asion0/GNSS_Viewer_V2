@@ -1,7 +1,7 @@
 #pragma once
 
 
-// CSetupDialog 對話方塊
+// CSetupDialog 
 struct Setting;
 
 class CSetupDialog : public CDialog
@@ -9,17 +9,15 @@ class CSetupDialog : public CDialog
 	DECLARE_DYNAMIC(CSetupDialog)
 
 public:
-	CSetupDialog(CWnd* pParent = NULL);   // 標準建構函式
+	CSetupDialog(CWnd* pParent = NULL);   //
 	virtual ~CSetupDialog();
-
-// 對話方塊資料
 //	enum { IDD = IDD_SETUP };
 
 	void SetSetting(Setting* p)
 	{ setting = p; }
 protected:
 	Setting* setting;
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
 public:

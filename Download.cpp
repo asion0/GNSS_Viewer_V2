@@ -373,12 +373,12 @@ bool CGPSDlg::FirmwareUpdate(const CString& strFwPath)
 		{
 			if(res == RETURN_NO_ERROR)
 			{
-				add_msgtolist("Software Image Download Successful...");	
+				add_msgtolist("Software Image Download successfully");	
 				isSuccessful = true;
 			}
 			else
 			{
-				add_msgtolist("Software Image Download Failed...");
+				add_msgtolist("Software Image Download fails!");
 			}
 			break;
 		}
@@ -1242,7 +1242,7 @@ bool CGPSDlg::DownloadLoader()
 		msg[6] = (U08)m_nDownloadBufferIdx;
 		int len = SetMessage(msg, sizeof(msg));
 
-		bool b = SendToTarget(m_inputMsg, len, "Send upload loader Successful");
+		bool b = SendToTarget(m_inputMsg, len, "Send upload loader successfully", true);
 		//bool b = false;
 		if(!b)
 		{
@@ -1585,7 +1585,7 @@ bool CGPSDlg::Download()
 				}
 
 				int len = SetMessage(msg, cmdSize);
-				if(!SendToTarget(CGPSDlg::m_inputMsg, len, "Loader start..."))
+				if(!SendToTarget(CGPSDlg::m_inputMsg, len, "Loader start...", true))
 				{
 					isSuccessful = false;
 				}
@@ -1827,7 +1827,7 @@ bool CGPSDlg::Download2()
 		cmdSize = 6;
 
 		int len = SetMessage(msg, cmdSize);
-		if(!SendToTarget(CGPSDlg::m_inputMsg, len, "Loader start..."))
+		if(!SendToTarget(CGPSDlg::m_inputMsg, len, "Loader start...", true))
 		{
 			isSuccessful = false;
 		}
@@ -1928,7 +1928,7 @@ bool CGPSDlg::Download3()
 	*cmd.GetBuffer(2) = m_nSlaveSourceBaud;
 	*cmd.GetBuffer(3) = 0x02;
 	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Configure master COM1 successful...", false);
+	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Configure master COM1 successfully", false);
 	Sleep(500);	//Wait for master firmware boot.
 
 	//In : a0 a1 00 04 7a 08 01 01 72 0d 0a 
@@ -1937,7 +1937,7 @@ bool CGPSDlg::Download3()
 	*cmd.GetBuffer(2) = 0x01;
 	*cmd.GetBuffer(3) = 0x01;
 	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Enter UART passthrough successful...", false);
+	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Enter UART passthrough successfully", false);
 	Sleep(500);	//Wait for master firmware boot.
 
 	//In : a0 a1 00 04 05 00 06 00 03 0d 0a 
@@ -1946,7 +1946,7 @@ bool CGPSDlg::Download3()
 	*cmd.GetBuffer(2) = 0x06;		//Slave download baud rate is 230400 bps
 	*cmd.GetBuffer(3) = 0x02;
 	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Configure slave COM0 successful...", false);
+	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Configure slave COM0 successfully", false);
 	Sleep(500);	//Wait for master firmware boot.
 
 	//In : a0 a1 00 04 7a 08 01 00 73 0d 0a 
@@ -1955,7 +1955,7 @@ bool CGPSDlg::Download3()
 	*cmd.GetBuffer(2) = 0x01;
 	*cmd.GetBuffer(3) = 0x00;
 	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Leave UART passthrough successful...", false);
+	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Leave UART passthrough successfully", false);
 	Sleep(500);	//Wait for master firmware boot.
 
 	//In : a0 a1 00 04 05 01 06 00 02 0d 0a 
@@ -1964,7 +1964,7 @@ bool CGPSDlg::Download3()
 	*cmd.GetBuffer(2) = 0x06;		//Slave download baud rate is 230400 bps
 	*cmd.GetBuffer(3) = 0x02;
 	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Configure master COM1 successful...", false);
+	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Configure master COM1 successfully", false);
 	Sleep(500);	//Wait for master firmware boot.
 
 	//In : a0 a1 00 04 05 00 06 00 02 0d 0a 
@@ -1973,7 +1973,7 @@ bool CGPSDlg::Download3()
 	*cmd.GetBuffer(2) = 0x06;		//Slave download baud rate is 230400 bps
 	*cmd.GetBuffer(3) = 0x02;
 	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Configure master COM0 successful...", false);
+	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Configure master COM0 successfully", false);
 	Sleep(500);	//Wait for master firmware boot.
 
 	//In : a0 a1 00 04 7a 08 01 03 70 0d 0a 
@@ -1982,7 +1982,7 @@ bool CGPSDlg::Download3()
 	*cmd.GetBuffer(2) = 0x01;
 	*cmd.GetBuffer(3) = 0x03;
 	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Enter slave download successful...", false);
+	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Enter slave download successfully", false);
 	Sleep(500);	//Wait for master firmware boot.
 
 	//Download slave
@@ -1997,7 +1997,7 @@ bool CGPSDlg::Download3()
 	*cmd.GetBuffer(2) = 0x01;
 	*cmd.GetBuffer(3) = 0x02;
 	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Leave slave download successful...", false);
+	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Leave slave download successfully", false);
 	Sleep(500);	//Wait for master firmware boot.
 
 	//In : a0 a1 00 04 05 01 05 00 02 0d 0a 
@@ -2006,7 +2006,7 @@ bool CGPSDlg::Download3()
 	*cmd.GetBuffer(2) = m_nSlaveTargetBaud;		//Slave target baud rate
 	*cmd.GetBuffer(3) = 0x00;
 	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Configure master COM1 successful...", false);
+	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Configure master COM1 successfully", false);
 	Sleep(500);	//Wait for master firmware boot.
 
 

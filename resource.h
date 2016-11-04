@@ -232,6 +232,9 @@
 #define IDB_TIME2                       491
 #define IDB_DATE2                       492
 #define IDR_UPGRADE_DOWNLOAD_PROM2      493
+#define IDD_HOSTLOG                     494
+#define IDB_ALTITUDE2                   495
+#define IDD_CFG_RTK_REF_POSITION        496
 #define IDC_CONNECT                     1000
 #define IDC_CLOSE                       1001
 #define IDC_SETORIGIN                   1002
@@ -499,13 +502,11 @@
 #define IDC_ALMANAC_SV                  1144
 #define IDC_CHECK75                     1144
 #define IDC_ALMANAC_BROWSE              1145
-#define IDC_CHECK77                     1145
 #define IDC_1PPS_SET1                   1146
 #define IDC_CHECK78                     1146
 #define IDC_1PPS_SET2                   1147
 #define IDC_CHECK76                     1147
 #define IDC_1PPS_SET3                   1148
-#define IDC_CHECK79                     1148
 #define IDC_3DKML                       1148
 #define IDC_3DKML2                      1149
 #define IDC_POINTLIST                   1149
@@ -758,6 +759,7 @@
 #define IDC_RAW_MEAS                    1306
 #define IDC_SLIDER5                     1307
 #define IDC_SV_CH                       1307
+#define IDC_FILESIZE2                   1307
 #define IDC_SLIDER6                     1308
 #define IDC_NMEA_FILE                   1308
 #define IDC_RCV_STATUS                  1308
@@ -842,7 +844,6 @@
 #define ID_GO                           1341
 #define IDC_STATUS                      1342
 #define IDC_KERNELVER                   1343
-#define IDC_                            1344
 #define IDC_SWVER                       1344
 #define IDC_REV                         1345
 #define IDC_CRC                         1346
@@ -931,8 +932,11 @@
 #define IDC_RTK_INFO_B                  1407
 #define IDC_UNIQUE_ID                   1407
 #define IDC_EAST_PROJECTION             1408
+#define IDC_FILE_TITLE                  1408
 #define IDC_BASELINE_LENGTH             1409
+#define IDC_CHECK_ALL                   1409
 #define IDC_NORTH_PROJECTION            1410
+#define IDC_UNCHECK_ALL                 1410
 #define IDC_BASELINE_COURSE             1411
 #define IDC_UP_PROJECTION               1412
 #define IDC_TIME2                       1413
@@ -949,6 +953,9 @@
 #define IDD_CFG_VERY_LOW                1424
 #define IDD_CFG_DOFUN_UNIQUE_ID         1425
 #define IDD_CFG_PSTI_INTERVAL           1426
+#define IDD_RTK_ONOFF_SV                1427
+#define IDC_ALT_SWITCH                  1428
+#define IDC_ALTITUDE2_T                 1429
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_SYSTEM_RESTART               32811
@@ -1164,6 +1171,17 @@
 #define ID_QUERY_PSTI004                33133
 #define ID_CONFIG_PSTI004               33134
 #define ID_RECALC_GLONASS_IFB           33135
+#define ID_DECODE_GP_ALMANAC            33136
+#define ID_SHOW_GP_ALMANAC              33137
+#define ID_INSDR_ENTER_UART             33138
+#define ID_INSDR_ENTER_DWN              33139
+#define ID_INSDR_LEAVE_UART             33140
+#define ID_RTK_ONOFF_GP_SV              33141
+#define ID_RTK_ONOFF_SQ_SV              33142
+#define ID_RTK_ONOFF_GL_SV              33143
+#define ID_RTK_ONOFF_BD_SV              33144
+#define ID_HOSTLOG                      33145
+#define ID_QUERY_RTK_REF_POSITION       33146
 
 // Next default values for new objects
 // 
@@ -1171,7 +1189,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        478
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1408
+#define _APS_NEXT_CONTROL_VALUE         1411
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

@@ -111,7 +111,7 @@ UINT ConfigNmeaIntervalThread(LPVOID pParam)
 	messages[19] = checksum;
 	messages[20] = (U08)0x0d;
 	messages[21] = (U08)0x0a;
-	CGPSDlg::gpsDlg->ExecuteConfigureCommand(messages, 22, "Configure NMEA Successful...");
+	CGPSDlg::gpsDlg->ExecuteConfigureCommand(messages, 22, "Configure NMEA Message Interval successfully.");
 
 	return 0;
 }
@@ -143,7 +143,7 @@ UINT ConfigNmeaInterval2Thread(LPVOID pParam)
 	messages[13] = checksum;
 	messages[14] = (U08)0x0d;
 	messages[15] = (U08)0x0a;
-	CGPSDlg::gpsDlg->ExecuteConfigureCommand(messages, 16, "Configure NMEA Successful...");
+	CGPSDlg::gpsDlg->ExecuteConfigureCommand(messages, 16, "Configure NMEA Message Interval successfully.");
 
 	return 0;
 }

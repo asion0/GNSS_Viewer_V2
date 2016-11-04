@@ -69,23 +69,32 @@ void CPic_Earth::Refresh_EarthChart(CDC *dc)
 	if(!firstFixed && CGPSDlg::gpsDlg->IsFixed())
 	{
 		double lon = CGPSDlg::gpsDlg->m_gpggaMsg.Longitude / 100.0;
-		lon *= (CGPSDlg::gpsDlg->m_gpggaMsg.Longitude_E_W=='W') ? -1.0 : 1.0;
+    char lon_ew = CGPSDlg::gpsDlg->m_gpggaMsg.Longitude_E_W;
+    char lat_ns = CGPSDlg::gpsDlg->m_gpggaMsg.Latitude_N_S;
+    if(lon == 0.0 && lon_ew == 0 && lat_ns == 0)
+    {
+		  lon = CGPSDlg::gpsDlg->m_gprmcMsg.Longitude / 100.0;
+      lon_ew = CGPSDlg::gpsDlg->m_gprmcMsg.Longitude_E_W;
+      lat_ns = CGPSDlg::gpsDlg->m_gprmcMsg.Latitude_N_S;
+    }
+
+		lon *= (lon_ew == 'W') ? -1.0 : 1.0;
 		lon += 180.0;
 		if(lon > 11 && lon < 142)	//Americas
 		{
-			usedEarth = (CGPSDlg::gpsDlg->m_gpggaMsg.Latitude_N_S=='N') ? 4 : 5;
+			usedEarth = (lat_ns == 'N') ? 4 : 5;
 			firstFixed = true;
 			g_setting.earthBitmap = usedEarth;
 		}
 		else if(lon > 142.0 && lon < 251.0)	//Europe
 		{
-			usedEarth = (CGPSDlg::gpsDlg->m_gpggaMsg.Latitude_N_S=='N') ? 2 : 3;
+			usedEarth = (lat_ns == 'N') ? 2 : 3;
 			firstFixed = true;
 			g_setting.earthBitmap = usedEarth;
 		}
 		else
 		{
-			usedEarth = (CGPSDlg::gpsDlg->m_gpggaMsg.Latitude_N_S=='N') ? 0 : 1;
+			usedEarth = (lat_ns == 'N') ? 0 : 1;
 			firstFixed = true;
 			g_setting.earthBitmap = usedEarth;
 		}
@@ -104,10 +113,8 @@ void CPic_Earth::Refresh_EarthChart(CDC *dc)
 	POINT pts[] = { {0, 0}, {312, 0}, {312, 170}, {0, 170}, {245, 170}, {245, 190}, {232, 190}, {232, 247}, {0, 247} };
 	const int ptsSize = sizeof(pts) / sizeof(pts[0]);
 
-
 	rgn.CreatePolygonRgn(pts, ptsSize, ALTERNATE);
 	dc->SelectClipRgn(&rgn);
-	
 
 	CMemDC memDC(*dc, rc);
 	img.Draw(memDC.GetDC().GetSafeHdc(), 0, 0);
@@ -170,7 +177,8 @@ void CPic_Earth::DrawEarthSate(CDC* dc, UISetting* s, Satellite* sate, GPGSV* gs
 		x += centerX;
 		y += centerY;	
 
-		bool isInUse = IsFixed(qtyInd) && !CheckInUse(id, gsa);
+		//bool isInUse = IsFixed(qtyInd) && !CheckInUse(id, gsa);
+		bool isInUse = !CheckInUse(id, gsa);
 		CSnrBarChart::DrawBarChartId(dc, s, isInUse, x, y, id, true);
 	}
 }

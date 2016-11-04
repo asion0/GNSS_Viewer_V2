@@ -53,7 +53,7 @@ UINT ConfigEricssonIntervalThread(LPVOID pParam)
 	messages[12] = checksum;
 	messages[13] = (U08)0x0d;
 	messages[14] = (U08)0x0a;
-	CGPSDlg::gpsDlg->ExecuteConfigureCommand(messages, 15, "Configure Ericsson Sentence Successful...");
+	CGPSDlg::gpsDlg->ExecuteConfigureCommand(messages, 15, "Configure Ericsson Sentence successfully");
 
 	return 0;
 }
@@ -335,7 +335,7 @@ void ConfigSerialNumberDlg::SendCommand()
 	cmd.SetString(5, (LPCSTR)strSn, strSn.GetLength());
 
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(cmd.GetBuffer(), cmd.Size(), 
-		"Configure Serial Number Successful...");
+		"Configure Serial Number successfully");
 }
 void ConfigSerialNumberDlg::OnEnChangeSn()
 {

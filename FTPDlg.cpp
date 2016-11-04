@@ -162,7 +162,7 @@ bool CFTPDlg::GetFtpFile()
 #else
 		CFtpConnection* pConnect = sess.GetFtpConnection(sHost, sUsername, sPassword, nPort, true);
 #endif
-		strMsg.Format("connect to %s successful!", sHost);
+		strMsg.Format("connect to %s successfully!", sHost);
 		m_text.SetWindowText(strMsg);
 
 		CString strLocalName, strRemotePath;
@@ -297,7 +297,7 @@ bool CFTPDlg::UploadSrec()
 	U08 msg[1];
 	msg[0] = 0x35;		//msgid
 	int len = CGPSDlg::gpsDlg->SetMessage(msg, sizeof(msg));
-	return CGPSDlg::gpsDlg->SendToTarget(CGPSDlg::m_inputMsg, len, "");
+	return CGPSDlg::gpsDlg->SendToTarget(CGPSDlg::m_inputMsg, len, "", true);
 }
 
 bool CFTPDlg::UploadBin()
@@ -391,7 +391,7 @@ void CFTPDlg::DoRomAgps()
 	for(int i=0; i<32; ++i)
 	{
 		m_progress.SetPos((int)((i + 1)* 100 / 32.0));
-		if(!CGPSDlg::gpsDlg->SendToTarget(eph4Data.GetBuffer(i*94), 94, ""))
+		if(!CGPSDlg::gpsDlg->SendToTarget(eph4Data.GetBuffer(i*94), 94, "", true))
 		{
 			strMsg.Format("SendToTarget fail!", m_ephFileName);
 			::AfxMessageBox(strMsg);
@@ -408,7 +408,7 @@ void CFTPDlg::GetAllDatFileSrec()
 	m_text.SetWindowText("Erase flash of target");
 	if(!UploadSrec())
 	{
-		m_text.SetWindowText("Setting predicted ephemeris data is fail.");
+		m_text.SetWindowText("Setting predicted ephemeris data fails!");
 		CGPSDlg::gpsDlg->BoostBaudrate(TRUE);
 		return; 
 	}
@@ -417,12 +417,12 @@ void CFTPDlg::GetAllDatFileSrec()
 	if(UploadBin())
 	{
 		m_progress.SetPos(100);
-		m_text.SetWindowText("Setting predicted ephemeris data is successful.");
+		m_text.SetWindowText("Setting predicted ephemeris data successfully.");
 		m_closeBtn.EnableWindow(TRUE);
 	}
 	else
 	{
-		::AfxMessageBox("Upload AGPS data fail!");
+		::AfxMessageBox("Upload AGPS data fails!");
 	}
 	CGPSDlg::gpsDlg->BoostBaudrate(TRUE);
 }

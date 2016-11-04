@@ -1,4 +1,4 @@
-// VerifyFwDlg.cpp : 實作檔
+// VerifyFwDlg.cpp
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "GPS.h"
 
 
-// CVerifyFwDlg 對話方塊
+// CVerifyFwDlg 
 
 IMPLEMENT_DYNAMIC(CVerifyFwDlg, CDialog)
 
@@ -32,7 +32,7 @@ BEGIN_MESSAGE_MAP(CVerifyFwDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CVerifyFwDlg 訊息處理常式
+// CVerifyFwDlg
 bool CVerifyFwDlg::AutoFill(const CString& s)
 {
 	CStringArray sa, sb;
@@ -126,5 +126,5 @@ void CVerifyFwDlg::OnBnClickedSelect()
 
 void CVerifyFwDlg::OnBnClickedGo()
 {
-	// TODO: 在此加入控制項告知處理常式程式碼
+
 }

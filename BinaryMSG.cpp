@@ -3,112 +3,107 @@
 #include "BinaryMSG.h"
 #include "GPSDlg.h"
 
+struct CHANNEL_DATA
+{
+	U08 prn;
+	U08 cn0;
+	D64 pseudo_range;
+	D64 carrier_cycle;
+	F32 doppler_freq;
+	U08 indicator;
+};
+
+struct ExtMeasChannelData
+{
+	U08 typeNsingel;
+	U08 svid;
+	U08 freqIdNlockTimeInd;
+	U08 cn0;
+  D64 pseduRange;
+  D64 accCarrierCycle;
+	F32 dopplerFreq;
+	U08 prStdDeviation;
+	U08 accStdDeviation;
+	U08 dfDeviation;
+	U16 chInd;
+};
+
+struct SV_CH_DATA
+{
+	U08 channel_id;
+	U08 prn;
+	U08 SV_status;
+	U08 URA;
+	S08 cn0;
+	S16 elevation;
+	S16 azimuth;
+	U08 channel_status;
+};
+
+struct RECEIVER_NAV_DATA
+{
+	U08 nav_status;
+	U16 wn;
+	D64 tow;
+	D64 ecef_x;
+	D64 ecef_y;
+	D64 ecef_z;
+	F32 ecef_vx;
+	F32 ecef_vy;
+	F32 ecef_vz;
+	D64 clock_bias;
+	F32 clock_drift;
+	F32 gdop;
+	F32 pdop;
+	F32 hdop;
+	F32 vdop;
+	F32 tdop;
+};
+
 extern void add2message(const char* buffer, int offset);
+static CString strBuffer("", 512);
 
-static char g_msgBuff[512] = {0};
-
-void ECEF_USER_PVT_PROC(ECEF_USER_PVT& ecef_user_pvt, U08* pt)
+static void DisplayAndSave(bool convertOnly, CString* pStr, const char* buf, int len)
 {
-	memcpy(&ecef_user_pvt.MessageID    , &pt[4],  sizeof(U08));
-	memcpy(&ecef_user_pvt.X            , &pt[5],  sizeof(S32));
-	memcpy(&ecef_user_pvt.Y            , &pt[9],  sizeof(S32));
-	memcpy(&ecef_user_pvt.Z            , &pt[13], sizeof(S32));
-	memcpy(&ecef_user_pvt.XV           , &pt[17], sizeof(S16));
-	memcpy(&ecef_user_pvt.YV           , &pt[19], sizeof(S16));
-	memcpy(&ecef_user_pvt.ZV           , &pt[21], sizeof(S16));
-	memcpy(&ecef_user_pvt.PositionMode , &pt[23], sizeof(U08));
-	memcpy(&ecef_user_pvt.FixMode      , &pt[24], sizeof(U08));
-	memcpy(&ecef_user_pvt.GPSWeek      , &pt[25], sizeof(U16));
-	memcpy(&ecef_user_pvt.TOW          , &pt[27], sizeof(U32));
-	memcpy(&ecef_user_pvt.Year         , &pt[31], sizeof(U16));
-	memcpy(&ecef_user_pvt.Month        , &pt[33], sizeof(U08));
-	memcpy(&ecef_user_pvt.Day          , &pt[34], sizeof(U08));
-	memcpy(&ecef_user_pvt.Hour         , &pt[35], sizeof(U16));
-	memcpy(&ecef_user_pvt.Min          , &pt[37], sizeof(U08));
-	memcpy(&ecef_user_pvt.Sec          , &pt[38], sizeof(U08));
-	memcpy(&ecef_user_pvt.NumOfSV      , &pt[39], sizeof(U08));
-	memcpy(&ecef_user_pvt.NumOfSVinFix , &pt[41], sizeof(U08));
-	memcpy(&ecef_user_pvt.GDOP         , &pt[41], sizeof(U08));
-	memcpy(&ecef_user_pvt.PDOP         , &pt[42], sizeof(U08));
-	memcpy(&ecef_user_pvt.HDOP         , &pt[43], sizeof(U08));
-	memcpy(&ecef_user_pvt.VDOP         , &pt[44], sizeof(U08));
-  memcpy(&ecef_user_pvt.TDOP         , &pt[45], sizeof(U08));    
-}
-
-void GEODETIC_USER_PVT_PROC(GEODETIC_USER_PVT& geod_user_pvt,U08* pt)
-{
-	memcpy(&geod_user_pvt.MessageID    , &pt[4],  sizeof(U08));
-	memcpy(&geod_user_pvt.Latitude     , &pt[5],  sizeof(S32));	
-	memcpy(&geod_user_pvt.Longitude    , &pt[9],  sizeof(S32));
-	memcpy(&geod_user_pvt.Altitude     , &pt[13], sizeof(S16));
-	memcpy(&geod_user_pvt.Heading      , &pt[15], sizeof(U16));
-	memcpy(&geod_user_pvt.Speed        , &pt[17], sizeof(U16));
-	memcpy(&geod_user_pvt.PositionMode , &pt[19], sizeof(U08));
-	memcpy(&geod_user_pvt.FixMode      , &pt[20], sizeof(U08));
-	memcpy(&geod_user_pvt.GPSWeek      , &pt[21], sizeof(U16));
-	memcpy(&geod_user_pvt.TOW          , &pt[23], sizeof(U32));
-	memcpy(&geod_user_pvt.Year         , &pt[27], sizeof(U16));
-	memcpy(&geod_user_pvt.Month        , &pt[29], sizeof(U08));
-	memcpy(&geod_user_pvt.Day          , &pt[30], sizeof(U08));
-	memcpy(&geod_user_pvt.Hour         , &pt[31], sizeof(U16));
-	memcpy(&geod_user_pvt.Min          , &pt[33], sizeof(U08));
-	memcpy(&geod_user_pvt.Sec          , &pt[34], sizeof(U08));
-	memcpy(&geod_user_pvt.NumOfSV      , &pt[35], sizeof(U08));
-	memcpy(&geod_user_pvt.NumOfSVinFix , &pt[36], sizeof(U08));
-	memcpy(&geod_user_pvt.GDOP         , &pt[37], sizeof(U08));
-	memcpy(&geod_user_pvt.PDOP         , &pt[38], sizeof(U08));
-	memcpy(&geod_user_pvt.HDOP         , &pt[39], sizeof(U08));
-	memcpy(&geod_user_pvt.VDOP         , &pt[40], sizeof(U08));
-	memcpy(&geod_user_pvt.TDOP         , &pt[41], sizeof(U08));   
-	geod_user_pvt.Lat = (float)geod_user_pvt.Latitude/10000000;
-	geod_user_pvt.Lon = (float)geod_user_pvt.Longitude /10000000;
-}
-
-void USER_SATELLITE_INFOMATION_PROC(USER_SATELLITE_INFOMATION& sv_info,U08* pt)
-{
-	memcpy(&sv_info.MessageID    , &pt[4],   sizeof(U08));
-	int index=5;
-	for(int i=0;i<12;i++)
+  const char eol[] = "\r\n";
+	if(convertOnly)
 	{
-		memcpy(&sv_info.sv[i].prn    , &pt[index], sizeof(U08));
-		index+=sizeof(U08);
-	    memcpy(&sv_info.sv[i].health , &pt[index], sizeof(U08));
-		index+=sizeof(U08);
-	    memcpy(&sv_info.sv[i].azm    , &pt[index], sizeof(U16));
-		index+=sizeof(U16);
-	    memcpy(&sv_info.sv[i].elv    , &pt[index], sizeof(U08));
-		index+=sizeof(U08);
-	    memcpy(&sv_info.sv[i].cn0    , &pt[index], sizeof(U08));
-		index+=sizeof(U08);
-	    memcpy(&sv_info.sv[i].stu    , &pt[index], sizeof(U16));
-		index+=sizeof(U16);	
-	}	
-	memcpy(&sv_info.GPSWeek       , &pt[101], sizeof(U16));
-	memcpy(&sv_info.TOW           , &pt[103], sizeof(U32));
-}
-
-void SATELLITE_MEASUREMENT_DATA_PROC(SATELLITE_MEASUREMENT_DATA& sm_data,U08* pt)
-{
-	memcpy(&sm_data.MessageID     , &pt[4],    sizeof(U08));
-
-	int index=5;
-	for(int i=0;i<12;i++)
-	{
-		memcpy(&sm_data.smd[i].prn, &pt[index], sizeof(U16));
-		index+=sizeof(U16);
-	    memcpy(&sm_data.smd[i].PR,  &pt[index], sizeof(S32));
-		index+=sizeof(S32);
-	    memcpy(&sm_data.smd[i].DR,  &pt[index], sizeof(S32));
-		index+=sizeof(S32);
-	    memcpy(&sm_data.smd[i].Dp,  &pt[index], sizeof(U16));
-		index+=sizeof(S16);
+    if(pStr)
+    {
+		  *pStr += buf;
+		  *pStr += eol;
+    }
 	}
-	memcpy(&sm_data.GPSWeek       , &pt[149],  sizeof(U16));
-	memcpy(&sm_data.TOW           , &pt[151],  sizeof(U32));
-	memcpy(&sm_data.ClockOffset   , &pt[155],  sizeof(U16));
+  else
+  {
+    add2message(buf, len);
+    CSaveNmea::SaveText(buf, len);
+    CSaveNmea::SaveText(eol, 2);
+  }
 }
 
-void CooCartesianToGeodetic(const POS_T* xyz_p, LLA_T* lla_p)
+static U08* decode_4bytes(U08* src, U32* dst)
+{
+	*dst = src[0]<<24 | src[1]<<16 | src[2]<<8 | src[3];
+	src += 4;
+	return src;
+}
+
+static U08* decode_2bytes(U08* src, U16* dst)
+{
+	*dst = src[0]<<8 | src[1];
+	src += 2;
+	return src;
+}
+
+static U08* decode_1bytes(U08* src, U08* dst)
+{
+	*dst = src[0];
+	src += 1;
+	return src;
+}
+
+static void CooCartesianToGeodetic(const POS_T* xyz_p, LLA_T* lla_p)
 {
 	D64 p;
 	D64 theta;
@@ -141,67 +136,9 @@ void CooCartesianToGeodetic(const POS_T* xyz_p, LLA_T* lla_p)
 	lla_p->alt = (F32)( (p / c_phi) - ( WGS84_RA / sqrt(1.0 - WGS84_E2*s_phi*s_phi ) ) );
 }
 
-static  void ecef2lla(const POS_T* xyz_p, LLA_T* lla_p)
-{
-	double ja = 6378137; // radius
-	double je = 8.1819190842622E-2;  // eccentricity
-
-	double asq = pow(ja,2);
-	double esq = pow(je,2);
-
-	double x = xyz_p->px;
-	double y = xyz_p->py;
-	double z = xyz_p->pz;
-
-  double jb = sqrt( asq * (1-esq) );
-  double bsq = pow(jb,2);
-  double ep = sqrt( (asq - bsq)/bsq);
-  double jp = sqrt( pow(x,2) + pow(y,2) );
-  double th = atan2(ja*z, jb*jp);
-
-  double lon = atan2(y,x);
-  double lat = atan2( (z + pow(ep,2)*jb*pow(sin(th),3) ), (jp - esq*ja*pow(cos(th),3)) );
-  double N = ja/( sqrt(1-esq*pow(sin(lat),2)) );
-  double alt = jp / cos(lat) - N;
-
-  // mod lat to 0-2pi
-  if(lon < 0 || lon > (2 * PI))
-  {
-	  lon -= lon / (2 * PI);
-  }
-
-  // correction for altitude near poles left out.
-  lla_p->lat = lat;
-  lla_p->lon = lon;
-  lla_p->alt = (F32)alt;
-}
-
-U08 *decode_4bytes(U08 *src,U32 *dst)
-{
-	*dst = src[0]<<24 | src[1]<<16 | src[2]<<8 | src[3];
-	src+=4;
-	return src;
-}
-
-U08 *decode_2bytes(U08 *src,U16 *dst)
-{
-	*dst = src[0]<<8 | src[1];
-	src+=2;
-	return src;
-}
-
-U08 *decode_1bytes(U08 *src,U08 *dst)
-{
-	*dst = src[0];
-	src+=1;
-	return src;
-}
-
 void ShowMeasurementChannel(U08* src, bool convertOnly, CString* pStr)
 {
-  static CString strBuffer("", 512);
 	U08* ptr = &src[5];
-
   U08 iod = 0;
   U08 nmeas = 0;
 
@@ -209,15 +146,7 @@ void ShowMeasurementChannel(U08* src, bool convertOnly, CString* pStr)
 	ptr = decode_1bytes(ptr, &nmeas);
 
   strBuffer.Format("$RAW_MEAS(0xDD),IOD=%d,NMEAS=%d", iod, nmeas);
-	if(convertOnly && pStr)
-	{
-		*pStr += strBuffer;
-		*pStr += "\r\n";
-	}
-  else
-  {
-    add2message(strBuffer, strBuffer.GetLength());
-  }
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
   if(nmeas == 0)
   {
@@ -225,28 +154,12 @@ void ShowMeasurementChannel(U08* src, bool convertOnly, CString* pStr)
   }
 
   strBuffer.Format(" SVID|CN0|   PseudoRange|    CarrierCycle|DopFreq|Indicator|");
-	if(convertOnly && pStr)
-	{
-		*pStr += strBuffer;
-		*pStr += "\r\n";
-	}
-  else
-  {
-    add2message(strBuffer, strBuffer.GetLength());
-  }
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
   strBuffer.Format(" ----+---+--------------+----------------+-------+---------+");
-	if(convertOnly && pStr)
-	{
-		*pStr += strBuffer;
-		*pStr += "\r\n";
-	}
-  else
-  {
-    add2message(strBuffer, strBuffer.GetLength());
-  }
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	CHANNEL_DATA_T channel = {0};
+	CHANNEL_DATA channel = { 0 };
 	U32 tmp[2];
 	for (int i=0; i<nmeas; ++i)
 	{
@@ -265,23 +178,14 @@ void ShowMeasurementChannel(U08* src, bool convertOnly, CString* pStr)
     strBuffer.Format("  %3d|%3d| %13.3lf| % 15.3lf| %6.0f|     0x%02X|",
       channel.prn, channel.cn0, channel.pseudo_range, channel.carrier_cycle, 
 			channel.doppler_freq, channel.indicator);
-
-		if(convertOnly && pStr)
-		{
-			*pStr += strBuffer;
-			*pStr += "\r\n";
-			continue;
-		}
-    add2message(strBuffer, strBuffer.GetLength());
+    DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 	}
 	return;
 }
 
 void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
 {
-  static CString strBuffer("", 512);
 	U08* ptr = &src[5];
-
   U08 ver = 0;
   U08 iod = 0;
   U16 weeks = 0;
@@ -302,15 +206,7 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
 
   strBuffer.Format("$EXT_RAW_MEAS(0xE5),V%d,IOD=%d,WN=%d,TOW=%d,MeasPeriod=%d,MeasIndicator=0x%02X,NMEAS=%d",
     ver, iod, weeks, tow, measPeriod, measIndFlag, nmeas);
-	if(convertOnly && pStr)
-	{
-		*pStr += strBuffer;
-		*pStr += "\r\n";
-	}
-  else
-  {
-    add2message(strBuffer, strBuffer.GetLength());
-  }
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
   if(nmeas == 0)
   {
@@ -318,26 +214,10 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
   }
 
   strBuffer.Format(" GnTp|SgTp|SVID|FrqID|LTInd|CN0|   PseudoRange|       AccCrrCyc|DopFreq|PRSdDv|ACCSdDv|DFSdDv| ChInd|");
-	if(convertOnly && pStr)
-	{
-		*pStr += strBuffer;
-		*pStr += "\r\n";
-	}
-  else
-  {
-    add2message(strBuffer, strBuffer.GetLength());
-  }
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
   strBuffer.Format(" ----+----+----+-----+-----+---+--------------+----------------+-------+------+-------+------+------+");
-	if(convertOnly && pStr)
-	{
-		*pStr += strBuffer;
-		*pStr += "\r\n";
-	}
-  else
-  {
-    add2message(strBuffer, strBuffer.GetLength());
-  }
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
 	ExtMeasChannelData channel = { 0 };
   U32 tmp[2] = { 0 };
@@ -366,18 +246,12 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
     // FrqID|LTInd|CN0|  
     // PseudoRange|      AccCrrCyc|DopplerFreq|
     // PRSdDv|ACCSdDv|DFSdDv| ChInd|");
-      strBuffer.Format("   %2d|  %2d| %3d|%5d|%5d|%3d| %13.3lf| % 15.3lf| % 6.0f|%6d|%7d|%6d|0x%04X|",
+    strBuffer.Format("   %2d|  %2d| %3d|%5d|%5d|%3d| %13.3lf| % 15.3lf| % 6.0f|%6d|%7d|%6d|0x%04X|",
         channel.typeNsingel & 0xF, channel.typeNsingel >> 4, channel.svid, 
         channel.freqIdNlockTimeInd & 0x0f, channel.freqIdNlockTimeInd >> 4, channel.cn0,
         channel.pseduRange, channel.accCarrierCycle, channel.dopplerFreq, 
         channel.prStdDeviation, channel.accStdDeviation, channel.dfDeviation, channel.chInd);
-		if(convertOnly && pStr)
-		{
-			*pStr += strBuffer;
-			*pStr += "\r\n";
-			continue;
-		}
-    add2message(strBuffer, strBuffer.GetLength());
+    DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 	}
 	return;
 }
@@ -385,7 +259,7 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
 void ShowSubframe(U08 *src, bool convertOnly, CString* pStr)
 {
 	U08 msgType = src[4];
-	LPCSTR subFrameType = NULL;
+	CString subFrameType;
 	if(msgType==0xE0)
 	{
 		subFrameType = "GPS_SUBFRAME(0xE0)";
@@ -410,29 +284,16 @@ void ShowSubframe(U08 *src, bool convertOnly, CString* pStr)
 #endif
 	U08 prn = src[5];
 	U08 subFrmId = src[6];
-	sprintf_s(g_msgBuff, sizeof(g_msgBuff), 
-		"$%s,SVID=%d,SFID=%d,data=",
-		subFrameType, prn, subFrmId);
+  strBuffer.Format("$%s,SVID=%d,SFID=%d,data=", subFrameType, prn, subFrmId);
 
 	WORD packetLen = MAKEWORD(src[3], src[2]);
-	for(int i=3; i<packetLen; ++i)
+	for(int i = 3; i < packetLen; ++i)
 	{
-		char tmpBuff[10];
-		sprintf_s(tmpBuff, sizeof(tmpBuff), "%02X ", src[4+i]);
-		strcat_s(g_msgBuff, sizeof(g_msgBuff), tmpBuff);
+		CString tmpBuff;
+    tmpBuff.Format("%02X ", src[4+i]);
+		strBuffer += tmpBuff;
 	}
-
-	int len = strlen(g_msgBuff);
-	if(convertOnly)
-	{
-		if(pStr)
-		{
-			*pStr += g_msgBuff;
-			*pStr += "\r\n";
-		}
-		return;
-	}
-	add2message(g_msgBuff, len);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 }
 
 void ShowMeasurementTime(U08 *src, bool convertOnly, CString* pStr)
@@ -450,17 +311,7 @@ void ShowMeasurementTime(U08 *src, bool convertOnly, CString* pStr)
 
   strBuffer.Format("$MEAS_TIME(0xDC),WN=%d,TOW=%d,Period=%d",
     wn, tow, period);
-
-	if(convertOnly && pStr)
-	{
-		*pStr = strBuffer;
-		*pStr += "\r\n";
-		return;
-	}
-  else
-  {
-    add2message(strBuffer, strBuffer.GetLength());
-  }
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
 	UtcTime utc;
 	UtcConvertGpsToUtcTime(wn, (tow / 1000.0), &utc);
@@ -490,15 +341,7 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 	ptr = decode_1bytes(ptr, &nsvs);
 
   strBuffer.Format("$SV_CH_STATUS(0xDE),IOD=%d,NSVS=%d", iod, nsvs);
-	if(convertOnly && pStr)
-	{
-		*pStr += strBuffer;
-		*pStr += "\r\n";
-	}
-  else
-  {
-    add2message(strBuffer, strBuffer.GetLength());
-  }
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
   if(nsvs == 0)
   {
@@ -506,30 +349,14 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
   }
 
   strBuffer.Format(" ChId|SVID|SvInd| URA|CN0|ELE| AZI|ChInd|");
-	if(convertOnly && pStr)
-	{
-		*pStr += strBuffer;
-		*pStr += "\r\n";
-	}
-  else
-  {
-    add2message(strBuffer, strBuffer.GetLength());
-  }
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
   strBuffer.Format(" ----+----+-----+----+---+---+----+-----+");
-	if(convertOnly && pStr)
-	{
-		*pStr += strBuffer;
-		*pStr += "\r\n";
-	}
-  else
-  {
-    add2message(strBuffer, strBuffer.GetLength());
-  }
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
 	int fixed_gps_c = 0, fixed_glonass_c = 0, fixed_beidou_c = 0, fixed_galileo_c = 0;
 	int gps_c = 0, glonass_c = 0, beidou_c = 0, galileo_c = 0;
-	SV_CH_DATA_T sv;
+	SV_CH_DATA sv;
 	if(!convertOnly)
 	{
 		memset(CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID));
@@ -549,21 +376,15 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 		ptr = decode_2bytes(ptr, (U16*)&sv.azimuth);
 		ptr = decode_1bytes(ptr, &sv.channel_status);
 
-		//int len = sprintf_s(g_msgBuff, sizeof(g_msgBuff), 
-		//	"$channel_id=%d,SVID=%d,SV_status=%d,URA=%d,cn0=%d,elevation=%d,azimuth=%d,channel_status=%d",
-		//	sv.channel_id, sv.prn, sv.SV_status, sv.URA,sv.cn0, 
-		//	sv.elevation, sv.azimuth, sv.channel_status);
     strBuffer.Format("%5d|%4d| 0x%02X|%4d|%3d|%3d|%4d| 0x%02X|",
 			sv.channel_id, sv.prn, sv.SV_status, sv.URA,sv.cn0, 
 			sv.elevation, sv.azimuth, sv.channel_status);
 
-	  if(convertOnly && pStr)
+    DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+	  if(convertOnly)
 	  {
-		  *pStr += strBuffer;
-		  *pStr += "\r\n";
 		  continue;
 	  }
-    add2message(strBuffer, strBuffer.GetLength());
 
 		if(NMEA::Glonass == NMEA::GetGNSSSystem(sv.prn))
 		{
@@ -651,12 +472,11 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 
 void ShowReceiverNav(U08 *src, bool convertOnly, CString* pStr)
 {
-  static CString strBuffer("", 512);
-	U08 *ptr = &src[6];
+  U08 *ptr = &src[6];
   U08 iod = src[5];
 
 	U32 tmp[2];
-	RECEIVER_NAV_DATA_T receiver;
+	RECEIVER_NAV_DATA receiver;
 
 	ptr = decode_1bytes(ptr, &receiver.nav_status);
 	ptr = decode_2bytes(ptr, &receiver.wn);
@@ -708,14 +528,6 @@ void ShowReceiverNav(U08 *src, bool convertOnly, CString* pStr)
 	ptr = decode_4bytes(ptr, &tmp[0]);
 	memcpy(&receiver.tdop, tmp, sizeof(F32));
 
-  //int len = sprintf_s(g_msgBuff, sizeof(g_msgBuff), 
-		//"$navigation_status=%d,wn=%d,tow=%f,ecef_x=%f,ecef_y=%f,ecef_z=%f,ecef_vx=%f,ecef_vy=%f,ecef_vz=%f,clock_bias=%f,clock_drift=%f,gdop=%f,pdop=%f,hdop=%f,vdop=%f,tdop=%f",
-		//receiver.nav_status, receiver.wn, receiver.tow, 
-		//receiver.ecef_x, receiver.ecef_y, receiver.ecef_z,
-		//receiver.ecef_vx, receiver.ecef_vy, receiver.ecef_vz,
-		//receiver.clock_bias, receiver.clock_drift,
-		//receiver.gdop, receiver.pdop, receiver.hdop, 
-		//receiver.vdop, receiver.tdop);
   strBuffer.Format("$RCV_STATE(0xDF),IOD=%d,NavState=%d,WN=%d,TOW=%lf,ECEF_x=%lf,ECEF_y=%lf,ECEF_z=%lf," \
     "ECEF_vx=%f,ECEF_vy=%f,ECEF_vz=%f,ClockBias=%lf,ClockDrift=%f,GDOP=%f,PDOP=%f,HDOP=%f,VDOP=%f,TDOP=%f",
 		iod, receiver.nav_status, receiver.wn, receiver.tow, 
@@ -724,13 +536,11 @@ void ShowReceiverNav(U08 *src, bool convertOnly, CString* pStr)
 		receiver.clock_bias, receiver.clock_drift,
 		receiver.gdop, receiver.pdop, receiver.hdop, 
 		receiver.vdop, receiver.tdop);
-
-	if(convertOnly && pStr)
-	{
-		*pStr += strBuffer;
-		*pStr += "\r\n";
-	}
-  add2message(strBuffer, strBuffer.GetLength());
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+  if(convertOnly)
+  {
+    return;
+  }
 
   switch(receiver.nav_status)
 	{
@@ -806,8 +616,10 @@ void ShowBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 	flon /= 10000000;
 	flon = ((int)flon)*100 +(double)(flon - (int)flon)*60;
 
-	U32 alt_t =src[21]<<24 | src[22]<<16 | src[23]<<8 | src[24];
-	U32 alt = src[25]<<24 | src[26]<<16 | src[27]<<8 | src[28];
+  U32 d = src[21]<<24 | src[22]<<16 | src[23]<<8 | src[24];
+	S32 alt_t = *((S32*)(&d));
+  d = src[25]<<24 | src[26]<<16 | src[27]<<8 | src[28];
+	S32 alt = *((S32*)(&d));
 
 	U32 gdop = src[29]<<8 | src[30];
 	U32 pdop = src[31]<<8 | src[32];
@@ -828,196 +640,59 @@ void ShowBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 	D64 fz = (D64)vz / 100;
 	D64 fv = sqrt(fx * fx + fy * fy + fz * fz);
 
-	char m_buff[512];
-	int msg_len;
+	strBuffer.Format("$fix mode=%d", src[5]);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff, "$fix mode=%d", src[5]);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff, "$number if sv in fix=%d", src[6]);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff, "$GPS Week=%d", wn);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff,"$GPS TOW=%.2f",ftow);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$number if sv in fix=%d", src[6]);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff,"$latitude=%.6f",flat);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$GPS Week=%d", wn);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff,"$longutide=%.6f",flon);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$GPS TOW=%.2f",ftow);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff,"$ellipsoid altitude=%.2f", (F32)alt_t / 100);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$latitude=%.6f",flat);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff,"$sea level altitude=%.2f", (F32)alt / 100);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$longutide=%.6f",flon);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff,"$gdop=%.2f",(F32)gdop/100);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff,"$pdop=%.2f",(F32)pdop/100);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff,"$hdop=%.2f",(F32)hdop/100);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff,"$tdop=%.2f",(F32)tdop/100);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$ellipsoid altitude=%.2f", (F32)alt_t / 100);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff,"$ecef-x=%.2f",(double)ecefx/100);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff,"$ecef-y=%.2f",(double)ecefy/100);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff,"$ecef-z=%.2f",(double)ecefz/100);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$sea level altitude=%.2f", (F32)alt / 100);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff,"$ecef-vx=%.2f",fx);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff,"$ecef-vy=%.2f",fy);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff,"$ecef-vz=%.2f",fz);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$gdop=%.2f",(F32)gdop/100);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$pdop=%.2f",(F32)pdop/100);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$hdop=%.2f",(F32)hdop/100);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$tdop=%.2f",(F32)tdop/100);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$ecef-x=%.2f",(double)ecefx/100);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$ecef-y=%.2f",(double)ecefy/100);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$ecef-z=%.2f",(double)ecefz/100);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$ecef-vx=%.2f",fx);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$ecef-vy=%.2f",fy);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$ecef-vz=%.2f",fz);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
 	if(convertOnly)
 	{
@@ -1121,218 +796,65 @@ void ShowDjiBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 	CGPSDlg::gpsDlg->PostMessage(UWM_UPDATE_RTK_INFO, *(WPARAM*)&rtkAge, *(LPARAM*)&rtkFix);
 	D64 fv = sqrt(vx * vx + vy * vy + vz * vz);
 
-	char m_buff[512];
-	int msg_len;
+	strBuffer.Format("$fix mode=%d", src[4]);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff, "$fix mode=%d", src[4]);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff, "$number if sv in fix=%d", src[5]);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff, "$GPS Week=%d", wn);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff,"$GPS TOW=%.2f", tow);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$number if sv in fix=%d", src[5]);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff,"$latitude=%.7f", lat);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$GPS Week=%d", wn);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff,"$longutide=%.7f",lon);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$GPS TOW=%.2f", tow);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff,"$ellipsoid altitude=%.2f", alt_t);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$latitude=%.7f", lat);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff,"$sea level altitude=%.2f", alt);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$longutide=%.7f",lon);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff,"$gdop=%.2f",(F32)gdop/100);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff,"$pdop=%.2f",(F32)pdop/100);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff,"$hdop=%.2f",(F32)hdop/100);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff,"$tdop=%.2f",(F32)tdop/100);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$ellipsoid altitude=%.2f", alt_t);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff,"$ecef-x=%.2f",(double)ecefx);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff,"$ecef-y=%.2f",(double)ecefy);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff,"$ecef-z=%.2f",(double)ecefz);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$sea level altitude=%.2f", alt);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff,"$ecef-vx=%.2f",vx);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff,"$ecef-vy=%.2f",vy);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$gdop=%.2f",(F32)gdop/100);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff,"$ecef-vz=%.2f",vz);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$pdop=%.2f",(F32)pdop/100);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	msg_len = sprintf_s(m_buff, "$RTK age=%.1f", rtkAge);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
-	msg_len = sprintf_s(m_buff, "$RTK ratio=%.1f", rtkFix);
-	if(convertOnly)
-	{
-		*pStr += m_buff;
-		*pStr += "\r\n";
-	}
-	else
-	{
-		add2message(m_buff, msg_len);
-	}
+	strBuffer.Format("$hdop=%.2f",(F32)hdop/100);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$tdop=%.2f",(F32)tdop/100);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$ecef-x=%.2f",(double)ecefx);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$ecef-y=%.2f",(double)ecefy);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$ecef-z=%.2f",(double)ecefz);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$ecef-vx=%.2f",vx);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$ecef-vy=%.2f",vy);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$ecef-vz=%.2f",vz);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$RTK age=%.1f", rtkAge);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	strBuffer.Format("$RTK ratio=%.1f", rtkFix);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
 	if(convertOnly)
 	{

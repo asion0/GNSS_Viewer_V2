@@ -26,7 +26,7 @@ struct GPGSA;
 typedef matrix<float> Matrix;
 
 #define LogDefaultName		"Response.log"
-#define DefaultTimeout		3000
+#define DefaultTimeout		2000
 
 #define MAX_WAIT_TIME		      INFINITE
 #define TIME_OUT_MS               10000
@@ -42,6 +42,8 @@ typedef matrix<float> Matrix;
 #define WGS84_RB    (WGS84_RA*(1.0-WGS84_F))      // semi-major earth axis(ellipsoid polar radius)
 #define WGS84_E2    (2.0*WGS84_F-WGS84_F*WGS84_F) // eccentricity squared: (RA*RA-RB*RB)/RA*RA
 #define WGS84_E2P   (WGS84_E2/(1.0-WGS84_E2))     // eccentricity squared: (RA*RA-RB*RB)/RB*RB
+
+#define COM_BUFFER_SIZE   (16 * 1024)              // 
 
 struct Setting
 {
@@ -315,14 +317,14 @@ extern U08 type;
 extern U08 attribute;
 extern U08 msgid;
 
-extern U08  slgga;	
-extern U08  slgsa;
-extern U08  slgsv;
-extern U08  slgll;
-extern U08  slrmc;
-extern U08  slvtg;
-extern U08  slzda;
-extern U08  slgns;
+//extern U08  slgga;	
+//extern U08  slgsa;
+//extern U08  slgsv;
+//extern U08  slgll;
+//extern U08  slrmc;
+//extern U08  slvtg;
+//extern U08  slzda;
+//extern U08  slgns;
 
 extern HANDLE g_connectEvent;
 extern HANDLE g_closeEvent;

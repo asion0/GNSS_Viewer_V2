@@ -1,7 +1,7 @@
 #pragma once
 
 
-// BinaryChecksumCalDlg 對話方塊
+// BinaryChecksumCalDlg
 class BinaryData;
 
 class BinaryChecksumCalDlg : public CDialog
@@ -9,14 +9,12 @@ class BinaryChecksumCalDlg : public CDialog
 	DECLARE_DYNAMIC(BinaryChecksumCalDlg)
 
 public:
-	BinaryChecksumCalDlg(CWnd* pParent = NULL);   // 標準建構函式
+	BinaryChecksumCalDlg(CWnd* pParent = NULL);   // 
 	virtual ~BinaryChecksumCalDlg();
-
-// 對話方塊資料
 //	enum { IDD = IDD_BIN_CHECKSUM_CAL };
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
 public:

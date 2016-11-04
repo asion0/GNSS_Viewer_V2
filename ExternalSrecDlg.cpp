@@ -72,7 +72,7 @@ void CExternalSrecDlg::OnBnClickedBrowse()
 		}
 	}
 }
-
+/*
 CWinThread* g_srecThread = NULL;
 bool g_stopThread = false;
 UINT ConnectSrec(LPVOID pParam)
@@ -93,7 +93,7 @@ UINT ConnectSrec(LPVOID pParam)
 	}
 	return 0;
 }
-
+*/
 void CExternalSrecDlg::OnBnClickedGo()
 {
 	CRegistry reg;
@@ -229,21 +229,21 @@ void CExternalSrecDlg::OnTimer(UINT_PTR nIDEvent)
 
 void CExternalSrecDlg::OnClose()
 {
-	if(g_srecThread)
-	{
-		g_stopThread = true;
-		::WaitForSingleObject(g_srecThread->m_hThread, 2000);
-	}
+	//if(g_srecThread)
+	//{
+	//	g_stopThread = true;
+	//	::WaitForSingleObject(g_srecThread->m_hThread, 2000);
+	//}
 	CDialog::OnClose();
 }
 
 void CExternalSrecDlg::OnOK()
 {
-	if(g_srecThread)
-	{
-		g_stopThread = true;
-		::WaitForSingleObject(g_srecThread->m_hThread, 2000);
-	}
+	//if(g_srecThread)
+	//{
+	//	g_stopThread = true;
+	//	::WaitForSingleObject(g_srecThread->m_hThread, 2000);
+	//}
 	CDialog::OnOK();
 }
 

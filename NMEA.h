@@ -17,6 +17,7 @@ enum NmeaType
 	MSG_GPGSV,
 	MSG_GLGSV,
 	MSG_BDGSV,
+	MSG_BDGSV2,
 	MSG_GAGSV,
 	MSG_GNGSV,
 
@@ -40,12 +41,12 @@ typedef struct GPGGA
 	U08     Latitude_N_S;
 	D64     Longitude;
 	U08     Longitude_E_W;
-    U16     GPSQualityIndicator;
+  U16     GPSQualityIndicator;
 	U16     NumsOfSatellites;
 	F32     HDOP;
 	F32     Altitude;
 	U08     Altitude_meters;
-    F32     GeoidalSeparation;
+  F32     GeoidalSeparation;
 	U08     GeoidalSeparation_meters;
 	F32     AgeDGPSData;
 	U16     DiffRefStaID;
@@ -423,6 +424,11 @@ public:
 	Satellite satellites_gnss[MAX_SATELLITE];
 	Satellite satellites_bd[MAX_SATELLITE];
 	Satellite satellites_ga[MAX_SATELLITE];
+
+#if(SUPPORT_L2_GSV2)
+	Satellite satellites2_bd[MAX_SATELLITE];
+	void ShowBDGSV2msg(GPGSV&, const char*, int);
+#endif
 
 	void ShowGPGLLmsg(GPGLL&, const char* ,int);
 	void ShowGPZDAmsg(GPZDA&, const char* ,int);

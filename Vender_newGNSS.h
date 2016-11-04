@@ -245,6 +245,17 @@
 // .226 20160914 3. Modify binary command 0x89 to add Extended_ Raw_Meas Enabling field.
 // .226 20160914 4. Parse EXT_RAW_MEAS – Extended Raw Measurement Data v.1 (0xE5), the protocol is defined in attached file.
 // .227 20160919 Add [UART Pass through] to RTK menu, request from Andrew and Ryan.
+// .228 20160930 Add Ins DR menu, request from Andrew and Gin.
+// .229 20161004 Modify InsDR menu message, request from Andrew and Gin.
+// .230 20161007 Add RTK On/OFF SV channel functions, request from Ryan and Andrew.
+// .231 20161013 Modify ellipsoid altitude and sea level altitude from U32 to S32, request from Ken and Andrew.
+// .232 20161014 NMEA Player support only RMC no GGA, request from Andrew.
+// .233 20161018 Release L2 support and fix PSTI issue, request from Patrick and Ken.
+// .234 20161018 Fix L2 size error, request from Patrick.
+// .235 20161020 Add Save Host Log function from Andrew.
+// .236 20161026 Add Configure RTK Reference Static Started Position, request from Andrew and Ryan.
+// .237 20161103 Add [Check all] and [Uncheck all] buttons in RTK On/OFF SV channel, request from Andrew.
+// .237 20161103 Redesign all save function for more stable, request from Andrew.
 
 #define SW_FUN_DATALOG		        0x0001
 #define SW_FUN_AGPS				        0x0002
@@ -254,7 +265,7 @@
 #define IS_DEBUG				          0
 //title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 #define APP_CAPTION				        "GNSS Viewer"
-#define APP_VERSION				        "2.0.227"
+#define APP_VERSION				        "2.0.237"
 #define APP_TITLE				          ""
 #define APP_MODULE				        "Venus 8"
 
@@ -331,8 +342,9 @@
 #define INVERT_LON_LAT			      1		//Final spec for GeoFecing spec.
 #define MORE_INFO				          0		//More information field for RTK
 #define RTK_MENU				          1		//Show RTK menu
+#define INS_DR_MENU				        1	  //Show INS_DR menu
 #define CLIENT_WIDTH			        1008	//Viewer window client width
-#define CLIENT_HEIGHT			        690		//Viewer window client height
+#define CLIENT_HEIGHT			        678	//Viewer window client height
 #define AUTO_QUERY_VERSION		    0
 #define DOWNLOAD_IMMEDIATELY	    0		//start download immediately when nmea come in.
 #define SPECIAL_TEST			        0		//Test ETEN case 20160202
@@ -345,9 +357,62 @@
 #define CUSTOMER_CWQX_160815  		0   //上海長望氣象, Add 1200, 2400 bps, maximum 115200 bps
 #define FIX_DOWNLOAD_115200   		0   //Download can only use 115200 bps
 #define CUSTOMER_ZENLANE_160808  	0   //善領科技, Add customized commands
+#define SUPPORT_L2_GSV2         	0   //Support L2 information in GSV2 token.
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-#if defined(SWCFG_VENDOR_GNSS_GENERAL_ZENLANE_160808)  //For 善領科技, 20160808, Request from Leo
+#if defined(SWCFG_VENDOR_GNSS_NMEAPLAYER_L2) //20161018 For Patrick and Evan
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef NMEA_INPUT
+ #undef SHOW_ERROR_NMEA_NOTIFY
+ #undef CLIENT_WIDTH
+ #undef CLIENT_HEIGHT
+ #undef MORE_INFO
+ #undef _TAB_LAYOUT_
+ #undef SUPPORT_L2_GSV2
+
+ #define APP_CAPTION			        "GNSS Viewer"
+ #define APP_TITLE				        "NMEA Player"
+ #define GNSS_VIEWER			        1
+ #define IS_DEBUG				          0
+ #define BAUDRATE_DEFAULT		      7
+ #define TIMING_MODE			        1
+ #define NMEA_INPUT				        1
+ #define SHOW_ERROR_NMEA_NOTIFY   1
+ #define CLIENT_WIDTH			        1008	
+ #define CLIENT_HEIGHT			      614
+ #define MORE_INFO				        0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			        1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define SUPPORT_L2_GSV2          1
+
+#elif defined(SWCFG_VENDOR_GNSS_L2_NMEA)  //20161018 For Patrick and Evan
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef SHOW_ERROR_NMEA_NOTIFY
+ #undef MORE_INFO
+ #undef _TAB_LAYOUT_
+ #undef SUPPORT_L2_GSV2
+
+ #define APP_CAPTION			        "GNSS Viewer"
+ #define APP_TITLE				        "Internal Use L2"
+ #define GNSS_VIEWER			        1
+ #define IS_DEBUG				          1
+ #define BAUDRATE_DEFAULT		      7
+ #define TIMING_MODE			        1
+ #define SHOW_ERROR_NMEA_NOTIFY   1
+ #define MORE_INFO				        0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			        1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define SUPPORT_L2_GSV2          1
+
+#elif defined(SWCFG_VENDOR_GNSS_GENERAL_ZENLANE_160808)  //For 善領科技, 20160808, Request from Leo
  #undef APP_CAPTION
  #undef APP_TITLE
  #undef GNSS_VIEWER
@@ -513,30 +578,6 @@
  #define UPGRADE_ADD_TAG		  1
  #define UPGRADE_TAG_VALUE		0xA012
 
-#elif defined(SWCFG_VENDOR_GNSS_L2_NMEA)
- #undef APP_CAPTION
- #undef APP_TITLE
- #undef GNSS_VIEWER
- #undef IS_DEBUG
- #undef BAUDRATE_DEFAULT
- #undef TIMING_MODE
- #undef SHOW_ERROR_NMEA_NOTIFY
- #undef MAX_SCATTER_COUNT
- #undef MORE_INFO
- #undef _TAB_LAYOUT_
-
- #define APP_CAPTION			  "GNSS Viewer"
- #define APP_TITLE				  "Internal Use L2 Test"
- #define GNSS_VIEWER			  1
- #define IS_DEBUG				    1
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			  1
- #define SHOW_ERROR_NMEA_NOTIFY 1
- #define MAX_SCATTER_COUNT		1000
- #define MORE_INFO				0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
- #define _TAB_LAYOUT_			1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
- #define _L2_NMEA_TEST_			1		//Test BDGSV2 L2 NMEA
-
 #elif defined(SWCFG_VENDOR_GNSS_NMEAPLAYER_NEW)
  #undef APP_CAPTION
  #undef APP_TITLE
@@ -551,18 +592,18 @@
  #undef MORE_INFO
  #undef _TAB_LAYOUT_
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"NMEA Player"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			1
- #define NMEA_INPUT				1
+ #define APP_CAPTION			      "GNSS Viewer"
+ #define APP_TITLE				      "NMEA Player"
+ #define GNSS_VIEWER			      1
+ #define IS_DEBUG				        0
+ #define BAUDRATE_DEFAULT		    7
+ #define TIMING_MODE			      1
+ #define NMEA_INPUT				      1
  #define SHOW_ERROR_NMEA_NOTIFY 1
- #define CLIENT_WIDTH			1008	
- #define CLIENT_HEIGHT			614
- #define MORE_INFO				0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
- #define _TAB_LAYOUT_			1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define CLIENT_WIDTH			      1008	
+ #define CLIENT_HEIGHT			    614
+ #define MORE_INFO				      0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			      1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
 
 #elif defined(SWCFG_VENDOR_GNSS_GENERAL_NEW)
  #undef APP_CAPTION

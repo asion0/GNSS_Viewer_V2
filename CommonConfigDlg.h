@@ -1,8 +1,6 @@
 #pragma once
 
-
-// CCommonConfigDlg 對話方塊
-
+// CCommonConfigDlg
 class CCommonConfigDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CCommonConfigDlg)
@@ -21,12 +19,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigDGPS 對話方塊
+// CConfigDGPS
 class CConfigDGPS : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigDGPS)
 public:
-	CConfigDGPS(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigDGPS(CWnd* pParent = NULL);   
 	virtual ~CConfigDGPS() {};
 
 	virtual void DoCommand();
@@ -42,12 +40,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigSmoothMode 對話方塊
+// CConfigSmoothMode
 class CConfigSmoothMode : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigSmoothMode)
 public:
-	CConfigSmoothMode(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigSmoothMode(CWnd* pParent = NULL);   
 	virtual ~CConfigSmoothMode() {};
 
 	virtual void DoCommand();
@@ -62,12 +60,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigTimeStamping 對話方塊
+// CConfigTimeStamping
 class CConfigTimeStamping : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigTimeStamping)
 public:
-	CConfigTimeStamping(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigTimeStamping(CWnd* pParent = NULL);   
 	virtual ~CConfigTimeStamping() {};
 
 	virtual void DoCommand();
@@ -83,12 +81,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigSBAS 對話方塊
+// CConfigSBAS
 class CConfigSBAS : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigSBAS)
 public:
-	CConfigSBAS(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigSBAS(CWnd* pParent = NULL);   
 	virtual ~CConfigSBAS() {};
 
 	virtual void DoCommand();
@@ -118,12 +116,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigSAGPS 對話方塊
+// CConfigSAGPS
 class CConfigSAEE : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigSAEE)
 public:
-	CConfigSAEE(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigSAEE(CWnd* pParent = NULL);   
 	virtual ~CConfigSAEE() {};
 
 	virtual void DoCommand();
@@ -138,12 +136,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigQZSS 對話方塊
+// CConfigQZSS
 class CConfigQZSS : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigQZSS)
 public:
-	CConfigQZSS(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigQZSS(CWnd* pParent = NULL);   
 	virtual ~CConfigQZSS() {};
 
 	virtual void DoCommand();
@@ -159,12 +157,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigInterferenceDetectControl 對話方塊
+// CConfigInterferenceDetectControl
 class CConfigInterferenceDetectControl : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigInterferenceDetectControl)
 public:
-	CConfigInterferenceDetectControl(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigInterferenceDetectControl(CWnd* pParent = NULL);   
 	virtual ~CConfigInterferenceDetectControl() {};
 
 	virtual void DoCommand();
@@ -179,12 +177,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigNMEABinaryOutputDestination 對話方塊
+// CConfigNMEABinaryOutputDestination
 class CConfigNMEABinaryOutputDestination : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigNMEABinaryOutputDestination)
 public:
-	CConfigNMEABinaryOutputDestination(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigNMEABinaryOutputDestination(CWnd* pParent = NULL);   
 	virtual ~CConfigNMEABinaryOutputDestination() {};
 
 	virtual void DoCommand();
@@ -199,12 +197,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigParameterSearchEngineNumber 對話方塊
+// CConfigParameterSearchEngineNumber
 class CConfigParameterSearchEngineNumber : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigParameterSearchEngineNumber)
 public:
-	CConfigParameterSearchEngineNumber(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigParameterSearchEngineNumber(CWnd* pParent = NULL);   
 	virtual ~CConfigParameterSearchEngineNumber() {};
 
 	virtual void DoCommand();
@@ -220,12 +218,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigPositionFixNavigationMask 對話方塊
+// CConfigPositionFixNavigationMask
 class CConfigPositionFixNavigationMask : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigPositionFixNavigationMask)
 public:
-	CConfigPositionFixNavigationMask(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigPositionFixNavigationMask(CWnd* pParent = NULL);   
 	virtual ~CConfigPositionFixNavigationMask() {};
 
 	virtual void DoCommand();
@@ -240,12 +238,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// ConfigRefTimeToGpsTimeDlg 對話方塊
+// ConfigRefTimeToGpsTimeDlg
 class ConfigRefTimeToGpsTimeDlg : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(ConfigRefTimeToGpsTimeDlg)
 public:
-	ConfigRefTimeToGpsTimeDlg(CWnd* pParent = NULL);   // 標準建構函式
+	ConfigRefTimeToGpsTimeDlg(CWnd* pParent = NULL);   
 	virtual ~ConfigRefTimeToGpsTimeDlg() {};
 
 	virtual void DoCommand();
@@ -263,12 +261,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// ConfigGnssConstellationTypeDlg 對話方塊
+// ConfigGnssConstellationTypeDlg
 class ConfigGnssConstellationTypeDlg : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(ConfigGnssConstellationTypeDlg)
 public:
-	ConfigGnssConstellationTypeDlg(CWnd* pParent = NULL);   // 標準建構函式
+	ConfigGnssConstellationTypeDlg(CWnd* pParent = NULL);   
 	virtual ~ConfigGnssConstellationTypeDlg() {};
 
 	virtual void DoCommand();
@@ -288,7 +286,7 @@ class ConfigBinaryMeasurementDataOutDlg : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(ConfigBinaryMeasurementDataOutDlg)
 public:
-	ConfigBinaryMeasurementDataOutDlg(CWnd* pParent = NULL);   // 標準建構函式
+	ConfigBinaryMeasurementDataOutDlg(CWnd* pParent = NULL);   
 	virtual ~ConfigBinaryMeasurementDataOutDlg() {};
 
 	virtual void DoCommand();
@@ -320,7 +318,7 @@ class CConfigLeapSeconds : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigLeapSeconds)
 public:
-	CConfigLeapSeconds(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigLeapSeconds(CWnd* pParent = NULL);   
 	virtual ~CConfigLeapSeconds() {};
 
 	virtual void DoCommand();
@@ -335,12 +333,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigPowerMode 對話方塊
+// CConfigPowerMode 
 class CConfigPowerMode : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigPowerMode)
 public:
-	CConfigPowerMode(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigPowerMode(CWnd* pParent = NULL);   
 	virtual ~CConfigPowerMode() {};
 
 	virtual void DoCommand();
@@ -355,12 +353,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigParamSearchEngineSleepCRiteria 對話方塊
+// CConfigParamSearchEngineSleepCRiteria
 class CConfigParamSearchEngineSleepCriteria : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigParamSearchEngineSleepCriteria)
 public:
-	CConfigParamSearchEngineSleepCriteria(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigParamSearchEngineSleepCriteria(CWnd* pParent = NULL);   
 	virtual ~CConfigParamSearchEngineSleepCriteria() {};
 
 	virtual void DoCommand();
@@ -375,12 +373,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigDatumIndex 對話方塊
+// CConfigDatumIndex
 class CConfigDatumIndex : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigDatumIndex)
 public:
-	CConfigDatumIndex(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigDatumIndex(CWnd* pParent = NULL);   
 	virtual ~CConfigDatumIndex() {};
 
 	virtual void DoCommand();
@@ -395,32 +393,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigUartPassThrough 對話方塊
-/*
-class CConfigUartPassThrough : public CCommonConfigDlg
-{
-	DECLARE_DYNAMIC(CConfigUartPassThrough)
-public:
-	CConfigUartPassThrough(CWnd* pParent = NULL);   // 標準建構函式
-	virtual ~CConfigUartPassThrough() {};
-
-	virtual void DoCommand();
-
-	afx_msg void OnBnClickedOk();
-	virtual BOOL OnInitDialog();
-
-protected:
-	U08 m_nPassThrough;
-	
-	DECLARE_MESSAGE_MAP()
-};
-*/
-// CSUP800EraseUserDataDlg 對話方塊
+// CSUP800EraseUserDataDlg
 class CSUP800EraseUserDataDlg : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CSUP800EraseUserDataDlg)
 public:
-	CSUP800EraseUserDataDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CSUP800EraseUserDataDlg(CWnd* pParent = NULL);   
 	virtual ~CSUP800EraseUserDataDlg() {};
 
 	virtual void DoCommand();
@@ -435,12 +413,12 @@ protected:
 };
 
 
-// CSUP800WriteUserDataDlg 對話方塊
+// CSUP800WriteUserDataDlg
 class CSUP800WriteUserDataDlg : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CSUP800WriteUserDataDlg)
 public:
-	CSUP800WriteUserDataDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CSUP800WriteUserDataDlg(CWnd* pParent = NULL);   
 	virtual ~CSUP800WriteUserDataDlg() {};
 
 	virtual void DoCommand();
@@ -459,12 +437,12 @@ protected:
 };
 
 
-// CSUP800ReadUserDataDlg 對話方塊
+// CSUP800ReadUserDataDlg
 class CSUP800ReadUserDataDlg : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CSUP800ReadUserDataDlg)
 public:
-	CSUP800ReadUserDataDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CSUP800ReadUserDataDlg(CWnd* pParent = NULL);   
 	virtual ~CSUP800ReadUserDataDlg() {};
 
 	virtual void DoCommand();
@@ -484,12 +462,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigureSignalDisturbanceStatusDlg 對話方塊
+// CConfigureSignalDisturbanceStatusDlg 
 class CConfigureSignalDisturbanceStatusDlg : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigureSignalDisturbanceStatusDlg)
 public:
-	CConfigureSignalDisturbanceStatusDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigureSignalDisturbanceStatusDlg(CWnd* pParent = NULL);   
 	virtual ~CConfigureSignalDisturbanceStatusDlg() {};
 
 	virtual void DoCommand();
@@ -503,12 +481,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigureGpsUtcLeapSecondsInUtcDlg 對話方塊
+// CConfigureGpsUtcLeapSecondsInUtcDlg
 class CConfigureGpsUtcLeapSecondsInUtcDlg : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigureGpsUtcLeapSecondsInUtcDlg)
 public:
-	CConfigureGpsUtcLeapSecondsInUtcDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigureGpsUtcLeapSecondsInUtcDlg(CWnd* pParent = NULL);   
 	virtual ~CConfigureGpsUtcLeapSecondsInUtcDlg() {};
 
 	virtual void DoCommand();
@@ -527,12 +505,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigNoisePowerControlDlg 對話方塊
+// CConfigNoisePowerControlDlg
 class CConfigNoisePowerControlDlg : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigNoisePowerControlDlg)
 public:
-	CConfigNoisePowerControlDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigNoisePowerControlDlg(CWnd* pParent = NULL);   
 	virtual ~CConfigNoisePowerControlDlg() {};
 
 	virtual void DoCommand();
@@ -550,12 +528,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// ConfigPowerSavingParametersRomDlg 對話方塊
+// ConfigPowerSavingParametersRomDlg
 class ConfigPowerSavingParametersRomDlg : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(ConfigPowerSavingParametersRomDlg)
 public:
-	ConfigPowerSavingParametersRomDlg(CWnd* pParent = NULL);   // 標準建構函式
+	ConfigPowerSavingParametersRomDlg(CWnd* pParent = NULL);   
 	virtual ~ConfigPowerSavingParametersRomDlg() {};
 
 	virtual void DoCommand();
@@ -565,7 +543,7 @@ public:
 	void SetRomMode(bool b) { m_bRomMode = b; }
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	bool m_bRomMode;
 	S16 m_param[9];
@@ -574,12 +552,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CIqPlot 對話方塊
+// CIqPlot 
 class CIqPlot : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CIqPlot)
 public:
-	CIqPlot(CWnd* pParent = NULL);   // 標準建構函式
+	CIqPlot(CWnd* pParent = NULL);   
 	virtual ~CIqPlot() {};
 
 	virtual void DoCommand();
@@ -597,12 +575,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigGeofencing 對話方塊
+// CConfigGeofencing
 class CConfigGeofencing : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigGeofencing)
 public:
-	CConfigGeofencing(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigGeofencing(CWnd* pParent = NULL);   
 	virtual ~CConfigGeofencing() {};
 
 	virtual void DoCommand();
@@ -631,12 +609,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigRtkMode 對話方塊
+// CConfigRtkMode 
 class CConfigRtkMode : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigRtkMode)
 public:
-	CConfigRtkMode(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigRtkMode(CWnd* pParent = NULL);   
 	virtual ~CConfigRtkMode() {};
 
 	virtual void DoCommand();
@@ -651,12 +629,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigRtkMode 對話方塊
+// CConfigRtkMode
 class CConfigRtkParameters : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigRtkParameters)
 public:
-	CConfigRtkParameters(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigRtkParameters(CWnd* pParent = NULL);   
 	virtual ~CConfigRtkParameters() {};
 
 	virtual void DoCommand();
@@ -680,12 +658,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigRtkReset 對話方塊
+// CConfigRtkReset
 class CConfigRtkReset : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigRtkReset)
 public:
-	CConfigRtkReset(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigRtkReset(CWnd* pParent = NULL);   
 	virtual ~CConfigRtkReset() {};
 
 	virtual void DoCommand();
@@ -732,12 +710,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigMessageOut 對話方塊
+// CConfigMessageOut 
 class CConfigMessageOut : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigMessageOut)
 public:
-	CConfigMessageOut(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigMessageOut(CWnd* pParent = NULL);   
 	virtual ~CConfigMessageOut() {};
 
 	virtual void DoCommand();
@@ -752,12 +730,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigSubSecRegister 對話方塊
+// CConfigSubSecRegister
 class CConfigSubSecRegister : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigSubSecRegister)
 public:
-	CConfigSubSecRegister(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigSubSecRegister(CWnd* pParent = NULL);   
 	virtual ~CConfigSubSecRegister() {};
 
 	virtual void DoCommand();
@@ -772,12 +750,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigTiming 對話方塊
+// CConfigTiming 
 class CConfigTiming : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigTiming)
 public:
-	CConfigTiming(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigTiming(CWnd* pParent = NULL);   
 	virtual ~CConfigTiming() {};
 
 	virtual void DoCommand();
@@ -801,12 +779,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigTimingCableDelay 對話方塊
+// CConfigTimingCableDelay
 class CConfigTimingCableDelay : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigTimingCableDelay)
 public:
-	CConfigTimingCableDelay(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigTimingCableDelay(CWnd* pParent = NULL);   
 	virtual ~CConfigTimingCableDelay() {};
 
 	virtual void DoCommand();
@@ -821,12 +799,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigGpsMeasurementMode 對話方塊
+// CConfigGpsMeasurementMode 
 class CConfigGpsMeasurementMode : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigGpsMeasurementMode)
 public:
-	CConfigGpsMeasurementMode(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigGpsMeasurementMode(CWnd* pParent = NULL);   
 	virtual ~CConfigGpsMeasurementMode() {};
 
 	virtual void DoCommand();
@@ -841,12 +819,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigPscmDeviceAddress 對話方塊
+// CConfigPscmDeviceAddress 
 class CConfigPscmDeviceAddress : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigPscmDeviceAddress)
 public:
-	CConfigPscmDeviceAddress(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigPscmDeviceAddress(CWnd* pParent = NULL);   
 	virtual ~CConfigPscmDeviceAddress() {};
 
 	virtual void DoCommand();
@@ -860,12 +838,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigPscmLatLonFractionalDigits 對話方塊
+// CConfigPscmLatLonFractionalDigits
 class CConfigPscmLatLonFractionalDigits : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigPscmLatLonFractionalDigits)
 public:
-	CConfigPscmLatLonFractionalDigits(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigPscmLatLonFractionalDigits(CWnd* pParent = NULL);   
 	virtual ~CConfigPscmLatLonFractionalDigits() {};
 
 	virtual void DoCommand();
@@ -879,12 +857,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigVeryLowSpeed 對話方塊
+// CConfigVeryLowSpeed 
 class CConfigVeryLowSpeed : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigVeryLowSpeed)
 public:
-	CConfigVeryLowSpeed(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigVeryLowSpeed(CWnd* pParent = NULL);   
 	virtual ~CConfigVeryLowSpeed() {};
 
 	virtual void DoCommand();
@@ -899,12 +877,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CConfigDofunUniqueId 對話方塊
+// CConfigDofunUniqueId 
 class CConfigDofunUniqueId : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigDofunUniqueId)
 public:
-	CConfigDofunUniqueId(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigDofunUniqueId(CWnd* pParent = NULL);   
 	virtual ~CConfigDofunUniqueId() {};
 
 	virtual void DoCommand();
@@ -946,6 +924,62 @@ protected:
 	int m_nPstiId;
 	int m_nPstiInterval;
 	int m_nAttribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CRtkOnOffSv 
+class CRtkOnOffSv : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CRtkOnOffSv)
+public:
+	CRtkOnOffSv(CWnd* pParent = NULL);
+	virtual ~CRtkOnOffSv() {};
+  enum SvMode 
+  {
+    RtkSvGps,
+    RtkSvSbasQzss,
+    RtkSvGlonass,
+    RtkSvBeidou2
+  };
+  void SetSvMode(SvMode s) { m_svMode = s; };
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedCheckAll();
+	afx_msg void OnBnClickedUncheckAll();
+	afx_msg void OnBnClickedRead();
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
+
+protected:
+  const static UINT svId[];
+	U08 m_svMode;
+	U32 m_svReadAddr;
+	U32 m_svWriteAddr;
+	U32 m_svData;
+
+	void UpdateStatus();
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigRtkReferencePosition 
+class CConfigRtkReferencePosition : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigRtkReferencePosition)
+public:
+	CConfigRtkReferencePosition(CWnd* pParent = NULL);   
+	virtual ~CConfigRtkReferencePosition() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+
+	virtual BOOL OnInitDialog();
+
+protected:
+	double m_sttValue1;
+	double m_sttValue2;
+	float m_sttValue3;
 
 	DECLARE_MESSAGE_MAP()
 };

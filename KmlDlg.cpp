@@ -428,9 +428,9 @@ void CKmlDlg::OnBnClickedCheck76()
 		m_alltxt.ShowWindow(1);	
 		if(isConvertFinish)
 		{
-			sprintf_s(nmea, sizeof(nmea), "Total (#%d) txt files selected.\r\n\r\n", NumOfFile);
+			sprintf_s(nmea, sizeof(nmea), "Total (#%d) txt files are selected.\r\n\r\n", NumOfFile);
 			temp = nmea;
-			temp += "Successful";					
+			temp += "successfully";					
 			m_alltxt.SetWindowText(temp);
 		}
 		else
