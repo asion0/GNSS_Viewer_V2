@@ -91,15 +91,15 @@ void CSaveNmea::DoDataExchange(CDataExchange* pDX)
 	CDialog::DoDataExchange(pDX);
 }
 
-
 BEGIN_MESSAGE_MAP(CSaveNmea, CDialog)
 	ON_BN_CLICKED(IDC_CONTINUE, OnBnClickedContinue)
 	ON_BN_CLICKED(IDC_STOP, OnBnClickedStop)
 	ON_BN_CLICKED(IDC_CLOSE, OnBnClickedClose)
+  ON_WM_TIMER()
 END_MESSAGE_MAP()
 
-
 // CSaveNmea
+const int HOSTLOG_RESTART_TIMEOUT_ID = 1;
 BOOL CSaveNmea::OnInitDialog()
 {
 	CDialog::OnInitDialog();
@@ -127,6 +127,7 @@ BOOL CSaveNmea::OnInitDialog()
 	  *(binData.GetBuffer(1)) = 1;
 	  BinaryCommand binCmd(binData);
 	  CGPSDlg::gpsDlg->Restart(binCmd.GetBuffer(), FALSE);
+    SetTimer(HOSTLOG_RESTART_TIMEOUT_ID, 2000, NULL);
   }
   else if(logFunction == Binary_Mode)
   {
@@ -336,6 +337,18 @@ void CSaveNmea::WriteFile(void* p, int len)
   {
     CString s;
     e.GetErrorMessage(s.GetBuffer(255), 255);
+  }
+}
+
+void CSaveNmea::OnTimer(UINT_PTR nIDEvent)
+{
+  if(nIDEvent == HOSTLOG_RESTART_TIMEOUT_ID)
+  {
+    KillTimer(HOSTLOG_RESTART_TIMEOUT_ID);
+    if(!isRestartAck)
+    {
+      ::AfxMessageBox("HostLog restart timeout!");
+    }
   }
 }
 

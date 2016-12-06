@@ -685,6 +685,14 @@ public:
 	CConfigRtkMode2(CWnd* pParent = NULL);
 	virtual ~CConfigRtkMode2() {};
 
+  enum CommandMode
+  {
+    CfgRtkOprtFctnOld,
+    CfgRtkOprtFctn,
+    CfgBasePosition,
+    CfgTiming
+  };
+
 	virtual void DoCommand();
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnCbnSelChangeRtkMode();
@@ -692,7 +700,7 @@ public:
 	afx_msg void OnCbnSelChangeRoverOpt();
 
 	virtual BOOL OnInitDialog();
-
+  void SetCommandMode(CommandMode m) { cmdMode = m; };
 protected:
 	U08 m_rtkMode;
 	U08 m_baseOpt;
@@ -704,9 +712,9 @@ protected:
 	F32 m_sttValue3;
 	F32 m_mvbLength;
 	U08 m_attribute;
-	BOOL m_newCmd;
+	CommandMode cmdMode;
+  void AdjustUI();
 	void UpdateStatus();
-
 	DECLARE_MESSAGE_MAP()
 };
 
@@ -749,7 +757,7 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 };
-
+/*
 // CConfigTiming 
 class CConfigTiming : public CCommonConfigDlg
 {
@@ -778,7 +786,7 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 };
-
+*/
 // CConfigTimingCableDelay
 class CConfigTimingCableDelay : public CCommonConfigDlg
 {
@@ -980,6 +988,35 @@ protected:
 	double m_sttValue1;
 	double m_sttValue2;
 	float m_sttValue3;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// ConfigRtcmMeasurementDataOutDlg
+class ConfigRtcmMeasurementDataOutDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(ConfigRtcmMeasurementDataOutDlg)
+public:
+	ConfigRtcmMeasurementDataOutDlg(CWnd* pParent = NULL);   
+	virtual ~ConfigRtcmMeasurementDataOutDlg() {};
+
+	virtual void DoCommand();
+	virtual BOOL OnInitDialog();
+
+  afx_msg void OnBnClickedField2();
+	afx_msg void OnBnClickedOk();
+protected:
+	U08 m_field2;
+	U08 m_field3;
+	U08 m_field4;
+	U08 m_field5;
+	U08 m_field6;
+	U08 m_field8;
+	U08 m_field9;
+	U08 m_field10;
+	U08 m_attribute;
+  U16 cnstMode;
+	void UpdateStatus();
 
 	DECLARE_MESSAGE_MAP()
 };

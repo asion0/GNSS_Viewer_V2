@@ -756,7 +756,7 @@ void ShowBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.HDOP = (F32)hdop/100;
 	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.VDOP = (F32)vdop/100;
 
-	CGPSDlg::gpsDlg->m_gprmcMsgCopy.SpeedKnots = (F32)(fv / 1.852);
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.SpeedKnots = (F32)(fv * MS2KMHR / KNOTS2KMHR);
 }
 
 void ShowDjiBinaryOutput(U08* src, bool convertOnly, CString* pStr)
@@ -929,5 +929,5 @@ void ShowDjiBinaryOutput(U08* src, bool convertOnly, CString* pStr)
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.HDOP = (F32)hdop/100;
 	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.VDOP = (F32)vdop/100;
 
-	CGPSDlg::gpsDlg->m_gprmcMsgCopy.SpeedKnots = (F32)(fv / 1.852);
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.SpeedKnots = (F32)(fv * MS2KMHR/ KNOTS2KMHR);
 }

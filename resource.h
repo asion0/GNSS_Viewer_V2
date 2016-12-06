@@ -235,6 +235,8 @@
 #define IDD_HOSTLOG                     494
 #define IDB_ALTITUDE2                   495
 #define IDD_CFG_RTK_REF_POSITION        496
+#define IDD_CONFIG_RTCM_MEA_DAT_OUT     497
+#define IDD_DR_TEST                     498
 #define IDC_CONNECT                     1000
 #define IDC_CLOSE                       1001
 #define IDC_SETORIGIN                   1002
@@ -770,8 +772,11 @@
 #define IDC_EXT_RAW_MEAS                1309
 #define IDC_SLIDER8                     1310
 #define IDC_PLAY_INV_SL                 1310
+#define IDC_FIELD2                      1310
 #define IDC_SLIDER9                     1311
 #define IDC_PLAY_INV                    1311
+#define IDC_EXT_RAW_MEAS2               1311
+#define IDC_FIELD10                     1311
 #define IDC_SLIDER10                    1312
 #define IDC_PLAY_CONTROL                1312
 #define IDC_SLIDER11                    1313
@@ -938,24 +943,66 @@
 #define IDC_NORTH_PROJECTION            1410
 #define IDC_UNCHECK_ALL                 1410
 #define IDC_BASELINE_COURSE             1411
+#define IDC_FIELD3                      1411
 #define IDC_UP_PROJECTION               1412
+#define IDC_FIELD4                      1412
 #define IDC_TIME2                       1413
+#define IDC_FIELD5                      1413
 #define IDC_DATE2                       1414
+#define IDC_FIELD6                      1414
 #define IDC_EAST_PROJECTION_T           1415
+#define IDC_FIELD8                      1415
 #define IDC_BASELINE_LENGTH_T           1416
+#define IDC_FIELD9                      1416
 #define IDC_NORTH_PROJECTION_T          1417
+#define IDC_STATIC_ADDR                 1417
 #define IDC_BASELINE_COURSE_T           1418
+#define IDC_STATIC_DATA                 1418
 #define IDC_UP_PROJECTION_T             1419
+#define IDC_HAS_SENSOR                  1419
 #define IDC_TIME2_T                     1420
+#define IDC_QUERY_COUNT                 1420
 #define IDC_DATE2_T                     1421
+#define IDC_QUERY_RESPONSE              1421
 #define IDC_COOR_SWITCH1                1422
+#define IDC_HAS_BARO                    1422
 #define IDC_COOR_SWITCH2                1423
+#define IDC_HAS_ODO                     1423
 #define IDD_CFG_VERY_LOW                1424
+#define IDC_AG_X                        1424
 #define IDD_CFG_DOFUN_UNIQUE_ID         1425
+#define IDC_AG_Y                        1425
 #define IDD_CFG_PSTI_INTERVAL           1426
+#define IDC_AG_Z                        1426
 #define IDD_RTK_ONOFF_SV                1427
+#define IDC_GB_X                        1427
 #define IDC_ALT_SWITCH                  1428
+#define IDC_GB_Y                        1428
 #define IDC_ALTITUDE2_T                 1429
+#define IDC_GB_Z                        1429
+#define IDC_AA_X                        1430
+#define IDC_AA_Y                        1431
+#define IDC_AA_Z                        1432
+#define IDC_AB_X                        1433
+#define IDC_AB_Y                        1434
+#define IDC_AB_Z                        1435
+#define IDC_GYRO_CALIB_IND              1436
+#define IDC_SENSOR_CALIB_IND            1437
+#define IDC_ODO_PLS_COUNT               1438
+#define IDC_ODO_FB_STS                  1439
+#define IDC_ODO_SCL_FCT                 1440
+#define IDC_ODO_DST                     1441
+#define IDC_PRESSURE                    1442
+#define IDC_REF_PRESSURE                1443
+#define IDC_RAW_ALTITUDE                1444
+#define IDC_ALT_EPS                     1445
+#define IDC_SENSOR1_TYPE                1446
+#define IDC_SENSOR2_TYPE                1447
+#define IDC_SENSOR1_TEMP                1448
+#define IDC_SENSOR2_TEMP                1449
+#define IDC_MODE_TXT                    1450
+#define IDC_RTK_MODE_TXT                1451
+#define IDC_ATTR_TXT                    1452
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_SYSTEM_RESTART               32811
@@ -1182,6 +1229,15 @@
 #define ID_RTK_ONOFF_BD_SV              33144
 #define ID_HOSTLOG                      33145
 #define ID_QUERY_RTK_REF_POSITION       33146
+#define ID_HOSTLOG_NMEA                 33147
+#define ID_CFG_REGISTER16               33148
+#define ID_GET_RGISTER16                33149
+#define ID_CONFIG_RTCM_MEA_DAT_OUT      33150
+#define ID_QUERY_RTCM_MEA_DAT_OUT       33151
+#define ID_SET_CLOCK_OFFSET             33152
+#define ID_INSDR_TEST                   33153
+#define ID_QUERY_BASE_POSITION          33154
+#define ID_CONFIG_BASE_POSITION         33155
 
 // Next default values for new objects
 // 
@@ -1189,7 +1245,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        478
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1411
+#define _APS_NEXT_CONTROL_VALUE         1453
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

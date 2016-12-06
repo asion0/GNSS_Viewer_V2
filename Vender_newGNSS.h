@@ -256,6 +256,18 @@
 // .236 20161026 Add Configure RTK Reference Static Started Position, request from Andrew and Ryan.
 // .237 20161103 Add [Check all] and [Uncheck all] buttons in RTK On/OFF SV channel, request from Andrew.
 // .237 20161103 Redesign all save function for more stable, request from Andrew.
+// .238 20161116 Add [HostLog Output To NMEA] in Convert menu, request from Terrance and Andrew.
+// .239 20161117 Add [Get 16-IO Register] and [Configure 16-IO Register] in Binary menu, request from Patrick.
+// .240 20161123 Fixed [Get 16-IO Register] and [Configure 16-IO Register] id error issue, request from Patrick.
+// .241 20161123 Add [Query RTCM Measurement Data Output] and [Configure RTCM Measurement Data Output] in RTK menu, request from Ryan.
+// .242 20161123 Fix 0xA8 speed issue, request from Andrew.
+// .243 20161124 Modify [RTCM Measurement Data Output] for checking setting value and module type, request from Andrew and Ryan.
+// .244 20161124 Modify [RTCM Measurement Data Output] for UI status issue, request from Ken.
+// .245 20161128 Add [Write Clock Offser], request from Oliver.
+// .246 20161130 Add [INS DR Test], request from Angus.
+// .247 20161201 Add Raw menu and add BASE POSITION commands, request from Ryan.
+// .248 20161202 Fixed some bugs in  BASE POSITION commands.
+// .249 20161202 Fixed some text in  BASE POSITION commands.
 
 #define SW_FUN_DATALOG		        0x0001
 #define SW_FUN_AGPS				        0x0002
@@ -265,7 +277,7 @@
 #define IS_DEBUG				          0
 //title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 #define APP_CAPTION				        "GNSS Viewer"
-#define APP_VERSION				        "2.0.237"
+#define APP_VERSION				        "2.0.249"
 #define APP_TITLE				          ""
 #define APP_MODULE				        "Venus 8"
 
@@ -341,6 +353,7 @@
 #define CHECK_SAEE_MULTIHZ_ON	    0		//Check SAEE and Multi-Hz can't both on.
 #define INVERT_LON_LAT			      1		//Final spec for GeoFecing spec.
 #define MORE_INFO				          0		//More information field for RTK
+#define RAW_MENU				          1		//Show RAW menu 20161201 request from Ryan
 #define RTK_MENU				          1		//Show RTK menu
 #define INS_DR_MENU				        1	  //Show INS_DR menu
 #define CLIENT_WIDTH			        1008	//Viewer window client width
@@ -360,7 +373,30 @@
 #define SUPPORT_L2_GSV2         	0   //Support L2 information in GSV2 token.
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-#if defined(SWCFG_VENDOR_GNSS_NMEAPLAYER_L2) //20161018 For Patrick and Evan
+#if defined(SWCFG_VENDOR_GNSS_CUSTOMER_PRODUCTION_OLIVER20161128) //20161128 for Oliver
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef APP_VERSION				    
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef MORE_INFO
+ #undef _TAB_LAYOUT_
+
+ #define APP_CAPTION			"GNSS Viewer"
+ #define APP_TITLE				"Customer Release"
+ #define APP_VERSION			"2.1.245"
+
+ #define GNSS_VIEWER			1
+ #define IS_DEBUG				  0
+ #define BAUDRATE_DEFAULT	7
+ #define TIMING_MODE			1
+ #define MORE_INFO				0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define PRODUCTION_OLIVER20161128
+
+#elif defined(SWCFG_VENDOR_GNSS_NMEAPLAYER_L2) //20161018 For Patrick and Evan
  #undef APP_CAPTION
  #undef APP_TITLE
  #undef GNSS_VIEWER

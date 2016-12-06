@@ -59,6 +59,7 @@ public:
 	afx_msg void OnBnClickedContinue();
 	afx_msg void OnBnClickedStop();
 	afx_msg void OnBnClickedClose();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 
 protected:
 	UINT m_dialogEvent;

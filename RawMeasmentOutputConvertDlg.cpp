@@ -7,7 +7,7 @@
 
 #define UWM_RAW_PROGRESS		(WM_USER + 0x1039)
 // CRawMeasmentOutputConvertDlg
-const int MaxProgress = 1000;
+const int MaxProgress = 100;
 
 IMPLEMENT_DYNAMIC(CRawMeasmentOutputConvertDlg, CDialog)
 
@@ -15,6 +15,7 @@ CRawMeasmentOutputConvertDlg::CRawMeasmentOutputConvertDlg(CWnd* pParent /*=NULL
 	: CDialog(IDD_RAW_MEAS_OUT_CONV, pParent)
 {
 	m_convertRunning = false;
+  mode = RawMeasment;
 }
 
 CRawMeasmentOutputConvertDlg::~CRawMeasmentOutputConvertDlg()
@@ -41,7 +42,7 @@ void CRawMeasmentOutputConvertDlg::OnBnClickedBrowse()
 	CFileDialog dlgFile(TRUE, _T("*.*"), NULL, 
 		OFN_HIDEREADONLY, _T("ALL Files (*.*)|*.*||"), this);
 	
-  	INT_PTR nResult = dlgFile.DoModal();
+  INT_PTR nResult = dlgFile.DoModal();
 	m_filePath = dlgFile.GetPathName();
 	if(nResult == IDOK)
 	{
@@ -189,7 +190,7 @@ void BinaryProc(U08* buffer, int len, CFile& f)
 	}
 }
 
-bool cancelConvert = false;
+static bool cancelConvert = false;
 UINT RawMeasmentOutputConvertThread(LPVOID pParam)
 {
 	CRawMeasmentOutputConvertDlg* pDlg = (CRawMeasmentOutputConvertDlg*)pParam;
@@ -222,7 +223,108 @@ UINT RawMeasmentOutputConvertThread(LPVOID pParam)
 	}
 	fo.Close();
 	f.Close();
-	pDlg->PostMessage(UWM_RAW_PROGRESS, 0, TRUE);
+  if(!cancelConvert)
+  {
+	  pDlg->PostMessage(UWM_RAW_PROGRESS, MaxProgress, TRUE);
+  }
+  return 0;
+}
+
+bool ReadOneLineInFile(CFile& f, char* buffer, int size);
+bool PreprocessInputLine(U08 *buf, int& bufLen);
+bool AllPrintable(const char* buffer, int len);
+UINT RawMeasmentOutputConvertHostLogThread(LPVOID pParam)
+{
+	CRawMeasmentOutputConvertDlg* pDlg = (CRawMeasmentOutputConvertDlg*)pParam;
+	int length = 0;	
+
+	static char buffer[COM_BUFFER_SIZE * 16] = {0};
+	static char line[4096] = {0};
+	CFile f(pDlg->GetFilePath(), CFile::modeRead);
+	CString strOutput = pDlg->GetFilePath();
+	strOutput += ".txt";
+	CFile fo(strOutput, CFile::modeWrite | CFile::modeCreate);
+	ULONGLONG total = f.GetLength();
+	WPARAM progress = 0;
+	pDlg->PostMessage(UWM_RAW_PROGRESS, progress);
+  UINT size = 0;
+  const char *iter = buffer;
+  char *witer = line;
+  enum LineState
+  {
+    None,
+    Start,
+    Got0D,
+  };
+
+  LineState getline = None;
+  line[0] = '$';
+  do
+  {
+    size = f.Read(buffer, sizeof(buffer));
+    UINT count = size;
+    iter = buffer;
+	  while(!cancelConvert && count > 0)
+	  {
+      if(getline == None && *iter == '$')
+      {
+        getline = Start;
+        witer = line + 1;
+      }
+      else if(getline == Start && *iter == '$')
+      {
+        witer = line + 1;
+      }
+      else if(getline == Start && *iter == 0x0D && (witer - line) < 3)
+      {
+        getline = None;
+      }
+      else if(getline == Start && *iter == 0x0D)
+      {
+        *witer = 0x0D;
+        ++witer;
+        getline = Got0D;
+      }
+      else if(getline == Got0D && *iter == 0x0A)
+      { //
+        *witer = 0x0A;
+        *(witer + 1) = 0;
+        fo.Write(line, strlen(line));
+        getline = None;
+      }
+      else if(getline == Got0D && *iter != 0x0A)
+      {
+        getline = None;
+      }
+      else if(getline == Start && (*iter < 0x20 || *iter > 0x7E))
+      { //line hase non-printable char, 
+        getline = None;
+      }
+      else if(getline == Start)
+      {
+        *witer = *iter;
+        ++witer;
+      }
+      ++iter;
+      --count;
+      if(cancelConvert)
+      {
+        int a = 0;
+      }
+	  } //while(!cancelConvert && count > 0)
+
+    if(progress != (WPARAM)(MaxProgress * (double)f.GetPosition() / total))
+	  {
+		  progress = (WPARAM)(MaxProgress * (double)f.GetPosition() / total);
+		  pDlg->PostMessage(UWM_RAW_PROGRESS, progress);
+	  }
+  } while(size == sizeof(buffer) && !cancelConvert);
+	fo.Close();
+	f.Close();
+  if(!cancelConvert)
+  {
+	  pDlg->PostMessage(UWM_RAW_PROGRESS, MaxProgress, TRUE);
+  }
 	return 0;
 }
 
@@ -232,7 +334,14 @@ void CRawMeasmentOutputConvertDlg::OnBnClickedGo()
 	if(!m_convertRunning)
 	{
 		cancelConvert = false;
-		pThread = AfxBeginThread(RawMeasmentOutputConvertThread, this);
+    if(mode == RawMeasment)
+    {
+		  pThread = AfxBeginThread(RawMeasmentOutputConvertThread, this);
+    }
+    else if(mode == HostLog)
+    {
+		  pThread = AfxBeginThread(RawMeasmentOutputConvertHostLogThread, this);
+    }
 		CProgressCtrl *p = (CProgressCtrl*)GetDlgItem(IDC_PROGRESS1);
 		p->SetRange32(0, MaxProgress);
 		p->SetPos(0);
@@ -252,7 +361,6 @@ BOOL CRawMeasmentOutputConvertDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	GetDlgItem(IDC_MESSAGE)->SetWindowText("");
-
 	OnBnClickedBrowse();
 
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -264,7 +372,7 @@ LRESULT CRawMeasmentOutputConvertDlg::OnRawProgress(WPARAM wParam, LPARAM lParam
 	p->SetPos(wParam);
 
 	CString strMsg;
-	strMsg.Format("Converting %d / %d", (int)wParam, 1000);
+	strMsg.Format("Converting %d / %d", (int)wParam, MaxProgress);
 	GetDlgItem(IDC_MESSAGE)->SetWindowText(strMsg);
 
 	if(lParam == TRUE)

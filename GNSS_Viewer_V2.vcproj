@@ -133,7 +133,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				WholeProgramOptimization="true"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_GNSS_GENERAL_ZENLANE_160808"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_GNSS_CUSTOMER_PRODUCTION_OLIVER20161128"
 				StringPooling="true"
 				MinimalRebuild="false"
 				RuntimeLibrary="0"
@@ -2909,6 +2909,14 @@
 			</File>
 			<File
 				RelativePath=".\ConfigEricssonIntervalDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DrTestDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DrTestDlg.h"
 				>
 			</File>
 			<File

@@ -961,3 +961,101 @@ WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)
 	return nReturn;
 }
 
+
+//void DisplayStaticInt(CDialog* pDlg, UINT uid, LPCSTR format, int data)
+//{
+//  CString txt;
+//  txt.Format(format, data);
+//  pDlg->GetDlgItem(uid)->SetWindowText(txt);
+//}
+//
+//void DisplayStaticFloat(CDialog* pDlg, UINT uid, LPCSTR format, double data)
+//{
+//  CString txt;
+//  txt.Format(format, data);
+//  pDlg->GetDlgItem(uid)->SetWindowText(txt);
+//}
+
+bool PreprocessInputLine(U08 *buf, int& bufLen)
+{
+  //Find text sentence
+  U08 *start = NULL, *end = NULL;
+  U08* iter = (U08*)(buf + bufLen - 1);
+  do
+  {
+    if(*iter == 0x0D && *(iter + 1) == 0x0A)
+    {
+      end = iter + 1;
+    }
+
+    if(*iter == '$' && end != NULL)
+    {
+      start = iter;
+      break;
+    }
+  } while(iter-- != buf);
+  if(start != NULL && end != NULL && (end - start) > 7 && (end - start) < 128 && *(end - 4) != '*')
+  {
+    int a = 0;
+  }
+  if(start != NULL && end != NULL && (end - start) > 7 && (end - start) < 128 && *(end - 4) == '*')
+  {
+    memcpy(buf, start, end - start + 1);
+    bufLen = end - start + 1;
+    buf[bufLen] = 0;
+    return true;
+  }
+
+  //Find binary sentence
+  start = NULL;
+  end = NULL;
+  iter = buf + bufLen - 1;
+  do
+  {
+    if(*iter == 0x0D && *(iter + 1) == 0x0A)
+    {
+      end = iter + 1;
+    }
+  
+    if(0xA0 == *iter && 0xA1 == *(iter + 1) && end != NULL)
+    {
+      start = iter;
+      break;
+    }
+  } while(iter-- != buf);
+
+  if(start != NULL && end != NULL)
+  {
+    memcpy(buf, start, end - start + 1);
+    bufLen = end - start + 1;
+    buf[bufLen] = 0;
+    return true;
+  }
+  return false;
+}
+
+bool ReadOneLineInFile(CFile& f, char* buffer, int size)
+{
+  char* iter = buffer;
+  memset(buffer, 0, size);
+  
+  if(1 != f.Read(iter++, 1))
+  {
+    return false;
+  }
+
+  while(iter - buffer < size)
+  {
+    if(1 != f.Read(iter, 1))
+    { //End of file
+      break;
+    }
+    if(*iter == 0x0A && *(iter - 1) == 0x0D)
+    {
+      return true;
+    }
+    ++iter;
+  }
+    
+  return true;
+}

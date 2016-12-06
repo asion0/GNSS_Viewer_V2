@@ -5,6 +5,8 @@
 *.pydevproject
 .project
 .metadata
+Objs/
+Exe/*.exe
 bin/
 tmp/
 *.tmp

@@ -25,6 +25,7 @@
 #include "GetAlmanac.h"
 #include "CommonConfigDlg.h"
 #include "GPSDlg.h"
+#include "DrTestDlg.h"
 
 struct CommandEntry
 {
@@ -42,7 +43,7 @@ static CommandEntry cmdTable[] =
 	//QuerySwCrcSysCmd
 	{ 0x03, 0x01, 2, 0x81, 0x00 },
 	//QueryCustomerIDCmd,
-	{ 0x0D, 0xFF, 1, 0x85, 0x00 },
+	{ 0x0D, 0xFF, 1, 0x92, 0x00 },
 	//QueryPositionRateCmd
 	{ 0x10, 0xFF, 1, 0x86, 0x00 },
 	//QueryPowerModeCmd
@@ -51,6 +52,10 @@ static CommandEntry cmdTable[] =
 	{ 0x17, 0xFF, 1, 0x94, 0x00 },
 	//QueryBinaryMeasurementDataOutCmd,
 	{ 0x1F, 0xFF, 1, 0x89, 0x00 },
+	//QueryRtcmMeasurementDataOutCmd,
+	{ 0x21, 0xFF, 1, 0x8A, 0x00 },
+	//QueryBasePositionCmd,
+	{ 0x23, 0xFF, 1, 0x8B, 0x00 },
 	//QueryDatumCmd
 	{ 0x2D, 0xFF, 1, 0xAE, 0x00 },
 	//QueryDopMaskCmd
@@ -121,7 +126,7 @@ static CommandEntry cmdTable[] =
 	{ 0x64, 0x2B, 2, 0x64, 0x94 },
 	//QuerySignalDisturbanceDataCmd,
 	{ 0x64, 0x2C, 2, 0x64, 0x95 },
-	//QueryVeryLowSpeedCmd,
+	//QueryGeofenceCmd,
 	{ 0x64, 0x35, 3, 0x64, 0x99 },
 	//QueryGeofenceResultCmd,
 	{ 0x64, 0x31, 2, 0x64, 0x97 },
@@ -155,6 +160,8 @@ static CommandEntry cmdTable[] =
 	{ 0x6F, 0x02, 2, 0x6F, 0x80 },
 	//QueryRegisterCmd,
 	{ 0x71, 0xFF, 5, 0xC0, 0x00 },
+	//QueryRegisterCmd16,
+	{ 0x73, 0xFF, 5, 0xC1, 0x00 },
 	//QueryNmeaInterval2V8Cmd,
 	{ 0x7A, 0x01, 3, 0x7A, 0x01 },
 	//QueryDofunUniqueIdCmd,
@@ -190,6 +197,8 @@ enum SqBinaryCmd
 	QueryPowerModeCmd,
 	QueryDatalogLogStatusCmd,
 	QueryBinaryMeasurementDataOutCmd,
+	QueryRtcmMeasurementDataOutCmd,
+  QueryBasePositionCmd,
 	QueryDatumCmd,
 	QueryDopMaskCmd,
 	QueryElevationAndCnrMaskCmd,
@@ -242,6 +251,7 @@ enum SqBinaryCmd
 	QueryRtkModeCmd2,
 	QueryDrMultiHzCmd,
 	QueryRegisterCmd,
+	QueryRegisterCmd16,
 	QueryNmeaInterval2V8Cmd,
 	QueryDofunUniqueIdCmd,
 	QueryEricssonIntervalCmd,
@@ -281,27 +291,28 @@ bool CGPSDlg::SaveEphemeris2(U08* buff, WORD id)
 CGPSDlg::CmdErrorCode CGPSDlg::GetCommandReturnType(U08* buff, int tail, bool showMsg)
 {	
 	if(buff[0]==0xa0 && buff[1]==0xa1 &&
-		buff[tail-1]==0x0d && buff[tail]==0x0a && buff[4]==0x83 && buff[5]==0x0)
-	{		
+		(buff[tail-1]==0x0d) && (buff[tail]==0x0a) && (buff[4]==0x83) && (buff[5]==0x0))
+	{ //ACK0 (V6 Firmware will return this before ACK) - 0xa0, 0xa1, l1, l2, 0x83, 0x00, ... ,0x0d, 0x0a
 		return Ack0;
 	}
 	if((buff[0]==0xa0) && (buff[1]==0xa1) &&
-		(buff[tail-1]==0x0d)&&(buff[tail]==0x0a) && (buff[4]==0x83))
-	{
+		(buff[tail-1]==0x0d) && (buff[tail]==0x0a) && (buff[4]==0x83))
+	{ //ACK - 0xa0, 0xa1, l1, l2, 0x83, 0xcommandId, ... ,0x0d, 0x0a
 		return Ack;
 	}
-	else if((buff[0]==0xa0) && (buff[1]==0xa1) &&
-		(buff[tail-1]==0x0d)&&(buff[tail]==0x0a) && (buff[4]==0x84))
-	{
+	if((buff[0]==0xa0) && (buff[1]==0xa1) &&
+		(buff[tail-1]==0x0d) && (buff[tail]==0x0a) && (buff[4]==0x84))
+	{ //NACK - 0xa0, 0xa1, l1, l2, 0x84, 0xcommandId, ... ,0x0d, 0x0a
 		if(showMsg)
 		{
 			add_msgtolist("Received NACK...");
 		}
 		return NACK;
 	}
-	else if((buff[0]==0xa0) && (buff[1]==0xa1) &&
-		(buff[tail-1]==0x0d)&&(buff[tail]==0x0a) && (buff[4]==0x85))
-	{
+	if((buff[0]==0xa0) && (buff[1]==0xa1) &&
+		(buff[tail-1]==0x0d) && (buff[tail]==0x0a) && (buff[4]==0x85))
+	{ //FormatError (V8 FW after 2016 will return this when command format error
+    //- 0xa0, 0xa1, l1, l2, 0x85, 0xcommandId, ... ,0x0d, 0x0a
 		if(showMsg)
 		{
 			add_msgtolist("Received FormatError...");
@@ -311,7 +322,85 @@ CGPSDlg::CmdErrorCode CGPSDlg::GetCommandReturnType(U08* buff, int tail, bool sh
 	return Timeout;
 }
 
-bool CGPSDlg::SendToTarget(U08* message, U16 length, const char* Msg, bool quick)
+bool CGPSDlg::SendToTarget(U08* message, U16 length, LPCSTR promptMessage, int timeout)
+{	
+  //For old style, timeout is boolean type.
+  if(timeout == 1)
+  {
+    timeout = 1000;
+  }
+  else if(timeout == 0)
+  {
+    timeout = 2000;
+  }
+
+	if(m_bShowBinaryCmdData)
+	{
+		add_msgtolist("In : " + theApp.GetHexString(message, length));	
+	}
+
+	ClearQue();
+  if(NULL == m_serial) 
+  {
+    return false;
+  }
+  else
+  {
+	  m_serial->SendData(message, length);
+  }
+
+	static U08 buffer[COM_BUFFER_SIZE] = { 0 };
+	ScopeTimer t;
+	while(NULL != m_serial)
+	{	
+    if((int)t.GetDuration() > timeout)
+    {
+      break;
+    }
+	  int retLen = m_serial->GetBinary(buffer, sizeof(buffer) - 1, timeout);
+		if(!ReadOK(retLen))
+		{
+			Sleep(10);
+			continue;
+		}
+		buffer[retLen] = 0;
+    if(!PreprocessInputLine(buffer, retLen))
+    {
+      continue;
+    }
+	
+		CmdErrorCode ack = GetCommandReturnType(buffer, retLen - 1, (promptMessage != NULL));	
+		if(ack == Ack)
+		{
+			if(m_bShowBinaryCmdData)
+			{
+				add_msgtolist("Ack: " + theApp.GetHexString(buffer, retLen));	
+			}
+
+			if(strlen(promptMessage))
+			{
+				add_msgtolist(promptMessage);	
+			}
+			return true;
+		}
+		else if(ack == NACK)
+		{
+			return false;
+		}
+		else if(ack == FormatError)
+		{
+			if(m_bShowBinaryCmdData)
+			{
+				add_msgtolist("FormatError: " + theApp.GetHexString(buffer, retLen));	
+			}
+			ShowFormatError(message, buffer);
+			return false;
+		}
+	}	//while(1)	
+  return false;
+}
+
+bool CGPSDlg::SendToTargetOld(U08* message, U16 length, const char* Msg, bool quick)
 {	
 	time_t start,end;
 	start = clock();
@@ -1817,6 +1906,10 @@ UINT RestartThread(LPVOID pParam)
 
 void CGPSDlg::OnBnClickedColdstart()
 {
+#if defined (PRODUCTION_OLIVER20161128)
+  OnBinaryConfigureClockOffset();
+  return;
+#endif
 	if(!CheckConnect())
 	{
 		return;
@@ -2149,33 +2242,19 @@ CGPSDlg::CmdErrorCode CGPSDlg::GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U
 {
 	ScopeTimer t;
 	bool alreadyAck = noWaitAck;
-	while(1)
+	while(NULL != m_serial)
 	{
 		ackCmd->Clear();
-		if(NULL == m_serial) 
-    {
-			return Timeout;
-    }
-		DWORD len = m_serial->GetBinaryAck(ackCmd->GetBuffer(), ackCmd->Size(), timeOut - t.GetDuration());
 		if(CGPSDlg::gpsDlg->CheckTimeOut(t.GetDuration(), timeOut, silent))
 		{	//Time Out
 			return Timeout;
 		}
+
+    DWORD len = m_serial->GetBinaryAck(ackCmd->GetBuffer(), ackCmd->Size(), timeOut - t.GetDuration());
 		if(!ReadOK(len))
 		{	
 			continue;
 		}
-    //{
-    //  CString dbg, c;
-    //  dbg.Format("#%d:", len);
-    //  for(int i = 0; i < len; ++i)
-    //  {
-    //    c.Format(" %02X", *(ackCmd->GetBuffer(i)));
-    //    dbg += c;
-    //  }
-    //  dbg += "\r\n";
-    //  ::OutputDebugString(dbg);
-    //}
 
 		int cmdSize = MAKEWORD((*ackCmd)[3], (*ackCmd)[2]);
 		if(cmdSize != len - 7)
@@ -2216,6 +2295,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U
 			add_msgtolist("Received FormatError...");
 			return FormatError;
 		}
+
 		if( (*ackCmd)[4] == 0x83)
 		{	//Get ACK
 			if(m_bShowBinaryCmdData)
@@ -2225,6 +2305,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U
 			alreadyAck = true;
 			continue;
 		}
+
 		if(alreadyAck && Cal_Checksum((*ackCmd).GetBuffer()) && (*ackCmd)[4]==cAck && cAckSub==0x00)
 		{
 			if(m_bShowBinaryCmdData)
@@ -2245,9 +2326,8 @@ CGPSDlg::CmdErrorCode CGPSDlg::GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U
 	return Timeout;
 }
 
-CGPSDlg::CmdErrorCode CGPSDlg::ExcuteBinaryCommand(int cmdIdx, BinaryCommand* cmd, BinaryData* ackCmd, DWORD timeOut, bool silent)
+CGPSDlg::CmdErrorCode CGPSDlg::ExcuteBinaryCommand(U08 ackId, U08 ackSubId, BinaryCommand* cmd, BinaryData* ackCmd, DWORD timeOut, bool silent)
 {
-	CommandEntry binMsg = cmdTable[cmdIdx];
 	U08* pCmd = cmd->GetBuffer();
 	int inSize = cmd->Size();
 	if(m_bShowBinaryCmdData)
@@ -2260,7 +2340,14 @@ CGPSDlg::CmdErrorCode CGPSDlg::ExcuteBinaryCommand(int cmdIdx, BinaryCommand* cm
 	m_serial->ClearQueue();
 	m_serial->SendData(pCmd, inSize);
 
-	return GetBinaryResponse(ackCmd, binMsg.cmdAck, binMsg.cmdAckSub, timeOut, silent);
+	return GetBinaryResponse(ackCmd, ackId, ackSubId, timeOut, silent);
+
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::ExcuteBinaryCommand(int cmdIdx, BinaryCommand* cmd, BinaryData* ackCmd, DWORD timeOut, bool silent)
+{
+	CommandEntry binMsg = cmdTable[cmdIdx];
+  return CGPSDlg::ExcuteBinaryCommand(binMsg.cmdAck, binMsg.cmdAckSub, cmd, ackCmd, timeOut, silent);
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::ExcuteBinaryCommandNoWait(int cmdIdx, BinaryCommand* cmd)
@@ -2632,59 +2719,69 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryConstellationCapability(CmdExeMode nMode, vo
 		return Timeout;
 	}
 	BinaryData ackCmd;
-	if(Ack == ExcuteBinaryCommand(QueryConstellationCapabilityCmd, &cmd, &ackCmd))
+  CmdErrorCode err =ExcuteBinaryCommand(QueryConstellationCapabilityCmd, &cmd, &ackCmd);
+	if(err != Ack)
 	{
-		CString strMsg;
-		U16 mode = MAKEWORD(ackCmd[7], ackCmd[6]);
-		add_msgtolist("Constellation Capability : ");
+    return err;
+  }
 
-		if(mode & 0x0001)
-		{
-			strMsg += "GPS, ";
-		}
-		if(mode & 0x0002)
-		{
-			strMsg += "GLONASS, ";
-		}
-		if(mode & 0x0004)
-		{
-			strMsg += "Galileo, ";
-		}
-		if(mode & 0x0008)
-		{
-			strMsg += "Beidou, ";
-		}
-		add_msgtolist(strMsg);
+  if(Return == nMode)
+  {	
+    *((BinaryData*)outputData) = ackCmd;
+	  return err;
+  }
 
-		UINT32 freq = ackCmd[8] << 24 & 0xff000000 | 
-					ackCmd[9] << 16 & 0xff0000 | 
-					ackCmd[10] << 8 &0xff00 | 
-					ackCmd[11] & 0xff;
-		strMsg.Format("GPS Ref. Freq. : %d Hz", freq);
-		add_msgtolist(strMsg);
+	CString strMsg;
+	U16 mode = MAKEWORD(ackCmd[7], ackCmd[6]);
+	add_msgtolist("Constellation Capability : ");
 
-		freq = ackCmd[12] << 24 & 0xff000000 | 
-					ackCmd[13] << 16 & 0xff0000 | 
-					ackCmd[14] << 8 &0xff00 | 
-					ackCmd[15] & 0xff;
-		strMsg.Format("GLONASS Ref. Freq. : %d Hz", freq);
-		add_msgtolist(strMsg);
-
-		freq = ackCmd[16] << 24 & 0xff000000 | 
-					ackCmd[17] << 16 & 0xff0000 | 
-					ackCmd[18] << 8 &0xff00 | 
-					ackCmd[19] & 0xff;
-		strMsg.Format("Galileo Ref. Freq. : %d Hz", freq);
-		add_msgtolist(strMsg);
-
-		freq = ackCmd[20] << 24 & 0xff000000 | 
-					ackCmd[21] << 16 & 0xff0000 | 
-					ackCmd[22] << 8 &0xff00 | 
-					ackCmd[23] & 0xff;
-		strMsg.Format("Beidou Ref. Freq. : %d Hz", freq);
-		add_msgtolist(strMsg);
+	if(mode & 0x0001)
+	{
+		strMsg += "GPS, ";
 	}
-	return Timeout;
+	if(mode & 0x0002)
+	{
+		strMsg += "GLONASS, ";
+	}
+	if(mode & 0x0004)
+	{
+		strMsg += "Galileo, ";
+	}
+	if(mode & 0x0008)
+	{
+		strMsg += "Beidou, ";
+	}
+	add_msgtolist(strMsg);
+
+	UINT32 freq = ackCmd[8] << 24 & 0xff000000 | 
+				ackCmd[9] << 16 & 0xff0000 | 
+				ackCmd[10] << 8 &0xff00 | 
+				ackCmd[11] & 0xff;
+	strMsg.Format("GPS Ref. Freq. : %d Hz", freq);
+	add_msgtolist(strMsg);
+
+	freq = ackCmd[12] << 24 & 0xff000000 | 
+				ackCmd[13] << 16 & 0xff0000 | 
+				ackCmd[14] << 8 &0xff00 | 
+				ackCmd[15] & 0xff;
+	strMsg.Format("GLONASS Ref. Freq. : %d Hz", freq);
+	add_msgtolist(strMsg);
+
+	freq = ackCmd[16] << 24 & 0xff000000 | 
+				ackCmd[17] << 16 & 0xff0000 | 
+				ackCmd[18] << 8 &0xff00 | 
+				ackCmd[19] & 0xff;
+	strMsg.Format("Galileo Ref. Freq. : %d Hz", freq);
+	add_msgtolist(strMsg);
+
+	freq = ackCmd[20] << 24 & 0xff000000 | 
+				ackCmd[21] << 16 & 0xff0000 | 
+				ackCmd[22] << 8 &0xff00 | 
+				ackCmd[23] & 0xff;
+	strMsg.Format("Beidou Ref. Freq. : %d Hz", freq);
+	add_msgtolist(strMsg);
+
+	return Ack;
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::QueryVersionExtension(CmdExeMode nMode, void* outputData)
@@ -2831,7 +2928,8 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareCrcSystemCode(CmdExeMode nMode, void
 	cmd.SetU08(2, cmdTable[QuerySwCrcSysCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(Ack == ExcuteBinaryCommand(QuerySwCrcSysCmd, &cmd, &ackCmd, m_nDefaultTimeout))
+  //QuerySoftwareCrcSystemCode need long timeout
+	if(Ack == ExcuteBinaryCommand(QuerySwCrcSysCmd, &cmd, &ackCmd, 5000))
 	{
 		if(nMode==Return)
 		{
@@ -3096,64 +3194,73 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryTiming(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(1, cmdTable[QueryTimingCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(Ack == ExcuteBinaryCommand(QueryTimingCmd, &cmd, &ackCmd))
+	CmdErrorCode err = ExcuteBinaryCommand(QueryTimingCmd, &cmd, &ackCmd, (nMode == Display) ? 3000 : 1000);
+	if(err != Ack)
 	{
-		CString strMsg = "Query Timing successfully";
+		return err;
+	}
+ 
+	if(Return == nMode)
+	{	//Return command data
+    *((BinaryData*)outputData) = ackCmd;
+		return err;
+	}
+
+	CString strMsg = "Query Timing successfully";
+	add_msgtolist(strMsg);
+
+	_1PPS_Timing_T t;
+	t.Timing_mode = ackCmd[5];
+	t.Survey_Length = MAKELONG(MAKEWORD(ackCmd[9], ackCmd[8]), MAKEWORD(ackCmd[7], ackCmd[6]));
+	t.Standard_deviation = MAKELONG(MAKEWORD(ackCmd[13], ackCmd[12]), MAKEWORD(ackCmd[11], ackCmd[10]));
+	for(int i=0; i<sizeof(t.latitude); ++i)
+	{
+		((BYTE*)(&t.latitude))[7 - i] = ackCmd[14 + i];
+		((BYTE*)(&t.longitude))[7 - i] = ackCmd[22 + i];
+		if(i < sizeof(t.altitude))
+		{
+			((BYTE*)(&t.altitude))[3 - i] = ackCmd[30 + i];
+		}
+	}
+	t.RT_Timing_mode = ackCmd[34];
+	t.RT_Survey_Length = MAKELONG(MAKEWORD(ackCmd[38], ackCmd[37]), MAKEWORD(ackCmd[36], ackCmd[35]));
+
+	if(t.Timing_mode==0)
+	{
+		add_msgtolist("Timing Mode: PVT Mode");
+	}
+	else if(t.Timing_mode==1)
+	{
+		add_msgtolist("Timing Mode: Survey Mode");
+		strMsg.Format("Survey Length: %d",t.Survey_Length);
 		add_msgtolist(strMsg);
+		strMsg.Format("Standard deviation: %d",t.Standard_deviation);
+		add_msgtolist(strMsg);
+	}
+	else if(t.Timing_mode==2)
+	{
+		add_msgtolist("Timing Mode: Static Mode");
+		strMsg.Format("Saved Latitude: %12.9lf",t.latitude);
+		add_msgtolist(strMsg);
+		strMsg.Format("Saved Longitude: %12.9lf",t.longitude);
+		add_msgtolist(strMsg);
+		strMsg.Format("Saved Altitude: %3.2f",t.altitude);
+		add_msgtolist(strMsg);
+	}
 
-		_1PPS_Timing_T t;
-		t.Timing_mode = ackCmd[5];
-		t.Survey_Length = MAKELONG(MAKEWORD(ackCmd[9], ackCmd[8]), MAKEWORD(ackCmd[7], ackCmd[6]));
-		t.Standard_deviation = MAKELONG(MAKEWORD(ackCmd[13], ackCmd[12]), MAKEWORD(ackCmd[11], ackCmd[10]));
-		for(int i=0; i<sizeof(t.latitude); ++i)
-		{
-			((BYTE*)(&t.latitude))[7 - i] = ackCmd[14 + i];
-			((BYTE*)(&t.longitude))[7 - i] = ackCmd[22 + i];
-			if(i < sizeof(t.altitude))
-			{
-				((BYTE*)(&t.altitude))[3 - i] = ackCmd[30 + i];
-			}
-		}
-		t.RT_Timing_mode = ackCmd[34];
-		t.RT_Survey_Length = MAKELONG(MAKEWORD(ackCmd[38], ackCmd[37]), MAKEWORD(ackCmd[36], ackCmd[35]));
-
-		if(t.Timing_mode==0)
-		{
-			add_msgtolist("Timing Mode: PVT Mode");
-		}
-		else if(t.Timing_mode==1)
-		{
-			add_msgtolist("Timing Mode: Survey Mode");
-			strMsg.Format("Survey Length: %d",t.Survey_Length);
-			add_msgtolist(strMsg);
-			strMsg.Format("Standard deviation: %d",t.Standard_deviation);
-			add_msgtolist(strMsg);
-		}
-		else if(t.Timing_mode==2)
-		{
-			add_msgtolist("Timing Mode: Static Mode");
-			strMsg.Format("Saved Latitude: %12.9lf",t.latitude);
-			add_msgtolist(strMsg);
-			strMsg.Format("Saved Longitude: %12.9lf",t.longitude);
-			add_msgtolist(strMsg);
-			strMsg.Format("Saved Altitude: %3.2f",t.altitude);
-			add_msgtolist(strMsg);
-		}
-
-		if(t.RT_Timing_mode==0)
-		{
-			add_msgtolist("Run-time Timing Mode: PVT Mode");
-		}
-		else if(t.RT_Timing_mode==1)
-		{
-			add_msgtolist("Run-time Timing Mode: Survey Mode");
-			strMsg.Format("Run-time Survey Length: %d",t.RT_Survey_Length);
-			add_msgtolist(strMsg);
-		}
-		else if(t.RT_Timing_mode==2)
-		{
-			add_msgtolist("Run-time Timing Mode: Static Mode");
-		}
+	if(t.RT_Timing_mode==0)
+	{
+		add_msgtolist("Run-time Timing Mode: PVT Mode");
+	}
+	else if(t.RT_Timing_mode==1)
+	{
+		add_msgtolist("Run-time Timing Mode: Survey Mode");
+		strMsg.Format("Run-time Survey Length: %d",t.RT_Survey_Length);
+		add_msgtolist(strMsg);
+	}
+	else if(t.RT_Timing_mode==2)
+	{
+		add_msgtolist("Run-time Timing Mode: Static Mode");
 	}
 	return Timeout;
 }
@@ -4038,6 +4145,33 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRegister(CmdExeMode nMode, void* outputData)
 	return Timeout;
 }
 
+CGPSDlg::CmdErrorCode CGPSDlg::QueryRegister16(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(cmdTable[QueryRegisterCmd16].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryRegisterCmd16].cmdId);
+	cmd.SetU08(2, HIBYTE(HIWORD(m_regAddress)));
+	cmd.SetU08(3, LOBYTE(HIWORD(m_regAddress)));
+	cmd.SetU08(4, HIBYTE(LOWORD(m_regAddress)));
+	cmd.SetU08(5, LOBYTE(LOWORD(m_regAddress)));
+
+	BinaryData ackCmd;
+	if(Ack == ExcuteBinaryCommand(QueryRegisterCmd16, &cmd, &ackCmd))
+	{
+		U32 data = MAKELONG(MAKEWORD(ackCmd[8], ackCmd[7]), MAKEWORD(ackCmd[6], ackCmd[5]));
+		if(nMode==Return)
+		{
+			*((U32*)outputData) = data;
+			return Ack;
+		} 
+		CString strMsg;
+		strMsg.Format("Get 16-IO Register in 0x%08X", m_regAddress);
+		add_msgtolist(strMsg);
+		strMsg.Format("0x%08X (%d)", data, data);
+		add_msgtolist(strMsg);
+	}
+	return Timeout;
+}
+
 CGPSDlg::CmdErrorCode CGPSDlg::QueryGetAlmanac(CmdExeMode nMode, void* outputData)
 {	    
 	BinaryCommand cmd(cmdTable[GetGpAlmanacCmd].cmdSize);
@@ -4713,8 +4847,8 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkMode2(CmdExeMode nMode, void* outputData)
 	}
 
 	if(Return == nMode)
-	{	//Return command length
-		*((U16*)outputData) = ConvertLeonU16(ackCmd.Ptr(2));
+	{	//Return command data
+    *((BinaryData*)outputData) = ackCmd;
 		return err;
 	}
 
@@ -4728,25 +4862,26 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkMode2(CmdExeMode nMode, void* outputData)
 	strMsg.Format((rtkMode) ? "RTK base mode" : "RTK rover mode");
 	add_msgtolist(strMsg);
 
-	strMsg.Format("Operational Function: ");
 	UINT8 rtkOpr = ackCmd[7];
 	if(rtkMode)	//base mode
 	{
+	  strMsg.Format("Saved Base Position Mode: ");
 		switch(rtkOpr)
 		{
 		case 0:
-			strMsg += "Kinematic";
+			strMsg += "Kinematic Mode";
 			break;
 		case 1:
-			strMsg += "Survey";
+			strMsg += "Survey Mode";
 			break;
 		case 2:
-			strMsg += "Static";
+			strMsg += "Static Mode";
 			break;
 		}
 	}
 	else	//rover mode
 	{
+	  strMsg.Format("Operational Function: ");
 		switch(rtkOpr)
 		{
 		case 0:
@@ -4772,37 +4907,117 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkMode2(CmdExeMode nMode, void* outputData)
 		return Ack;
 	}
 
-	UINT8 timingMode = ackCmd[36];
 	strMsg.Format("Run-time Timing Mode: ");
+	switch(rtkOpr)
+	{
+	case 0:
+		break;
+	case 1:
+		strMsg.Format("Saved Survey Length:%u", MAKELONG(MAKEWORD(ackCmd[11], ackCmd[10]), MAKEWORD(ackCmd[9], ackCmd[8])));
+		add_msgtolist(strMsg);
+		strMsg.Format("Standard Deviation:%u", MAKELONG(MAKEWORD(ackCmd[15], ackCmd[14]), MAKEWORD(ackCmd[13], ackCmd[12])));
+		add_msgtolist(strMsg);
+		break;
+	case 2:
+		strMsg.Format("Saved Latitude:%f", ConvertLeonDouble(ackCmd.Ptr(16)));
+		add_msgtolist(strMsg);
+		strMsg.Format("Saved Longitude:%f", ConvertLeonDouble(ackCmd.Ptr(24)));
+		add_msgtolist(strMsg);
+		strMsg.Format("Saved Ellipsoidal Height:%f", ConvertLeonFloat(ackCmd.Ptr(32)));
+		add_msgtolist(strMsg);
+		break;
+	}	
+
+	UINT8 timingMode = ackCmd[36];
+  strMsg.Format("Run-time Base Position Mode: ");
 	switch(timingMode)
 	{
 	case 0:
-		strMsg += "Timing Kinematic Mode";
+		strMsg += "Kinematic Mode";
 		add_msgtolist(strMsg);
 		break;
 	case 1:
-		strMsg += "Timing Survey Mode";
-		add_msgtolist(strMsg);
-		strMsg.Format("Saved Survey Length:%u", MAKELONG(MAKEWORD(ackCmd[11], ackCmd[10]), MAKEWORD(ackCmd[9], ackCmd[8])));
-		add_msgtolist(strMsg);
-		strMsg.Format("Standard deviation:%u", MAKELONG(MAKEWORD(ackCmd[15], ackCmd[14]), MAKEWORD(ackCmd[13], ackCmd[12])));
+		strMsg += "Survey Mode";
 		add_msgtolist(strMsg);
 		strMsg.Format("Run-time Survey Length:%u", MAKELONG(MAKEWORD(ackCmd[40], ackCmd[39]), MAKEWORD(ackCmd[38], ackCmd[37])));
 		add_msgtolist(strMsg);
 		break;
 	case 2:
-		strMsg += "Timing Static Mode";
+		strMsg += "Static Mode";
 		add_msgtolist(strMsg);
-		if(rtkOpr==2)
-		{
+		break;
+	}	
+	return Ack;
+}
 
-			strMsg.Format("Saved Latitude:%f", ConvertLeonDouble(ackCmd.Ptr(16)));
-			add_msgtolist(strMsg);
-			strMsg.Format("Saved Longitude:%f", ConvertLeonDouble(ackCmd.Ptr(24)));
-			add_msgtolist(strMsg);
-			strMsg.Format("Saved Altitude:%f", ConvertLeonFloat(ackCmd.Ptr(32)));
-			add_msgtolist(strMsg);
-		}
+CGPSDlg::CmdErrorCode CGPSDlg::QueryBasePosition(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryBasePositionCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryBasePositionCmd].cmdId);
+
+	BinaryData ackCmd;
+	CmdErrorCode err = ExcuteBinaryCommand(QueryBasePositionCmd, &cmd, &ackCmd, (nMode == Display) ? 3000 : 1000);
+	if(err != Ack)
+	{
+		return err;
+	}
+
+	if(Return == nMode)
+	{	//Return command data
+    *((BinaryData*)outputData) = ackCmd;
+		return err;
+	}
+
+	CString strMsg;
+	strMsg = "Query Base Position successfully";
+	add_msgtolist(strMsg);
+
+	U16 cmdLen = ConvertLeonU16(ackCmd.Ptr(2));
+	UINT8 svBpMode = ackCmd[5];
+	strMsg.Format("Saved Base Position Mode: ");
+	switch(svBpMode)
+	{
+	case 0:
+		strMsg += "Kinematic Mode";
+		add_msgtolist(strMsg);
+		break;
+	case 1:
+		strMsg += "Survey Mode";
+		add_msgtolist(strMsg);
+		strMsg.Format("Saved Survey Length:%u", MAKELONG(MAKEWORD(ackCmd[9], ackCmd[8]), MAKEWORD(ackCmd[7], ackCmd[6])));
+		add_msgtolist(strMsg);
+		strMsg.Format("Standard Deviation:%u", MAKELONG(MAKEWORD(ackCmd[13], ackCmd[12]), MAKEWORD(ackCmd[11], ackCmd[10])));
+		add_msgtolist(strMsg);
+		break;
+	case 2:
+		strMsg += "Static Mode";
+		add_msgtolist(strMsg);
+		strMsg.Format("Saved Latitude:%f", ConvertLeonDouble(ackCmd.Ptr(14)));
+		add_msgtolist(strMsg);
+		strMsg.Format("Saved Longitude:%f", ConvertLeonDouble(ackCmd.Ptr(22)));
+		add_msgtolist(strMsg);
+		strMsg.Format("Saved Ellipsoidal Height:%f", ConvertLeonFloat(ackCmd.Ptr(30)));
+		add_msgtolist(strMsg);
+		break;
+	}	
+
+	UINT8 rtBpMode = ackCmd[34];
+  strMsg.Format("Run-time Base Position Mode: ");
+	switch(rtBpMode)
+	{
+	case 0:
+		strMsg += "Kinematic Mode";
+		add_msgtolist(strMsg);
+		break;
+	case 1:
+		strMsg += "Survey Mode";
+		add_msgtolist(strMsg);
+		strMsg.Format("Run-time Survey Length:%u", MAKELONG(MAKEWORD(ackCmd[38], ackCmd[37]), MAKEWORD(ackCmd[36], ackCmd[35])));
+		add_msgtolist(strMsg);
+		break;
+	case 2:
+		strMsg += "Static Mode";
+		add_msgtolist(strMsg);
 		break;
 	}	
 	return Ack;
@@ -5448,6 +5663,81 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryBinaryMeasurementDataOut(CmdExeMode nMode, v
 */
 	return Ack;
 }
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryRtcmMeasurementDataOut(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(cmdTable[QueryRtcmMeasurementDataOutCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryRtcmMeasurementDataOutCmd].cmdId);
+
+	BinaryData ackCmd;
+  CmdErrorCode err = ExcuteBinaryCommand(QueryRtcmMeasurementDataOutCmd, &cmd, &ackCmd, (nMode == Display) ? 3000 : 1000);
+	if(err != Ack)
+	{
+    return err;
+  }
+
+  if(Return == nMode)
+	{	
+    *((BinaryData*)outputData) = ackCmd;
+		return err;
+  }
+
+	U16 cmdLen = ConvertLeonU16(ackCmd.Ptr(2));
+	CString strMsg = "Query RTCM Measurement Data Out successfully";
+	add_msgtolist(strMsg);
+  strMsg.Format("RTCM Output: %s", (ackCmd[5]) ? "Enable" : "Disable");	
+	add_msgtolist(strMsg);
+	if(ackCmd[6]==0)
+	{
+		strMsg.Format("Output Rate : 1Hz");	
+	}
+	else if(ackCmd[6]==1)
+	{
+		strMsg.Format("Output Rate for MSM: 2Hz");
+	}
+	else if(ackCmd[6]==2)
+	{
+		strMsg.Format("Output Rate for MSM: 4Hz");
+	}
+	else if(ackCmd[6]==3)
+	{
+		strMsg.Format("Output Rate for MSM: 5Hz");
+	}
+	else if(ackCmd[6]==4)
+	{
+		strMsg.Format("Output Rate for MSM : 10Hz");
+	}
+	else if(ackCmd[6]==5)
+	{
+		strMsg.Format("Output Rate for MSM: 20Hz");
+	}
+	else if(ackCmd[6]==6)	//Add in 20160512, request from Andrew
+	{
+		strMsg.Format("Output Rate for MSM: 8Hz");
+	}
+	add_msgtolist(strMsg);
+
+	strMsg.Format("Message Type 1005: %s", (ackCmd[7]) ? "Enable" : "Disable");
+	add_msgtolist(strMsg);
+
+	strMsg.Format("Message Type 1077: %s", (ackCmd[8]) ? "Enable" : "Disable");
+	add_msgtolist(strMsg);
+
+	strMsg.Format("Message Type 1087: %s", (ackCmd[9]) ? "Enable" : "Disable");
+	add_msgtolist(strMsg);
+
+	strMsg.Format("Message Type 1107: %s", (ackCmd[11]) ? "Enable" : "Disable");
+	add_msgtolist(strMsg);
+
+	strMsg.Format("Message Type 1117: %s", (ackCmd[12]) ? "Enable" : "Disable");
+	add_msgtolist(strMsg);
+
+	strMsg.Format("Message Type 1127: %s", (ackCmd[13]) ? "Enable" : "Disable");
+	add_msgtolist(strMsg);
+
+	return Ack;
+}
+
 
 CGPSDlg::CmdErrorCode CGPSDlg::QueryCableDelay(CmdExeMode nMode, void* outputData)
 {
@@ -6233,7 +6523,7 @@ void CGPSDlg::SetBeidouAlmanac(U08 continues)
 			else
 			{
 				msg[one_entry_size] = (SVID == 37) ? 1 : 0;
-            }
+      }
 
 			int len = SetMessage2(messages, msg, sizeof(msg));
 			sprintf_s(m_nmeaBuffer, sizeof(m_nmeaBuffer), "Set SV#%d Beidou2 almanac successfuly.", SVID);
@@ -6514,6 +6804,12 @@ void CGPSDlg::OnConfigBinaryMeasurementDataOut()
 	DoCommonConfig(&dlg);
 }
 
+void CGPSDlg::OnConfigRtcmMeasurementDataOut()
+{
+	ConfigRtcmMeasurementDataOutDlg dlg;
+	DoCommonConfig(&dlg);
+}
+
 void CGPSDlg::OnBinaryConfigurepowermode()
 {
 	CConfigPowerMode dlg;
@@ -6633,6 +6929,13 @@ void CGPSDlg::OnConfigRtkMode2()
 	DoCommonConfig(&dlg);
 }
 
+void CGPSDlg::OnConfigBasePosition()
+{
+	CConfigRtkMode2 dlg;
+  dlg.SetCommandMode(CConfigRtkMode2::CfgBasePosition);
+	DoCommonConfig(&dlg);
+}
+
 void CGPSDlg::OnConfigMessageOut()
 {
 	CConfigMessageOut dlg;
@@ -6647,7 +6950,9 @@ void CGPSDlg::OnConfigSubSecRegister()
 
 void CGPSDlg::OnConfigTiming()
 {
-	CConfigTiming dlg;
+	//CConfigTiming dlg;
+	CConfigRtkMode2 dlg;
+  dlg.SetCommandMode(CConfigRtkMode2::CfgTiming);
 	DoCommonConfig(&dlg);
 }
 
@@ -6728,6 +7033,20 @@ void CGPSDlg::OnQueryRtkReferencePosition()
 {
 	CConfigRtkReferencePosition dlg;
 	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnInsdrTest()
+{
+	if(!CheckConnect())
+	{
+		return;
+	}
+
+	DrTestDlg dlg;
+  dlg.DoModal();
+
+	SetMode();
+	CreateGPSThread();
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::QueryVeryLowSpeed(CmdExeMode nMode, void* outputData)

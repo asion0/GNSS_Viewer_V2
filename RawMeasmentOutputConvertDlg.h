@@ -1,30 +1,35 @@
 #pragma once
 
 
-// CRawMeasmentOutputConvertDlg 對話方塊
+// CRawMeasmentOutputConvertDlg
 
 class CRawMeasmentOutputConvertDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CRawMeasmentOutputConvertDlg)
 
 public:
-	CRawMeasmentOutputConvertDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CRawMeasmentOutputConvertDlg(CWnd* pParent = NULL);  
 	virtual ~CRawMeasmentOutputConvertDlg();
 
-// 對話方塊資料
-	//enum { IDD = IDD_RAW_MEAS_OUT_CONV };
+	enum ConvertMode
+  { 
+    RawMeasment,
+    HostLog,
+  };
 	LPCSTR GetFilePath() { return m_filePath; }
+  void SetMode(ConvertMode cm) { mode = cm; }
 protected:
 	CString m_filePath;
 	bool	m_convertRunning;
+  ConvertMode mode;
 
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV
 	void UpdateConvertUI();
-	DECLARE_MESSAGE_MAP()
-public:
 	afx_msg void OnBnClickedBrowse();
 	afx_msg void OnBnClickedGo();
 	afx_msg LRESULT OnRawProgress(WPARAM wParam, LPARAM lParam);
 	virtual BOOL OnInitDialog();
 	afx_msg void OnClose();
+
+	DECLARE_MESSAGE_MAP()
 };

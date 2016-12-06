@@ -44,6 +44,8 @@ typedef matrix<float> Matrix;
 #define WGS84_E2P   (WGS84_E2/(1.0-WGS84_E2))     // eccentricity squared: (RA*RA-RB*RB)/RB*RB
 
 #define COM_BUFFER_SIZE   (16 * 1024)              // 
+#define KNOTS2KMHR  1.852F
+#define MS2KMHR     3.6F
 
 struct Setting
 {
@@ -368,5 +370,13 @@ U32 ConvertLeonU32(const U08* ptr);
 S32 ConvertLeonS32(const U08* ptr);
 WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd);
 
-//void UTC_convert_gps_to_utc_time_by_default_parameters( S16 wn, D64 tow, UtcTime *utc_time_p );
+bool ReadOneLineInFile(CFile& f, char* buffer, int size);
+bool PreprocessInputLine(U08 *buf, int& bufLen);
 
+template <class T>
+void DisplayStatic(CDialog* pDlg, UINT uid, LPCSTR format, T data)
+{
+  CString txt;
+  txt.Format(format, data);
+  pDlg->GetDlgItem(uid)->SetWindowText(txt);
+}

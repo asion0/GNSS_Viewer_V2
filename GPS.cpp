@@ -117,7 +117,7 @@ CString CGPSApp::GetTitle()
 	return title;
 }
 
-CString CGPSApp::GetHexString(const unsigned char* buf, int size)
+CString CGPSApp::GetHexString(const U08* buf, int size)
 {
 	CString strResult;
 	const int DisplayLimite = 999;

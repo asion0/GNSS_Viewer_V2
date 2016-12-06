@@ -476,7 +476,9 @@ public:
 	void NmeaOutput(LPCSTR pt, int len);
 
 	bool SendMsg();
-	bool SendToTarget(U08* ,U16 ,const char*, bool quick = false);
+	//bool SendToTarget(U08* ,U16 ,const char*, bool quick = false);
+  bool SendToTargetOld(U08* message, U16 length, const char* Msg, bool quick);
+  bool SendToTarget(U08* message, U16 length, const char* Msg, int timeout);
 	bool SendToTargetNoAck(U08*,U16);
 	bool SendToTargetNoWait(U08*,U16,LPCSTR);
 	bool TIMEOUT_METHOD(time_t,time_t);
@@ -651,7 +653,7 @@ public:
 	void SetBaudrate(int b);
 	BOOL GetShowBinaryCmdData() { return m_bShowBinaryCmdData; }
 	void BoostBaudrate(BOOL bRestore, BoostMode mode = ChangeToTemp, bool isForce = false);
-	//BOOL OpenDataLogFile(UINT nOpenFlags);
+	void TempBoostBaudrate(BOOL bRestore, int boostBaudIndex = 5, int timeout = 1000);
 	
 	void SetInputMode(MsgMode i) { m_inputMode = i; }
 	void SetMode() { m_inputMode = GetMsgType(); }
@@ -726,17 +728,23 @@ private:
 	DataLogType GetDataLogType(U16 word);
 	//For Common Binary Clasases
 public:
+  CmdErrorCode ExcuteBinaryCommand(U08 ackId, U08 ackSubId, BinaryCommand* cmd, BinaryData* ackCmd, DWORD timeOut = g_setting.defaultTimeout, bool silent = false);
 	CmdErrorCode ExcuteBinaryCommand(int cmdIdx, BinaryCommand* cmd, BinaryData* ackCmd, DWORD timeOut = g_setting.defaultTimeout, bool silent = false);
 	CmdErrorCode ExcuteBinaryCommandNoWait(int cmdIdx, BinaryCommand* cmd);
 	CmdErrorCode GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U08 cAckSub, DWORD timeOut, bool silent, bool noWaitAck = false, int cmdSize = -1, int cmdLen = 0);
 	CmdErrorCode QueryRtkMode2(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryBasePosition(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPsti030(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPsti032(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPsti004(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGeofenceEx(CmdExeMode nMode, void* outputData);
 	CmdErrorCode ReCalcuteGlonassIfb(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryBinaryMeasurementDataOut(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryRtcmMeasurementDataOut(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryRegister(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryRegister16(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryConstellationCapability(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryTiming(CmdExeMode nMode, void* outputData);
 
   U08 m_nGeofecingNo;
 
@@ -750,7 +758,6 @@ protected:
 	CmdErrorCode QueryPositionRate(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDatum(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySha1String(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryConstellationCapability(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryVersionExtension(CmdExeMode nMode, void* outputData);
 	CmdErrorCode SendZenlandInitCmd(CmdExeMode nMode, void* outputData);
 	CmdErrorCode SendZenlandQueryCmd(CmdExeMode nMode, void* outputData);
@@ -762,7 +769,6 @@ protected:
 	CmdErrorCode QueryPowerMode(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryV8PowerSavingParameters(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryProprietaryMessage(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryTiming(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDopMask(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryElevationAndCnrMask(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryAntennaDetection(CmdExeMode nMode, void* outputData);
@@ -880,7 +886,10 @@ protected:
 	afx_msg void OnSoftwareimagedownloadLoaderimage();
 	afx_msg void OnSoftwareimagedownloadImageonly();
 	afx_msg void OnBinaryGetrgister();
+	afx_msg void OnBinaryGetrgister16();
 	afx_msg void OnBinaryConfigureregister();
+	afx_msg void OnBinaryConfigureregister16();
+	afx_msg void OnBinaryConfigureClockOffset();
 	afx_msg void OnBnClickedClear();
 	afx_msg void OnBnClickedHotstart();
 	afx_msg void OnBnClickedWarmstart();
@@ -895,6 +904,7 @@ protected:
 	afx_msg void OnFilePlayNmea();
 	afx_msg void OnConverterKml();
 	afx_msg void OnRawMeasurementOutputConvert();
+	afx_msg void OnHosLogToNmea();
 	afx_msg void OnBnClickedScanAll();
 	afx_msg void OnBnClickedScanPort();
 	afx_msg void OnBnClickedScanBaudrate();
@@ -981,6 +991,7 @@ protected:
 	afx_msg void OnQuery1PpsPulseWidth();
 	afx_msg void OnConfigQueryGnssNavSol();
 	afx_msg void OnConfigBinaryMeasurementDataOut();
+	afx_msg void OnConfigRtcmMeasurementDataOut();
 	afx_msg void OnConfig1ppsFrequencyOutput();
 	afx_msg void OnLineAssistance();
 	//afx_msg void On1ppstimingQueryppspulseclksrc();
@@ -1033,6 +1044,7 @@ protected:
 	afx_msg void OnConfigGeofence4();
 	afx_msg void OnConfigRtkMode();
 	afx_msg void OnConfigRtkMode2();
+	afx_msg void OnConfigBasePosition();
 	afx_msg void OnConfigRtkParameters();
 	afx_msg void OnRtkReset();
 	afx_msg void OnConfigMessageOut();
@@ -1056,6 +1068,7 @@ protected:
 	afx_msg void OnRtkOnOffGlonassSv();
 	afx_msg void OnRtkOnOffBeidouSv();
 	afx_msg void OnQueryRtkReferencePosition();
+	afx_msg void OnInsdrTest();
 
 	afx_msg void OnQueryPositionRate()
 	{ GenericQuery(&CGPSDlg::QueryPositionRate); }
@@ -1176,6 +1189,8 @@ protected:
 	{ GenericQuery(&CGPSDlg::Query1ppsFreqencyOutput); }
 	afx_msg void OnQueryBinaryMeasurementDataOut()
 	{ GenericQuery(&CGPSDlg::QueryBinaryMeasurementDataOut); }
+	afx_msg void OnQueryRtcmMeasurementDataOut()
+	{ GenericQuery(&CGPSDlg::QueryRtcmMeasurementDataOut); }
 	afx_msg void OnQuerySerialNumber()
 	{ GenericQuery(&CGPSDlg::QuerySerialNumber); }
 	afx_msg void OnQueryDgps()
@@ -1212,6 +1227,8 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryRtkMode); }
 	afx_msg void OnQueryRtkMode2()
 	{ GenericQuery(&CGPSDlg::QueryRtkMode2); }
+	afx_msg void OnQueryBasePosition()
+	{ GenericQuery(&CGPSDlg::QueryBasePosition); }
 	afx_msg void OnQueryRtkParameters()
 	{ GenericQuery(&CGPSDlg::QueryRtkParameters); }
 	afx_msg void OnQueryPstmDeviceAddress()

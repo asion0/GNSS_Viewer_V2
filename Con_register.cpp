@@ -12,6 +12,7 @@ IMPLEMENT_DYNAMIC(CCon_register, CDialog)
 CCon_register::CCon_register(CWnd* pParent /*=NULL*/)
 	: CDialog(CCon_register::IDD, pParent)
 {
+  specialFunction = 0;
 }
 
 CCon_register::~CCon_register()
@@ -44,7 +45,13 @@ BOOL CCon_register::OnInitDialog()
 
 	m_txt_addr.SetLimitText(8);
 	m_txt_data.SetLimitText(8);
-	
+	if(specialFunction == 1)
+  {
+    m_txt_addr.ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_STATIC_ADDR)->ShowWindow(SW_HIDE);
+    SetWindowText("Set Default Clock Offset");
+    GetDlgItem(IDC_STATIC_DATA)->SetWindowText("Clock Offset 0X");
+  }
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }

@@ -162,7 +162,7 @@ void log2nmea::parse_rmc(char *src,rmc_nmea *rmc)
 				break;
 			case 11:		//Speed
 				rmc->speed = (float)atof(ptr);
-				rmc->speed = (float)(rmc->speed / 1.852);
+				rmc->speed = (float)(rmc->speed / KNOTS2KMHR);
 				break;
 			case 12:		//Longitude
 				bool ew;

@@ -603,110 +603,17 @@ UINT ConnectGPS(LPVOID pParam)
 	return retCode;
 }
 
-bool PreprocessInputLine(U08 *buf, int& bufLen)
-{
-  //Find text sentence
-  U08 *start = NULL, *end = NULL;
-  U08* iter = (U08*)(buf + bufLen - 1);
-  do
-  {
-    if(*iter == 0x0D && *(iter + 1) == 0x0A)
-    {
-      end = iter + 1;
-    }
-
-    if(*iter == '$' && end != NULL)
-    {
-      start = iter;
-      break;
-    }
-  } while(iter-- != buf);
-  if(start != NULL && end != NULL && (end - start) > 7 && (end - start) < 128 && *(end - 4) != '*')
-  {
-    int a = 0;
-  }
-  if(start != NULL && end != NULL && (end - start) > 7 && (end - start) < 128 && *(end - 4) == '*')
-  {
-    memcpy(buf, start, end - start + 1);
-    bufLen = end - start + 1;
-    buf[bufLen] = 0;
-    return true;
-  }
-
-  //Find binary sentence
-  start = NULL;
-  end = NULL;
-  iter = buf + bufLen - 1;
-  do
-  {
-    if(*iter == 0x0D && *(iter + 1) == 0x0A)
-    {
-      end = iter + 1;
-    }
-  
-    if(0xA0 == *iter && 0xA1 == *(iter + 1) && end != NULL)
-    {
-      start = iter;
-      break;
-    }
-  } while(iter-- != buf);
-
-  if(start != NULL && end != NULL)
-  {
-    memcpy(buf, start, end - start + 1);
-    bufLen = end - start + 1;
-    buf[bufLen] = 0;
-    return true;
-  }
-  return false;
-}
-
-bool ReadOneLineInFile(CFile& f, char* buffer, int size)
-{
-  char* iter = buffer;
-  memset(buffer, 0, size);
-  
-  if(1 != f.Read(iter++, 1))
-  {
-    return false;
-  }
-
-  while(iter - buffer < size)
-  {
-    if(1 != f.Read(iter, 1))
-    { //End of file
-      break;
-    }
-    if(*iter == 0x0A && *(iter - 1) == 0x0D)
-    {
-      return true;
-    }
-    ++iter;
-  }
-    
-  return true;
-}
-
 UINT NmeaPlayThread(LPVOID pParam)
 {
-	//FILE *f = NULL;
   CFile f;
 	CString ext = Utility::GetFileExt((LPCSTR)pParam).MakeUpper();
-  //fopen_s(&f, (LPCSTR)pParam, "r");
-	//if(f==NULL)
-	//{
-	//	return 0;
-	//}
+
   if(FALSE == f.Open((LPCSTR)pParam, CFile::modeRead))
   {
     return 0;
   }
 
-	//fseek(f, 0L, SEEK_END);
-	//long total = ftell(f);
-	//fseek(f, 0L, SEEK_SET);
   ULONGLONG total = f.GetLength();
-
 	bool hasGGA = false;
 	bool hasRMC = false;
 	bool needSleep = false;
@@ -1276,10 +1183,13 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_CONFIG_DOZE_MODE, &CGPSDlg::OnConfigGnssDozeMode)
 
 	ON_COMMAND(ID_CFG_REGISTER, OnBinaryConfigureregister)
+	ON_COMMAND(ID_CFG_REGISTER16, OnBinaryConfigureregister16)
+	ON_COMMAND(ID_SET_CLOCK_OFFSET, OnBinaryConfigureClockOffset)
 	ON_COMMAND(ID_CFG_SERIAL_PORT, OnConfigureSerialPort)
 	ON_COMMAND(ID_CFG_SUBSEC_REG, OnConfigSubSecRegister)
 	ON_COMMAND(ID_BINARY_DUMP_DATA, OnBinaryDumpData)
 	ON_COMMAND(ID_GET_RGISTER, OnBinaryGetrgister)
+	ON_COMMAND(ID_GET_RGISTER16, OnBinaryGetrgister16)
 	//ON_COMMAND(ID_BINARY_POSITIONFINDER, OnBinaryPositionfinder)
 
 	ON_COMMAND(ID_RESET_ODOMETER, OnResetOdometer)
@@ -1293,6 +1203,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_DECODE_GP_ALMANAC, OnDecodeGpsAlmanac)
 	ON_COMMAND(ID_CONVERTER_KML, OnConverterKml)
 	ON_COMMAND(ID_RAW_MEAS_OUT_CONVERT, OnRawMeasurementOutputConvert)
+	ON_COMMAND(ID_HOSTLOG_NMEA, OnHosLogToNmea)
 	ON_COMMAND(ID_LOG_CLEAR, OnDatalogClearControl)
 	ON_COMMAND(ID_LOG_CONFIGURE, OnDatalogLogconfigurecontrol)
 	ON_COMMAND(ID_NMEA_CHECKSUM_CAL, OnNmeaChecksumCalculator)
@@ -1380,7 +1291,9 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_QUERY_1PPS_PULSE_WIDTH, OnQuery1PpsPulseWidth)
 	ON_COMMAND(ID_CONFIG_GNSS_NAV_SOL, OnConfigQueryGnssNavSol)
 	ON_COMMAND(ID_CONFIG_BIN_MEA_DAT_OUT, OnConfigBinaryMeasurementDataOut)
+	ON_COMMAND(ID_CONFIG_RTCM_MEA_DAT_OUT, OnConfigRtcmMeasurementDataOut)
 	ON_COMMAND(ID_QUERY_BIN_MEA_DAT_OUT, OnQueryBinaryMeasurementDataOut)
+	ON_COMMAND(ID_QUERY_RTCM_MEA_DAT_OUT, OnQueryRtcmMeasurementDataOut)
 
 	//New type
 	ON_COMMAND(ID_QUERY_POSITION_UPDATE_RATE, OnQueryPositionRate)
@@ -1447,6 +1360,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_INSDR_ENTER_UART, OnInsdrEnterUart)
 	ON_COMMAND(ID_INSDR_ENTER_DWN, OnInsdrEnterDownload)
 	ON_COMMAND(ID_INSDR_LEAVE_UART, OnInsdrLeaveUart)
+	ON_COMMAND(ID_INSDR_TEST, OnInsdrTest)
 
 	ON_COMMAND(ID_SUP800_ERASE_DATA, OnSup800EraseData)
 	ON_COMMAND(ID_SUP800_WRITE_DATA, OnSup800WriteData)
@@ -1466,8 +1380,11 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_QUERY_GEOFENCE_RESULTEX, OnQueryGeofenceResultEx)
 	ON_COMMAND(ID_QUERY_RTK_MODE, OnQueryRtkMode)
 	ON_COMMAND(ID_QUERY_RTK_MODE2, OnQueryRtkMode2)
+	ON_COMMAND(ID_QUERY_BASE_POSITION, OnQueryBasePosition)
 	ON_COMMAND(ID_CONFIG_RTK_MODE, OnConfigRtkMode)
 	ON_COMMAND(ID_CONFIG_RTK_MODE2, OnConfigRtkMode2)
+	ON_COMMAND(ID_CONFIG_BASE_POSITION, OnConfigBasePosition)
+  
 	ON_COMMAND(ID_QUERY_RTK_PARAM, OnQueryRtkParameters)
 	ON_COMMAND(ID_CONFIG_RTK_PARAM, OnConfigRtkParameters)
 	ON_COMMAND(ID_RTK_RESET, OnRtkReset)
@@ -1599,6 +1516,9 @@ void CGPSDlg::Initialization()
 {
 #if !defined(SAINTMAX_UI)
 	Load_Menu();
+#endif
+#if defined(PRODUCTION_OLIVER20161128)
+	GetDlgItem(IDC_COLDSTART)->SetWindowText("Set Default Clock Offset");
 #endif
 	RescaleDialog();
 
@@ -2049,7 +1969,7 @@ bool CGPSDlg::NmeaInput()
 	m_playNmea->Initialize(m_nmeaPlayFilePath);
 	m_nmeaPlayInterval = m_playNmea->GetPlayInterval();
 	m_playNmea->SetFocus();
-	if(0 == Utility::GetFileExt(m_nmeaPlayFilePath).CompareNoCase("txt"))
+	if(0 == Utility::GetFileExt(m_nmeaPlayFilePath).CompareNoCase("txt") || 0 == Utility::GetFileExt(m_nmeaPlayFilePath).CompareNoCase("dat"))
 	{
 		m_nmeaPlayThread = ::AfxBeginThread(NmeaPlayThread, (LPVOID)(LPCSTR)m_nmeaPlayFilePath);
 	}
@@ -2848,15 +2768,15 @@ void CGPSDlg::ShowSpeed(bool reset)
 	{
 		lastSpeed = -99999.0F;
 	}
-	if(m_gpvtgMsg.SpeedKmPerHur != 0.0F)
+
+	if(m_gprmcMsg.SpeedKnots != 0.0F)
+	{
+		speed = (F32)(m_gprmcMsg.SpeedKnots * KNOTS2KMHR);
+	}
+	else if(m_gpvtgMsg.SpeedKmPerHur != 0.0F)
 	{
 		speed = m_gpvtgMsg.SpeedKmPerHur;
 	}
-	else if(m_gprmcMsg.SpeedKnots != 0.0F)
-	{
-		speed = (F32)(m_gprmcMsg.SpeedKnots * 1.852);
-	}
-
 	if(speed != lastSpeed)
 	{
 		CString txt;
@@ -3812,6 +3732,23 @@ void CGPSDlg::OnBinaryGetrgister()
 	}
 }
 
+void CGPSDlg::OnBinaryGetrgister16()
+{
+	if(!m_isConnectOn)
+	{
+		AfxMessageBox("Please connect to GNSS device");
+		return;
+	}
+
+	CGetRgsDlg dlg;
+	INT_PTR ret = dlg.DoModal();
+	if(ret == IDOK)
+	{
+		m_regAddress = dlg.address;
+		GenericQuery(&CGPSDlg::QueryRegister16);
+	}
+}
+
 bool CGPSDlg::TIMEOUT_METHOD(time_t start, time_t end)
 {
 	if((end-start) > TIME_OUT_MS )
@@ -4029,6 +3966,13 @@ void CGPSDlg::OnConverterKml()
 void CGPSDlg::OnRawMeasurementOutputConvert()
 {
 	CRawMeasmentOutputConvertDlg dlg;
+	dlg.DoModal();
+}
+
+void CGPSDlg::OnHosLogToNmea()
+{
+	CRawMeasmentOutputConvertDlg dlg;
+  dlg.SetMode(CRawMeasmentOutputConvertDlg::HostLog);
 	dlg.DoModal();
 }
 
@@ -4729,6 +4673,8 @@ void CGPSDlg::Load_Menu()
 		{ _SHOW_BINARY_DATA_, MF_STRING, ID_BINARY_DUMP_DATA, "Show Binary Data", NULL },
 		{ 1, MF_POPUP, 0, "Set Factory Default", SetFactoryDefaultMenu },
 		{ IS_DEBUG, MF_STRING, ID_FIRMWARE_DOWNLOAD, "Firmware Image Download", NULL },
+    { 1, MF_STRING, ID_SET_CLOCK_OFFSET, "Set Default Clock Offset", NULL },
+
 		{ 1, MF_SEPARATOR, 0,NULL,NULL },
 		{ 1, MF_STRING, ID_QUERY_SW_VERSION, "Query Software Version", NULL },
 		{ 1, MF_STRING, ID_QUERY_SW_CRC, "Query CRC Checksum", NULL },
@@ -4755,9 +4701,9 @@ void CGPSDlg::Load_Menu()
 		{ SOFTWARE_FUNCTION & SW_FUN_DR, MF_STRING, ID_QUERY_DR_HW_PARAMETER, "Query DR HW Parameter", NULL },//
 		{ 1, MF_STRING, ID_QUERY_GNSS_KNUM_SLT_CNR, "Query GLONASS K-Number, Slot, CNR", NULL },
 		{ 1, MF_STRING, ID_QUERY_NMEA_TALKER_ID, "Query NMEA Talker ID", NULL },
-		{ 1, MF_STRING, ID_QUERY_BIN_MEA_DAT_OUT, "Query Binary Measurement Data Out", NULL },
 
 		{ IS_DEBUG, MF_STRING, ID_GET_RGISTER, "Get Register", NULL },
+		{ IS_DEBUG, MF_STRING, ID_GET_RGISTER16, "Get 16-IO Register", NULL },
 		{ 1, MF_SEPARATOR, 0,NULL,NULL },
 		{ 1, MF_STRING, ID_CFG_SERIAL_PORT, "Configure Serial Port", NULL },
 		{ 1, MF_STRING, ID_CFG_NMEA_INTERVAL_V8, "Configure NMEA Message Interval", NULL },
@@ -4782,11 +4728,9 @@ void CGPSDlg::Load_Menu()
 		{ IS_DEBUG, MF_STRING, ID_CFG_SUBSEC_REG, "Configure SubSec Register", NULL },
 		{ 1, MF_STRING, ID_CFG_NMEA_OUTPUT_COM, "Configure NMEA Output Comport", NULL },
 		{ 1, MF_STRING, ID_CFG_NMEA_TALKER_ID, "Configure NMEA Talker ID", NULL },
-		//2014/03/11, Oliver remove this command in raw measurment version.
-		//2014/05/12, Added by customer request.
-		{ 1, MF_STRING, ID_CONFIG_BIN_MEA_DAT_OUT, "Configure Binary Measurement Data Out", NULL },
 
 		{ IS_DEBUG, MF_STRING, ID_CFG_REGISTER, "Configure Register", NULL },
+		{ IS_DEBUG, MF_STRING, ID_CFG_REGISTER16, "Configure 16-IO Register", NULL },
 		{ ODOMETER_SUPPORT, MF_STRING, ID_RESET_ODOMETER, "Reset Odometer", NULL },
 		{ RESET_MOTION_SENSOR, MF_STRING, ID_RESET_MOTION_SENSOR, "Reset Motion Sensor", NULL },
 
@@ -4955,7 +4899,27 @@ void CGPSDlg::Load_Menu()
 		CreateSubMenu(hMenu, menuItemVenus8, "&Venus 8");
 	}
 
-	static MenuItemEntry menuItemRtk[] =
+	static MenuItemEntry menuItemRaw[] =
+	{
+		{ 1, MF_STRING, ID_QUERY_BASE_POSITION, "Query Base Position", NULL },
+		{ 1, MF_STRING, ID_QUERY_BIN_MEA_DAT_OUT, "Query Binary Measurement Data Out", NULL },
+    //2016/11/24, Add from Ryan request.
+		{ 1, MF_STRING, ID_QUERY_RTCM_MEA_DAT_OUT, "Query RTCM Measurement Data Out", NULL },
+		{ 1, MF_SEPARATOR, 0,NULL,NULL },
+		{ 1, MF_STRING, ID_CONFIG_BASE_POSITION, "Configure Base Position", NULL },
+		//2014/03/11, Oliver remove this command in raw measurment version.
+		//2014/05/12, Added by customer request.
+		{ 1, MF_STRING, ID_CONFIG_BIN_MEA_DAT_OUT, "Configure Binary Measurement Data Out", NULL },
+    //2016/11/24, Add from Ryan request.
+		{ 1, MF_STRING, ID_CONFIG_RTCM_MEA_DAT_OUT, "Configure RTCM Measurement Data Out", NULL },
+		{ 0, 0, 0, NULL, NULL }	//End of table
+	};
+	if(_V8_SUPPORT && !NMEA_INPUT && RTK_MENU)
+	{
+		CreateSubMenu(hMenu, menuItemRaw, "&RAW");
+	}
+
+  static MenuItemEntry menuItemRtk[] =
 	{
 		{ IS_DEBUG, MF_STRING, ID_RTK_RESET, "Reset RTK engine", NULL },
 		{ 1, MF_STRING, ID_RECALC_GLONASS_IFB, "Re-calculate GLONASS IFB", NULL },
@@ -4974,7 +4938,6 @@ void CGPSDlg::Load_Menu()
 		{ 1, MF_STRING, ID_CONFIG_RTK_MODE, "Configure RTK Mode", NULL },
 		{ 1, MF_STRING, ID_CONFIG_RTK_MODE2, "Configure RTK Mode And Operational Function", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CONFIG_RTK_PARAM, "Configure RTK Parameters", NULL },
-
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
 	if(_V8_SUPPORT && !NMEA_INPUT && RTK_MENU)
@@ -4984,9 +4947,11 @@ void CGPSDlg::Load_Menu()
 
 	static MenuItemEntry menuItemInsDr[] =
 	{
-		{ 1, MF_STRING, ID_INSDR_ENTER_UART, "Enter Slave UART Pass Through", NULL },
-		{ 1, MF_STRING, ID_INSDR_ENTER_DWN, "Enter Slave Download", NULL },
+		{ 1, MF_STRING, ID_INSDR_ENTER_UART, "Enter UART Pass Through for Slave ROM Code", NULL },
+		{ 1, MF_STRING, ID_INSDR_ENTER_DWN, "Enter UART Pass Through for Slave Flash Code", NULL },
 		{ 1, MF_STRING, ID_INSDR_LEAVE_UART, "Back To Master", NULL },
+		{ 1, MF_SEPARATOR, 0, NULL, NULL },
+		{ 1, MF_STRING, ID_INSDR_TEST, "DR Test", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
 	if(_V8_SUPPORT && !NMEA_INPUT && INS_DR_MENU && IS_DEBUG)
@@ -5132,6 +5097,7 @@ void CGPSDlg::Load_Menu()
 		{ IS_DEBUG & SOFTWARE_FUNCTION & SW_FUN_DATALOG, MF_STRING, ID_LOG_DECOMPRESS, "Decompress", NULL },
 		{ 1, MF_STRING, ID_CONVERTER_KML, "KML", NULL },
 		{ 1, MF_STRING, ID_RAW_MEAS_OUT_CONVERT, "Raw Measurement Binary Convert", NULL },
+		{ 1, MF_STRING, ID_HOSTLOG_NMEA, "HostLog Output To NMEA", NULL },
 		//{ IS_DEBUG, MF_STRING, ID_DECODE_GP_ALMANAC, "Decode GPS Almanac", NULL },
 		{ 0, 0, 0, NULL, NULL },
 	};
@@ -5925,8 +5891,8 @@ void CGPSDlg::OnMultimodeConfiguremode()
 	::AfxBeginThread(ConfigureMultiMode, 0);
 }
 
-U32 m_reg_addr;
-U32 m_reg_data;
+static U32 m_reg_addr;
+static U32 m_reg_data;
 UINT ConfigureRegister_thread(LPVOID param)
 {
 	U08 msg[9];
@@ -5944,6 +5910,26 @@ UINT ConfigureRegister_thread(LPVOID param)
 
 	int len = CGPSDlg::gpsDlg->SetMessage(msg,sizeof(msg));
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(CGPSDlg::m_inputMsg, len, "Configure Register successfully");
+	return 0;
+}
+
+UINT ConfigureRegister16_thread(LPVOID param)
+{
+	U08 msg[9];
+	msg[0] = 0x74;
+
+	msg[1] = m_reg_addr >> 24 & 0xFF;
+	msg[2] = m_reg_addr >> 16 & 0xFF;
+	msg[3] = m_reg_addr >> 8 & 0xFF;
+	msg[4] = m_reg_addr & 0xFF;
+
+	msg[5] = m_reg_data >> 24 & 0xFF;
+	msg[6] = m_reg_data >> 16 & 0xFF;
+	msg[7] = m_reg_data >> 8 & 0xFF;
+	msg[8] = m_reg_data & 0xFF;
+
+	int len = CGPSDlg::gpsDlg->SetMessage(msg,sizeof(msg));
+	CGPSDlg::gpsDlg->ExecuteConfigureCommand(CGPSDlg::m_inputMsg, len, "Configure 16-IO Register successfully");
 	return 0;
 }
 
@@ -5976,6 +5962,62 @@ void CGPSDlg::OnBinaryConfigureregister()
 	static CString m_data = "00000000";
 	CCon_register dia;
 
+	dia.m_addr = addr;
+	dia.m_data = m_data;
+
+	if(dia.DoModal() == IDOK)
+	{
+		m_reg_addr = ConvertCharToU32(dia.m_addr);
+		m_reg_data = ConvertCharToU32(dia.m_data);
+		addr = dia.m_addr;
+		m_data = dia.m_data;
+		::AfxBeginThread(ConfigureRegister_thread, 0);
+	}
+	else
+	{
+		SetMode();
+		CreateGPSThread();
+	}
+}
+
+void CGPSDlg::OnBinaryConfigureregister16()
+{
+	if(!CheckConnect())
+	{
+		return;
+	}
+	static CString addr = "00000000";
+	static CString m_data = "00000000";
+	CCon_register dia;
+
+	dia.m_addr = addr;
+	dia.m_data = m_data;
+
+	if(dia.DoModal() == IDOK)
+	{
+		m_reg_addr = ConvertCharToU32(dia.m_addr);
+		m_reg_data = ConvertCharToU32(dia.m_data);
+		addr = dia.m_addr;
+		m_data = dia.m_data;
+		::AfxBeginThread(ConfigureRegister16_thread, 0);
+	}
+	else
+	{
+		SetMode();
+		CreateGPSThread();
+	}
+}
+
+void CGPSDlg::OnBinaryConfigureClockOffset()
+{
+	if(!CheckConnect())
+	{
+		return;
+	}
+	static CString addr = "870000CD";
+	static CString m_data = "00000000";
+	CCon_register dia;
+  dia.specialFunction = 1;
 	dia.m_addr = addr;
 	dia.m_data = m_data;
 
@@ -7130,6 +7172,26 @@ void CGPSDlg::BoostBaudrate(BOOL bRestore, BoostMode mode, bool isForce)
 	}
 }
 
+void CGPSDlg::TempBoostBaudrate(BOOL bRestore, int boostBaudIndex, int timeout)
+{
+	if(bRestore)
+	{
+		SetPort(g_setting.GetBaudrateIndex(), (int)ChangeToTemp);
+		Sleep(timeout);
+		CloseOpenUart();
+		m_serial->ResetPort(g_setting.GetBaudrateIndex());
+		m_BaudRateCombo.SetCurSel(g_setting.GetBaudrateIndex());
+	}
+  else
+	{
+		if(g_setting.GetBaudrateIndex() != boostBaudIndex)
+		{
+			SetPort(boostBaudIndex, (int)ChangeToTemp);
+			Sleep(1000);
+		}
+	}
+}
+
 void CGPSDlg::OnConverterCompress()
 {
 	if(m_isConnectOn)
@@ -7359,7 +7421,17 @@ void CGPSDlg::RescaleDialog()
 
 		TRUE, 0, IDC_COMMAND_T, {6, 560, 280, 29},
 		TRUE, 0, IDC_COMMAND_F, {6, 590, 280, 81},
-
+#if defined(PRODUCTION_OLIVER20161128)
+		FALSE, 0, IDC_HOTSTART, {15, 593, 82, 24},
+		FALSE, 0, IDC_WARMSTART, {105, 593, 82, 24},
+		TRUE, 0, IDC_COLDSTART, {15, 593, 262, 74},
+		FALSE, 0, IDC_NO_OUTPUT, {15, 618, 82, 24},
+		FALSE, 0, IDC_NMEA_OUTPUT, {105, 618, 82, 24},
+		FALSE, 0, IDC_BIN_OUTPUT, {195, 618, 82, 24},
+		FALSE, 0, IDC_SCANALL, {15, 643, 82, 24},
+		FALSE, 0, IDC_SCANPORT, {105, 643, 82, 24},
+		FALSE, 0, IDC_SCANBAUDRATE, {195, 643, 82, 24},
+#else
 		TRUE, 0, IDC_HOTSTART, {15, 593, 82, 24},
 		TRUE, 0, IDC_WARMSTART, {105, 593, 82, 24},
 		TRUE, 0, IDC_COLDSTART, {195, 593, 82, 24},
@@ -7369,7 +7441,7 @@ void CGPSDlg::RescaleDialog()
 		TRUE, 0, IDC_SCANALL, {15, 643, 82, 24},
 		TRUE, 0, IDC_SCANPORT, {105, 643, 82, 24},
 		TRUE, 0, IDC_SCANBAUDRATE, {195, 643, 82, 24},
-
+#endif
 		//Earth View
 		TRUE, 0, IDC_EARTH_PANEL, {301, 346, 343, 253},
 		TRUE, 0, IDC_EARTH, {332, 347, 312, 251},

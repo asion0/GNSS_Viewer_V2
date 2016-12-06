@@ -18,7 +18,7 @@ public:
 	CEdit m_txt_data;
 // 對話方塊資料
 	enum { IDD = IDD_CON_REGISTER };
-
+  int  specialFunction;
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
 

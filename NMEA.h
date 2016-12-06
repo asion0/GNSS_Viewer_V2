@@ -87,11 +87,11 @@ typedef struct GPGSA
 
 typedef struct GPVTG
 {	
-	F32     TrueCourse;//true course over ground in degrees(000.0 ~ 359.9)	
-	F32     MagneticCourse;//Magnetic course over ground in degrees(000.0 ~ 359.9)
+	F32     TrueCourse;     //true course over ground in degrees(000.0 ~ 359.9)	
+	F32     MagneticCourse; //Magnetic course over ground in degrees(000.0 ~ 359.9)
 	F32     SpeedKnots;
 	F32     SpeedKmPerHur;
-	U08     Mode;//N=not valid, A=Auto, D=Diff, E=Estimated, M=Manual, S=Simulator
+	U08     Mode;           //N=not valid, A=Auto, D=Diff, E=Estimated, M=Manual, S=Simulator
 }GPVTG, *pGPVTG, &rGPVTG;
 
 typedef struct Satellite
