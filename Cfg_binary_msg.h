@@ -1,17 +1,16 @@
 #pragma once
 
 
-// CCfg_binary_msg 對話方塊
+// CCfg_binary_msg
 
 class CCfg_binary_msg : public CDialog
 {
 	DECLARE_DYNAMIC(CCfg_binary_msg)
 
 public:
-	CCfg_binary_msg(CWnd* pParent = NULL);   // 標準建構函式
+	CCfg_binary_msg(CWnd* pParent = NULL);
 	virtual ~CCfg_binary_msg();
 
-// 對話方塊資料
 	enum { IDD = IDD_CON_BINARY_MSG };
 
 	CComboBox m_rate;
@@ -30,7 +29,7 @@ public:
 	int m_rate_sel;
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV
 
 	DECLARE_MESSAGE_MAP()
 public:

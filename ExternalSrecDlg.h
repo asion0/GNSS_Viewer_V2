@@ -2,22 +2,21 @@
 
 #include "resource.h"
 
-// CExternalSrecDlg 對話方塊
+// CExternalSrecDlg 
 
 class CExternalSrecDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CExternalSrecDlg)
 
 public:
-	CExternalSrecDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CExternalSrecDlg(CWnd* pParent = NULL);
 	virtual ~CExternalSrecDlg();
 	void AddMsgToList(LPCTSTR msg);
 
-// 對話方塊資料
 	enum { IDD = IDD_EXTERNAL_SREC };
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV
 	bool DownloadLoader(CString externalSrecFile);
 
 	DECLARE_MESSAGE_MAP()

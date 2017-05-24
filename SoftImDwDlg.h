@@ -1,6 +1,6 @@
 #pragma once
 
-// CSoftImDwDlg 對話方塊
+// CSoftImDwDlg 
 
 
 class CSoftImDwDlg : public CDialog
@@ -8,14 +8,13 @@ class CSoftImDwDlg : public CDialog
 	DECLARE_DYNAMIC(CSoftImDwDlg)
 
 public:
-	CSoftImDwDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CSoftImDwDlg(CWnd* pParent = NULL); 
 	virtual ~CSoftImDwDlg();
 
-// 對話方塊資料
 	enum { IDD = IDD_SOFTWAREIMAGEDOWNLOAD };
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnTimer(UINT nIDEvent);

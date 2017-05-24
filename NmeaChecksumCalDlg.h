@@ -1,21 +1,20 @@
 #pragma once
 
 
-// NmeaChecksumCalDlg 對話方塊
+// NmeaChecksumCalDlg 
 
 class NmeaChecksumCalDlg : public CDialog
 {
 	DECLARE_DYNAMIC(NmeaChecksumCalDlg)
 
 public:
-	NmeaChecksumCalDlg(CWnd* pParent = NULL);   // 標準建構函式
+	NmeaChecksumCalDlg(CWnd* pParent = NULL);   
 	virtual ~NmeaChecksumCalDlg();
 
-// 對話方塊資料
 //	enum { IDD = IDD_NMEA_CHECKSUM_CAL };
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
 public:

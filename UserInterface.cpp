@@ -85,7 +85,7 @@ void CGPSDlg::DrawGnssSatellite(CDC* dc, int id, int centerX, int centerY)
 		}
 
 		int snrValue = sate_gnss[i].SNR;
-		//畫地球上面的衛星
+		//Draw satellites on earth
 		if(id==0 || id == 64)
 		{
 			continue;	
@@ -145,7 +145,7 @@ void CGPSDlg::DrawBdSatellite(CDC* dc, int id, int centerX, int centerY)
 		}
 
 		int snrValue = sate_bd[i].SNR;
-		//畫地球上面的衛星
+		//Draw satellites on earth
 		if(id==0 || id == 64)
 		{
 			continue;	
@@ -205,7 +205,7 @@ void CGPSDlg::DrawGaSatellite(CDC* dc, int id, int centerX, int centerY)
 		}
 
 		int snrValue = sate_ga[i].SNR;
-		//畫地球上面的衛星
+		//Draw satellites on earth
 		if(id==0 || id == 64)
 		{
 			continue;	

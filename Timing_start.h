@@ -18,14 +18,14 @@ enum
 	CMD_TIMEOUT = 0x09,
 
 };
-// CTiming_start 對話方塊
+// CTiming_start 
 
 class CTiming_start : public CDialog
 {
 	DECLARE_DYNAMIC(CTiming_start)
 
 public:
-	CTiming_start(CWnd* pParent = NULL);   // 標準建構函式
+	CTiming_start(CWnd* pParent = NULL);   
 	virtual ~CTiming_start();
 
 	D64 latitude;
@@ -41,11 +41,10 @@ public:
 	CButton m_start;
 	CButton m_exit;
 
-// 對話方塊資料
 	enum { IDD = IDD_TIMING_START };
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV
 
 	DECLARE_MESSAGE_MAP()
 public:

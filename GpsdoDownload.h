@@ -1,17 +1,16 @@
 #pragma once
 
 
-// CGpsdoDownload 對話方塊
+// CGpsdoDownload 
 
 class CGpsdoDownload : public CDialog
 {
 	DECLARE_DYNAMIC(CGpsdoDownload)
 
 public:
-	CGpsdoDownload(CWnd* pParent = NULL);   // 標準建構函式
+	CGpsdoDownload(CWnd* pParent = NULL); 
 	virtual ~CGpsdoDownload();
 
-// 對話方塊資料
 	//enum { IDD = IDD_GPSDO_DOWNLOAD };
 	CString m_strMasterPath;
 	CString m_strSlavePath;
@@ -23,7 +22,7 @@ protected:
 	void LoadSetting();
 	void AutoDetectBaudRate(CString path, UINT uid);
 
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
 public:

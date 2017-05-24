@@ -2,21 +2,20 @@
 #include "afxwin.h"
 
 
-// CConSrePorDlg 對話方塊
+// CConSrePorDlg
 
 class CConSrePorDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CConSrePorDlg)
 
 public:
-	CConSrePorDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CConSrePorDlg(CWnd* pParent = NULL);
 	virtual ~CConSrePorDlg();
 
-// 對話方塊資料
 	enum { IDD = IDD_CON_SRE_POR };
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV
 
 	DECLARE_MESSAGE_MAP()
 public:

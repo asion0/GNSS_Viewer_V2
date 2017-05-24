@@ -1,23 +1,22 @@
 #pragma once
 
 
-// CGetTimeCorrection 對話方塊
+// CGetTimeCorrection
 
 class CGetTimeCorrection : public CDialog
 {
 	DECLARE_DYNAMIC(CGetTimeCorrection)
 
 public:
-	CGetTimeCorrection(CWnd* pParent = NULL);   // 標準建構函式
+	CGetTimeCorrection(CWnd* pParent = NULL);
 	virtual ~CGetTimeCorrection();
 
-// 對話方塊資料
 	enum { IDD = IDD_GETTIMECORR };
 
 	CString _filename;
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
 public:

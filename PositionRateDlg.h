@@ -1,23 +1,22 @@
 #pragma once
 
 
-// CPositionRateDlg 對話方塊
+// CPositionRateDlg 
 
 class CPositionRateDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CPositionRateDlg)
 
 public:
-	CPositionRateDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CPositionRateDlg(CWnd* pParent = NULL); 
 	virtual ~CPositionRateDlg();
 
-// 對話方塊資料
 	enum { IDD = IDD_CONFIG_POSITIONRATE };
 	
 	int rate;
 	int attr;
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV
 	
 	CComboBox cbo_rate;
 	CComboBox cbo_attr;

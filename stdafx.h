@@ -12,20 +12,20 @@
 #define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
 #endif
 
-#ifndef WINVER                          // 指定最低平台需求為 Windows Vista。
-#define WINVER 0x0600           // 將它變更為針對 Windows 其他版本的適當值。
+#ifndef WINVER                       
+#define WINVER 0x0600           
 #endif
 
-#ifndef _WIN32_WINNT            // 指定最低平台需求為 Windows Vista。
-#define _WIN32_WINNT 0x0600     // 將它變更為針對 Windows 其他版本的適當值。
+#ifndef _WIN32_WINNT           
+#define _WIN32_WINNT 0x0600     
 #endif						
 
-#ifndef _WIN32_WINDOWS          // 指定最低平台需求為 Windows 98。
-#define _WIN32_WINDOWS 0x0410 // 將它變更為針對 Windows Me (含) 以後版本的適當值。
+#ifndef _WIN32_WINDOWS          
+#define _WIN32_WINDOWS 0x0410 
 #endif
 
-#ifndef _WIN32_IE                       // 指定最低平台需求為 Internet Explorer 7.0。
-#define _WIN32_IE 0x0700        // 將它變更為針對 IE 其他版本的適當值。
+#ifndef _WIN32_IE                      
+#define _WIN32_IE 0x0700       
 #endif
 
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS	// some CString constructors will be explicit
@@ -41,13 +41,13 @@
 
 
 #ifndef _AFX_NO_OLE_SUPPORT
-#include <afxdtctl.h>           // MFC 支援的 Internet Explorer 4 通用控制項
+#include <afxdtctl.h>          
 #endif
 #ifndef _AFX_NO_AFXCMN_SUPPORT
-#include <afxcmn.h>             // MFC 支援的 Windows 通用控制項
+#include <afxcmn.h>             
 #endif // _AFX_NO_AFXCMN_SUPPORT
 
-#include <afxcontrolbars.h>     // 功能區和控制列的 MFC 支援
+#include <afxcontrolbars.h>     
 
 #include <conio.h>
 #include <afxinet.h>

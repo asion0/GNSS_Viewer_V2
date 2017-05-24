@@ -1,4 +1,4 @@
-// ScanDlg.cpp : 實作檔
+// ScanDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -9,7 +9,7 @@
 extern HANDLE hScanGPS;
 
 
-// CScanDlg 對話方塊
+// CScanDlg 
 
 IMPLEMENT_DYNAMIC(CScanDlg, CDialog)
 CScanDlg::CScanDlg(CWnd* pParent /*=NULL*/)
@@ -33,7 +33,7 @@ BEGIN_MESSAGE_MAP(CScanDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON1, OnBnClickedButton1)
 END_MESSAGE_MAP()
 
-// CScanDlg 訊息處理常式
+// CScanDlg 
 BOOL CScanDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();

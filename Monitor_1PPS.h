@@ -1,17 +1,16 @@
 #pragma once
 
 
-// CMonitor_1PPS 對話方塊
+// CMonitor_1PPS 
 
 class CMonitor_1PPS : public CDialog
 {
 	DECLARE_DYNAMIC(CMonitor_1PPS)
 
 public:
-	CMonitor_1PPS(CWnd* pParent = NULL);   // 標準建構函式
+	CMonitor_1PPS(CWnd* pParent = NULL); 
 	virtual ~CMonitor_1PPS();
 
-// 對話方塊資料
 //	enum { IDD = IDD_1PPS_MONITOR };
 
 	CEdit m_mode,m_length,m_error;
@@ -19,7 +18,7 @@ public:
 	CEdit m_set_std,m_now_std;
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
 public:

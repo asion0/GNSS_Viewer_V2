@@ -1,4 +1,4 @@
-// Cfg_binary_msg.cpp : 實作檔
+// Cfg_binary_msg.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "Cfg_binary_msg.h"
 
 
-// CCfg_binary_msg 對話方塊
+// CCfg_binary_msg 
 
 IMPLEMENT_DYNAMIC(CCfg_binary_msg, CDialog)
 CCfg_binary_msg::CCfg_binary_msg(CWnd* pParent /*=NULL*/)
@@ -39,11 +39,10 @@ BEGIN_MESSAGE_MAP(CCfg_binary_msg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CCfg_binary_msg 訊息處理常式
+// CCfg_binary_msg 
 
 void CCfg_binary_msg::OnBnClickedOk()
 {
-	// TODO: 在此加入控制項告知處理常式程式碼
 	m_rate_sel = m_rate.GetCurSel();
 	m_mt_sel = m_mt.GetCurSel();
 	m_rm_sel = m_rm.GetCurSel();
@@ -57,8 +56,6 @@ void CCfg_binary_msg::OnBnClickedOk()
 
 void CCfg_binary_msg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
-	// TODO: 在此加入您的訊息處理常式程式碼和 (或) 呼叫預設值
-
 	CDialog::OnHScroll(nSBCode, nPos, pScrollBar);
 }
 
@@ -107,8 +104,5 @@ BOOL CCfg_binary_msg::OnInitDialog()
 
 	m_attr.SetCurSel(0);
 
-	// TODO:  在此加入額外的初始化
-
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }

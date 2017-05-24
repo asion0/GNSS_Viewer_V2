@@ -1,4 +1,4 @@
-// Con_NMEA_TalkerID.cpp : 實作檔
+// Con_NMEA_TalkerID.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "Con_NMEA_TalkerID.h"
 
 
-// CCon_NMEA_TalkerID 對話方塊
+// CCon_NMEA_TalkerID 
 
 IMPLEMENT_DYNAMIC(CCon_NMEA_TalkerID, CDialog)
 
@@ -35,5 +35,3 @@ void CCon_NMEA_TalkerID::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CCon_NMEA_TalkerID, CDialog)
 END_MESSAGE_MAP()
 
-
-// CCon_NMEA_TalkerID 訊息處理常式

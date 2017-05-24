@@ -1,21 +1,20 @@
 #pragma once
 #include "afxwin.h"
 
-// CSysRestartDlg 對話方塊
+// CSysRestartDlg
 
 class CSysRestartDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CSysRestartDlg)
 
 public:
-	CSysRestartDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CSysRestartDlg(CWnd* pParent = NULL);
 	virtual ~CSysRestartDlg();
 
-// 對話方塊資料
 	enum { IDD = IDD_SYSTEM_RESET };
 //	static CSysRestartDlg* pSysRestartDlg;	
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 	
 	DECLARE_MESSAGE_MAP()
 public:

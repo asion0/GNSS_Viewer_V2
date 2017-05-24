@@ -1,4 +1,4 @@
-// NmeaChecksumCalDlg.cpp : 實作檔
+// NmeaChecksumCalDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -8,7 +8,7 @@
 #include "Serial.h"
 
 
-// NmeaChecksumCalDlg 對話方塊
+// NmeaChecksumCalDlg 
 
 IMPLEMENT_DYNAMIC(NmeaChecksumCalDlg, CDialog)
 
@@ -34,19 +34,15 @@ BEGIN_MESSAGE_MAP(NmeaChecksumCalDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// NmeaChecksumCalDlg 訊息處理常式
+// NmeaChecksumCalDlg 
 
 BOOL NmeaChecksumCalDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// TODO:  在此加入額外的初始化
-	//IDC_INPUT, IDC_RESULT
-
 	GetDlgItem(IDC_INPUT)->SetWindowText("");
 	GetDlgItem(IDC_RESULT)->SetWindowText("$*00");
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 CString NmeaChecksumCalDlg::GetFullNmeaString(const CString& s)
@@ -63,10 +59,6 @@ CString NmeaChecksumCalDlg::GetFullNmeaString(const CString& s)
 
 void NmeaChecksumCalDlg::OnEnChangeInput()
 {
-	// TODO:  如果這是 RICHEDIT 控制項，控制項將不會
-	// 傳送此告知，除非您覆寫 CDialog::OnInitDialog()
-	// 函式和呼叫 CRichEditCtrl().SetEventMask()
-	// 讓具有 ENM_CHANGE 旗標 ORed 加入遮罩。
 	CString strInput;
 	GetDlgItem(IDC_INPUT)->GetWindowText(strInput);
 

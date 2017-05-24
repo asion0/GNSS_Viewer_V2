@@ -1,4 +1,4 @@
-// PositionRateDlg.cpp : 實作檔
+// PositionRateDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "PositionRateDlg.h"
 
 
-// CPositionRateDlg 對話方塊
+// CPositionRateDlg 
 
 IMPLEMENT_DYNAMIC(CPositionRateDlg, CDialog)
 CPositionRateDlg::CPositionRateDlg(CWnd* pParent /*=NULL*/)
@@ -31,7 +31,7 @@ BEGIN_MESSAGE_MAP(CPositionRateDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CPositionRateDlg 訊息處理常式
+// CPositionRateDlg 
 
 void CPositionRateDlg::OnBnClickedOk()
 {
@@ -49,11 +49,9 @@ BOOL CPositionRateDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// TODO:  在此加入額外的初始化
 	cbo_rate.SetCurSel(0);
 	cbo_attr.SetCurSel(0);
 
 	GetDlgItem(IDC_WARNING)->SetWindowText("Warning :\r\nPlease disable SAEE before using multi-hz position update rate.");
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }

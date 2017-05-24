@@ -2,21 +2,20 @@
 #include "afxwin.h"
 
 
-// CLogFilterDlg 對話方塊
+// CLogFilterDlg 
 
 class CLogFilterDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CLogFilterDlg)
 
 public:
-	CLogFilterDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CLogFilterDlg(CWnd* pParent = NULL);   
 	virtual ~CLogFilterDlg();
 
-// 對話方塊資料
 	enum { IDD = IDD_LOGFILTERDLG };
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
 public:

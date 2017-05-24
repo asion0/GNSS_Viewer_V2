@@ -1,4 +1,4 @@
-// GpsdoDownload.cpp : 實作檔
+// GpsdoDownload.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "resource.h"
 
 
-// CGpsdoDownload 對話方塊
+// CGpsdoDownload 
 
 IMPLEMENT_DYNAMIC(CGpsdoDownload, CDialog)
 
@@ -34,7 +34,7 @@ BEGIN_MESSAGE_MAP(CGpsdoDownload, CDialog)
 END_MESSAGE_MAP()
 
 
-// CGpsdoDownload 訊息處理常式
+// CGpsdoDownload 
 void CGpsdoDownload::OnBnClickedBrowseMaster()
 {
 	CFileDialog fd(TRUE, "*.bin", m_strMasterPath, OFN_FILEMUSTEXIST | OFN_HIDEREADONLY, "*.bin|*.bin||");

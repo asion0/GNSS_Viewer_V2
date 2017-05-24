@@ -1,4 +1,4 @@
-// PositionRateDlg.cpp : 實作檔
+// PositionRateDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "DrMultiHzDlg.h"
 
 
-// DrMultiHzDlg 對話方塊
+// DrMultiHzDlg 
 
 IMPLEMENT_DYNAMIC(DrMultiHzDlg, CDialog)
 DrMultiHzDlg::DrMultiHzDlg(CWnd* pParent /*=NULL*/)
@@ -31,7 +31,7 @@ BEGIN_MESSAGE_MAP(DrMultiHzDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// DrMultiHzDlg 訊息處理常式
+// DrMultiHzDlg 
 
 void DrMultiHzDlg::OnBnClickedOk()
 {
@@ -49,9 +49,7 @@ BOOL DrMultiHzDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// TODO:  在此加入額外的初始化
 	cbo_rate.SetCurSel(0);
 	cbo_attr.SetCurSel(0);
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }

@@ -1,11 +1,11 @@
-// Con1PPS_ElevCNR.cpp : 實作檔
+// Con1PPS_ElevCNR.cpp 
 //
 
 #include "stdafx.h"
 #include "GPS.h"
 #include "Con1PPS_ElevCNR.h"
 
-// CCon1PPS_ElevCNR 對話方塊
+// CCon1PPS_ElevCNR 
 
 IMPLEMENT_DYNAMIC(CCon1PPS_ElevCNR, CDialog)
 CCon1PPS_ElevCNR::CCon1PPS_ElevCNR(CWnd* pParent /*=NULL*/)
@@ -44,7 +44,7 @@ BEGIN_MESSAGE_MAP(CCon1PPS_ElevCNR, CDialog)
 END_MESSAGE_MAP()
 
 
-// CCon1PPS_ElevCNR 訊息處理常式
+// CCon1PPS_ElevCNR 
 
 void CCon1PPS_ElevCNR::OnBnClickedOk()
 {
@@ -94,7 +94,6 @@ BOOL CCon1PPS_ElevCNR::OnInitDialog()
 	m_cnr.SetWindowText("0");
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CCon1PPS_ElevCNR::OnBnClickedRadioElevAndCnr()

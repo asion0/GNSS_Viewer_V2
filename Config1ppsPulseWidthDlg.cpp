@@ -1,4 +1,4 @@
-// CConfig1ppsPulseWidthDlg.cpp : 實作檔
+// CConfig1ppsPulseWidthDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "Config1ppsPulseWidthDlg.h"
 
 
-// CConfig1ppsPulseWidthDlg 對話方塊
+// CConfig1ppsPulseWidthDlg 
 
 IMPLEMENT_DYNAMIC(CConfig1ppsPulseWidthDlg, CDialog)
 
@@ -33,10 +33,9 @@ BEGIN_MESSAGE_MAP(CConfig1ppsPulseWidthDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CConfig1ppsPulseWidthDlg 訊息處理常式
+// CConfig1ppsPulseWidthDlg 
 void CConfig1ppsPulseWidthDlg::OnBnClickedOk()
 {
-	// TODO: 在此加入控制項告知處理常式程式碼
 	CString txt;
 
 	GetDlgItem(IDC_PULSE_WIDTH)->GetWindowText(txt);
@@ -55,10 +54,8 @@ BOOL CConfig1ppsPulseWidthDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// TODO:  在此加入額外的初始化
 	GetDlgItem(IDC_PULSE_WIDTH)->SetWindowText("1");
 	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }

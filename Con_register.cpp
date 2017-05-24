@@ -1,4 +1,4 @@
-// Con_register.cpp : 實作檔
+// Con_register.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "Con_register.h"
 
 
-// CCon_register 對話方塊
+// CCon_register 
 
 IMPLEMENT_DYNAMIC(CCon_register, CDialog)
 CCon_register::CCon_register(CWnd* pParent /*=NULL*/)
@@ -35,7 +35,7 @@ BEGIN_MESSAGE_MAP(CCon_register, CDialog)
 END_MESSAGE_MAP()
 
 
-// CCon_register 訊息處理常式
+// CCon_register 
 
 BOOL CCon_register::OnInitDialog()
 {
@@ -53,18 +53,10 @@ BOOL CCon_register::OnInitDialog()
     GetDlgItem(IDC_STATIC_DATA)->SetWindowText("Clock Offset 0X");
   }
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CCon_register::OnEnUpdateRegAddr()
 {
-	// TODO:  如果這是 RICHEDIT 控制項，控制項將不會
-	// 傳送此告知，除非您覆寫 CDialog::OnInitDialog()
-	// 要傳送 EM_SETEVENTMASK 訊息到控制項的函式
-	// 將具有 ENM_UPDATE 旗標 ORed 加入 lParam 遮罩。
-
-	// TODO:  在此加入控制項告知處理常式程式碼
-
 	//CString tmp;
 	//m_txt_addr.GetWindowText(tmp);
 	//if (tmp.GetLength() > 8)

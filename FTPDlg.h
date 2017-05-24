@@ -1,21 +1,16 @@
 #pragma once
+//#include "stdafx.h"
 
-#include "stdafx.h"
-
-//#include <list>
-//using std::list;
-
-// CFTPDlg 對話方塊
+// CFTPDlg 
 
 class CFTPDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CFTPDlg)
 
 public:
-	CFTPDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CFTPDlg(CWnd* pParent = NULL);
 	virtual ~CFTPDlg();
 
-// 對話方塊資料
 	enum { IDD = IDD_FTPDLG };
 
 	virtual BOOL OnInitDialog();
@@ -25,7 +20,7 @@ public:
 
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 	virtual void OnCancel();
 
 	afx_msg void OnBnClickedConnect();

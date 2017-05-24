@@ -1,4 +1,4 @@
-// SetTimeCorrections.cpp : 實作檔
+// SetTimeCorrections.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "SetTimeCorrections.h"
 
 
-// CSetTimeCorrections 對話方塊
+// CSetTimeCorrections 
 
 IMPLEMENT_DYNAMIC(CSetTimeCorrections, CDialog)
 
@@ -33,7 +33,7 @@ BEGIN_MESSAGE_MAP(CSetTimeCorrections, CDialog)
 END_MESSAGE_MAP()
 
 
-// CSetTimeCorrections 訊息處理常式
+// CSetTimeCorrections 
 
 void CSetTimeCorrections::OnBnClickedBrowse()
 {
@@ -49,11 +49,5 @@ void CSetTimeCorrections::OnBnClickedBrowse()
 BOOL CSetTimeCorrections::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-
-	
-	//UpdateData(TRUE);
-	// TODO:  在此加入額外的初始化
-
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }

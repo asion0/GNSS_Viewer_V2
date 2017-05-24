@@ -1,4 +1,4 @@
-// ConfigNmeaIntervalDlg.cpp : 實作檔
+// ConfigNmeaIntervalDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -78,7 +78,7 @@ static const char * InitialTable[] = {
 static const int tableSize = sizeof(SliderTable)/sizeof(SliderTable[0]);
 static int ConfigNmeaIntervalParam[tableSize];
 
-// CConfigNmeaIntervalDlg 對話方塊
+// CConfigNmeaIntervalDlg 
 UINT ConfigNmeaIntervalThread(LPVOID pParam)
 {
 	U08 messages[22] = {0};   
@@ -116,7 +116,7 @@ UINT ConfigNmeaIntervalThread(LPVOID pParam)
 	return 0;
 }
 
-// CConfigNmeaIntervalDlg 對話方塊
+// CConfigNmeaIntervalDlg 
 UINT ConfigNmeaInterval2Thread(LPVOID pParam)
 {
 	U08 messages[16] = {0};   
@@ -289,7 +289,7 @@ void CConfigNmeaIntervalDlg::AdjustValue(int nPos, CScrollBar* pScrollBar)
 
 }
 
-// CConfigNmeaIntervalDlg 訊息處理常式
+// CConfigNmeaIntervalDlg 
 void CConfigNmeaIntervalDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {   
 	if(NULL==pScrollBar)
@@ -338,7 +338,6 @@ BOOL CConfigNmeaIntervalDlg::OnInitDialog()
 	m_attr.SetCurSel(0);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CConfigNmeaIntervalDlg::OnBnClickedOk()

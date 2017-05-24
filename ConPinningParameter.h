@@ -1,19 +1,17 @@
 #pragma once
 
 
-// CConPinningParameter 對話方塊
+// CConPinningParameter 
 
 class CConPinningParameter : public CDialog
 {
 	DECLARE_DYNAMIC(CConPinningParameter)
 
 public:
-	CConPinningParameter(CWnd* pParent = NULL);   // 標準建構函式
+	CConPinningParameter(CWnd* pParent = NULL);
 	virtual ~CConPinningParameter();
 
-// 對話方塊資料
 	enum { IDD = IDD_CON_PINNING };
-
 
 	int pin_speed;
 	int pin_cnt;
@@ -23,7 +21,7 @@ public:
 	int attr;
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
 public:

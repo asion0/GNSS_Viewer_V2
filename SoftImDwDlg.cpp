@@ -1,4 +1,4 @@
-// SoftImDwDlg.cpp : 實作檔
+// SoftImDwDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "GPSDlg.h"
 #include "SoftImDwDlg.h"
 
-// CSoftImDwDlg 對話方塊
+// CSoftImDwDlg 
 
 IMPLEMENT_DYNAMIC(CSoftImDwDlg, CDialog)
 CSoftImDwDlg::CSoftImDwDlg(CWnd* pParent /*=NULL*/)
@@ -39,7 +39,7 @@ BEGIN_MESSAGE_MAP(CSoftImDwDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CSoftImDwDlg 訊息處理常式
+// CSoftImDwDlg 
 
 BOOL CSoftImDwDlg::OnInitDialog()
 {
@@ -54,7 +54,6 @@ BOOL CSoftImDwDlg::OnInitDialog()
 	isFinish = false;
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CSoftImDwDlg::OnTimer(UINT nIDEvent)

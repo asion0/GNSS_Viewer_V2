@@ -1,4 +1,4 @@
-// Agps_config.cpp : 實作檔
+// Agps_config.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "Agps_config.h"
 
 
-// CAgps_config 對話方塊
+// CAgps_config 
 
 IMPLEMENT_DYNAMIC(CAgps_config, CDialog)
 CAgps_config::CAgps_config(CWnd* pParent /*=NULL*/)
@@ -33,11 +33,10 @@ BEGIN_MESSAGE_MAP(CAgps_config, CDialog)
 END_MESSAGE_MAP()
 
 
-// CAgps_config 訊息處理常式
+// CAgps_config 
 
 void CAgps_config::OnBnClickedOk()
 {
-	// TODO: 在此加入控制項告知處理常式程式碼
 	enable = cbo_status.GetCurSel();
 	OnOK();
 }
@@ -46,10 +45,8 @@ BOOL CAgps_config::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// TODO:  在此加入額外的初始化
 	cbo_status.SetCurSel(enable);
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CAgps_config::Set_Enable(U08 m_enable)

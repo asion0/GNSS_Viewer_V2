@@ -1,4 +1,4 @@
-// ConfigNmeaIntervalDlg.cpp : 實作檔
+// ConfigNmeaIntervalDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -27,7 +27,7 @@ static const char * InitialTable[] = {
 static const int tableSize = sizeof(SliderTable)/sizeof(SliderTable[0]);
 static int ConfigEricssonIntervalParam[tableSize];
 
-// ConfigEricssonIntervalDlg 對話方塊
+// ConfigEricssonIntervalDlg 
 UINT ConfigEricssonIntervalThread(LPVOID pParam)
 {
 	U08 messages[15] = {0};   
@@ -199,7 +199,7 @@ void ConfigEricssonIntervalDlg::AdjustValue(int nPos, CScrollBar* pScrollBar)
 
 }
 
-// ConfigEricssonIntervalDlg 訊息處理常式
+// ConfigEricssonIntervalDlg 
 void ConfigEricssonIntervalDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {   
 	if(NULL==pScrollBar)
@@ -248,7 +248,6 @@ BOOL ConfigEricssonIntervalDlg::OnInitDialog()
 	m_attr.SetCurSel(0);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void ConfigEricssonIntervalDlg::OnBnClickedOk()
@@ -272,7 +271,7 @@ U08 ConfigEricssonIntervalDlg::GetParam(int index)
 
 ///////////////////////////////////////////////////////////////////////////
 
-// ConfigEricssonIntervalDlg 對話方塊
+// ConfigEricssonIntervalDlg 
 UINT ConfigSerialNumberThread(LPVOID pParam)
 {
 	ConfigSerialNumberDlg* p = (ConfigSerialNumberDlg*)pParam;
@@ -310,7 +309,6 @@ BOOL ConfigSerialNumberDlg::OnInitDialog()
 	CDialog::OnInitDialog();
 	GetDlgItem(IDC_SN)->SetFocus();
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void ConfigSerialNumberDlg::OnBnClickedOk()
@@ -339,10 +337,4 @@ void ConfigSerialNumberDlg::SendCommand()
 }
 void ConfigSerialNumberDlg::OnEnChangeSn()
 {
-	// TODO:  如果這是 RICHEDIT 控制項，控制項將不會
-	// 傳送此告知，除非您覆寫 CDialog::OnInitDialog()
-	// 函式和呼叫 CRichEditCtrl().SetEventMask()
-	// 讓具有 ENM_CHANGE 旗標 ORed 加入遮罩。
-
-	// TODO:  在此加入控制項告知處理常式程式碼
 }

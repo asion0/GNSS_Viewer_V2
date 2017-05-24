@@ -1,4 +1,4 @@
-// GetRgsDlg.cpp : 實作檔
+// GetRgsDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "GetRgsDlg.h"
 
 
-// CGetRgsDlg 對話方塊
+// CGetRgsDlg 
 static unsigned int lastAddress = 0;
 
 IMPLEMENT_DYNAMIC(CGetRgsDlg, CDialog)
@@ -31,7 +31,7 @@ BEGIN_MESSAGE_MAP(CGetRgsDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CGetRgsDlg 訊息處理常式
+// CGetRgsDlg 
 
 BOOL CGetRgsDlg::OnInitDialog()
 {
@@ -43,7 +43,6 @@ BOOL CGetRgsDlg::OnInitDialog()
 
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CGetRgsDlg::OnBnClickedOk()

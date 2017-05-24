@@ -1,4 +1,4 @@
-// GetTimeCorrection.cpp : 實作檔
+// GetTimeCorrection.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "GetTimeCorrection.h"
 
 
-// CGetTimeCorrection 對話方塊
+// CGetTimeCorrection 
 
 IMPLEMENT_DYNAMIC(CGetTimeCorrection, CDialog)
 
@@ -33,7 +33,7 @@ BEGIN_MESSAGE_MAP(CGetTimeCorrection, CDialog)
 END_MESSAGE_MAP()
 
 
-// CGetTimeCorrection 訊息處理常式
+// CGetTimeCorrection 
 
 void CGetTimeCorrection::OnBnClickedBrowse()
 {

@@ -1,17 +1,16 @@
 #pragma once
 
 
-// CCon1PPS_ElevCNR 對話方塊
+// CCon1PPS_ElevCNR 
 
 class CCon1PPS_ElevCNR : public CDialog
 {
 	DECLARE_DYNAMIC(CCon1PPS_ElevCNR)
 
 public:
-	CCon1PPS_ElevCNR(CWnd* pParent = NULL);   // 標準建構函式
+	CCon1PPS_ElevCNR(CWnd* pParent = NULL); 
 	virtual ~CCon1PPS_ElevCNR();
 
-// 對話方塊資料
 	enum { IDD = IDD_1PPS_ELEVCNR };
 
 	CButton m_bboth,m_belev,m_bcnr,m_disable;
@@ -24,7 +23,7 @@ public:
 
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV
 
 	DECLARE_MESSAGE_MAP()
 public:

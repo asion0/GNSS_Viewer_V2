@@ -2,26 +2,25 @@
 #include "afxwin.h"
 
 
-// CCon1PPS_OutputMode 對話方塊
+// CCon1PPS_OutputMode
 
 class CCon1PPS_OutputMode : public CDialog
 {
 	DECLARE_DYNAMIC(CCon1PPS_OutputMode)
 
 public:
-	CCon1PPS_OutputMode(CWnd* pParent = NULL);   // 標準建構函式
+	CCon1PPS_OutputMode(CWnd* pParent = NULL); 
 	virtual ~CCon1PPS_OutputMode();
 	CButton m_no_output,m_output_always,m_output_gps_time,m_output_align;
 	CButton m_align_to_GPS,m_align_to_UTC;
 
-// 對話方塊資料
 	enum { IDD = IDD_CON_1PPS_OUTPUT_MODE };
 	int mode;
 	int attr;
 	int align_to;
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
 public:

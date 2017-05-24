@@ -1,4 +1,4 @@
-// FTPDlg.cpp : 實作檔
+// FTPDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -12,7 +12,7 @@ const char EphOldFile[] = "Eph_Old.dat";
 const char Eph4File[] = "Eph_4.dat";
 const char Eph4RomFile[] = "Eph_4_Rom.dat";
 
-// CFTPDlg 對話方塊
+// CFTPDlg 
 IMPLEMENT_DYNAMIC(CFTPDlg, CDialog)
 CFTPDlg::CFTPDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CFTPDlg::IDD, pParent)
@@ -50,7 +50,7 @@ BEGIN_MESSAGE_MAP(CFTPDlg, CDialog)
 	ON_EN_CHANGE(IDC_PWD, &CFTPDlg::OnEnChangePwd)
 END_MESSAGE_MAP()
 
-// CFTPDlg 訊息處理常式
+// CFTPDlg 
 BOOL CFTPDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
@@ -438,20 +438,12 @@ void CFTPDlg::OnBnClickedErase()
 
 void CFTPDlg::OnStnClickedHostT()
 {
-	// TODO: 在此加入控制項告知處理常式程式碼
 }
 
 void CFTPDlg::OnStnClickedPwdT()
 {
-	// TODO: 在此加入控制項告知處理常式程式碼
 }
 
 void CFTPDlg::OnEnChangePwd()
 {
-	// TODO:  如果這是 RICHEDIT 控制項，控制項將不會
-	// 傳送此告知，除非您覆寫 CDialog::OnInitDialog()
-	// 函式和呼叫 CRichEditCtrl().SetEventMask()
-	// 讓具有 ENM_CHANGE 旗標 ORed 加入遮罩。
-
-	// TODO:  在此加入控制項告知處理常式程式碼
 }

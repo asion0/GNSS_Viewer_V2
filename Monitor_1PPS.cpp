@@ -1,4 +1,4 @@
-// Monitor_1PPS.cpp : 實作檔
+// Monitor_1PPS.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "Monitor_1PPS.h"
 #include "GPSDlg.h"
 
-// CMonitor_1PPS 對話方塊
+// CMonitor_1PPS 
 
 IMPLEMENT_DYNAMIC(CMonitor_1PPS, CDialog)
 CMonitor_1PPS::CMonitor_1PPS(CWnd* pParent /*=NULL*/)
@@ -39,11 +39,10 @@ BEGIN_MESSAGE_MAP(CMonitor_1PPS, CDialog)
 END_MESSAGE_MAP()
 
 
-// CMonitor_1PPS 訊息處理常式
+// CMonitor_1PPS 
 
 void CMonitor_1PPS::OnBnClickedOk()
 {
-	// TODO: 在此加入控制項告知處理常式程式碼
 	OnOK();
 }
 
@@ -59,7 +58,6 @@ BOOL CMonitor_1PPS::OnInitDialog()
 
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CMonitor_1PPS::Show1PPSTiming(int mode,int surveylen,float quan_err)
@@ -107,8 +105,6 @@ void CMonitor_1PPS::Show1PPSTiming(int mode,int surveylen,float quan_err,int set
 
 void CMonitor_1PPS::OnCancel()
 {
-	// TODO: 在此加入特定的程式碼和 (或) 呼叫基底類別
-
 	CDialog::OnCancel();
 
 	CGPSDlg::gpsDlg->close_minitor_1pps_window();
@@ -116,6 +112,5 @@ void CMonitor_1PPS::OnCancel()
 
 void CMonitor_1PPS::OnBnClickedCancel()
 {
-	// TODO: 在此加入控制項告知處理常式程式碼
 	OnCancel();
 }

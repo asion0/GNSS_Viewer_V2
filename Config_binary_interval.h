@@ -1,23 +1,22 @@
 #pragma once
 
 
-// CConfig_binary_interval 對話方塊
+// CConfig_binary_interval 
 
 class CConfig_binary_interval : public CDialog
 {
 	DECLARE_DYNAMIC(CConfig_binary_interval)
 
 public:
-	CConfig_binary_interval(CWnd* pParent = NULL);   // 標準建構函式
+	CConfig_binary_interval(CWnd* pParent = NULL);
 	virtual ~CConfig_binary_interval();
 
-// 對話方塊資料
 	enum { IDD = IDD_CONFIG_BINARY_INTERVAL };
 
 	CComboBox m_interval,m_attr;
 	int m_bin_interval,m_bin_attr;
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
 public:

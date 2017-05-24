@@ -1,4 +1,4 @@
-// GetAlmanac.cpp : 實作檔
+// GetAlmanac.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "GetAlmanac.h"
 
 
-// CGetAlmanac 對話方塊
+// CGetAlmanac 
 
 IMPLEMENT_DYNAMIC(CGetAlmanac, CDialog)
 CGetAlmanac::CGetAlmanac(CWnd* pParent /*=NULL*/)
@@ -34,7 +34,7 @@ BEGIN_MESSAGE_MAP(CGetAlmanac, CDialog)
 END_MESSAGE_MAP()
 
 
-// CGetAlmanac 訊息處理常式
+// CGetAlmanac 
 
 void CGetAlmanac::OnBnClickedAlmanacBrowse()
 {
@@ -101,7 +101,6 @@ BOOL CGetAlmanac::OnInitDialog()
   }
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CGetAlmanac::OnBnClickedOk()

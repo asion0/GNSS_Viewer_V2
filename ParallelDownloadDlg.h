@@ -1,17 +1,16 @@
 #pragma once
 
 
-// CParallelDownloadDlg 對話方塊
+// CParallelDownloadDlg 
 
 class CParallelDownloadDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CParallelDownloadDlg)
 
 public:
-	CParallelDownloadDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CParallelDownloadDlg(CWnd* pParent = NULL);
 	virtual ~CParallelDownloadDlg();
 
-// 對話方塊資料
 //	enum { IDD = IDD_FIRMWARE_DL };
 	virtual BOOL OnInitDialog();
 
@@ -28,7 +27,7 @@ protected:
 	//BOOL m_isInternal;
 	//int m_nBufferIdx;
 
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 	virtual void OnOK();
 
 	afx_msg void OnBnClickedBrowse();

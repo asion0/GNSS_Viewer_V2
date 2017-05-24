@@ -14,6 +14,7 @@ static const S08 south_euro[9][21] =
 	{42,48,54,51,44,41,32,30,32,33,31,28,29,26,10,6,11,15,18,19,15},
 	{44,49,47,42,36,31,28,26,28,32,32,32,29,25,22,18,17,18,19,16,12}
 };
+
 // 2.5 degrees table
 static const S08 east_asia[13][9] = 
 {
@@ -31,6 +32,7 @@ static const S08 east_asia[13][9] =
 	{36,38,41,45,48,46,30,37,36},
 	{39,40,43,47,49,50,47,33,39}
 };
+
 // 5 degrees table
 static const S08 north_america[9][19] =
 {
@@ -44,6 +46,7 @@ static const S08 north_america[9][19] =
 	{-11,-17,-24,-32,-40,-45,-47,-42,-34,-17,-15,-31,-26,-25,-26,-40,-52,-49,-48},
 	{-7,-14,-23,-31,-39,-44,-47,-42,-34,-23,-9,-19,-10,-16,-20,-26,-45,-61,-48}
 };
+
 // 5 degree table
 static const S08 north_euro[5][11] = 
 {
@@ -53,6 +56,7 @@ static const S08 north_euro[5][11] =
 	{58,56,46,41,41,35,26,22,18,16,11},
 	{59,55,47,47,48,46,42,32,28,18,12}
 };
+
 // 5 degree table
 static const  S08 west_asia[7][7] =  
 {
@@ -64,6 +68,7 @@ static const  S08 west_asia[7][7] =
 	{-36,-31,-21,-2,17,29,34},
 	{-36,-26,-11,6,21,34,39}
 };
+
 // 5 degree table
 static const S08 australia[9][11] =  
 {
@@ -77,6 +82,7 @@ static const S08 australia[9][11] =
 	{-24,-20,-17,-15,-11,-9,-6,-2,8,6,4},
 	{-22,-19,-18,-16,-15,-16,-14,-11,-10,-11,-15}
 };
+
 // 5 degree table
 static const S08 singapore[5][4] =
 {
@@ -100,6 +106,7 @@ static const S08 upper[9][37] =
 	{5,10,7,-7,-23,-39,-47,-34,-9,-10,-20,-45,-48,-32,-9,17,25,31,31,26,15,6,1,-29,-44,-61,-67,-59,-36,-11,21,39,49,39,22,10,5},
 	{13,12,11,2,-11,-28,-38,-29,-10,3,1,-11,-41,-42,-16,3,17,33,22,23,2,-3,-7,-36,-59,-90,-95,-63,-24,12,53,60,58,46,36,26,13}
 };
+
 // 10 degree table
 static const S08 south_america[5][3] =
 {
@@ -109,6 +116,7 @@ static const S08 south_america[5][3] =
 	{7,35,20},
 	{9,32,16}
 };
+
 // 20 degree table
 static const S08 lower[6][19] =
 {
@@ -141,7 +149,6 @@ geoid::geoid(void)
 geoid::~geoid(void)
 {
 }
-
 
 double geoid::find_geoid_height(double lat_table, double lon_table)
 {
@@ -303,7 +310,6 @@ double geoid::convert_lat(double lat)
 
 	return ( -lat*(R2D) + 90 );
 }
-
 
 double geoid::convert_lon(double lon)
 {

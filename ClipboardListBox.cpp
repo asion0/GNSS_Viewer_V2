@@ -1,4 +1,4 @@
-// ClipboardListBox.cpp : 實作檔
+// ClipboardListBox.cpp
 //
 
 #include "stdafx.h"
@@ -25,7 +25,7 @@ BEGIN_MESSAGE_MAP(CClipboardListBox, CListBox)
     ON_WM_RBUTTONUP()
 END_MESSAGE_MAP()
 
-// CClipboardListBox 訊息處理常式
+// CClipboardListBox 
 void CClipboardListBox::DoCopy()
 {
 	CArray<int,int> sels;
@@ -110,7 +110,6 @@ void CClipboardListBox::SelectAll()
 
 void CClipboardListBox::OnRButtonUp(UINT nFlags, CPoint point)
 {
-	// TODO: 在此加入您的訊息處理常式程式碼和 (或) 呼叫預設值
 	const UINT_PTR IDM_SELECTALL = 0x80fb;
 	const UINT_PTR IDM_COPY = 0x80fc;
 	const UINT_PTR IDM_CLEAR = 0x80fd;

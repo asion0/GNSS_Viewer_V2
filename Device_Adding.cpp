@@ -1,11 +1,11 @@
-// Device_Adding.cpp : 實作檔
+// Device_Adding.cpp 
 //
 
 #include "stdafx.h"
 #include "GPS.h"
 #include "Device_Adding.h"
 
-// CDevice_Adding 對話方塊
+// CDevice_Adding 
 IMPLEMENT_DYNAMIC(CDevice_Adding, CDialog)
 CDevice_Adding::CDevice_Adding(CWnd* pParent /*=NULL*/)
 	: CDialog(CDevice_Adding::IDD, pParent)
@@ -33,7 +33,7 @@ void CDevice_Adding::setPort_Baudrate(CString port,int baudrate)
 	m_baudrate = baudrate;
 }
 
-// CDevice_Adding 訊息處理常式
+// CDevice_Adding 
 void CDevice_Adding::OnBnClickedOk()
 {
 	CString tmp;

@@ -1,22 +1,22 @@
 #pragma once
 
 
-// CConWaas 對話方塊
+// CConWaas
 
 class CConWaas : public CDialog
 {
 	DECLARE_DYNAMIC(CConWaas)
 
 public:
-	CConWaas(CWnd* pParent = NULL);   // 標準建構函式
+	CConWaas(CWnd* pParent = NULL);
 	virtual ~CConWaas();
 	int waas;
 	int attribute;
-// 對話方塊資料
+
 	enum { IDD = IDD_CON_WAAS };
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV
 
 	DECLARE_MESSAGE_MAP()
 public:

@@ -1,4 +1,4 @@
-// SysRestartDlg.cpp : 實作檔
+// SysRestartDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -25,7 +25,7 @@ UINT ResetThread(LPVOID pParam)
 	return 0;
 }
 
-// CSysRestartDlg 對話方塊
+// CSysRestartDlg 
 IMPLEMENT_DYNAMIC(CSysRestartDlg, CDialog)
 CSysRestartDlg::CSysRestartDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CSysRestartDlg::IDD, pParent)
@@ -60,7 +60,7 @@ BEGIN_MESSAGE_MAP(CSysRestartDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CSysRestartDlg 訊息處理常式
+// CSysRestartDlg 
 
 BOOL CSysRestartDlg::OnInitDialog()
 {
@@ -134,7 +134,6 @@ BOOL CSysRestartDlg::OnInitDialog()
 		break;
 	}
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CSysRestartDlg::OnBnClickedOk()

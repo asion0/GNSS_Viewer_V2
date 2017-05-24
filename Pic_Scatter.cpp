@@ -13,9 +13,6 @@ static void Log(CString f, int line, CString name = "", int data = 0)
 
 void ScatterData::SetOrigin()
 {
-	//double offset_x = 0;
-	//double offset_y = 0;	 
-	
 	LockEnuData();
 	if(g_setting.specifyCenter && IS_DEBUG)
 	{	//Only Internal Use version support specify center.
@@ -42,9 +39,6 @@ void ScatterData::SetOrigin()
 		double ty = enu_y.back();
 		*enu_x_it -= tx;
 		*enu_y_it -= ty;
-
-		//*enu_x_it -= enu_x.back();
-		//*enu_y_it -= enu_y.back();
 	}		
 	UnlockEnuData();
 
@@ -214,10 +208,8 @@ void ScatterData::SetENU(double lon, double lat, double h)
 CPic_Scatter::CPic_Scatter(void)
 {
 	int i=0, x=0, y=0;
-	//定義點圖的範圍大小
 	plot_x1 = 45; 
 	plot_y1 = 21;	
-	//視窗左上角
 	plot_x2 = plot_x1+200; 
 	plot_y2 = plot_y1+200;
 
@@ -292,7 +284,6 @@ void CPic_Scatter::Create_scatterplot(CDC *dc)
 		dc->LineTo(x,plot_y2);
 	}
 
-	////畫十字線
 	dc->SelectObject(&(s->inUseSnrBarPen));	
 	dc->MoveTo(plot_x1,plot_cross_y);dc->LineTo(plot_x2,plot_cross_y);
 	dc->MoveTo(plot_cross_x,plot_y1);dc->LineTo(plot_cross_x,plot_y2);	

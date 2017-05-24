@@ -1,4 +1,4 @@
-// Config_binary_interval.cpp : 實作檔
+// Config_binary_interval.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "Config_binary_interval.h"
 
 
-// CConfig_binary_interval 對話方塊
+// CConfig_binary_interval 
 
 IMPLEMENT_DYNAMIC(CConfig_binary_interval, CDialog)
 CConfig_binary_interval::CConfig_binary_interval(CWnd* pParent /*=NULL*/)
@@ -31,7 +31,7 @@ BEGIN_MESSAGE_MAP(CConfig_binary_interval, CDialog)
 END_MESSAGE_MAP()
 
 
-// CConfig_binary_interval 訊息處理常式
+// CConfig_binary_interval 
 
 void CConfig_binary_interval::OnBnClickedOk()
 {
@@ -44,7 +44,6 @@ BOOL CConfig_binary_interval::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// TODO:  在此加入額外的初始化
 	CString temp;
 
 	for (int i=0;i<256;i++)
@@ -56,5 +55,4 @@ BOOL CConfig_binary_interval::OnInitDialog()
 	m_attr.SetCurSel(0);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }

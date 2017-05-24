@@ -1,4 +1,4 @@
-// Con1PPS_DOP.cpp : 實作檔
+// Con1PPS_DOP.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "Con1PPS_DOP.h"
 
 
-// CCon1PPS_DOP 對話方塊
+// CCon1PPS_DOP 
 
 IMPLEMENT_DYNAMIC(CCon1PPS_DOP, CDialog)
 CCon1PPS_DOP::CCon1PPS_DOP(CWnd* pParent /*=NULL*/)
@@ -48,7 +48,7 @@ BEGIN_MESSAGE_MAP(CCon1PPS_DOP, CDialog)
 END_MESSAGE_MAP()
 
 
-// CCon1PPS_DOP 訊息處理常式
+// CCon1PPS_DOP 
 
 void CCon1PPS_DOP::OnBnClickedRadioDopAuto()
 {
@@ -89,8 +89,6 @@ BOOL CCon1PPS_DOP::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// TODO:  在此加入額外的初始化
-
 	m_attr.SetCurSel(0);
 	m_dop_auto.SetCheck(1);
 	m_dop_pdop.SetCheck(0);
@@ -105,14 +103,12 @@ BOOL CCon1PPS_DOP::OnInitDialog()
 	m_gdop.SetWindowText("10");
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 
 
 void CCon1PPS_DOP::OnBnClickedOk()
 {
-	// TODO: 在此加入控制項告知處理常式程式碼
 	CString tmp;
 	
 

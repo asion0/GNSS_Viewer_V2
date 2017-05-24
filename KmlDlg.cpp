@@ -1,4 +1,4 @@
-// KmlDlg.cpp : 實作檔
+// KmlDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -11,7 +11,7 @@
 CKmlDlg* CKmlDlg::kmlDlg = NULL;
 HANDLE	hReadEvent;
 
-// CKmlDlg 對話方塊
+// CKmlDlg 
 
 IMPLEMENT_DYNAMIC(CKmlDlg, CDialog)
 CKmlDlg::CKmlDlg(CWnd* pParent /*=NULL*/)
@@ -125,7 +125,7 @@ BEGIN_MESSAGE_MAP(CKmlDlg, CDialog)
   ON_CLBN_CHKCHANGE(IDC_FILE_LIST, &CKmlDlg::OnLbnChkchangeFileList)
 END_MESSAGE_MAP()
 
-// CKmlDlg 訊息處理常式
+// CKmlDlg 
 
 BOOL CKmlDlg::OnInitDialog()
 {
@@ -276,95 +276,7 @@ void CKmlDlg::GetDataFiles(BOOL autoChecked)
       }
     }
 }
-/*
-void CKmlDlg::GetDatFile()
-{
-	for(int i=0;i<NumOfCheckBox;i++)
-	{
-		m_check[i].ShowWindow(1);
-	}
-	
-  int num = 0;
-//	CString sFilterName = sPath + sPathName; // 完整的路徑以及可用 "?" 或 "*" 表示的檔案名稱, 例如 "*.*" 表示所有檔案
-	CString sFilterName = sPath+"*.txt"; 
-	
-	HANDLE hFind = NULL;
-	WIN32_FIND_DATA fd;
-	//CString sTemp = "  ";
-	if ((hFind = ::FindFirstFile ((LPCTSTR) sFilterName, &fd)) != INVALID_HANDLE_VALUE)
-	{
-		if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) // 檢查所搜尋到的是否為目錄名稱
-		{
-			FileName[num] = fd.cFileName;
-			FilePath[num] = sPath + fd.cFileName; // fd.cFileName只有檔名, 請自行合併路徑後使用
-			if(num<NumOfCheckBox)
-			m_check[num].SetWindowText(FileName[num]);			
-			while (::FindNextFile(hFind, &fd))
-			{
-				num++;
-				if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-				{
-					FileName[num] = fd.cFileName;
-					FilePath[num] = sPath + fd.cFileName;
-					if(num<NumOfCheckBox)
-					{
-						m_check[num].SetWindowText(FileName[num]);
-					//	break;
-					}
-				}
-			}
-		}
-		FindClose(hFind);
-	}
-	NumOfFile = num+1;
-	for(int i=0;i<NumOfFile;i++) m_check[i].SetCheck(BST_CHECKED);	
-	for(int i=NumOfFile;i<NumOfCheckBox;i++)m_check[i].ShowWindow(0);
-	
-}
 
-void CKmlDlg::GetAllDatFile()
-{
-	char msg[300];
-	int num = 0;
-//	CString sFilterName = sPath + sPathName; // 完整的路徑以及可用 "?" 或 "*" 表示的檔案名稱, 例如 "*.*" 表示所有檔案
-	CString sFilterName = sPath+"*.txt"; 	
-	HANDLE hFind = NULL;
-	WIN32_FIND_DATA fd;
-	//CString sTemp = "  ";
-	if ((hFind = ::FindFirstFile ((LPCTSTR) sFilterName, &fd)) != INVALID_HANDLE_VALUE)
-	{
-		if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) // 檢查所搜尋到的是否為目錄名稱
-		{
-			FileName[num] = fd.cFileName;
-			FilePath[num] = sPath + fd.cFileName; // fd.cFileName只有檔名, 請自行合併路徑後使用				
-			while (::FindNextFile(hFind, &fd))
-			{
-				num++;
-				if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-				{
-					FileName[num] = fd.cFileName;
-					FilePath[num] = sPath + fd.cFileName;						
-				}
-			}
-		}
-		FindClose(hFind);
-	}	
-	NumOfFile = num+1;
-	CString MSG;
-	sprintf_s(msg, sizeof(msg), "Total (#%d) txt files selected.\r\n\r\n",NumOfFile);
-	MSG = msg;
-	for(int i=0;i<NumOfFile;i++)
-	{		
-		int x = i%10;
-		if(i!=0 && !x)
-			sprintf_s(msg, sizeof(msg), "%s \r\n",FileName[i]);
-		else
-			sprintf_s(msg, sizeof(msg), "%s ",FileName[i]);		
-		MSG += msg;
-	}
-	m_alltxt.SetWindowText(MSG);
-}
-*/
 void CKmlDlg::OnBnClickedOk()
 {
 	memset(&msg_gpgga, 0, sizeof(GPGGA));
@@ -861,15 +773,11 @@ bool CKmlDlg::WriteToFile(U08 type)
 
 void CKmlDlg::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	// TODO: 在此加入您的訊息處理常式程式碼和 (或) 呼叫預設值
-
 	CDialog::OnLButtonDown(nFlags, point);
 }
 
 BOOL CKmlDlg::PreTranslateMessage(MSG* pMsg)
 {
-	// TODO: 在此加入特定的程式碼和 (或) 呼叫基底類別
-
 	return CDialog::PreTranslateMessage(pMsg);
 }
 

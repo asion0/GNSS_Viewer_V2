@@ -1,4 +1,4 @@
-// Config_Proprietary.cpp : 實作檔
+// Config_Proprietary.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "Config_Proprietary.h"
 
 
-// CConfig_Proprietary 對話方塊
+// CConfig_Proprietary 
 
 IMPLEMENT_DYNAMIC(CConfig_Proprietary, CDialog)
 
@@ -32,4 +32,4 @@ BEGIN_MESSAGE_MAP(CConfig_Proprietary, CDialog)
 END_MESSAGE_MAP()
 
 
-// CConfig_Proprietary 訊息處理常式
+// CConfig_Proprietary 

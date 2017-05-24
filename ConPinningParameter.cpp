@@ -1,4 +1,4 @@
-// ConPinningParameter.cpp : 實作檔
+// ConPinningParameter.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "ConPinningParameter.h"
 
 
-// CConPinningParameter 對話方塊
+// CConPinningParameter 
 
 IMPLEMENT_DYNAMIC(CConPinningParameter, CDialog)
 CConPinningParameter::CConPinningParameter(CWnd* pParent /*=NULL*/)
@@ -42,10 +42,9 @@ BEGIN_MESSAGE_MAP(CConPinningParameter, CDialog)
 END_MESSAGE_MAP()
 
 
-// CConPinningParameter 訊息處理常式
+// CConPinningParameter 
 
 void CConPinningParameter::OnBnClickedOk()
 {
-	// TODO: 在此加入控制項告知處理常式程式碼
 	OnOK();
 }

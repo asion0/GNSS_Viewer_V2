@@ -1,19 +1,19 @@
 #pragma once
 
-// CInputPassword 對話方塊
+// CInputPassword
 class CInputPassword : public CDialog
 {
 	DECLARE_DYNAMIC(CInputPassword)
 
 public:
-	CInputPassword(CWnd* pParent = NULL);   // 標準建構函式
+	CInputPassword(CWnd* pParent = NULL);
 	virtual ~CInputPassword();
 
-// 對話方塊資料
+
 //	enum { IDD = IDD_PASSWD };
 	CString GetPassword() { return password; };
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV
 
 	DECLARE_MESSAGE_MAP()
 

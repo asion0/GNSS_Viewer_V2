@@ -1,4 +1,4 @@
-// PanelBackground.cpp : 實作檔
+// PanelBackground.cpp 
 //
 
 #include "stdafx.h"
@@ -25,13 +25,9 @@ END_MESSAGE_MAP()
 
 
 
-// CPanelBackground 訊息處理常式
-
-
-
+// CPanelBackground 
 BOOL CPanelBackground::OnEraseBkgnd(CDC* pDC)
 {
-	// TODO: 在此加入您的訊息處理常式程式碼和 (或) 呼叫預設值
 	CRect rcClient;
 	GetClientRect(rcClient);
 	CBrush bgBrush(g_panelBkColor);
@@ -43,8 +39,8 @@ BOOL CPanelBackground::OnEraseBkgnd(CDC* pDC)
 void CPanelBackground::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
-	// TODO: 在此加入您的訊息處理常式程式碼
-	CRect rcClient;
+
+  CRect rcClient;
 	GetClientRect(rcClient);
 	CPen penGray(PS_SOLID, 1, RGB(150,150,150));
 	CPen *oldPen = dc.SelectObject(&penGray);

@@ -1,4 +1,4 @@
-// FirmwareDownloadDlg.cpp : 實作檔
+// FirmwareDownloadDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -9,7 +9,7 @@
 #include "Serial.h"
 
 extern CGPSApp theApp;
-// CFirmwareDownloadDlg 對話方塊
+// CFirmwareDownloadDlg 
 
 IMPLEMENT_DYNAMIC(CFirmwareDownloadDlg, CDialog)
 
@@ -32,7 +32,7 @@ BEGIN_MESSAGE_MAP(CFirmwareDownloadDlg, CDialog)
 	ON_BN_CLICKED(IDC_BROWSE, OnBnClickedBrowse)
 END_MESSAGE_MAP()
 
-// CFirmwareDownloadDlg 訊息處理常式
+// CFirmwareDownloadDlg 
 BOOL CFirmwareDownloadDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();

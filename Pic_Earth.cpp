@@ -143,7 +143,6 @@ void CPic_Earth::Show_EarthChart(CDC *dc)
 	{
 		DrawEarthSate(dc, &gaUI, CGPSDlg::gpsDlg->sate_ga, &CGPSDlg::gpsDlg->m_gagsvMsg, &CGPSDlg::gpsDlg->m_gagsaMsg, &CGPSDlg::gpsDlg->m_gpggaMsg);
 	}
-
 }
 
 void CPic_Earth::DrawEarthSate(CDC* dc, UISetting* s, Satellite* sate, GPGSV* gsv, GPGSA* gsa, GPGGA* gga)
@@ -161,8 +160,8 @@ void CPic_Earth::DrawEarthSate(CDC* dc, UISetting* s, Satellite* sate, GPGSV* gs
 		{
 			continue;	
 		}
-		//Elevation 仰角 0~90度
-		//Azimuth 方位角 0~359度
+		//Elevation 0~90 degrees
+		//Azimuth  0~359 degrees
 		//Elevation = 75*cos(satellites[i].Elevation*PI/180);	
 		U16 azimuth = sate[i].Azimuth;
 		U16 elevation = sate[i].Elevation;

@@ -119,12 +119,9 @@ BOOL CColorStatic::OnEraseBkgnd(CDC* pDC)
 
 HBRUSH CColorStatic::CtlColor(CDC* pDC, UINT nCtlColor)
 {
-	// TODO:  在此變更 DC 的任何屬性
 	pDC->SetBkMode(TRANSPARENT);
 	//pDC->SetTextColor(RGB(0, 0, 0));
 	pDC->SetTextColor(m_crTextColor);
 	//return (HBRUSH)GetStockObject(NULL_BRUSH);
 	return (m_pBgBrush) ? (HBRUSH)m_pBgBrush->GetSafeHandle() : (HBRUSH)GetStockObject(WHITE_BRUSH);
-	// TODO:  如果不應該呼叫父處理常式，則傳回非 NULL 筆刷
-	return NULL;
 }

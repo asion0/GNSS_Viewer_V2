@@ -1,4 +1,4 @@
-// ConPosPinning.cpp : πÍß@¿…
+// ConPosPinning.cpp 
 //
 
 #include "stdafx.h"

@@ -1,17 +1,16 @@
 #pragma once
 
 
-// CConMultiMode 對話方塊
+// CConMultiMode
 
 class CConMultiMode : public CDialog
 {
 	DECLARE_DYNAMIC(CConMultiMode)
 
 public:
-	CConMultiMode(CWnd* pParent = NULL);   // 標準建構函式
+	CConMultiMode(CWnd* pParent = NULL);
 	virtual ~CConMultiMode();
 
-// 對話方塊資料
 	enum { IDD = IDD_CON_MULTI_MODE };
 	
 	int mode;
@@ -19,7 +18,7 @@ public:
 
 	CComboBox m_mode;
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
 public:

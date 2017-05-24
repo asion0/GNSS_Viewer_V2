@@ -3,22 +3,21 @@
 #include "afxcmn.h"
 
 
-// CConDauDlg 對話方塊
+// CConDauDlg
 
 class CConDauDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CConDauDlg)
 
 public:
-	CConDauDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CConDauDlg(CWnd* pParent = NULL); 
 	virtual ~CConDauDlg();
 
-// 對話方塊資料
 	enum { IDD = IDD_CON_DATUM };
 
 	CButton m_test;
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
 public:

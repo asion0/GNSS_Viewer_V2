@@ -3,21 +3,20 @@
 #include "afxwin.h"
 
 
-// CScanDlg 對話方塊
+// CScanDlg 
 
 class CScanDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CScanDlg)
 
 public:
-	CScanDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CScanDlg(CWnd* pParent = NULL);  
 	virtual ~CScanDlg();
 
-// 對話方塊資料
 	enum { IDD = IDD_SCANGPS_DLG };
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
 public:

@@ -1,4 +1,4 @@
-// ConAntennaDetection.cpp : 實作檔
+// ConAntennaDetection.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "ConAntennaDetection.h"
 
 
-// CConAntennaDetection 對話方塊
+// CConAntennaDetection 
 
 IMPLEMENT_DYNAMIC(CConAntennaDetection, CDialog)
 
@@ -35,16 +35,14 @@ BEGIN_MESSAGE_MAP(CConAntennaDetection, CDialog)
 END_MESSAGE_MAP()
 
 
-// CConAntennaDetection 訊息處理常式
+// CConAntennaDetection 
 
 BOOL CConAntennaDetection::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// TODO:  在此加入額外的初始化
 	m_chk_short.ShowWindow(SW_HIDE);
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CConAntennaDetection::OnBnClickedOk()

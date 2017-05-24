@@ -1,14 +1,14 @@
 #pragma once
 
 
-// CCon_register 對話方塊
+// CCon_register 
 
 class CCon_register : public CDialog
 {
 	DECLARE_DYNAMIC(CCon_register)
 
 public:
-	CCon_register(CWnd* pParent = NULL);   // 標準建構函式
+	CCon_register(CWnd* pParent = NULL); 
 	virtual ~CCon_register();
 	
 	CString m_addr;
@@ -16,11 +16,12 @@ public:
 
 	CEdit m_txt_addr;
 	CEdit m_txt_data;
-// 對話方塊資料
+
 	enum { IDD = IDD_CON_REGISTER };
+
   int  specialFunction;
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV
 
 	DECLARE_MESSAGE_MAP()
 public:

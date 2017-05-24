@@ -1,4 +1,4 @@
-// Proprietary_nmea.cpp : 實作檔
+// Proprietary_nmea.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "Proprietary_nmea.h"
 
 
-// CProprietary_nmea 對話方塊
+// CProprietary_nmea 
 
 IMPLEMENT_DYNAMIC(CProprietary_nmea, CDialog)
 CProprietary_nmea::CProprietary_nmea(CWnd* pParent /*=NULL*/)
@@ -35,7 +35,7 @@ BEGIN_MESSAGE_MAP(CProprietary_nmea, CDialog)
 END_MESSAGE_MAP()
 
 
-// CProprietary_nmea 訊息處理常式
+// CProprietary_nmea 
 
 void CProprietary_nmea::OnBnClickedOk()
 {
@@ -49,7 +49,6 @@ BOOL CProprietary_nmea::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// TODO:  在此加入額外的初始化
 	CString temp;
 
 	for (int i=0;i<256;i++)
@@ -65,5 +64,4 @@ BOOL CProprietary_nmea::OnInitDialog()
 
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }

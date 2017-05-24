@@ -1,17 +1,16 @@
 #pragma once
 
 
-// CProprietary_nmea 對話方塊
+// CProprietary_nmea 
 
 class CProprietary_nmea : public CDialog
 {
 	DECLARE_DYNAMIC(CProprietary_nmea)
 
 public:
-	CProprietary_nmea(CWnd* pParent = NULL);   // 標準建構函式
+	CProprietary_nmea(CWnd* pParent = NULL);   
 	virtual ~CProprietary_nmea();
 
-// 對話方塊資料
 	enum { IDD = IDD_PROPRIETARY_NMEA };
 
 	CComboBox m_psti_id;
@@ -20,7 +19,7 @@ public:
 	int psti_id, psti_interval, attr;
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
 public:

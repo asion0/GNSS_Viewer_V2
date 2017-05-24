@@ -1,11 +1,11 @@
-// SoftImDwDlg.cpp : 實作檔
+// SoftImDwDlg.cpp 
 //
 
 #include "stdafx.h"
 #include "InputPasswordDlg.h"
 #include "resource.h"
 
-// CInputPassword 對話方塊
+// CInputPassword 
 
 IMPLEMENT_DYNAMIC(CInputPassword, CDialog)
 CInputPassword::CInputPassword(CWnd* pParent /*=NULL*/)
@@ -28,7 +28,7 @@ BEGIN_MESSAGE_MAP(CInputPassword, CDialog)
 END_MESSAGE_MAP()
 
 
-// CInputPassword 訊息處理常式
+// CInputPassword 
 
 BOOL CInputPassword::OnInitDialog()
 {
@@ -37,7 +37,6 @@ BOOL CInputPassword::OnInitDialog()
 	GetDlgItem(IDC_EDIT1)->SetFocus();
 
 	return FALSE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CInputPassword::OnCancel()

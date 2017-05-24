@@ -1,4 +1,4 @@
-// ConNMEAComport.cpp : 實作檔
+// ConNMEAComport.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "ConNMEAComport.h"
 
 
-// CConNMEAComport 對話方塊
+// CConNMEAComport 
 
 IMPLEMENT_DYNAMIC(CConNMEAComport, CDialog)
 
@@ -36,20 +36,18 @@ BEGIN_MESSAGE_MAP(CConNMEAComport, CDialog)
 END_MESSAGE_MAP()
 
 
-// CConNMEAComport 訊息處理常式
+// CConNMEAComport
 
 BOOL CConNMEAComport::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// TODO:  在此加入額外的初始化
 	m_com0.SetCheck(0);
 	m_com1.SetCheck(0);
 
 
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CConNMEAComport::OnBnClickedOk()
@@ -59,6 +57,6 @@ void CConNMEAComport::OnBnClickedOk()
 		comport |= 0x01;
 	if (m_com1.GetCheck())
 		comport |= 0x02;
-	// TODO: 在此加入控制項告知處理常式程式碼
-	OnOK();
+
+  OnOK();
 }

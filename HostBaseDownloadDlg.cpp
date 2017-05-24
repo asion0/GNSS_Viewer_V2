@@ -1,4 +1,4 @@
-// HostBaseDownloadDlg.cpp : 實作檔
+// HostBaseDownloadDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -9,7 +9,7 @@
 #include "Serial.h"
 
 extern CGPSApp theApp;
-// CHostBaseDownloadDlg 對話方塊
+// CHostBaseDownloadDlg 
 
 IMPLEMENT_DYNAMIC(CHostBaseDownloadDlg, CDialog)
 
@@ -37,7 +37,7 @@ BEGIN_MESSAGE_MAP(CHostBaseDownloadDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CHostBaseDownloadDlg 訊息處理常式
+// CHostBaseDownloadDlg 
 
 BOOL CHostBaseDownloadDlg::OnInitDialog()
 {
@@ -72,7 +72,6 @@ BOOL CHostBaseDownloadDlg::OnInitDialog()
 	bufferCombo->SetCurSel(m_nBufferIdx);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 void CHostBaseDownloadDlg::GetValue()
 {

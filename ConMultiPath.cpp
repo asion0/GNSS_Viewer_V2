@@ -1,4 +1,4 @@
-// ConMultiPath.cpp : 實作檔
+// ConMultiPath.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "ConMultiPath.h"
 
 
-// CConMultiPath 對話方塊
+// CConMultiPath 
 
 IMPLEMENT_DYNAMIC(CConMultiPath, CDialog)
 CConMultiPath::CConMultiPath(CWnd* pParent /*=NULL*/)
@@ -30,6 +30,3 @@ void CConMultiPath::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CConMultiPath, CDialog)
 END_MESSAGE_MAP()
-
-
-// CConMultiPath 訊息處理常式

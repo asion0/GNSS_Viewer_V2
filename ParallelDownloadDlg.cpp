@@ -1,4 +1,4 @@
-// FirmwareDownloadDlg.cpp : 實作檔
+// FirmwareDownloadDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -9,7 +9,7 @@
 #include "Serial.h"
 
 extern CGPSApp theApp;
-// CParallelDownloadDlg 對話方塊
+// CParallelDownloadDlg 
 
 IMPLEMENT_DYNAMIC(CParallelDownloadDlg, CDialog)
 
@@ -34,7 +34,7 @@ BEGIN_MESSAGE_MAP(CParallelDownloadDlg, CDialog)
 	ON_BN_CLICKED(IDC_BROWSE, OnBnClickedBrowse)
 END_MESSAGE_MAP()
 
-// CParallelDownloadDlg 訊息處理常式
+// CParallelDownloadDlg 
 BOOL CParallelDownloadDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
@@ -72,12 +72,10 @@ BOOL CParallelDownloadDlg::OnInitDialog()
 	//bufferCombo->SetCurSel(m_nBufferIdx);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CParallelDownloadDlg::OnOK()
 {
-	// TODO: 在此加入特定的程式碼和 (或) 呼叫基底類別
 
 	//m_nBaudrateIdx = ((CComboBox*)GetDlgItem(IDC_BAUDRATE_IDX))->GetCurSel();
 	m_nFlashType = ((CComboBox*)GetDlgItem(IDC_FLASH_TYPE))->GetCurSel();

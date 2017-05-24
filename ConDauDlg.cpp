@@ -1,4 +1,4 @@
-// ConDauDlg.cpp : 實作檔
+// ConDauDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -10,7 +10,7 @@
 #define IF1  2930000000
 
 CConDauDlg* pDauDlg;
-// CConDauDlg 對話方塊
+// CConDauDlg 
 static U16 EllipseList;
 static U08 EllipseIndex;
 static S32 DeltaX;
@@ -333,7 +333,7 @@ BEGIN_MESSAGE_MAP(CConDauDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CConDauDlg 訊息處理常式
+// CConDauDlg 
 
 BOOL CConDauDlg::OnInitDialog()
 {
@@ -355,7 +355,6 @@ BOOL CConDauDlg::OnInitDialog()
 	}
 	m_ellipsoidlist.SetCurSel(0);
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CConDauDlg::OnBnClickedOk()

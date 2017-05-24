@@ -1,11 +1,11 @@
-// WaitAckDlg.cpp : 實作檔
+// WaitAckDlg.cpp 
 //
 
 #include "stdafx.h"
 #include "GPS.h"
 #include "WaitAckDlg.h"
 
-// CWaitAckDlg 對話方塊
+// CWaitAckDlg 
 
 IMPLEMENT_DYNAMIC(CWaitAckDlg, CDialog)
 CWaitAckDlg::CWaitAckDlg(CWnd* pParent /*=NULL*/)
@@ -30,7 +30,7 @@ BEGIN_MESSAGE_MAP(CWaitAckDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CWaitAckDlg 訊息處理常式
+// CWaitAckDlg 
 
 void CWaitAckDlg::OnTimer(UINT nIDEvent)
 {

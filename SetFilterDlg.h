@@ -2,21 +2,20 @@
 #include "afxwin.h"
 
 
-// CSetFilterDlg 對話方塊
+// CSetFilterDlg 
 
 class CSetFilterDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CSetFilterDlg)
 
 public:
-	CSetFilterDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CSetFilterDlg(CWnd* pParent = NULL);   
 	virtual ~CSetFilterDlg();
 
-// 對話方塊資料
 	enum { IDD = IDD_DLGSETFILTER };
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV
 
 	DECLARE_MESSAGE_MAP()
 public:

@@ -1,4 +1,4 @@
-// LogFilterDlg.cpp : 實作檔
+// LogFilterDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -7,7 +7,7 @@
 #include "GPSDlg.h"
 
 
-// CLogFilterDlg 對話方塊
+// CLogFilterDlg 
 
 IMPLEMENT_DYNAMIC(CLogFilterDlg, CDialog)
 CLogFilterDlg::CLogFilterDlg(CWnd* pParent /*=NULL*/)

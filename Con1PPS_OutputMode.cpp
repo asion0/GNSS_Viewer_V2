@@ -1,4 +1,4 @@
-// Con1PPS_OutputMode.cpp : 實作檔
+// Con1PPS_OutputMode.cpp 
 //
 
 #include "stdafx.h"
@@ -6,7 +6,7 @@
 #include "Con1PPS_OutputMode.h"
 
 
-// CCon1PPS_OutputMode 對話方塊
+// CCon1PPS_OutputMode 
 
 IMPLEMENT_DYNAMIC(CCon1PPS_OutputMode, CDialog)
 
@@ -51,7 +51,6 @@ END_MESSAGE_MAP()
 BOOL CCon1PPS_OutputMode::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-	// TODO:  在此加入額外的初始化
 //GetDlgItem(IDC_RADIO_PPS_NO_OUTPUT)->SetCheck();
 	m_attr.SetCurSel(0);
 	m_no_output.SetCheck(0);
@@ -61,14 +60,10 @@ BOOL CCon1PPS_OutputMode::OnInitDialog()
 	m_align_to_UTC.SetCheck(0);
 	m_output_align.ShowWindow((TIMING_OUTPUT_ALIGN) ? SW_SHOW : SW_HIDE);
 
-
-
-
-	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
+  return TRUE;  // return TRUE unless you set the focus to a control
 }
 
-// CCon1PPS_OutputMode 訊息處理常式
+// CCon1PPS_OutputMode 
 
 void CCon1PPS_OutputMode::OnBnClickedRadioPpsNoOutput()
 {

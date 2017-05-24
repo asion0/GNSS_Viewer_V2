@@ -1,11 +1,11 @@
-// ConWaas.cpp : 實作檔
+// ConWaas.cpp 
 //
 
 #include "stdafx.h"
 #include "GPS.h"
 #include "ConWaas.h"
 
-// CConWaas 對話方塊
+// CConWaas 
 
 IMPLEMENT_DYNAMIC(CConWaas, CDialog)
 CConWaas::CConWaas(CWnd* pParent /*=NULL*/)
@@ -32,10 +32,9 @@ BEGIN_MESSAGE_MAP(CConWaas, CDialog)
 END_MESSAGE_MAP()
 
 
-// CConWaas 訊息處理常式
+// CConWaas 
 
 void CConWaas::OnBnClickedOk()
 {
-	// TODO: 在此加入控制項告知處理常式程式碼
 	OnOK();
 }

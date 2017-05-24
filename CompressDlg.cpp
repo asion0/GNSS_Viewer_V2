@@ -1,4 +1,4 @@
-// CompressDlg.cpp : 實作檔
+// CompressDlg.cpp 
 //
 
 #include "stdafx.h"
@@ -128,7 +128,7 @@ UINT ReadNMEA(LPVOID pParam)
 }
 
 
-// CCompressDlg 對話方塊
+// CCompressDlg 
 
 IMPLEMENT_DYNAMIC(CCompressDlg, CDialog)
 CCompressDlg::CCompressDlg(CWnd* pParent /*=NULL*/)
@@ -156,7 +156,7 @@ BEGIN_MESSAGE_MAP(CCompressDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CCompressDlg 訊息處理常式
+// CCompressDlg 
 
 void CCompressDlg::OnBnClickedButton1()
 {
@@ -276,7 +276,6 @@ BOOL CCompressDlg::OnInitDialog()
 	LogFlashInfo.max_speed=511;
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 
