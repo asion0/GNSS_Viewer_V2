@@ -217,6 +217,7 @@
 #define IDB_EARTH4                      477
 #define IDD_CFG_PSCM_DEV_ADDR           477
 #define IDB_EARTH5                      478
+#define IDB_RTK_TABLE                   478
 #define IDB_EARTH6                      479
 #define IDR_UPGRADE_DOWNLOAD_PROM       480
 #define IDB_RTK_AGE                     481
@@ -237,6 +238,8 @@
 #define IDD_CFG_RTK_REF_POSITION        496
 #define IDD_CONFIG_RTCM_MEA_DAT_OUT     497
 #define IDD_DR_TEST                     498
+#define IDD_SAVE_BINARY_NOPARSING       499
+#define IDD_CFG_SBAS2                   500
 #define IDC_CONNECT                     1000
 #define IDC_CLOSE                       1001
 #define IDC_SETORIGIN                   1002
@@ -291,6 +294,7 @@
 #define IDC_POINTS                      1026
 #define IDC_DIRECTION2                  1026
 #define IDC_RTK_RATIO                   1026
+#define IDC_FILE_LIST                   1026
 #define IDC_PROGRESS1                   1027
 #define IDC_2DRMS2                      1027
 #define IDC_2DRMS_2                     1027
@@ -519,6 +523,7 @@
 #define IDC_NO_TITLE2                   1151
 #define IDC_DETAIL_INFO                 1151
 #define IDC_STATIC_SET3                 1152
+#define IDC_CHECK79                     1152
 #define IDC_STATIC_SET4                 1153
 #define IDC_BINARY_ATTRI                1154
 #define IDC_STATIC_                     1154
@@ -665,6 +670,7 @@
 #define IDC_DEFAULT                     1243
 #define IDC_BASE_OPT_FUN                1243
 #define IDC_ROVER_OPT_FUN               1244
+#define IDC_PKB_OPT_FUN                 1245
 #define IDC_DATE_T                      1250
 #define IDC_TIME_T                      1251
 #define IDC_HDOP_T                      1252
@@ -750,7 +756,6 @@
 #define IDC_BEIDOU                      1303
 #define IDC_FLASH_TYPE                  1303
 #define IDC_SLIDER2                     1304
-#define IDC_GALIALEO                    1304
 #define IDC_GALILEO                     1304
 #define IDC_STOP                        1304
 #define IDC_SLIDER3                     1305
@@ -844,6 +849,8 @@
 #define IDC_ROM_INTERNAL                1339
 #define IDC_EARTHSETTING                1340
 #define IDC_SELECT                      1340
+#define IDC_ROM_INTERNAL2               1340
+#define IDC_BIN_EXTERNAL                1340
 #define IDC_SCATTERSETTING              1341
 #define IDC_EARTHSETTING2               1341
 #define ID_GO                           1341
@@ -1003,6 +1010,44 @@
 #define IDC_MODE_TXT                    1450
 #define IDC_RTK_MODE_TXT                1451
 #define IDC_ATTR_TXT                    1452
+#define IDC_DESC2                       1453
+#define IDC_DURATION                    1454
+#define IDC_TOTAL_SIZE                  1455
+#define IDC_V6                          1455
+#define IDC_DURATION3                   1456
+#define IDC_TOTAL_FREE                  1456
+#define IDC_D11                         1456
+#define IDC_DURATION2                   1457
+#define IDC_EST_TIME                    1457
+#define IDC_D12                         1457
+#define IDC_D13                         1458
+#define IDC_D21                         1459
+#define IDC_D22                         1460
+#define IDC_D23                         1461
+#define IDC_D31                         1462
+#define IDC_D32                         1463
+#define IDC_D33                         1464
+#define IDC_D41                         1465
+#define IDC_D42                         1466
+#define IDC_D43                         1467
+#define IDC_U11                         1468
+#define IDC_U12                         1469
+#define IDC_U13                         1470
+#define IDC_U21                         1471
+#define IDC_U22                         1472
+#define IDC_U23                         1473
+#define IDC_U31                         1474
+#define IDC_U32                         1475
+#define IDC_U33                         1476
+#define IDC_U41                         1477
+#define IDC_U42                         1478
+#define IDC_U43                         1479
+#define IDC_WAAS_SPEC                   1480
+#define IDC_EGNOS_SPEC                  1481
+#define IDC_MSAS_SPEC                   1482
+#define IDC_GAGAN_SPEC                  1483
+#define IDC_APPLY_DEFAULT               1484
+#define IDC_GROUP                       1485
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_SYSTEM_RESTART               32811
@@ -1238,14 +1283,26 @@
 #define ID_INSDR_TEST                   33153
 #define ID_QUERY_BASE_POSITION          33154
 #define ID_CONFIG_BASE_POSITION         33155
+#define ID_SAVE_BINARY_NOPARSING        33156
+#define ID_QUERY_CLOCK_OFFSET           33157
+#define ID_SHOW_BD_ALMANAC              33158
+#define ID_UBLOX_OUT_CONVERT            33159
+#define ID_INSDR_ACC_SELF_TEST          33160
+#define ID_INSDR_GYRO_SELF_TEST         33161
+#define ID_INSDR_ACCU_ANGLE_START       33162
+#define ID_INSDR_ACCU_ANGLE_STOP        33163
+#define ID_CFG_SBAS2                    33164
+#define ID_QUERY_SBAS2                  33165
+#define ID_QUERY_SBAS_DEFAULT           33166
+#define ID_READ_MEM_TO_FILE2            33167
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        478
+#define _APS_NEXT_RESOURCE_VALUE        479
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1453
+#define _APS_NEXT_CONTROL_VALUE         1486
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

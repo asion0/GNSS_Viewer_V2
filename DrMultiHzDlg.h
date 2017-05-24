@@ -1,23 +1,22 @@
 #pragma once
 
 
-// DrMultiHzDlg 對話方塊
+// DrMultiHzDlg 
 
 class DrMultiHzDlg : public CDialog
 {
 	DECLARE_DYNAMIC(DrMultiHzDlg)
 
 public:
-	DrMultiHzDlg(CWnd* pParent = NULL);   // 標準建構函式
+	DrMultiHzDlg(CWnd* pParent = NULL);  
 	virtual ~DrMultiHzDlg();
 
-// 對話方塊資料
 //	enum { IDD = IDD_CONFIG_DRUPDATERATE };
 	
 	int rate;
 	int attr;
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 	
 	CComboBox cbo_rate;
 	CComboBox cbo_attr;

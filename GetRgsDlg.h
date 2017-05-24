@@ -2,21 +2,20 @@
 #include "afxwin.h"
 
 
-// CGetRgsDlg 對話方塊
+// CGetRgsDlg 
 
 class CGetRgsDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CGetRgsDlg)
 
 public:
-	CGetRgsDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CGetRgsDlg(CWnd* pParent = NULL);   
 	virtual ~CGetRgsDlg();
 
-// 對話方塊資料
 	enum { IDD = IDD_GETRGSDLG };
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
 public:

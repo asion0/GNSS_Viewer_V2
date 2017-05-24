@@ -15,6 +15,7 @@ enum NmeaType
 	MSG_GNGSA,
 
 	MSG_GPGSV,
+  MSG_GPGSV2,
 	MSG_GLGSV,
 	MSG_BDGSV,
 	MSG_BDGSV2,
@@ -105,8 +106,8 @@ typedef struct Satellite
 typedef struct GPGSV
 {	
 	U16     NumOfMessage;
-    U16     SequenceNum;
-    U16     NumOfSate;
+  U16     SequenceNum;
+  U16     NumOfSate;
 	U08     have_gps;
 	U08     have_gnss;
 	Satellite    sates[4];
@@ -419,14 +420,17 @@ public:
 	static int TrimTail(const char* buffer, int offset);
 	static NmeaType MessageType(LPCSTR pt, int len);
 	static bool GetFirstGsaIn() { return firstGsaIn; }
-
+  
+  int ClearSatellitesInRange(GNSS_System gs, int prnStart, int prnEnd);
 	Satellite satellites_gps[MAX_SATELLITE];
 	Satellite satellites_gnss[MAX_SATELLITE];
 	Satellite satellites_bd[MAX_SATELLITE];
 	Satellite satellites_ga[MAX_SATELLITE];
 
-#if(SUPPORT_L2_GSV2)
+#if(SUPPORT_BDL2_GSV2)
+	Satellite satellites2_gps[MAX_SATELLITE];
 	Satellite satellites2_bd[MAX_SATELLITE];
+	void ShowGPGSV2msg(GPGSV&, const char*, int);
 	void ShowBDGSV2msg(GPGSV&, const char*, int);
 #endif
 

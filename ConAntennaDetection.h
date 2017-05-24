@@ -1,25 +1,25 @@
 #pragma once
 
 
-// CConAntennaDetection 對話方塊
+// CConAntennaDetection 
 
 class CConAntennaDetection : public CDialog
 {
 	DECLARE_DYNAMIC(CConAntennaDetection)
 
 public:
-	CConAntennaDetection(CWnd* pParent = NULL);   // 標準建構函式
+	CConAntennaDetection(CWnd* pParent = NULL);
 	virtual ~CConAntennaDetection();
 
 	U08 antenna_control;
 	int attr;
 
 	CButton m_chk_short,m_chk_antenna;
-// 對話方塊資料
+
 	enum { IDD = IDD_CON_ANTENNA_DETECT };
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
 public:

@@ -1,13 +1,13 @@
 #pragma once
 
-// CGetEphemerisDlg 對話方塊
+// CGetEphemerisDlg 塊
 
 class CGetEphemerisDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CGetEphemerisDlg)
 
 public:
-	CGetEphemerisDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CGetEphemerisDlg(CWnd* pParent = NULL);   
 	virtual ~CGetEphemerisDlg();
 
 	//BOOL IsGlonass() { return isGlonass; };	
@@ -24,7 +24,7 @@ public:
 	void SetEphemerisType(EphemerisType s) { ephType = s; };	
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 	CString GetEphemerisNmae();
 
 	DECLARE_MESSAGE_MAP()

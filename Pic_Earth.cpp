@@ -51,8 +51,6 @@ void CPic_Earth::OnPaint()
 		m_first = true;
 		InitCheck();
 	}
-
-	//CGPSDlg::gpsDlg->Refresh_EarthChart(&dc);
 	Refresh_EarthChart(&dc);
 }
 

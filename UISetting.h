@@ -4,8 +4,8 @@ class UISetting
 {
 public:
 	UISetting(COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, 
-		COLORREF, COLORREF, COLORREF, COLORREF, UINT, UINT,
-		const LOGFONT* lpLogFont);
+		COLORREF, COLORREF, COLORREF, COLORREF, UINT, UINT, 
+    int idFontSize = 17, int barFontSize = 16);
 	//UISetting(void);
 	~UISetting(void);
 
@@ -37,4 +37,8 @@ extern UISetting gpUI;
 extern UISetting glUI;
 extern UISetting bdUI;
 extern UISetting gaUI;
+extern UISetting bdl1UI;
+extern UISetting bdl2UI;
+extern UISetting gpl1UI;
+extern UISetting gpl2UI;
 

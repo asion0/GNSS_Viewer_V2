@@ -122,6 +122,7 @@ void CSetupDialog::OnBnClickedOk()
 	setting->checkNmeaError = ((CButton*)GetDlgItem(IDC_CHECK_NMEA_ERR))->GetCheck();
 	setting->downloadTesting = ((CButton*)GetDlgItem(IDC_DOWNLOAD_TEST))->GetCheck();
 	setting->downloadRomInternal = ((CButton*)GetDlgItem(IDC_ROM_INTERNAL))->GetCheck();
+	setting->downloadUseBinExternal = ((CButton*)GetDlgItem(IDC_BIN_EXTERNAL))->GetCheck();
 
 	setting->responseLog = ((CButton*)GetDlgItem(IDC_ENABLE_LOG))->GetCheck();
 	((CEdit*)GetDlgItem(IDC_LOG_PATH))->GetWindowText(setting->responseLogPath);
@@ -184,6 +185,7 @@ BOOL CSetupDialog::OnInitDialog()
 	((CButton*)GetDlgItem(IDC_CHECK_NMEA_ERR))->SetCheck(setting->checkNmeaError);
 	((CButton*)GetDlgItem(IDC_DOWNLOAD_TEST))->SetCheck(setting->downloadTesting);
 	((CButton*)GetDlgItem(IDC_ROM_INTERNAL))->SetCheck(setting->downloadRomInternal);
+	((CButton*)GetDlgItem(IDC_BIN_EXTERNAL))->SetCheck(setting->downloadUseBinExternal);
 	((CButton*)GetDlgItem(IDC_ENABLE_LOG))->SetCheck(setting->responseLog);
 	((CEdit*)GetDlgItem(IDC_LOG_PATH))->SetWindowText(setting->responseLogPath);
 	((CButton*)GetDlgItem(IDC_SPY_CENTER))->SetCheck(setting->specifyCenter);

@@ -223,7 +223,7 @@ BEGIN_MESSAGE_MAP(CConfigSBAS, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigSBAS::OnBnClickedOk)
 	ON_BN_CLICKED(IDC_ENABLE_WAAS, OnBnClickedEnableWaas)
 	ON_BN_CLICKED(IDC_ENABLE_EGNOS, OnBnClickedEnableEgnos)
-	ON_BN_CLICKED(IDC_ENABLE_MSAS, OnBnClickedEnableMasa)
+	ON_BN_CLICKED(IDC_ENABLE_MSAS, OnBnClickedEnableMsas)
 	ON_BN_CLICKED(IDC_ENABLE_GAGAN, OnBnClickedEnableGagan)
 	ON_BN_CLICKED(IDC_ENABLE_ALL, OnBnClickedEnableAll)
 END_MESSAGE_MAP()
@@ -233,10 +233,38 @@ BOOL CConfigSBAS::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
 
-	GetDlgItem(IDC_NUMBER_CHANNEL)->SetWindowText("0");
-	GetDlgItem(IDC_URAMASK)->SetWindowText("8");
-	((CComboBox*)GetDlgItem(IDC_ENABLE_NAV))->SetCurSel(0);
+  BinaryData ackCmd;
+  CString txt, title;
+  this->GetWindowText(title);
+	if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QuerySbas(CGPSDlg::Return, &ackCmd))
+	{
+    title += " (Query success)";
+    ((CButton*)GetDlgItem(IDC_ENABLE_SBAS))->SetCheck(ackCmd[6]);
+	  ((CComboBox*)GetDlgItem(IDC_ENABLE_NAV))->SetCurSel(ackCmd[7]);
+    txt.Format("%d", ackCmd[8]);
+	  GetDlgItem(IDC_URAMASK)->SetWindowText(txt);
+    ((CButton*)GetDlgItem(IDC_ENABLE_CORRECTION))->SetCheck(ackCmd[9]);
+    txt.Format("%d", ackCmd[10]);
+	  GetDlgItem(IDC_NUMBER_CHANNEL)->SetWindowText(txt);
+
+    ((CButton*)GetDlgItem(IDC_ENABLE_ALL))->SetCheck(((ackCmd[11] & 0x80) ? TRUE : FALSE));
+	  if(!(ackCmd[11] & 0x80))
+	  {
+      ((CButton*)GetDlgItem(IDC_ENABLE_WAAS))->SetCheck(((ackCmd[11] & 0x01) ? TRUE : FALSE));
+      ((CButton*)GetDlgItem(IDC_ENABLE_EGNOS))->SetCheck(((ackCmd[11] & 0x02) ? TRUE : FALSE));
+      ((CButton*)GetDlgItem(IDC_ENABLE_MSAS))->SetCheck(((ackCmd[11] & 0x04) ? TRUE : FALSE));
+      ((CButton*)GetDlgItem(IDC_ENABLE_GAGAN))->SetCheck(((ackCmd[11] & 0x08) ? TRUE : FALSE));
+	  }
+  }
+  else
+  {
+    title += " (Query failed)";
+	  GetDlgItem(IDC_NUMBER_CHANNEL)->SetWindowText("0");
+	  GetDlgItem(IDC_URAMASK)->SetWindowText("8");
+	  ((CComboBox*)GetDlgItem(IDC_ENABLE_NAV))->SetCurSel(0);
+  }
 	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+  this->SetWindowText(title);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
@@ -246,7 +274,7 @@ void CConfigSBAS::OnBnClickedOk()
 	CString txt;
 	GetDlgItem(IDC_URAMASK)->GetWindowText(txt);
 	m_nUraMask = atoi(txt);
-	if(m_nUraMask<0 || m_nUraMask>15)
+	if(m_nUraMask < 0 || m_nUraMask > 15)
 	{
 		AfxMessageBox("URA Mask must be between 0 and 15!");
 		return;
@@ -254,7 +282,7 @@ void CConfigSBAS::OnBnClickedOk()
 
 	GetDlgItem(IDC_NUMBER_CHANNEL)->GetWindowText(txt);
 	m_nTrackingChannel = atoi(txt);
-	if(m_nTrackingChannel<0 || m_nTrackingChannel>3)
+	if(m_nTrackingChannel < 0 || m_nTrackingChannel > 3)
 	{
 		AfxMessageBox("Number of tracking channels must be between 0 and 3!");
 		return;
@@ -290,7 +318,7 @@ void CConfigSBAS::OnBnClickedEnableEgnos()
 	}
 }
 
-void CConfigSBAS::OnBnClickedEnableMasa()
+void CConfigSBAS::OnBnClickedEnableMsas()
 {
 	if(((CButton*)GetDlgItem(IDC_ENABLE_MSAS))->GetCheck())
 	{
@@ -332,6 +360,460 @@ void CConfigSBAS::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure SBAS successfully";
+  AfxBeginThread(ConfigThread, 0);
+}
+
+// CConfigSBAS2
+IMPLEMENT_DYNAMIC(CConfigSBAS2, CCommonConfigDlg)
+
+CConfigSBAS2::CConfigSBAS2(CWnd* pParent /*=NULL*/)
+	: CCommonConfigDlg(IDD_CFG_SBAS2, pParent)
+{
+	m_bEnable = FALSE;
+	m_bRanging = FALSE;
+	m_bCorrection = FALSE;
+	m_nUraMask = 0;
+	m_nTrackingChannel = 0;
+	m_bWAAS = FALSE;
+	m_bEGNOS = FALSE;
+	m_bMSAS = FALSE;
+	m_bGAGAN = FALSE;
+	m_nAttribute = 0;
+}
+
+BEGIN_MESSAGE_MAP(CConfigSBAS2, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigSBAS2::OnBnClickedOk)
+	ON_BN_CLICKED(IDC_ENABLE_WAAS, OnBnClickedEnableWaas)
+	ON_BN_CLICKED(IDC_ENABLE_EGNOS, OnBnClickedEnableEgnos)
+	ON_BN_CLICKED(IDC_ENABLE_MSAS, OnBnClickedEnableMsas)
+	ON_BN_CLICKED(IDC_ENABLE_GAGAN, OnBnClickedEnableGagan)
+	ON_BN_CLICKED(IDC_ENABLE_ALL, OnBnClickedEnableAll)
+	ON_BN_CLICKED(IDC_WAAS_SPEC, OnBnClickedWaasSpecify)
+	ON_BN_CLICKED(IDC_EGNOS_SPEC, OnBnClickedEgnosSpecify)
+	ON_BN_CLICKED(IDC_MSAS_SPEC, OnBnClickedMsasSpecify)
+	ON_BN_CLICKED(IDC_GAGAN_SPEC, OnBnClickedGaganSpecify)
+	ON_BN_CLICKED(IDC_APPLY_DEFAULT, &CConfigSBAS2::OnBnClickedApplyDefault)
+END_MESSAGE_MAP()
+
+// CConfigSBAS2 
+BOOL CConfigSBAS2::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+  BinaryData ackCmd;
+  CString txt, title;
+  this->GetWindowText(title);
+	if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QuerySbas2(CGPSDlg::Return, &ackCmd))
+	{
+    title += " (Query success)";
+    ((CButton*)GetDlgItem(IDC_ENABLE_SBAS))->SetCheck(ackCmd[6]);
+	  ((CComboBox*)GetDlgItem(IDC_ENABLE_NAV))->SetCurSel(ackCmd[7]);
+    txt.Format("%d", ackCmd[8]);
+	  GetDlgItem(IDC_URAMASK)->SetWindowText(txt);
+    ((CButton*)GetDlgItem(IDC_ENABLE_CORRECTION))->SetCheck(ackCmd[9]);
+    txt.Format("%d", ackCmd[10]);
+	  GetDlgItem(IDC_NUMBER_CHANNEL)->SetWindowText(txt);
+
+    ((CButton*)GetDlgItem(IDC_ENABLE_ALL))->SetCheck(((ackCmd[11] & 0x80) ? TRUE : FALSE));
+	  if(!(ackCmd[11] & 0x80))
+	  {
+      ((CButton*)GetDlgItem(IDC_ENABLE_WAAS))->SetCheck(((ackCmd[11] & 0x01) ? TRUE : FALSE));
+      ((CButton*)GetDlgItem(IDC_ENABLE_EGNOS))->SetCheck(((ackCmd[11] & 0x02) ? TRUE : FALSE));
+      ((CButton*)GetDlgItem(IDC_ENABLE_MSAS))->SetCheck(((ackCmd[11] & 0x04) ? TRUE : FALSE));
+      ((CButton*)GetDlgItem(IDC_ENABLE_GAGAN))->SetCheck(((ackCmd[11] & 0x08) ? TRUE : FALSE));
+	  }
+
+    ((CButton*)GetDlgItem(IDC_WAAS_SPEC))->SetCheck(((ackCmd[12] & 0x01) ? TRUE : FALSE));
+    ((CButton*)GetDlgItem(IDC_EGNOS_SPEC))->SetCheck(((ackCmd[12] & 0x02) ? TRUE : FALSE));
+    ((CButton*)GetDlgItem(IDC_MSAS_SPEC))->SetCheck(((ackCmd[12] & 0x04) ? TRUE : FALSE));
+    ((CButton*)GetDlgItem(IDC_GAGAN_SPEC))->SetCheck(((ackCmd[12] & 0x08) ? TRUE : FALSE));
+
+    txt.Format("%d", ackCmd[14]);
+    GetDlgItem(IDC_U11)->SetWindowText((ackCmd[13] > 0) ? txt : "");
+    txt.Format("%d", ackCmd[15]);
+    GetDlgItem(IDC_U12)->SetWindowText((ackCmd[13] > 1) ? txt : "");
+    txt.Format("%d", ackCmd[16]);
+    GetDlgItem(IDC_U13)->SetWindowText((ackCmd[13] > 2) ? txt : "");
+
+    txt.Format("%d", ackCmd[18]);
+    GetDlgItem(IDC_U21)->SetWindowText((ackCmd[17] > 0) ? txt : "");
+    txt.Format("%d", ackCmd[19]);
+    GetDlgItem(IDC_U22)->SetWindowText((ackCmd[17] > 1) ? txt : "");
+    txt.Format("%d", ackCmd[20]);
+    GetDlgItem(IDC_U23)->SetWindowText((ackCmd[17] > 2) ? txt : "");
+
+    txt.Format("%d", ackCmd[22]);
+    GetDlgItem(IDC_U31)->SetWindowText((ackCmd[21] > 0) ? txt : "");
+    txt.Format("%d", ackCmd[23]);
+    GetDlgItem(IDC_U32)->SetWindowText((ackCmd[21] > 1) ? txt : "");
+    txt.Format("%d", ackCmd[24]);
+    GetDlgItem(IDC_U33)->SetWindowText((ackCmd[21] > 2) ? txt : "");
+
+    txt.Format("%d", ackCmd[26]);
+    GetDlgItem(IDC_U41)->SetWindowText((ackCmd[25] > 0) ? txt : "");
+    txt.Format("%d", ackCmd[27]);
+    GetDlgItem(IDC_U42)->SetWindowText((ackCmd[25] > 1) ? txt : "");
+    txt.Format("%d", ackCmd[28]);
+    GetDlgItem(IDC_U43)->SetWindowText((ackCmd[25] > 2) ? txt : "");
+  }
+  else
+  {
+    title += " (Query failed)";
+	  GetDlgItem(IDC_NUMBER_CHANNEL)->SetWindowText("0");
+	  GetDlgItem(IDC_URAMASK)->SetWindowText("8");
+	  ((CComboBox*)GetDlgItem(IDC_ENABLE_NAV))->SetCurSel(0);
+
+	  GetDlgItem(IDC_U11)->SetWindowText("");
+	  GetDlgItem(IDC_U12)->SetWindowText("");
+	  GetDlgItem(IDC_U13)->SetWindowText("");
+	  GetDlgItem(IDC_U21)->SetWindowText("");
+	  GetDlgItem(IDC_U22)->SetWindowText("");
+	  GetDlgItem(IDC_U23)->SetWindowText("");
+	  GetDlgItem(IDC_U31)->SetWindowText("");
+	  GetDlgItem(IDC_U32)->SetWindowText("");
+	  GetDlgItem(IDC_U33)->SetWindowText("");
+	  GetDlgItem(IDC_U41)->SetWindowText("");
+	  GetDlgItem(IDC_U42)->SetWindowText("");
+	  GetDlgItem(IDC_U43)->SetWindowText("");
+  }
+
+	if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QuerySbasDefault(CGPSDlg::Return, &ackCmd))
+	{
+    txt.Format("%d", ackCmd[7]);
+    GetDlgItem(IDC_D11)->SetWindowText((ackCmd[6] > 0) ? txt : "");
+    txt.Format("%d", ackCmd[8]);
+    GetDlgItem(IDC_D12)->SetWindowText((ackCmd[6] > 1) ? txt : "");
+    txt.Format("%d", ackCmd[9]);
+    GetDlgItem(IDC_D13)->SetWindowText((ackCmd[6] > 2) ? txt : "");
+
+    txt.Format("%d", ackCmd[11]);
+    GetDlgItem(IDC_D21)->SetWindowText((ackCmd[10] > 0) ? txt : "");
+    txt.Format("%d", ackCmd[12]);
+    GetDlgItem(IDC_D22)->SetWindowText((ackCmd[10] > 1) ? txt : "");
+    txt.Format("%d", ackCmd[13]);
+    GetDlgItem(IDC_D23)->SetWindowText((ackCmd[10] > 2) ? txt : "");
+
+    txt.Format("%d", ackCmd[15]);
+    GetDlgItem(IDC_D31)->SetWindowText((ackCmd[14] > 0) ? txt : "");
+    txt.Format("%d", ackCmd[16]);
+    GetDlgItem(IDC_D32)->SetWindowText((ackCmd[14] > 1) ? txt : "");
+    txt.Format("%d", ackCmd[17]);
+    GetDlgItem(IDC_D33)->SetWindowText((ackCmd[14] > 2) ? txt : "");
+
+    txt.Format("%d", ackCmd[19]);
+    GetDlgItem(IDC_D41)->SetWindowText((ackCmd[18] > 0) ? txt : "");
+    txt.Format("%d", ackCmd[20]);
+    GetDlgItem(IDC_D42)->SetWindowText((ackCmd[18] > 1) ? txt : "");
+    txt.Format("%d", ackCmd[21]);
+    GetDlgItem(IDC_D43)->SetWindowText((ackCmd[18] > 2) ? txt : "");
+  }
+  else
+  {
+	  GetDlgItem(IDC_D11)->SetWindowText("");
+	  GetDlgItem(IDC_D12)->SetWindowText("");
+	  GetDlgItem(IDC_D13)->SetWindowText("");
+	  GetDlgItem(IDC_D21)->SetWindowText("");
+	  GetDlgItem(IDC_D22)->SetWindowText("");
+	  GetDlgItem(IDC_D23)->SetWindowText("");
+	  GetDlgItem(IDC_D31)->SetWindowText("");
+	  GetDlgItem(IDC_D32)->SetWindowText("");
+	  GetDlgItem(IDC_D33)->SetWindowText("");
+	  GetDlgItem(IDC_D41)->SetWindowText("");
+	  GetDlgItem(IDC_D42)->SetWindowText("");
+	  GetDlgItem(IDC_D43)->SetWindowText("");
+	  GetDlgItem(IDC_APPLY_DEFAULT)->EnableWindow(FALSE);
+  }
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+  this->SetWindowText(title);
+  UpdateStatus();
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+
+int CConfigSBAS2::GetUserTaqble(U08& u1, U08& u2, U08& u3, UINT id1, UINT id2, UINT id3)
+{
+  CString txt;
+	GetDlgItem(id1)->GetWindowText(txt);
+  int i1 = atoi(txt);
+	GetDlgItem(id2)->GetWindowText(txt);
+  int i2 = atoi(txt);
+	GetDlgItem(id3)->GetWindowText(txt);
+  int i3 = atoi(txt);
+
+  if(i1 > 255 || i1 < 0 || i2 > 255 || i2 < 0 || i3 > 255 || i3 < 0)
+  {
+    return -1;
+  }
+
+  if(i1 != 0 && i2 != 0 && i3 != 0)
+  {
+    u1 = i1; u2 = i2; u3 = i3;
+    return 3;
+  }
+
+  if(i1 == 0 && i2 == 0 && i3 == 0)
+  {
+    u1 = i1; u2 = i2; u3 = i3;
+    return 0;
+  }
+
+  int n;
+  if(i1 == 0)
+  {
+    if(i2 == 0)
+    {
+      i1 = i3;
+      i2 = i3 = 0;
+      n = 1;
+    }
+    else
+    {
+      i1 = i2;
+      i2 = i3;
+      i3 = 0;
+      n = (i2 == 0) ? 1 : 2;
+    }
+  }
+  else 
+  {
+    if(i2 == 0)
+    {
+      i2 = i3;
+      i3 = 0;
+      n = (i2 == 0) ? 1 : 2;
+    }
+    else
+    {
+      n = 2;
+    }
+  }
+  u1 = i1; u2 = i2; u3 = i3;
+  return n;
+}
+
+void CConfigSBAS2::OnBnClickedOk()
+{
+	CString txt;
+	GetDlgItem(IDC_URAMASK)->GetWindowText(txt);
+	m_nUraMask = atoi(txt);
+	if(m_nUraMask < 0 || m_nUraMask > 15)
+	{
+		AfxMessageBox("URA Mask must be between 0 and 15!");
+		return;
+	}
+
+	GetDlgItem(IDC_NUMBER_CHANNEL)->GetWindowText(txt);
+	m_nTrackingChannel = atoi(txt);
+	if(m_nTrackingChannel < 0 || m_nTrackingChannel > 3)
+	{
+		AfxMessageBox("Number of tracking channels must be between 0 and 3!");
+		return;
+	}
+
+	m_bEnable = ((CButton*)GetDlgItem(IDC_ENABLE_SBAS))->GetCheck();
+	m_bRanging = ((CComboBox*)GetDlgItem(IDC_ENABLE_NAV))->GetCurSel();
+	m_bCorrection = ((CButton*)GetDlgItem(IDC_ENABLE_CORRECTION))->GetCheck();
+	m_bWAAS = ((CButton*)GetDlgItem(IDC_ENABLE_WAAS))->GetCheck();
+	m_bEGNOS = ((CButton*)GetDlgItem(IDC_ENABLE_EGNOS))->GetCheck();
+	m_bMSAS = ((CButton*)GetDlgItem(IDC_ENABLE_MSAS))->GetCheck();
+	m_bGAGAN = ((CButton*)GetDlgItem(IDC_ENABLE_GAGAN))->GetCheck();
+	m_bAll = ((CButton*)GetDlgItem(IDC_ENABLE_ALL))->GetCheck();
+
+	m_bWaasSpec = ((CButton*)GetDlgItem(IDC_WAAS_SPEC))->GetCheck();
+	m_bEgnosSpec = ((CButton*)GetDlgItem(IDC_EGNOS_SPEC))->GetCheck();
+	m_bMsasSpec = ((CButton*)GetDlgItem(IDC_MSAS_SPEC))->GetCheck();
+	m_bGaganSpec = ((CButton*)GetDlgItem(IDC_GAGAN_SPEC))->GetCheck();
+
+  int n;
+  n = GetUserTaqble(m_u11, m_u12, m_u13, IDC_U11, IDC_U12, IDC_U13);
+  if(n == -1)
+  {
+		AfxMessageBox("Invalid user subsystem mask!");
+		return;
+  }
+  n = GetUserTaqble(m_u21, m_u22, m_u23, IDC_U21, IDC_U22, IDC_U23);
+  if(n == -1)
+  {
+		AfxMessageBox("Invalid user subsystem mask!");
+		return;
+  }
+  n = GetUserTaqble(m_u31, m_u32, m_u33, IDC_U31, IDC_U32, IDC_U33);
+  if(n == -1)
+  {
+		AfxMessageBox("Invalid user subsystem mask!");
+		return;
+  }
+  n = GetUserTaqble(m_u41, m_u42, m_u43, IDC_U41, IDC_U42, IDC_U43);
+  if(n == -1)
+  {
+		AfxMessageBox("Invalid user subsystem mask!");
+		return;
+  }
+
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
+void CConfigSBAS2::UpdateStatus()
+{
+	BOOL enableWass = ((CButton*)GetDlgItem(IDC_ENABLE_WAAS))->GetCheck();
+	BOOL enableEgnos = ((CButton*)GetDlgItem(IDC_ENABLE_EGNOS))->GetCheck();
+	BOOL enableMsas = ((CButton*)GetDlgItem(IDC_ENABLE_MSAS))->GetCheck();
+	BOOL enableGagan = ((CButton*)GetDlgItem(IDC_ENABLE_GAGAN))->GetCheck();
+	BOOL enableAll = ((CButton*)GetDlgItem(IDC_ENABLE_ALL))->GetCheck();
+
+  BOOL specWass = ((CButton*)GetDlgItem(IDC_WAAS_SPEC))->GetCheck();
+	BOOL specEgnos = ((CButton*)GetDlgItem(IDC_EGNOS_SPEC))->GetCheck();
+	BOOL specMsas = ((CButton*)GetDlgItem(IDC_MSAS_SPEC))->GetCheck();
+	BOOL specGagan = ((CButton*)GetDlgItem(IDC_GAGAN_SPEC))->GetCheck();
+
+  ((CButton*)GetDlgItem(IDC_WAAS_SPEC))->EnableWindow(enableWass);
+  ((CButton*)GetDlgItem(IDC_EGNOS_SPEC))->EnableWindow(enableEgnos);
+  ((CButton*)GetDlgItem(IDC_MSAS_SPEC))->EnableWindow(enableMsas);
+  ((CButton*)GetDlgItem(IDC_GAGAN_SPEC))->EnableWindow(enableGagan);
+
+
+  ((CEdit*)GetDlgItem(IDC_U11))->EnableWindow(enableWass && specWass);
+  ((CEdit*)GetDlgItem(IDC_U12))->EnableWindow(enableWass && specWass);
+  ((CEdit*)GetDlgItem(IDC_U13))->EnableWindow(enableWass && specWass);
+  ((CEdit*)GetDlgItem(IDC_U21))->EnableWindow(enableEgnos && specEgnos);
+  ((CEdit*)GetDlgItem(IDC_U22))->EnableWindow(enableEgnos && specEgnos);
+  ((CEdit*)GetDlgItem(IDC_U23))->EnableWindow(enableEgnos && specEgnos);
+  ((CEdit*)GetDlgItem(IDC_U31))->EnableWindow(enableMsas && specMsas);
+  ((CEdit*)GetDlgItem(IDC_U32))->EnableWindow(enableMsas && specMsas);
+  ((CEdit*)GetDlgItem(IDC_U33))->EnableWindow(enableMsas && specMsas);
+  ((CEdit*)GetDlgItem(IDC_U41))->EnableWindow(enableGagan && specGagan);
+  ((CEdit*)GetDlgItem(IDC_U42))->EnableWindow(enableGagan && specGagan);
+  ((CEdit*)GetDlgItem(IDC_U43))->EnableWindow(enableGagan && specGagan);
+
+}
+
+void CConfigSBAS2::OnBnClickedEnableWaas()
+{
+	if(((CButton*)GetDlgItem(IDC_ENABLE_WAAS))->GetCheck())
+	{
+		((CButton*)GetDlgItem(IDC_ENABLE_ALL))->SetCheck(FALSE);
+	}
+  UpdateStatus();
+}
+
+void CConfigSBAS2::OnBnClickedEnableEgnos()
+{
+	if(((CButton*)GetDlgItem(IDC_ENABLE_EGNOS))->GetCheck())
+	{
+		((CButton*)GetDlgItem(IDC_ENABLE_ALL))->SetCheck(FALSE);
+	}
+  UpdateStatus();
+}
+
+void CConfigSBAS2::OnBnClickedEnableMsas()
+{
+	if(((CButton*)GetDlgItem(IDC_ENABLE_MSAS))->GetCheck())
+	{
+		((CButton*)GetDlgItem(IDC_ENABLE_ALL))->SetCheck(FALSE);
+	}
+  UpdateStatus();
+}
+
+void CConfigSBAS2::OnBnClickedEnableGagan()
+{
+	if(((CButton*)GetDlgItem(IDC_ENABLE_GAGAN))->GetCheck())
+	{
+		((CButton*)GetDlgItem(IDC_ENABLE_ALL))->SetCheck(FALSE);
+	}
+  UpdateStatus();
+}
+
+void CConfigSBAS2::OnBnClickedEnableAll()
+{
+	if(((CButton*)GetDlgItem(IDC_ENABLE_ALL))->GetCheck())
+	{
+		((CButton*)GetDlgItem(IDC_ENABLE_WAAS))->SetCheck(FALSE);
+		((CButton*)GetDlgItem(IDC_ENABLE_EGNOS))->SetCheck(FALSE);
+		((CButton*)GetDlgItem(IDC_ENABLE_MSAS))->SetCheck(FALSE);
+		((CButton*)GetDlgItem(IDC_ENABLE_GAGAN))->SetCheck(FALSE);
+	}
+  UpdateStatus();
+}
+
+void CConfigSBAS2::OnBnClickedWaasSpecify()
+{
+  UpdateStatus();
+}
+
+void CConfigSBAS2::OnBnClickedEgnosSpecify()
+{
+  UpdateStatus();
+}
+
+void CConfigSBAS2::OnBnClickedMsasSpecify()
+{
+  UpdateStatus();
+}
+
+void CConfigSBAS2::OnBnClickedGaganSpecify()
+{
+  UpdateStatus();
+}
+
+void CConfigSBAS2::OnBnClickedApplyDefault()
+{
+  CString strTxt;
+  ((CEdit*)GetDlgItem(IDC_D11))->GetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_U11))->SetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_D12))->GetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_U12))->SetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_D13))->GetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_U13))->SetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_D21))->GetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_U21))->SetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_D22))->GetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_U22))->SetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_D23))->GetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_U23))->SetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_D31))->GetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_U31))->SetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_D32))->GetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_U32))->SetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_D33))->GetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_U33))->SetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_D41))->GetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_U41))->SetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_D42))->GetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_U42))->SetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_D43))->GetWindowText(strTxt);
+  ((CEdit*)GetDlgItem(IDC_U43))->SetWindowText(strTxt);
+}
+
+void CConfigSBAS2::DoCommand()
+{
+	BinaryData cmd(22);
+	*cmd.GetBuffer(0) = 0x62;
+	*cmd.GetBuffer(1) = 0x05;
+	*cmd.GetBuffer(2) = (U08)m_bEnable;
+	*cmd.GetBuffer(3) = (U08)m_bRanging;
+	*cmd.GetBuffer(4) = (U08)m_nUraMask;
+	*cmd.GetBuffer(5) = (U08)m_bCorrection;
+	*cmd.GetBuffer(6) = (U08)m_nTrackingChannel;
+	*cmd.GetBuffer(7) = (U08)(m_bWAAS | (m_bEGNOS << 1) | (m_bMSAS << 2) | (m_bGAGAN << 3) | (m_bAll << 7));
+	*cmd.GetBuffer(8) = (U08)(m_bWaasSpec | (m_bEgnosSpec << 1) | (m_bMsasSpec << 2) | (m_bGaganSpec << 3));
+	*cmd.GetBuffer(9) = (U08)m_u11;
+	*cmd.GetBuffer(10) = (U08)m_u12;
+	*cmd.GetBuffer(11) = (U08)m_u13;
+	*cmd.GetBuffer(12) = (U08)m_u21;
+	*cmd.GetBuffer(13) = (U08)m_u22;
+	*cmd.GetBuffer(14) = (U08)m_u23;
+	*cmd.GetBuffer(15) = (U08)m_u31;
+	*cmd.GetBuffer(16) = (U08)m_u32;
+	*cmd.GetBuffer(17) = (U08)m_u33;
+	*cmd.GetBuffer(18) = (U08)m_u41;
+	*cmd.GetBuffer(19) = (U08)m_u42;
+	*cmd.GetBuffer(20) = (U08)m_u43;
+	*cmd.GetBuffer(21) = (U08)m_nAttribute;
+
+	configCmd.SetData(cmd);
+	configPrompt = "Configure SBAS Advance successfully";
   AfxBeginThread(ConfigThread, 0);
 }
 
@@ -821,19 +1303,50 @@ BOOL ConfigBinaryMeasurementDataOutDlg::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
 
+  BinaryData ackCmd;
 	U16 cmdLen = 7;
-	if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryBinaryMeasurementDataOut(CGPSDlg::Return, &cmdLen))
+  CString title;
+  this->GetWindowText(title);
+	if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryBinaryMeasurementDataOut(CGPSDlg::Return, &ackCmd))
 	{
-	  m_newCmd = (cmdLen == 7) ? FALSE : TRUE;
+    title += " (Query success)";
+    cmdLen = ConvertLeonU16(ackCmd.Ptr(2));
+    m_newCmd = (cmdLen == 7) ? FALSE : TRUE;
+	  ((CComboBox*)GetDlgItem(IDC_OUTPUT_RATE))->SetCurSel(ackCmd[5]);
+	  ((CButton*)GetDlgItem(IDC_MEAS_TIME))->SetCheck(ackCmd[6]);
+	  ((CButton*)GetDlgItem(IDC_RAW_MEAS))->SetCheck(ackCmd[7]);
+	  ((CButton*)GetDlgItem(IDC_SV_CH))->SetCheck(ackCmd[8]);
+	  ((CButton*)GetDlgItem(IDC_RCV_STATE))->SetCheck(ackCmd[9]);
+    ((CButton*)GetDlgItem(IDC_EXT_RAW_MEAS))->SetCheck((m_newCmd) ? ackCmd[11] : 0);
+
+    if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryConstellationCapability(CGPSDlg::Return, &ackCmd))
+    {
+      U16 mode = MAKEWORD(ackCmd[7], ackCmd[6]);
+      ((CButton*)GetDlgItem(IDC_GPS))->SetCheck((mode & 0x0001));
+      ((CButton*)GetDlgItem(IDC_GLONASS))->SetCheck((mode & 0x0002));
+      ((CButton*)GetDlgItem(IDC_GALILEO))->SetCheck((mode & 0x0004));
+      ((CButton*)GetDlgItem(IDC_BEIDOU))->SetCheck((mode & 0x0008));
+    }
+    else
+    {
+      ((CButton*)GetDlgItem(IDC_GPS))->SetCheck(1);
+    }
+	  ((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
 	}
-	((CComboBox*)GetDlgItem(IDC_OUTPUT_RATE))->SetCurSel(0);
-	((CButton*)GetDlgItem(IDC_MEAS_TIME))->SetCheck(1);
-	((CButton*)GetDlgItem(IDC_RAW_MEAS))->SetCheck(1);
-	((CButton*)GetDlgItem(IDC_SV_CH))->SetCheck(1);
-	((CButton*)GetDlgItem(IDC_RCV_STATE))->SetCheck(1);
-	((CButton*)GetDlgItem(IDC_EXT_RAW_MEAS))->SetCheck(0);
-	((CButton*)GetDlgItem(IDC_GPS))->SetCheck(1);
-	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+  else
+  {
+    title += " (Query failed)";
+	  ((CComboBox*)GetDlgItem(IDC_OUTPUT_RATE))->SetCurSel(0);
+	  ((CButton*)GetDlgItem(IDC_MEAS_TIME))->SetCheck(1);
+	  ((CButton*)GetDlgItem(IDC_RAW_MEAS))->SetCheck(1);
+	  ((CButton*)GetDlgItem(IDC_SV_CH))->SetCheck(1);
+	  ((CButton*)GetDlgItem(IDC_RCV_STATE))->SetCheck(1);
+    ((CButton*)GetDlgItem(IDC_EXT_RAW_MEAS))->SetCheck(0);
+    ((CButton*)GetDlgItem(IDC_GPS))->SetCheck(1);
+	  ((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+ }
+
+  this->SetWindowText(title);
 	UpdateStatus();
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
@@ -2285,6 +2798,8 @@ BOOL CConfigRtkReset::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
 	GetDlgItem(IDC_MODE)->SetWindowText("0");
+  //20170421 Doesn't need UI now
+  OnOK();
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
@@ -2299,10 +2814,10 @@ void CConfigRtkReset::OnBnClickedOk()
 void CConfigRtkReset::DoCommand()
 {
 	CWaitCursor wait;
-	BinaryData cmd(3);
+	BinaryData cmd(2);
 	*cmd.GetBuffer(0) = 0x6A;
 	*cmd.GetBuffer(1) = 0x05;
-	*cmd.GetBuffer(2) = (U08)m_mode;
+	//*cmd.GetBuffer(2) = (U08)m_mode;
 	configCmd.SetData(cmd);
 	configPrompt = "Reset RTK engine successfully";
   AfxBeginThread(ConfigThread, 0);
@@ -2330,37 +2845,63 @@ BOOL CConfigRtkMode2::OnInitDialog()
 	CCommonConfigDlg::OnInitDialog();
 
   BinaryData ackCmd;
+  CString title;
+  this->GetWindowText(title);
   if(cmdMode==CfgRtkOprtFctn)
   {
     CGPSDlg::CmdErrorCode err = CGPSDlg::gpsDlg->QueryRtkMode2(CGPSDlg::Return, &ackCmd);
 	  if(CGPSDlg::Ack == err)
 	  { //Load from device
+      title += " (Query success)";
       U16 cmdLen = ConvertLeonU16(ackCmd.Ptr(2));
 		  cmdMode = (cmdLen == 37) ? CfgRtkOprtFctnOld : CfgRtkOprtFctn;
 
 	    ((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(ackCmd[6]);
-	    ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->SetCurSel(ackCmd[7]);
-	    ((CComboBox*)GetDlgItem(IDC_ROVER_OPT_FUN))->SetCurSel(ackCmd[7]);
+      if(ackCmd[6] == 0)
+      { //RTK Rover Mode
+	      ((CComboBox*)GetDlgItem(IDC_ROVER_OPT_FUN))->SetCurSel(ackCmd[7]);
+	      ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->SetCurSel(0);
+	      ((CComboBox*)GetDlgItem(IDC_PKB_OPT_FUN))->SetCurSel(0);
+      }
+      else if(ackCmd[6] == 1)
+      { //RTK Base Mode
+	      ((CComboBox*)GetDlgItem(IDC_ROVER_OPT_FUN))->SetCurSel(0);
+        ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->SetCurSel(ackCmd[7]);
+	      ((CComboBox*)GetDlgItem(IDC_PKB_OPT_FUN))->SetCurSel(0);
+      }
+      else if(ackCmd[6] == 2)
+      { //RTK precisely kinematic base mode
+	      ((CComboBox*)GetDlgItem(IDC_ROVER_OPT_FUN))->SetCurSel(0);
+        ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->SetCurSel(0);
+        ((CComboBox*)GetDlgItem(IDC_PKB_OPT_FUN))->SetCurSel(ackCmd[7]);
+      }
 
-      //GetDlgItem(IDC_MVB_EDT1)->SetWindowText("0");
       DisplayStatic(this, IDC_MVB_EDT1, "%f", ConvertLeonFloat(ackCmd.Ptr(36)));
-	    //GetDlgItem(IDC_SRV_EDT1)->SetWindowText("2000");
-      DisplayStatic(this, IDC_SRV_EDT1, "%u", MAKELONG(MAKEWORD(ackCmd[11], ackCmd[10]), MAKEWORD(ackCmd[9], ackCmd[8])));
-	    //GetDlgItem(IDC_SRV_EDT2)->SetWindowText("30");
-      DisplayStatic(this, IDC_SRV_EDT2, "%u", MAKELONG(MAKEWORD(ackCmd[15], ackCmd[14]), MAKEWORD(ackCmd[13], ackCmd[12])));
 
-	    //GetDlgItem(IDC_STT_EDT1)->SetWindowText("");
+      DWORD svyLen = MAKELONG(MAKEWORD(ackCmd[11], ackCmd[10]), MAKEWORD(ackCmd[9], ackCmd[8]));
+      DWORD stdDev = MAKELONG(MAKEWORD(ackCmd[15], ackCmd[14]), MAKEWORD(ackCmd[13], ackCmd[12]));
+      if(svyLen == 0 && stdDev == 0)
+      {
+        DisplayStatic(this, IDC_SRV_EDT1, "%u", 2000);
+        DisplayStatic(this, IDC_SRV_EDT2, "%u", 30);
+      }
+      else
+      {
+        DisplayStatic(this, IDC_SRV_EDT1, "%u", svyLen);
+        DisplayStatic(this, IDC_SRV_EDT2, "%u", stdDev);
+      }
+
       DisplayStatic(this, IDC_STT_EDT1, "%f", ConvertLeonDouble(ackCmd.Ptr(16)));
-	    //GetDlgItem(IDC_STT_EDT2)->SetWindowText("");
       DisplayStatic(this, IDC_STT_EDT2, "%f", ConvertLeonDouble(ackCmd.Ptr(24)));
-	    //GetDlgItem(IDC_STT_EDT3)->SetWindowText("");
       DisplayStatic(this, IDC_STT_EDT3, "%f", ConvertLeonFloat(ackCmd.Ptr(32)));
     } //if(CGPSDlg::Ack == err)
     else
     { //Default value
+      title += " (Query failed)";
 	    ((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);
 	    ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->SetCurSel(0);
 	    ((CComboBox*)GetDlgItem(IDC_ROVER_OPT_FUN))->SetCurSel(0);
+	    ((CComboBox*)GetDlgItem(IDC_PKB_OPT_FUN))->SetCurSel(0);
 
  	    GetDlgItem(IDC_MVB_EDT1)->SetWindowText("0");
 	    GetDlgItem(IDC_SRV_EDT1)->SetWindowText("2000");
@@ -2380,22 +2921,30 @@ BOOL CConfigRtkMode2::OnInitDialog()
 
 	  if(CGPSDlg::Ack == err)
 	  { //Load from device
+      title += " (Query success)";
       ((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(1);
 	    ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->SetCurSel(ackCmd[5]);
-	    //GetDlgItem(IDC_SRV_EDT1)->SetWindowText("2000");
-      DisplayStatic(this, IDC_SRV_EDT1, "%u", MAKELONG(MAKEWORD(ackCmd[9], ackCmd[8]), MAKEWORD(ackCmd[7], ackCmd[6])));
-	    //GetDlgItem(IDC_SRV_EDT2)->SetWindowText("30");
-      DisplayStatic(this, IDC_SRV_EDT2, "%u", MAKELONG(MAKEWORD(ackCmd[13], ackCmd[12]), MAKEWORD(ackCmd[11], ackCmd[10])));
+      
+      DWORD svyLen = MAKELONG(MAKEWORD(ackCmd[9], ackCmd[8]), MAKEWORD(ackCmd[7], ackCmd[6]));
+      DWORD stdDev = MAKELONG(MAKEWORD(ackCmd[13], ackCmd[12]), MAKEWORD(ackCmd[11], ackCmd[10]));
+      if(svyLen == 0 && stdDev == 0)
+      {
+        DisplayStatic(this, IDC_SRV_EDT1, "%u", 2000);
+        DisplayStatic(this, IDC_SRV_EDT2, "%u", 30);
+      }
+      else
+      {
+        DisplayStatic(this, IDC_SRV_EDT1, "%u", svyLen);
+        DisplayStatic(this, IDC_SRV_EDT2, "%u", stdDev);
+      }
 
-	    //GetDlgItem(IDC_STT_EDT1)->SetWindowText("");
       DisplayStatic(this, IDC_STT_EDT1, "%f", ConvertLeonDouble(ackCmd.Ptr(14)));
-	    //GetDlgItem(IDC_STT_EDT2)->SetWindowText("");
       DisplayStatic(this, IDC_STT_EDT2, "%f", ConvertLeonDouble(ackCmd.Ptr(22)));
-	    //GetDlgItem(IDC_STT_EDT3)->SetWindowText("");
       DisplayStatic(this, IDC_STT_EDT3, "%f", ConvertLeonFloat(ackCmd.Ptr(30)));
     } //if(CGPSDlg::Ack == err)
     else
     { //Default value
+      title += " (Query failed)";
       ((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(1);
 	    ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->SetCurSel(0);
 
@@ -2407,8 +2956,8 @@ BOOL CConfigRtkMode2::OnInitDialog()
 	    GetDlgItem(IDC_STT_EDT3)->SetWindowText("");
     } //if(CGPSDlg::Ack == err) else
   } //else if(cmdMode==CfgBasePosition)
-
 	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+  this->SetWindowText(title);
 	UpdateStatus();
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
@@ -2418,6 +2967,7 @@ void CConfigRtkMode2::OnBnClickedOk()
 	m_rtkMode = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
 	m_baseOpt = ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->GetCurSel();
 	m_roverOpt = ((CComboBox*)GetDlgItem(IDC_ROVER_OPT_FUN))->GetCurSel();
+	m_pkbOpt = ((CComboBox*)GetDlgItem(IDC_PKB_OPT_FUN))->GetCurSel();
 
 	CString txt;
 	((CEdit*)GetDlgItem(IDC_SRV_EDT1))->GetWindowText(txt);
@@ -2466,7 +3016,7 @@ void CConfigRtkMode2::DoCommand()
   if(cmdMode == CfgBasePosition || cmdMode == CfgTiming)
   {
     *cmd.GetBuffer(0) = (cmdMode == CfgBasePosition) ? 0x22 : 0x54;
-	  *cmd.GetBuffer(1) = (m_rtkMode) ? m_baseOpt : m_roverOpt;
+	  *cmd.GetBuffer(1) = m_baseOpt;
 	  //U32 Survey Length
 	  *cmd.GetBuffer(2) = HIBYTE(HIWORD(m_srvValue1));
 	  *cmd.GetBuffer(3) = LOBYTE(HIWORD(m_srvValue1));
@@ -2514,8 +3064,19 @@ void CConfigRtkMode2::DoCommand()
 	  *cmd.GetBuffer(0) = 0x6A;
 	  *cmd.GetBuffer(1) = 0x06;
 	  *cmd.GetBuffer(2) = (U08)m_rtkMode;
-	  *cmd.GetBuffer(3) = (m_rtkMode) ? m_baseOpt : m_roverOpt;
-	  //U32
+    if(m_rtkMode == 0)
+    {
+	    *cmd.GetBuffer(3) = m_roverOpt;
+    }
+    else if(m_rtkMode == 1)
+    {
+	    *cmd.GetBuffer(3) = m_baseOpt;
+    }
+    else if(m_rtkMode == 2)
+    {
+	    *cmd.GetBuffer(3) = m_pkbOpt;
+    }
+    //U32
 	  *cmd.GetBuffer(4) = HIBYTE(HIWORD(m_srvValue1));
 	  *cmd.GetBuffer(5) = LOBYTE(HIWORD(m_srvValue1));
 	  *cmd.GetBuffer(6) = HIBYTE(LOWORD(m_srvValue1));
@@ -2633,16 +3194,18 @@ void CConfigRtkMode2::UpdateStatus()
 	int rtkMode = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
 	int baseOpt = ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->GetCurSel();
 	int roverOpt = ((CComboBox*)GetDlgItem(IDC_ROVER_OPT_FUN))->GetCurSel();
+	int pkbOpt = ((CComboBox*)GetDlgItem(IDC_PKB_OPT_FUN))->GetCurSel();
 
 	const char *baseDesc1 = "This function can only match below operational function in RTK base position mode:\r\n - Static Mode\r\n - Survey Mode";
-	const char *baseDesc2 = "This function can only match below operational function in RTK base position mode:\r\n - Kinematic Mode";
-	const char *roverDesc1 = "This function can only match below operational function in RTK rover mode:\r\n - Normal\r\n - Float";
-	const char *roverDesc2 = "This function can only match below operational function in RTK rover mode:\r\n - Moving base";
+  const char *baseDesc2 = "This function can only match below operational function in RTK base position mode:\r\n - Kinematic Mode\r\nor RTK precisely kinematic base mode:\r\n - Normal, Float";
+	const char *roverDesc1 = "This function can only match below operational function in RTK rover mode:\r\n - Normal, Float";
+	const char *roverDesc2 = "This function can only match below operational function in RTK rover mode:\r\n - Moving base\r\nor RTK precisely kinematic base mode:\r\n - Normal, Float";
 
-	if(rtkMode == 0)	//Rover mode
+	if(rtkMode == 0)	//RTK Rover mode
 	{
 		GetDlgItem(IDC_BASE_OPT_FUN)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_ROVER_OPT_FUN)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_PKB_OPT_FUN)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_MODE_TXT)->SetWindowText("RTK Operational Function :");
 
 		GetDlgItem(IDC_SRV_SET1)->ShowWindow(SW_HIDE);
@@ -2672,7 +3235,7 @@ void CConfigRtkMode2::UpdateStatus()
 		}
 		return;
 	}
-	else
+	else if(rtkMode == 1) //RTK Base mode
 	{
     if(cmdMode==CfgTiming)
     {
@@ -2684,14 +3247,39 @@ void CConfigRtkMode2::UpdateStatus()
     }
     else
     {
- 		  GetDlgItem(IDC_MODE_TXT)->SetWindowText("RTK Base Position Mode :");
+ 		  GetDlgItem(IDC_MODE_TXT)->SetWindowText("RTK Operational Function :");
     }
 		GetDlgItem(IDC_BASE_OPT_FUN)->ShowWindow(SW_SHOW);
 		GetDlgItem(IDC_ROVER_OPT_FUN)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_PKB_OPT_FUN)->ShowWindow(SW_HIDE);
+
 		GetDlgItem(IDC_MVB_SET)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_MVB_SET2)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_MVB_EDT1)->ShowWindow(SW_HIDE);
 	}
+	else if(rtkMode == 2) //RTK precisely kinematic base mode
+	{
+		GetDlgItem(IDC_BASE_OPT_FUN)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_ROVER_OPT_FUN)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_PKB_OPT_FUN)->ShowWindow(SW_SHOW);
+ 		GetDlgItem(IDC_MODE_TXT)->SetWindowText("RTK Operational Function :");
+		GetDlgItem(IDC_DESC)->SetWindowText(baseDesc1);
+
+		GetDlgItem(IDC_MVB_SET)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_MVB_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_MVB_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET3)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT3)->ShowWindow(SW_HIDE);
+		return;
+  }
 
   if(CfgBasePosition == cmdMode || CfgTiming == cmdMode)
   {
@@ -2700,6 +3288,7 @@ void CConfigRtkMode2::UpdateStatus()
 	    GetDlgItem(IDC_MODE)->ShowWindow(SW_HIDE);
 	    GetDlgItem(IDC_ROVER_OPT_FUN)->ShowWindow(SW_HIDE);
       GetDlgItem(IDC_MVB_EDT1)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_DESC2)->ShowWindow(SW_HIDE);
   }
 
 	if(baseOpt == 0)	//Kinematic 
@@ -2802,7 +3391,7 @@ void CConfigMessageOut::DoCommand()
 	*cmd.GetBuffer(1) = m_nType;
 	*cmd.GetBuffer(2) = m_nAttribute;
 	configCmd.SetData(cmd);
-	configPrompt = "Configure Message successfully";
+	configPrompt = "Configure message type successfully";
   AfxBeginThread(ConfigThread, 0);
 }
 
@@ -3818,10 +4407,13 @@ END_MESSAGE_MAP()
 BOOL ConfigRtcmMeasurementDataOutDlg::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
-
+  CString title;
   BinaryData ackCmd;
+  this->GetWindowText(title);
+
   if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryRtcmMeasurementDataOut(CGPSDlg::Return, &ackCmd))
   {
+    title += " (Query success)";
     ((CButton*)GetDlgItem(IDC_FIELD2))->SetCheck(ackCmd[5]);
     ((CComboBox*)GetDlgItem(IDC_FIELD3))->SetCurSel(ackCmd[6]);
     ((CButton*)GetDlgItem(IDC_FIELD4))->SetCheck(ackCmd[7]);
@@ -3834,6 +4426,7 @@ BOOL ConfigRtcmMeasurementDataOutDlg::OnInitDialog()
   }
   else
   {
+    title += " (Query failed)";
     ((CButton*)GetDlgItem(IDC_FIELD2))->SetCheck(1);
     ((CComboBox*)GetDlgItem(IDC_FIELD3))->SetCurSel(0);
     ((CButton*)GetDlgItem(IDC_FIELD4))->SetCheck(1);
@@ -3853,7 +4446,7 @@ BOOL ConfigRtcmMeasurementDataOutDlg::OnInitDialog()
   {
     cnstMode = 0xFFFF;
   }
-
+  this->SetWindowText(title);
 	UpdateStatus();
 	return TRUE;  // return TRUE unless you set the focus to a control
 }

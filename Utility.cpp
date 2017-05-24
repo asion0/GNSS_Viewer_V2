@@ -599,6 +599,19 @@ CString Utility::GetFileExt(LPCTSTR pszPathname)
 	return strRet;
 }
 
+CString Utility::GetFilePathName(LPCTSTR pszPathname)
+{
+	CString strRet(pszPathname);
+	int nDot = strRet.ReverseFind(_T('.'));
+	if(-1 == nDot)
+	{
+		return strRet;
+	}
+
+	strRet = strRet.Left(nDot);
+	return strRet;
+}
+
 BOOL Utility::CopyResToFile(LPCTSTR szDesFileName, DWORD dRes, LPCTSTR szType)
 {
 	HANDLE			hFile;	
@@ -686,6 +699,17 @@ double Utility::GetPrivateProfileDouble(LPCSTR appName, LPCSTR keyName, LPCSTR d
 	GetPrivateProfileString(appName, keyName, defaultString, strBuffer.GetBuffer(bufferSize), bufferSize, fileName);
 	strBuffer.ReleaseBuffer();
 	return atof(strBuffer);
+}
+
+U32 Utility::GetPrivateProfileHex(LPCSTR appName, LPCSTR keyName, U32 defaultValue, LPCSTR fileName)
+{
+	CString strBuffer, defaultString;
+  defaultString.Format("%08X", defaultValue);
+	const int bufferSize = 1024;
+	GetPrivateProfileString(appName, keyName, defaultString, strBuffer.GetBuffer(bufferSize), bufferSize, fileName);
+	strBuffer.ReleaseBuffer();
+
+  return strtoul(strBuffer, NULL, 16);
 }
 
 bool Utility::IsFileExist(const char* filePath)

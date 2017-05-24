@@ -52,7 +52,7 @@ BOOL CGPSApp::InitInstance()
 	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
 	::OutputDebugString("GNSS Viewer Start...");
 
-	GetEnvPath();
+  GetEnvPath();
 
 	CGPSDlg dlg;
 	m_pMainWnd = &dlg;
@@ -113,7 +113,14 @@ bool CGPSApp::CheckExternalPreloader(CString& externalPreloaderFile)
 CString CGPSApp::GetTitle()
 {
 	CString title;
-	title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
+  if(strlen(APP_MODULE) > 0)
+  {
+	  title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
+  }
+  else
+  {
+	  title.Format("%s %s V%s", APP_CAPTION, APP_TITLE, APP_VERSION);
+  }
 	return title;
 }
 
@@ -138,7 +145,7 @@ int CGPSApp::GetIntSetting(LPCSTR key, int defaultValue)
 {
 	CRegistry reg;
 	reg.SetRootKey(HKEY_CURRENT_USER);
-	if(reg.SetKey("Software\\GNSSViewer\\GPS", true))
+	if(reg.SetKey(VIEWER_REG_PATH, true))
 	{
 		return reg.ReadInt(key, defaultValue);
 	}
@@ -149,7 +156,7 @@ CString CGPSApp::GetStringSetting(LPCSTR key, LPCSTR defaultValue)
 {
 	CRegistry reg;
 	reg.SetRootKey(HKEY_CURRENT_USER);
-	if(reg.SetKey("Software\\GNSSViewer\\GPS", true))
+	if(reg.SetKey(VIEWER_REG_PATH, true))
 	{
 		return reg.ReadString(key, defaultValue);
 	}
@@ -160,7 +167,7 @@ bool CGPSApp::SetIntSetting(LPCSTR key, int data)
 {
 	CRegistry reg;
 	reg.SetRootKey(HKEY_CURRENT_USER);
-	if(reg.SetKey("Software\\GNSSViewer\\GPS", true))
+	if(reg.SetKey(VIEWER_REG_PATH, true))
 	{
 		return reg.WriteInt(key, data)==TRUE;
 	}
@@ -171,7 +178,7 @@ bool CGPSApp::SetIntSetting(LPCSTR key, int data)
 //{
 //	CRegistry reg;
 //	reg.SetRootKey(HKEY_CURRENT_USER);
-//	if(reg.SetKey("Software\\GNSSViewer\\GPS", true))
+//	if(reg.SetKey(VIEWER_REG_PATH, true))
 //	{
 //		return reg.WriteString(key, data)==TRUE;
 //	}

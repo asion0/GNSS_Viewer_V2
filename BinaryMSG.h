@@ -17,3 +17,17 @@ void ShowReceiverNav(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowBinaryOutput(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowDjiBinaryOutput(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ExtRawMeas(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowRtcm1005(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowRtcm1077(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowRtcm1107(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowRtcm1117(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowRtcm1127(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowRtcm1087(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowUbxTimTp(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowUbxNavSol(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowUbxNavSvInfo(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowUbxNavSvStatus(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowUbxNavPosllh(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowUbxNavDop(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowUbxNavVelned(U08* src, bool convertOnly = false, CString* pStr = NULL);
+

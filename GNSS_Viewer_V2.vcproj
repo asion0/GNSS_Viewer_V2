@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG;_TAB_LAYOUT_"
+				PreprocessorDefinitions="_DEBUG;"
 				Culture="1033"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
@@ -133,7 +133,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				WholeProgramOptimization="true"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_GNSS_CUSTOMER_PRODUCTION_OLIVER20161128"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_GNSS_XN120_TESTER"
 				StringPooling="true"
 				MinimalRebuild="false"
 				RuntimeLibrary="0"
@@ -150,7 +150,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG;_TAB_LAYOUT_"
+				PreprocessorDefinitions="NDEBUG;"
 				Culture="1033"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
@@ -159,7 +159,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="Exe/GNSS_Viewer-Release.exe"
+				OutputFile="Exe/XN120_Tester(GPS).exe"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				EnableUAC="false"
@@ -192,7 +192,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
+				CommandLine="Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -1698,7 +1698,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				WholeProgramOptimization="true"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_GNSS_L2_NMEA"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_GNSS_BDL2_NMEA"
 				StringPooling="true"
 				MinimalRebuild="false"
 				RuntimeLibrary="0"
@@ -1976,7 +1976,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				WholeProgramOptimization="true"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_GNSS_NMEAPLAYER_L2"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_GNSS_NMEAPLAYER_BDL2"
 				StringPooling="true"
 				MinimalRebuild="false"
 				RuntimeLibrary="0"
@@ -2591,6 +2591,10 @@
 				RelativePath=".\res\NewGNSS_Viewer.rc2"
 				>
 			</File>
+			<File
+				RelativePath=".\res\RTKTable.bmp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="1_MainDialog"
@@ -2628,6 +2632,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SaveBinaryNoParsingDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SaveBinaryNoParsingDlg.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Savenmea.cpp"
 				>
 			</File>
@@ -2656,6 +2668,14 @@
 			Name="2_GlobalClasses"
 			>
 			<File
+				RelativePath="BinaryMSG.cpp"
+				>
+			</File>
+			<File
+				RelativePath="BinaryMSG.h"
+				>
+			</File>
+			<File
 				RelativePath=".\CommonConfigDlg.h"
 				>
 			</File>
@@ -2668,19 +2688,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MessageParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MessageParser.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Serial.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\Serial.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SerialAgents.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SerialAgents.h"
 				>
 			</File>
 			<File
@@ -2698,14 +2718,6 @@
 			<Filter
 				Name="Common"
 				>
-				<File
-					RelativePath="BinaryMSG.cpp"
-					>
-				</File>
-				<File
-					RelativePath="BinaryMSG.h"
-					>
-				</File>
 				<File
 					RelativePath="ClipboardListBox.cpp"
 					>

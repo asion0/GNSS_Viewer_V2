@@ -19,8 +19,9 @@ public:
 		m_maxLine = max;
 		return oldMax;
 	}
-	//virtual BOOL PreTranslateMessage(MSG* pMsg);
+  //void SetRedraw(bool b) { this.SetRedraw(FALSE); }
 	void ProcessTextBuffer();
+
 protected:
 	bool m_scanTimer;
 	int m_maxLine;

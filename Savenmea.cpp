@@ -183,6 +183,8 @@ void CSaveNmea::StopSave()
 void CSaveNmea::OnBnClickedClose()
 {
   StopSave();
+  writeIter = 0;
+  flashIter = 0;
 
   if(logFunction == HostLog_Mode)
   {

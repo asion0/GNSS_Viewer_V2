@@ -64,7 +64,7 @@ void CGpsdoDownload::SaveSetting()
 
 	CRegistry reg;
 	reg.SetRootKey(HKEY_CURRENT_USER);
-	if(reg.SetKey("Software\\GNSSViewer\\GPS", false))
+	if(reg.SetKey(VIEWER_REG_PATH, false))
 	{
 		reg.WriteString("gpsdo_fw_dn_master_path", m_strMasterPath);
 		reg.WriteString("gpsdo_fw_dn_slave_path", m_strSlavePath);
@@ -77,7 +77,7 @@ void CGpsdoDownload::LoadSetting()
 {
 	CRegistry reg;
 	reg.SetRootKey(HKEY_CURRENT_USER);
-	if(reg.SetKey("Software\\GNSSViewer\\GPS", true))
+	if(reg.SetKey(VIEWER_REG_PATH, true))
 	{
 		m_strMasterPath = reg.ReadString("gpsdo_fw_dn_master_path", "");
 		m_strSlavePath = reg.ReadString("gpsdo_fw_dn_slave_path", "");

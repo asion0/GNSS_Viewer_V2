@@ -15,6 +15,7 @@ public:
   { 
     RawMeasment,
     HostLog,
+    UbloxBinary,
   };
 	LPCSTR GetFilePath() { return m_filePath; }
   void SetMode(ConvertMode cm) { mode = cm; }

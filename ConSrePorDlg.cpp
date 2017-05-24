@@ -1,4 +1,4 @@
-// ConSrePorDlg.cpp : 實作檔
+// ConSrePorDlg.cpp
 //
 
 #include "stdafx.h"
@@ -30,22 +30,18 @@ UINT CigSrePorThread(LPVOID pParam)
 	messages[8]=checksum;
 	messages[9]=(U08)0x0d;
 	messages[10]=(U08)0x0a;	
-	//for(int i=0;i<10;i++)	_cprintf("%x ",messages[i]);
 	bool b = CGPSDlg::gpsDlg->SendToTarget(messages, 11, "Configure Serial Port successfully", true);	
 	if(b)
 	{
 		CGPSDlg::gpsDlg->SetBaudrate(baudrate);	
 	}
-//	CP->Nmeamessage();
 	CGPSDlg::gpsDlg->SetMode();	
 	CGPSDlg::gpsDlg->CreateGPSThread();	
 	g_setting.Save();
-//	AfxEndThread(0);
 	return 0;
 }
 
-// CConSrePorDlg 對話方塊
-
+// CConSrePorDlg
 IMPLEMENT_DYNAMIC(CConSrePorDlg, CDialog)
 CConSrePorDlg::CConSrePorDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CConSrePorDlg::IDD, pParent)
@@ -70,7 +66,7 @@ BEGIN_MESSAGE_MAP(CConSrePorDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CConSrePorDlg 訊息處理常式
+// CConSrePorDlg
 
 BOOL CConSrePorDlg::OnInitDialog()
 {
@@ -81,7 +77,7 @@ BOOL CConSrePorDlg::OnInitDialog()
 
   g_setting.InitBaudrateCombo(&m_baudrate);
 
-	if(!IS_DEBUG)
+	if(!IS_DEBUG && !SHOW_COM_SELECT)
 	{
 		GetDlgItem(IDC_CON_COMPORT_T)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_CON_COMPORT)->ShowWindow(SW_HIDE);
@@ -91,7 +87,6 @@ BOOL CConSrePorDlg::OnInitDialog()
 	m_attribute.SetCurSel(0);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CConSrePorDlg::OnBnClickedOk()

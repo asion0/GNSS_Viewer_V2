@@ -244,7 +244,13 @@ UINT CGPSDlg::GetSrecFromResource(int buad)
 		case EnternalLoader:
 			ASSERT(FALSE);
 			break;
+		case FileLoader:
+			ASSERT(FALSE);
+			break;
 		case EnternalLoaderInBinCmd:
+			ASSERT(FALSE);
+			break;
+		case FileLoaderInBinCmd:
 			ASSERT(FALSE);
 			break;
 		case ParallelDownloadType0:
@@ -348,8 +354,10 @@ bool CGPSDlg::FirmwareUpdate(const CString& strFwPath)
 				res = PlRomNoAlloc2(strFwPath);
 				break;
 			case EnternalLoader:
+			case FileLoader:
 			case GpsdoMasterSlave:
 			case EnternalLoaderInBinCmd:
+			case FileLoaderInBinCmd:
 			case InternalLoaderV8:
 			case ParallelDownloadType0:
 			case ParallelDownloadType1:
@@ -452,7 +460,9 @@ int CGPSDlg::SendRomBufferCustomerUpgrade(const U08* sData, int sDataSize, Binar
 			}
 
 			if( EnternalLoaderInBinCmd==m_DownloadMode || 
+				FileLoaderInBinCmd==m_DownloadMode || 
 				EnternalLoader==m_DownloadMode || 
+				FileLoader==m_DownloadMode || 
 				InternalLoaderV8==m_DownloadMode ||
 				InternalLoaderSpecial==m_DownloadMode )
 			{
@@ -655,7 +665,9 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, BinaryData &binData
 			}
 
 			if( EnternalLoaderInBinCmd==m_DownloadMode || 
+				FileLoaderInBinCmd==m_DownloadMode || 
 				EnternalLoader==m_DownloadMode || 
+				FileLoader==m_DownloadMode || 
 				InternalLoaderV8==m_DownloadMode ||
 				InternalLoaderSpecial==m_DownloadMode )
 			{
@@ -1028,22 +1040,28 @@ U08 CGPSDlg::PlRomNoAllocV8(const CString& prom_path)
 	{
 		U32 checkCode = 0;
 		CString strBinsizeCmd;
-		if(m_DownloadMode == InternalLoaderV8AddTag)
+		if(m_DownloadMode == InternalLoaderV8AddTag || downloadAddTag)
 		{
-			U32 tagAddress = 0xAAA56556;	//V8 tag address is 0xFCFFC ^ 0xAAAAAAAA
-			U32 tagValue = 0x5555AAAA;	//default tag is 0xFFFF ^ 0x55555555 (No Tag)
+      if(m_DownloadMode == InternalLoaderV8AddTag)
+      {
+			  tagAddress = 0xAAA56556;	//V8 tag address is 0xFCFFC ^ 0xAAAAAAAA
+			  tagValue = 0x5555AAAA;	//default tag is 0xFFFF ^ 0x55555555 (No Tag)
+      }
 			//U32 tagValue = 0x55555A54;	//Skytraq DR tag is 0x0F01 ^ 0x55555555
 			if(m_customerId==OlinkStar)
 			{
 				tagValue = 0x55555E54;	//OLinkStar tag is 0x0B01 ^ 0x55555555
 			}
-			else
+			else if(m_DownloadMode == InternalLoaderV8AddTag)
 			{
 				tagValue = 0x55555F54;	//Skytraq tag is 0x0A01 ^ 0x55555555
 			}
 			checkCode = promLen + mycheck + m_nDownloadBaudIdx + tagAddress + tagValue;
 			strBinsizeCmd.Format("BINSIZ2 = %d %d %u %u %u %u ", promLen, mycheck, m_nDownloadBaudIdx,
 									tagAddress, tagValue, checkCode);
+      downloadAddTag = FALSE;
+      tagAddress = 0;
+      tagValue = 0;
 		}
 		else
 		{
@@ -1204,7 +1222,7 @@ bool CGPSDlg::DownloadLoader()
 	char messages[100] = {0};
 	//U08 dummy[9] = {0xa0, 0xa1, 0x00, 0x02, 0x00, 0x00, 0x01, 0x0d, 0x0a};
 
-	if(m_DownloadMode != EnternalLoaderInBinCmd)
+	if(m_DownloadMode != EnternalLoaderInBinCmd && m_DownloadMode != FileLoaderInBinCmd)
 	{
 		GetLoaderDownloadCmd(messages, sizeof(messages));
 		
@@ -1242,7 +1260,7 @@ bool CGPSDlg::DownloadLoader()
 		msg[6] = (U08)m_nDownloadBufferIdx;
 		int len = SetMessage(msg, sizeof(msg));
 
-		bool b = SendToTarget(m_inputMsg, len, "Send upload loader successfully", true);
+		bool b = SendToTarget(m_inputMsg, len, "Send upload loader successfully", 6000);
 		//bool b = false;
 		if(!b)
 		{
@@ -1269,9 +1287,25 @@ bool CGPSDlg::DownloadLoader()
 	CString externalSrecFile;
 	theApp.CheckExternalSrec(externalSrecFile);
 
-	if(EnternalLoaderInBinCmd==m_DownloadMode || EnternalLoader==m_DownloadMode)
+	if(EnternalLoaderInBinCmd == m_DownloadMode || 
+     FileLoader == m_DownloadMode || FileLoaderInBinCmd == m_DownloadMode)
 	{
-		srec.ReadFromFile(externalSrecFile);
+    if(externalSrecFile.IsEmpty())
+    {
+      srec.ReadFromResource(IDR_V8_AT_SREC, "SREC");
+    }
+    else
+    {
+		  srec.ReadFromFile(externalSrecFile);
+      //if(FileLoader == m_DownloadMode)
+      //{
+      //  m_DownloadMode = EnternalLoader;
+      //}
+      //else if(FileLoaderInBinCmd == m_DownloadMode)
+      //{
+      //  m_DownloadMode = FileLoader;
+      //}
+    }
 	}
 	else
 	{
@@ -1357,7 +1391,9 @@ bool CGPSDlg::DownloadLoader()
 			Sleep(1000);
 			break;
 		case EnternalLoader:
+		case FileLoader:
 		case EnternalLoaderInBinCmd:
+		case FileLoaderInBinCmd:
 		case InternalLoaderV8:
 		case InternalLoaderV8AddTag:
 		case RomExternalDownload:
@@ -1451,7 +1487,7 @@ bool CGPSDlg::Download()
 	do 
 	{	//Download test loop
 		customerCrc = 0;
-		if(_CREATE_LICENSE_TAG_ && m_DownloadMode==InternalLoaderV8)
+		if((_CREATE_LICENSE_TAG_ && m_DownloadMode==InternalLoaderV8) || (m_DownloadMode == EnternalLoader))
 		{
 			m_DownloadMode = InternalLoaderV8AddTag;
 		}
@@ -1459,7 +1495,9 @@ bool CGPSDlg::Download()
 		U16 crcCode = 0;
 		BOOL hasAckVersion = FALSE;
 		m_nDefaultTimeout = 5000;
-		if(!DOWNLOAD_IMMEDIATELY && Ack == QuerySoftwareCrcSystemCode(Return, &crcCode))
+		if(m_DownloadMode != FileLoader && 
+       !DOWNLOAD_IMMEDIATELY && 
+       Ack == QuerySoftwareCrcSystemCode(Return, &crcCode))
 		{
 			hasAckVersion = TRUE;
 		}
@@ -1474,7 +1512,7 @@ bool CGPSDlg::Download()
 				customerCrc = crcCode;
 			}
 		}
-		else if(m_DownloadMode == InternalLoaderV8 && crcCode==0xe463)
+		else if(m_DownloadMode == InternalLoaderV8 && (crcCode == 0xe463 /*|| crcCode == 0x74cf*/))
 		{	
       if(!g_setting.downloadRomInternal)
       { //V8 ROM Code A must use external loader.
@@ -1511,6 +1549,7 @@ bool CGPSDlg::Download()
 		switch(m_DownloadMode)
 		{
 			case EnternalLoader:
+			case FileLoader:
 			case InternalLoaderV6Gps:
 			case InternalLoaderV6Gnss:
 			case InternalLoaderV6Gg12a:
@@ -1524,6 +1563,7 @@ bool CGPSDlg::Download()
 			case RomExternalDownload:
 			case InternalLoaderSpecial:
 				BoostBaudrate(FALSE);
+			case FileLoaderInBinCmd:
 			case EnternalLoaderInBinCmd:
 			{
 				//1. Boost baud rate 2. Download Loader 
@@ -1616,7 +1656,6 @@ bool CGPSDlg::Download()
 				m_psoftImgDlDlg = new CSoftImDwDlg;	
 				AfxBeginThread(ShowDownloadProgressThread, 0); 
 			}
-	//		Sleep(5000);
 			if(g_setting.delayBeforeBinsize)
 			{
 				Sleep(g_setting.delayBeforeBinsize);
@@ -1684,12 +1723,6 @@ bool CGPSDlg::Download()
 	{
 		return isSuccessful;
 	}
-	//if(m_gpsdoInProgress)
-	//{
-	//	GpsdoLeaveDownload(Display, NULL);
-	//	this->SetBaudrate(5);
-	//	m_gpsdoInProgress = false;
-	//}
 
 	SetMode();
 	m_firstDataIn = false;
@@ -1712,9 +1745,6 @@ bool CGPSDlg::CheckTagType()
 	m_regAddress = t;
 
 	if( (data >> 16) == 0x901)
-	//if( (data >> 16) == 0xA015 ||
-	//	(data >> 16) == 0xA006 ||
-	//	(data >> 16) == 0xA016 )
 	{
 		suc = true;
 	}
@@ -1751,20 +1781,23 @@ bool CGPSDlg::Download2()
 	}
 	customerCrc = 0;
 
-	U16 crcCode = 0;
-	BOOL hasAckVersion = FALSE;
-	m_nDefaultTimeout = 5000;
-	if(Ack == QuerySoftwareCrcSystemCode(Return, &crcCode))
-	{
-		hasAckVersion = TRUE;
-	}
-	m_nDefaultTimeout = g_setting.defaultTimeout;
+  if(UPGRADE_CRC != 0xFFFFFFFF)
+  {
+	  U16 crcCode = 0;
+	  BOOL hasAckVersion = FALSE;
+	  m_nDefaultTimeout = 5000;
+	  if(Ack == QuerySoftwareCrcSystemCode(Return, &crcCode))
+	  {
+		  hasAckVersion = TRUE;
+	  }
+	  m_nDefaultTimeout = g_setting.defaultTimeout;
 
-	if(UPGRADE_CRC!=0xFFFFFFFF && (!hasAckVersion || (crcCode!=UPGRADE_CRC && crcCode!=0xb02c) ) )
-	{
-		::AfxMessageBox("Can't support upgrade!");
-		return false;
-	}
+	  if(UPGRADE_CRC!=0xFFFFFFFF && (!hasAckVersion || (crcCode!=UPGRADE_CRC && crcCode!=0xb02c) ) )
+	  {
+		  ::AfxMessageBox("Can't support upgrade!");
+		  return false;
+	  }
+  }
 
 	bool checkOK = false;
 	if(SHOW_PATCH_MENU)
@@ -1774,7 +1807,7 @@ bool CGPSDlg::Download2()
 
 	if(!checkOK)
 	{
-		::AfxMessageBox("Device does not support patch!");
+		::AfxMessageBox("This device doesn't support patch!");
 		patchLog.Format("PatchResult: %08X%08X", patchData, patchStatus);
 		add_msgtolist(patchLog);
 		AfxMessageBox(patchLog);
@@ -1816,15 +1849,13 @@ bool CGPSDlg::Download2()
 	else
 	{
 		U08 msg[9] = {0};
-		int cmdSize = 0;	
-
+		int cmdSize = 6;
 		msg[0] = 0x0B;
 		msg[1] = (U08)m_nDownloadBaudIdx;
 		msg[2] = (U08)0;
 		msg[3] = (U08)0;
 		msg[4] = (U08)0;
 		msg[5] = (U08)m_nDownloadBufferIdx;
-		cmdSize = 6;
 
 		int len = SetMessage(msg, cmdSize);
 		if(!SendToTarget(CGPSDlg::m_inputMsg, len, "Loader start...", true))
@@ -1914,7 +1945,7 @@ bool CGPSDlg::Download3()
 {
 	m_DownloadMode = InternalLoaderV8;
 	m_nDownloadBaudIdx = ((CComboBox*)GetDlgItem(IDC_DL_BAUDRATE))->GetCurSel();
-	m_nDownloadBaudIdx += 5;	//Download Baudrate start in 115200
+	//m_nDownloadBaudIdx += 5;	//Download Baudrate start in 115200
 	m_gpsdoInProgress = true;
 	bool isSuccessful = Download();
 

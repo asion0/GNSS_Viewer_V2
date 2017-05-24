@@ -50,7 +50,7 @@ BOOL CHostBaseDownloadDlg::OnInitDialog()
 
 	CRegistry reg;
 	reg.SetRootKey(HKEY_CURRENT_USER);
-	if(reg.SetKey("Software\\GNSSViewer\\GPS", TRUE))
+	if(reg.SetKey(VIEWER_REG_PATH, TRUE))
 	{
 		m_nBaudrateIdx = reg.ReadInt("hb_baudrate", g_setting.boostBaudIndex);
 		m_strPath = reg.ReadString("hb_firmware", "");
@@ -82,7 +82,7 @@ void CHostBaseDownloadDlg::GetValue()
 
 	CRegistry reg;
 	reg.SetRootKey(HKEY_CURRENT_USER);
-	if(reg.SetKey("Software\\GNSSViewer\\GPS", false))
+	if(reg.SetKey(VIEWER_REG_PATH, false))
 	{
 		reg.WriteInt("hb_baudrate", m_nBaudrateIdx);
 		reg.WriteString("hb_firmware", m_strPath);

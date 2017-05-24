@@ -1,4 +1,4 @@
-// ExternalSrecDlg.cpp : 實作檔
+// ExternalSrecDlg.cpp
 //
 
 #include "stdafx.h"
@@ -7,13 +7,13 @@
 #include "GPSDlg.h"
 
 #define TIMER_ID 1
-// CExternalSrecDlg 對話方塊
+// CExternalSrecDlg 
 IMPLEMENT_DYNAMIC(CExternalSrecDlg, CDialog)
 
 CExternalSrecDlg::CExternalSrecDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CExternalSrecDlg::IDD, pParent)
 {
-
+  m_isV6 = false;
 }
 
 CExternalSrecDlg::~CExternalSrecDlg()
@@ -33,14 +33,14 @@ BEGIN_MESSAGE_MAP(CExternalSrecDlg, CDialog)
 	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
-// CExternalSrecDlg 訊息處理常式
+// CExternalSrecDlg
 BOOL CExternalSrecDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
 	CRegistry reg;
 	reg.SetRootKey(HKEY_CURRENT_USER);
-	if(reg.SetKey("Software\\GNSSViewer\\GPS",true))
+	if(reg.SetKey(VIEWER_REG_PATH,true))
 	{
 		CString str;
 		str = reg.ReadString("extern_srec_path", "");
@@ -52,7 +52,6 @@ BOOL CExternalSrecDlg::OnInitDialog()
 	}
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX 屬性頁應傳回 FALSE
 }
 
 void CExternalSrecDlg::OnBnClickedBrowse()
@@ -66,34 +65,13 @@ void CExternalSrecDlg::OnBnClickedBrowse()
 
 		CRegistry reg;
 		reg.SetRootKey(HKEY_CURRENT_USER);
-		if(reg.SetKey("Software\\GNSSViewer\\GPS", false))
+		if(reg.SetKey(VIEWER_REG_PATH, false))
 		{
 			reg.WriteString("extern_srec_path", strPath);
 		}
 	}
 }
-/*
-CWinThread* g_srecThread = NULL;
-bool g_stopThread = false;
-UINT ConnectSrec(LPVOID pParam)
-{	
-	U08 buffer[1024] = {0};
-	CExternalSrecDlg* pDlg = (CExternalSrecDlg*)pParam;
-	while(!g_stopThread)
-	{
-		DWORD length = CGPSDlg::gpsDlg->m_serial->GetBinary(buffer, sizeof(buffer));
-		if(ReadOK(length))
-		{
-			//Doesn't save skytraq binary data
-			if(length > 2 && buffer[0] != 0xA0 && buffer[1] != 0xA1)
-			{
-				pDlg->AddMsgToList((LPCSTR)buffer);
-			}
-		}
-	}
-	return 0;
-}
-*/
+
 void CExternalSrecDlg::OnBnClickedGo()
 {
 	CRegistry reg;
@@ -104,23 +82,19 @@ void CExternalSrecDlg::OnBnClickedGo()
 	if(!str.IsEmpty())
 	{
 		reg.SetRootKey(HKEY_CURRENT_USER);
-		if(reg.SetKey("Software\\GNSSViewer\\GPS", false))
+		if(reg.SetKey(VIEWER_REG_PATH, false))
 		{
 			reg.WriteString("extern_srec_cmd", str);
 		}
 	}
-
+  m_isV6 = ((CButton*)GetDlgItem(IDC_V6))->GetCheck() != 0;
 	CString externalSrecFile;
 	GetDlgItem(IDC_PATH)->GetWindowText(externalSrecFile);
 
 	if(!DownloadLoader(externalSrecFile))
 	{
-		//AfxMessageBox("");				
 		return;
 	}
-	//g_stopThread = false;
-	//g_srecThread = ::AfxBeginThread(ConnectSrec, this);	
-	//SetTimer(TIMER_ID, 100, NULL);
 	OnOK();
 }
 
@@ -185,24 +159,25 @@ bool CExternalSrecDlg::DownloadLoader(CString externalSrecFile)
 		sData += packetSize;
 		totalByte += packetSize;//deduct by end of string character in sending
 	}			
-
+  
+  int endTimes = (m_isV6) ? 2 : 1;
 	memset(buff, 0, sizeof(buff));
-	switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, TIME_OUT_MS, NULL))
-	{
-	case wlf_end:
-		//sprintf_s(messages, sizeof(messages), "The total bytes transferred = %d", totalByte);
-		//AfxMessageBox(messages);				
-		//add_msgtolist(messages);	
-		break;
-	case wlf_timeout:
-		AfxMessageBox("Timeout!");				
-		return false;
-		break;
-	default:
-		//Utility::LogFatal(__FUNCTION__, messages, __LINE__);
-		break;
-	}	
-
+  int exit = 0;
+  do
+  {
+	  switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, TIME_OUT_MS, NULL))
+	  {
+	  case wlf_timeout:
+		  AfxMessageBox("Timeout!");				
+		  return false;
+		  break;
+    case wlf_end:
+      ++exit;
+      break;
+	  default:
+		  break;
+	  }	
+  } while (exit < endTimes);
 	GetDlgItem(IDC_CMD)->GetWindowText(messages, sizeof(messages));
 	CGPSDlg::gpsDlg->m_serial->SendData((U08*)messages, (U16)strlen(messages) + 1);	
 

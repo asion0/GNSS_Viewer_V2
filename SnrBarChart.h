@@ -45,8 +45,8 @@ protected:
 	virtual void ShowBoxChart(CDC *dc);
 	virtual void DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGSA* gsa, 
 				GPGGA* gga, Satellite* sate);
-	void DrawSnrInRange(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, 
-				GPGSA* gsa, GPGGA* gga, Satellite* sate, int start, int end);
+	//void DrawSnrInRange(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, 
+	//			GPGSA* gsa, GPGGA* gga, Satellite* sate, int start, int end);
 
 	void RefreshBarChart();
 	void CreateBarChart(CDC *dc);
@@ -82,11 +82,11 @@ protected:
 };
 
 
-class CSnrBarChartGpsGlonass : public CSnrBarChart
+class CSnrBarChartDual : public CSnrBarChart
 {
 public:
-	CSnrBarChartGpsGlonass(void);
-	~CSnrBarChartGpsGlonass(void);
+	CSnrBarChartDual();
+	~CSnrBarChartDual(void);
 
 	void SetGsvData2(GPGSV* gsv) { gsvData2 = gsv; };
 	void SetGsaData2(GPGSA* gsa) { gsaData2 = gsa; };
@@ -111,11 +111,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-class CSnrBarChartBeidouL2 : public CSnrBarChart
+class CSnrBarChartL2 : public CSnrBarChart
 {
 public:
-	CSnrBarChartBeidouL2(void);
-	~CSnrBarChartBeidouL2(void);
+	CSnrBarChartL2();
+	CSnrBarChartL2(int type);
+	~CSnrBarChartL2(void);
 
 	void SetGsvData2(GPGSV* gsv) { gsvData2 = gsv; };
 	void SetGsaData2(GPGSA* gsa) { gsaData2 = gsa; };
@@ -124,6 +125,7 @@ public:
 	void SetUISetting2(UISetting* p) { uiSetting2 = p; }
 
 protected:
+  void Init(int t);
 	virtual void DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGSA* gsa, 
 				GPGGA* gga, Satellite* sate);
   int GetGsv2Snr(int id);

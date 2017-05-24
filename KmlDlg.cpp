@@ -27,88 +27,89 @@ CKmlDlg::~CKmlDlg()
 
 void CKmlDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_EDIT1, m_directory);
-	DDX_Control(pDX, IDC_EDIT2, m_alltxt);
-	DDX_Control(pDX, IDC_CHECK76, m_selectall);
-	DDX_Control(pDX, IDC_CHECK78, m_hselectall);
-	DDX_Control(pDX, IDC_CHECK1, m_check[0]);
-	DDX_Control(pDX, IDC_CHECK2, m_check[1]);
-	DDX_Control(pDX, IDC_CHECK3, m_check[2]);
-	DDX_Control(pDX, IDC_CHECK4, m_check[3]);
-	DDX_Control(pDX, IDC_CHECK5, m_check[4]);
-	DDX_Control(pDX, IDC_CHECK6, m_check[5]);
-	DDX_Control(pDX, IDC_CHECK7, m_check[6]);
-	DDX_Control(pDX, IDC_CHECK8, m_check[7]);
-	DDX_Control(pDX, IDC_CHECK9, m_check[8]);
-	DDX_Control(pDX, IDC_CHECK10, m_check[9]);	
-	DDX_Control(pDX, IDC_CHECK11, m_check[10]);	
-	DDX_Control(pDX, IDC_CHECK12, m_check[11]);	
-	DDX_Control(pDX, IDC_CHECK13, m_check[12]);	
-	DDX_Control(pDX, IDC_CHECK14, m_check[13]);
-	DDX_Control(pDX, IDC_CHECK15, m_check[14]);	
-	DDX_Control(pDX, IDC_CHECK16, m_check[15]);	
-	DDX_Control(pDX, IDC_CHECK17, m_check[16]);	
-	DDX_Control(pDX, IDC_CHECK18, m_check[17]);	
-	DDX_Control(pDX, IDC_CHECK19, m_check[18]);	
-	DDX_Control(pDX, IDC_CHECK20, m_check[19]);	
-	DDX_Control(pDX, IDC_CHECK21, m_check[20]);	
-	DDX_Control(pDX, IDC_CHECK22, m_check[21]);	
-	DDX_Control(pDX, IDC_CHECK23, m_check[22]);	
-	DDX_Control(pDX, IDC_CHECK24, m_check[23]);	
-	DDX_Control(pDX, IDC_CHECK25, m_check[24]);	
-	DDX_Control(pDX, IDC_CHECK26, m_check[25]);	
-	DDX_Control(pDX, IDC_CHECK27, m_check[26]);	
-	DDX_Control(pDX, IDC_CHECK28, m_check[27]);	
-	DDX_Control(pDX, IDC_CHECK29, m_check[28]);	
-	DDX_Control(pDX, IDC_CHECK30, m_check[29]);	
-	DDX_Control(pDX, IDC_CHECK31, m_check[30]);	
-	DDX_Control(pDX, IDC_CHECK32, m_check[31]);	
-	DDX_Control(pDX, IDC_CHECK33, m_check[32]);	
-	DDX_Control(pDX, IDC_CHECK34, m_check[33]);	
-	DDX_Control(pDX, IDC_CHECK35, m_check[34]);	
-	DDX_Control(pDX, IDC_CHECK36, m_check[35]);	
-	DDX_Control(pDX, IDC_CHECK37, m_check[36]);	
-	DDX_Control(pDX, IDC_CHECK38, m_check[37]);	
-	DDX_Control(pDX, IDC_CHECK39, m_check[38]);	
-	DDX_Control(pDX, IDC_CHECK40, m_check[39]);	
-	DDX_Control(pDX, IDC_CHECK41, m_check[40]);	
-	DDX_Control(pDX, IDC_CHECK42, m_check[41]);	
-	DDX_Control(pDX, IDC_CHECK43, m_check[42]);	
-	DDX_Control(pDX, IDC_CHECK44, m_check[43]);	
-	DDX_Control(pDX, IDC_CHECK45, m_check[44]);	
-	DDX_Control(pDX, IDC_CHECK46, m_check[45]);	
-	DDX_Control(pDX, IDC_CHECK47, m_check[46]);	
-	DDX_Control(pDX, IDC_CHECK48, m_check[47]);	
-	DDX_Control(pDX, IDC_CHECK49, m_check[48]);	
-	DDX_Control(pDX, IDC_CHECK50, m_check[49]);	
-	DDX_Control(pDX, IDC_CHECK51, m_check[50]);	
-	DDX_Control(pDX, IDC_CHECK52, m_check[51]);	
-	DDX_Control(pDX, IDC_CHECK53, m_check[52]);	
-	DDX_Control(pDX, IDC_CHECK54, m_check[53]);	
-	DDX_Control(pDX, IDC_CHECK55, m_check[54]);	
-	DDX_Control(pDX, IDC_CHECK56, m_check[55]);	
-	DDX_Control(pDX, IDC_CHECK57, m_check[56]);	
-	DDX_Control(pDX, IDC_CHECK58, m_check[57]);	
-	DDX_Control(pDX, IDC_CHECK59, m_check[58]);	
-	DDX_Control(pDX, IDC_CHECK60, m_check[59]);	
-	DDX_Control(pDX, IDC_CHECK61, m_check[60]);
-	DDX_Control(pDX, IDC_CHECK62, m_check[61]);	
-	DDX_Control(pDX, IDC_CHECK63, m_check[62]);	
-	DDX_Control(pDX, IDC_CHECK64, m_check[63]);	
-	DDX_Control(pDX, IDC_CHECK65, m_check[64]);	
-	DDX_Control(pDX, IDC_CHECK66, m_check[65]);	
-	DDX_Control(pDX, IDC_CHECK67, m_check[66]);	
-	DDX_Control(pDX, IDC_CHECK68, m_check[67]);	
-	DDX_Control(pDX, IDC_CHECK69, m_check[68]);	
-	DDX_Control(pDX, IDC_CHECK70, m_check[69]);
-	DDX_Control(pDX, IDC_CHECK71, m_check[70]);	
-	DDX_Control(pDX, IDC_CHECK72, m_check[71]);	
-	DDX_Control(pDX, IDC_CHECK73, m_check[72]);	
-	DDX_Control(pDX, IDC_CHECK74, m_check[73]);
-	DDX_Control(pDX, IDC_CHECK75, m_check[74]);	
-	DDX_Control(pDX, IDC_COMBO1, m_color);
-	DDX_Control(pDX, IDC_PROGRESS1, m_progress);
+  CDialog::DoDataExchange(pDX);
+  DDX_Control(pDX, IDC_EDIT1, m_directory);
+  DDX_Control(pDX, IDC_EDIT2, m_alltxt);
+  DDX_Control(pDX, IDC_CHECK76, m_selectall);
+  DDX_Control(pDX, IDC_CHECK78, m_hselectall);
+  DDX_Control(pDX, IDC_CHECK1, m_check[0]);
+  DDX_Control(pDX, IDC_CHECK2, m_check[1]);
+  DDX_Control(pDX, IDC_CHECK3, m_check[2]);
+  DDX_Control(pDX, IDC_CHECK4, m_check[3]);
+  DDX_Control(pDX, IDC_CHECK5, m_check[4]);
+  DDX_Control(pDX, IDC_CHECK6, m_check[5]);
+  DDX_Control(pDX, IDC_CHECK7, m_check[6]);
+  DDX_Control(pDX, IDC_CHECK8, m_check[7]);
+  DDX_Control(pDX, IDC_CHECK9, m_check[8]);
+  DDX_Control(pDX, IDC_CHECK10, m_check[9]);	
+  DDX_Control(pDX, IDC_CHECK11, m_check[10]);	
+  DDX_Control(pDX, IDC_CHECK12, m_check[11]);	
+  DDX_Control(pDX, IDC_CHECK13, m_check[12]);	
+  DDX_Control(pDX, IDC_CHECK14, m_check[13]);
+  DDX_Control(pDX, IDC_CHECK15, m_check[14]);	
+  DDX_Control(pDX, IDC_CHECK16, m_check[15]);	
+  DDX_Control(pDX, IDC_CHECK17, m_check[16]);	
+  DDX_Control(pDX, IDC_CHECK18, m_check[17]);	
+  DDX_Control(pDX, IDC_CHECK19, m_check[18]);	
+  DDX_Control(pDX, IDC_CHECK20, m_check[19]);	
+  DDX_Control(pDX, IDC_CHECK21, m_check[20]);	
+  DDX_Control(pDX, IDC_CHECK22, m_check[21]);	
+  DDX_Control(pDX, IDC_CHECK23, m_check[22]);	
+  DDX_Control(pDX, IDC_CHECK24, m_check[23]);	
+  DDX_Control(pDX, IDC_CHECK25, m_check[24]);	
+  DDX_Control(pDX, IDC_CHECK26, m_check[25]);	
+  DDX_Control(pDX, IDC_CHECK27, m_check[26]);	
+  DDX_Control(pDX, IDC_CHECK28, m_check[27]);	
+  DDX_Control(pDX, IDC_CHECK29, m_check[28]);	
+  DDX_Control(pDX, IDC_CHECK30, m_check[29]);	
+  DDX_Control(pDX, IDC_CHECK31, m_check[30]);	
+  DDX_Control(pDX, IDC_CHECK32, m_check[31]);	
+  DDX_Control(pDX, IDC_CHECK33, m_check[32]);	
+  DDX_Control(pDX, IDC_CHECK34, m_check[33]);	
+  DDX_Control(pDX, IDC_CHECK35, m_check[34]);	
+  DDX_Control(pDX, IDC_CHECK36, m_check[35]);	
+  DDX_Control(pDX, IDC_CHECK37, m_check[36]);	
+  DDX_Control(pDX, IDC_CHECK38, m_check[37]);	
+  DDX_Control(pDX, IDC_CHECK39, m_check[38]);	
+  DDX_Control(pDX, IDC_CHECK40, m_check[39]);	
+  DDX_Control(pDX, IDC_CHECK41, m_check[40]);	
+  DDX_Control(pDX, IDC_CHECK42, m_check[41]);	
+  DDX_Control(pDX, IDC_CHECK43, m_check[42]);	
+  DDX_Control(pDX, IDC_CHECK44, m_check[43]);	
+  DDX_Control(pDX, IDC_CHECK45, m_check[44]);	
+  DDX_Control(pDX, IDC_CHECK46, m_check[45]);	
+  DDX_Control(pDX, IDC_CHECK47, m_check[46]);	
+  DDX_Control(pDX, IDC_CHECK48, m_check[47]);	
+  DDX_Control(pDX, IDC_CHECK49, m_check[48]);	
+  DDX_Control(pDX, IDC_CHECK50, m_check[49]);	
+  DDX_Control(pDX, IDC_CHECK51, m_check[50]);	
+  DDX_Control(pDX, IDC_CHECK52, m_check[51]);	
+  DDX_Control(pDX, IDC_CHECK53, m_check[52]);	
+  DDX_Control(pDX, IDC_CHECK54, m_check[53]);	
+  DDX_Control(pDX, IDC_CHECK55, m_check[54]);	
+  DDX_Control(pDX, IDC_CHECK56, m_check[55]);	
+  DDX_Control(pDX, IDC_CHECK57, m_check[56]);	
+  DDX_Control(pDX, IDC_CHECK58, m_check[57]);	
+  DDX_Control(pDX, IDC_CHECK59, m_check[58]);	
+  DDX_Control(pDX, IDC_CHECK60, m_check[59]);	
+  DDX_Control(pDX, IDC_CHECK61, m_check[60]);
+  DDX_Control(pDX, IDC_CHECK62, m_check[61]);	
+  DDX_Control(pDX, IDC_CHECK63, m_check[62]);	
+  DDX_Control(pDX, IDC_CHECK64, m_check[63]);	
+  DDX_Control(pDX, IDC_CHECK65, m_check[64]);	
+  DDX_Control(pDX, IDC_CHECK66, m_check[65]);	
+  DDX_Control(pDX, IDC_CHECK67, m_check[66]);	
+  DDX_Control(pDX, IDC_CHECK68, m_check[67]);	
+  DDX_Control(pDX, IDC_CHECK69, m_check[68]);	
+  DDX_Control(pDX, IDC_CHECK70, m_check[69]);
+  DDX_Control(pDX, IDC_CHECK71, m_check[70]);	
+  DDX_Control(pDX, IDC_CHECK72, m_check[71]);	
+  DDX_Control(pDX, IDC_CHECK73, m_check[72]);	
+  DDX_Control(pDX, IDC_CHECK74, m_check[73]);
+  DDX_Control(pDX, IDC_CHECK75, m_check[74]);	
+  DDX_Control(pDX, IDC_COMBO1, m_color);
+  DDX_Control(pDX, IDC_PROGRESS1, m_progress);
+  DDX_Control(pDX, IDC_FILE_LIST, m_fileList);
 }
 
 
@@ -117,8 +118,11 @@ BEGIN_MESSAGE_MAP(CKmlDlg, CDialog)
 	ON_BN_CLICKED(IDOK, OnBnClickedOk)
 	ON_BN_CLICKED(IDC_CHECK76, OnBnClickedCheck76)
 	ON_BN_CLICKED(IDC_CHECK78, OnBnClickedCheck78)
+	ON_BN_CLICKED(IDC_CHECK_ALL, OnBnClickedCheckAll)
 	ON_WM_LBUTTONDOWN()
 	ON_MESSAGE(UWM_PROGRESS, OnProgress)
+  ON_LBN_SELCHANGE(IDC_FILE_LIST, &CKmlDlg::OnLbnSelchangeFileList)
+  ON_CLBN_CHKCHANGE(IDC_FILE_LIST, &CKmlDlg::OnLbnChkchangeFileList)
 END_MESSAGE_MAP()
 
 // CKmlDlg 訊息處理常式
@@ -135,6 +139,14 @@ BOOL CKmlDlg::OnInitDialog()
 
 	isConvertFinish = false;
 	m_color.SetCurSel(0);
+  if(KML_USE_CHECKLISTBOX)
+  {
+    GetDlgItem(IDC_GROUP)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_PROMPT)->ShowWindow(SW_SHOW);
+    GetDlgItem(IDC_CHECK_ALL)->ShowWindow(SW_SHOW);
+    m_selectall.ShowWindow(SW_HIDE);
+    m_hselectall.ShowWindow(SW_HIDE);
+  }
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
@@ -173,45 +185,106 @@ UINT ContinueToConvert(LPVOID pParam)
 void CKmlDlg::OnBnClickedBplayer()
 {
 	CString fileName;
-
 	CFileDialog dlgFile(true, _T("*.txt"), NULL, OFN_FILEMUSTEXIST | OFN_HIDEREADONLY, _T("*.txt|*.txt||"), this);
 
-//	dlgFile.GetOFN().lpstrFile = fileName.GetBuffer(MyMaxPath);
-//	dlgFile.GetOFN().nMaxFile = MyMaxPath;	
 	INT_PTR nResult = dlgFile.DoModal();
-//	fileName.ReleaseBuffer();
-
 	if(nResult != IDOK)
 	{
 		return;
 	}
+  
 	fileName = dlgFile.GetPathName();
-
 	m_directory.SetWindowText(fileName);
 	sPath = Utility::GetFilePath(fileName) + "\\";
-
-	for(int i=0;i<NumOfCheckBox;i++)
+	for(int i = 0; i < NumOfCheckBox; ++i)
 	{
-		m_check[i].SetCheck(0);
+		m_check[i].SetCheck(BST_UNCHECKED);
 	}
 
-	int s = m_selectall.GetCheck();
-	if(m_selectall.GetCheck() == BST_UNCHECKED)
-		GetDatFile();
-	else if(m_selectall.GetCheck() == BST_CHECKED)
-		GetAllDatFile();
-
-	NoOfFile = 0;
-	m_hselectall.SetCheck(BST_CHECKED);
+  GetDataFiles(m_selectall.GetCheck() == BST_CHECKED);
+	//NoOfFile = 0;
+  if(KML_USE_CHECKLISTBOX)
+  {
+    ((CButton*)GetDlgItem(IDC_CHECK_ALL))->SetCheck(BST_CHECKED);
+  }
+  else
+  {
+    m_hselectall.SetCheck(BST_CHECKED);
+  }
 }
 
+void CKmlDlg::GetDataFiles(BOOL autoChecked)
+{
+    CFileFind finder;
+    CString sFilterName = sPath + "*.*";
+    int num = 0;
+    BOOL bExist = finder.FindFile(sFilterName);
+    while (bExist) {
+        bExist = finder.FindNextFile(); 
+        if(finder.IsDirectory())
+        {
+          continue;
+        }
+
+        CString ext = Utility::GetFileExt(finder.GetFileName());
+        if(ext != "txt" && ext != "out")
+        {
+          continue;
+        }
+        FileName[num] = finder.GetFileName();
+			  FilePath[num] = sPath + finder.GetFileName();
+        if(autoChecked == FALSE && num < NumOfCheckBox)
+        {
+          if(KML_USE_CHECKLISTBOX)
+          {
+            m_fileList.AddString(FileName[num]);
+            m_fileList.SetCheck(num, BST_CHECKED);
+          }
+          else
+          {
+            m_check[num].SetWindowText(FileName[num]);
+            m_check[num].ShowWindow(SW_SHOW);
+            m_check[num].SetCheck(BST_CHECKED);	
+          }
+        }
+        ++num;
+    }
+    finder.Close();
+	  NumOfFile = num + 1;
+
+    if(!KML_USE_CHECKLISTBOX)
+    {
+      if(autoChecked)
+      {
+	      CString msg, txt;
+        msg.Format("Total (#%d) output files selected.\r\n\r\n", NumOfFile);
+
+	      for(int i = 0; i < NumOfFile; ++i)
+	      {		
+		      int x = i%10;
+          txt.Format("%s%s", FileName[i], (i != 0 && (i % 10) == 0) ? " \r\n" : " ");
+  	      msg += txt;
+	      }
+	      m_alltxt.SetWindowText(msg);
+      }
+      else
+      {
+	      for(int i = NumOfFile; i < NumOfCheckBox; ++i)
+        {
+          m_check[i].ShowWindow(SW_HIDE);
+        }
+      }
+    }
+}
+/*
 void CKmlDlg::GetDatFile()
 {
 	for(int i=0;i<NumOfCheckBox;i++)
 	{
 		m_check[i].ShowWindow(1);
 	}
-	num=0;
+	
+  int num = 0;
 //	CString sFilterName = sPath + sPathName; // 完整的路徑以及可用 "?" 或 "*" 表示的檔案名稱, 例如 "*.*" 表示所有檔案
 	CString sFilterName = sPath+"*.txt"; 
 	
@@ -252,7 +325,7 @@ void CKmlDlg::GetDatFile()
 void CKmlDlg::GetAllDatFile()
 {
 	char msg[300];
-	num=0;
+	int num = 0;
 //	CString sFilterName = sPath + sPathName; // 完整的路徑以及可用 "?" 或 "*" 表示的檔案名稱, 例如 "*.*" 表示所有檔案
 	CString sFilterName = sPath+"*.txt"; 	
 	HANDLE hFind = NULL;
@@ -291,14 +364,14 @@ void CKmlDlg::GetAllDatFile()
 	}
 	m_alltxt.SetWindowText(MSG);
 }
-
+*/
 void CKmlDlg::OnBnClickedOk()
 {
 	memset(&msg_gpgga, 0, sizeof(GPGGA));
 	memset(&msg_gprmc, 0, sizeof(GPRMC));
 	isConvertFinish = false;
 
-	hReadEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+  hReadEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
 	if(!ResetEvent(hReadEvent))
 	{
 		DWORD error = GetLastError();
@@ -308,39 +381,72 @@ void CKmlDlg::OnBnClickedOk()
 	m_directory.GetWindowText(fileName);
 	if(fileName.IsEmpty())
 	{
-		AfxMessageBox("您尚未選擇任何txt檔", MB_YESNOCANCEL | MB_ICONQUESTION);		
+	  AfxMessageBox("您尚未選擇任何檔案", MB_YESNOCANCEL | MB_ICONQUESTION);
+    return;
 	}
 
-	if(m_selectall.GetCheck() == BST_UNCHECKED)
-	{
-        int numbers = 0;
-		for(int i=0; i<NumOfCheckBox; ++i)
-		{
-			if(m_check[i].GetCheck() == BST_CHECKED)
-			{
-				FileName[numbers] = FileName[i];
-				FilePath[numbers] = FilePath[i];
-				numbers++;
-			}
-		}
-		NumOfFile = numbers;
-	}
+  if(KML_USE_CHECKLISTBOX)
+  {
+    int num = 0;
+    for(int i = 0; i < m_fileList.GetCount(); ++i)
+    {
+      if(m_fileList.GetCheck(i) == BST_CHECKED)
+      {
+		    FileName[num] = FileName[i];
+			  FilePath[num] = FilePath[i];
+			  ++num;
+      }
+    }
+		NumOfFile = num;
+    for(int i = m_fileList.GetCount() - 1; i >= 0; --i)
+    {
+      if(m_fileList.GetCheck(i) == BST_UNCHECKED)
+      {
+        m_fileList.DeleteString(i);
+      }
+      else
+      {
+        m_fileList.SetCheck(i, BST_UNCHECKED);
+      }
+    }
+    m_fileList.SetCurSel(-1);
+  }
+  else
+  {
+	  if(m_selectall.GetCheck() == BST_UNCHECKED)
+	  {
+      int numbers = 0;
+		  for(int i=0; i<NumOfCheckBox; ++i)
+		  {
+			  if(m_check[i].GetCheck() == BST_CHECKED)
+			  {
+				  FileName[numbers] = FileName[i];
+				  FilePath[numbers] = FilePath[i];
+				  numbers++;
+			  }
+		  }
+		  NumOfFile = numbers;
+    }
+  }
 
 	if(!NumOfFile) 
 	{
 		return;
 	}
 
-	for(int i=0; i<NumOfCheckBox; ++i) 
-	{
-		m_check[i].SetCheck(BST_UNCHECKED);	
-		m_check[i].SetWindowText(FileName[i]);
-	}
+  if(!KML_USE_CHECKLISTBOX)
+  {
+	  for(int i=0; i<NumOfCheckBox; ++i) 
+	  {
+		  m_check[i].SetCheck(BST_UNCHECKED);	
+		  m_check[i].SetWindowText(FileName[i]);
+	  }
 
-	for(int i=NumOfFile; i<NumOfCheckBox; ++i)
-	{
-		m_check[i].ShowWindow(SW_HIDE);
-	}
+	  for(int i=NumOfFile; i<NumOfCheckBox; ++i)
+	  {
+		  m_check[i].ShowWindow(SW_HIDE);
+	  }
+  }
 	AfxBeginThread(ConvertToKml, 0);	
 }
 
@@ -354,7 +460,12 @@ void CKmlDlg::convert_all_file()
 		CFileException ef;
 		CFile f;
 		try
-		{		        
+		{
+      if(KML_USE_CHECKLISTBOX)
+      {
+        m_fileList.SetCurSel(i);
+      }
+
 			if(!f.Open(FilePath[i], CFile::modeRead,&ef))
 			{
 				ef.ReportError();
@@ -369,8 +480,18 @@ void CKmlDlg::convert_all_file()
 			f.Close();
 
 			temp.Format("%s OK", FileName[i]);
-			m_check[i].SetWindowText(temp);
-			m_check[i].SetCheck(BST_CHECKED);	
+      if(KML_USE_CHECKLISTBOX)
+      {
+        //m_fileList.SetCurSel(i);
+        m_fileList.DeleteString(i);
+        m_fileList.InsertString(i, temp);
+        m_fileList.SetCheck(i, BST_CHECKED);
+      }
+      else
+      {
+			  m_check[i].SetWindowText(temp);
+			  m_check[i].SetCheck(BST_CHECKED);	
+      }
 		}
 		catch(CFileException *fe)
 		{
@@ -416,7 +537,8 @@ void CKmlDlg::OnBnClickedCheck76()
 		} //if(IsConvertFinish)
 		else
 		{
-			GetDatFile();
+			//GetDatFile();
+      GetDataFiles(FALSE);
 		} //if(IsConvertFinish)
 	} //if(m_selectall.GetCheck() == BST_UNCHECKED)
 	else if(m_selectall.GetCheck() == BST_CHECKED)
@@ -435,11 +557,11 @@ void CKmlDlg::OnBnClickedCheck76()
 		}
 		else
 		{
-			GetAllDatFile();
+			//GetAllDatFile();
+      GetDataFiles(TRUE);
 		}
 	} //else if(m_selectall.GetCheck() == BST_CHECKED)
 }
-
 
 void CKmlDlg::OnBnClickedCheck78()
 {
@@ -462,6 +584,44 @@ void CKmlDlg::OnBnClickedCheck78()
 	}
 }
 
+void CKmlDlg::OnBnClickedCheckAll()
+{
+	CString fileName;
+	m_directory.GetWindowText(fileName);
+	if(fileName == "")	
+  {
+    return;
+  }
+
+  int c = ((CButton*)GetDlgItem(IDC_CHECK_ALL))->GetCheck();
+  for(int i = 0; i < m_fileList.GetCount(); ++i)
+  {
+    m_fileList.SetCheck(i, (c) ? BST_CHECKED : BST_UNCHECKED);
+  }
+/*
+		if(m_hselectall.GetCheck() == BST_UNCHECKED)
+		{
+			for(int i=0;i<NumOfFile;i++)
+      {
+        m_check[i].SetCheck(BST_UNCHECKED);
+        m_check[i].ShowWindow(1);
+        m_check[i].SetWindowText(FileName[i]);
+      }
+			for(int i=NumOfFile;i<NumOfCheckBox;i++)m_check[i].ShowWindow(0);				
+		}
+		else if(m_hselectall.GetCheck() == BST_CHECKED)
+		{
+			for(int i=0;i<NumOfFile;i++)
+      { 
+        m_check[i].SetCheck(BST_CHECKED);
+        m_check[i].ShowWindow(1);
+        m_check[i].SetWindowText(FileName[i]);
+      }		
+			for(int i=NumOfFile;i<NumOfCheckBox;i++)m_check[i].ShowWindow(0);					
+		}
+*/
+}
+
 
 
 
@@ -470,7 +630,7 @@ int CKmlDlg::GET_NMEA_SENTENCE(CFile& file, unsigned char* buffer)
 	unsigned char nmea[2];
 	unsigned int   length=0;
 	int nBytesRead = 0;
-    do
+  do
 	{
 		memset(nmea,0,2);
 		nBytesRead = file.Read(nmea,1);		
@@ -493,14 +653,13 @@ U08 CKmlDlg::NMEA_PROC(const char* buffer, int offset)
 		break;	
 	case MSG_GGA:
 		nmea.ShowGPGGAmsg(msg_gpgga,buffer,offset);		
-        break;	
+    break;	
 	case MSG_RMC:
 		nmea.ShowGPRMCmsg(msg_gprmc,buffer,offset);		
 		break;	
 	case MSG_GNS:		
 		nmea.ShowGNSmsg(msg_gpgga, buffer, offset);
 		break; 
-
 	case MSG_GPGSA:
 		nmea.ShowGNGSAmsg(msg_gpgsa, msg_glgsa, msg_bdgsa, msg_gagsa, buffer, offset);
 		kml.msg_gpgsa = &msg_gpgsa;
@@ -654,8 +813,8 @@ bool CKmlDlg::WriteToFile(U08 type)
 		if(IsFixed(msg_gprmc.Status))
 			ut = UsingRMC;
 	}
-	if(IsFixed(msg_gprmc.Status))
-		ut = UsingRMC;
+	//if(IsFixed(msg_gprmc.Status))
+	//	ut = UsingRMC;
 
 	if(ut == UsingGGA && last_hh == msg_gpgga.Hour && last_mm == msg_gpgga.Min && last_ss == msg_gpgga.Sec)
 	{
@@ -668,10 +827,15 @@ bool CKmlDlg::WriteToFile(U08 type)
 
 	if(ut == UsingGGA && (type==MSG_GGA || type==MSG_GNS) && IsFixed(msg_gpgga.GPSQualityIndicator))
 	{
-		CString timeStr;
+    if(msg_gpgga.Hour == 9 && msg_gpgga.Min == 53 && (int)(msg_gpgga.Sec) == 4)
+    {
+      int a = 0;
+    }
+    CString timeStr;
 		timeStr.Format("%02d:%02d:%05.2f", msg_gpgga.Hour, msg_gpgga.Min, msg_gpgga.Sec);
 		kml.PushOnePoint(GetLon(msg_gpgga.Longitude, msg_gpgga.Longitude_E_W), 
-			GetLat(msg_gpgga.Latitude, msg_gpgga.Latitude_N_S), msg_gpgga.Altitude, timeStr, GetGnssQualityMode(msg_gpgga.GPSQualityIndicator));
+			GetLat(msg_gpgga.Latitude, msg_gpgga.Latitude_N_S), msg_gpgga.Altitude, timeStr, 
+      GetGnssQualityMode(msg_gpgga.GPSQualityIndicator, (U08)msg_gpgsa.Mode, (U08)msg_glgsa.Mode, (U08)msg_gagsa.Mode, (U08)msg_bdgsa.Mode));
 		last_hh = msg_gpgga.Hour;
 		last_mm = msg_gpgga.Min;
 		last_ss = msg_gpgga.Sec;
@@ -679,6 +843,10 @@ bool CKmlDlg::WriteToFile(U08 type)
 	}
 	else if (ut == UsingRMC && type==MSG_RMC && msg_gprmc.Status == 'A')
 	{
+    if(msg_gprmc.Hour == 10 && msg_gprmc.Min == 9 && (int)(msg_gprmc.Sec) == 57)
+    {
+      int a = 0;
+    }
 		CString timeStr;
 		timeStr.Format("%02d:%02d:%05.2f", msg_gprmc.Hour, msg_gprmc.Min, msg_gprmc.Sec);
 		kml.PushOnePoint(GetLon(msg_gprmc.Longitude, msg_gprmc.Longitude_E_W), 
@@ -795,4 +963,26 @@ LRESULT CKmlDlg::OnProgress(WPARAM wParam, LPARAM lParam)
 	m_progress.SetRange(0, 1000);
 	m_progress.SetPos((int)lParam);
     return 0L;
+}
+
+void CKmlDlg::OnLbnSelchangeFileList()
+{
+  int s = m_fileList.GetCurSel();
+  int c = m_fileList.GetCheck(s);
+  m_fileList.SetCheck(s, (c) ? BST_UNCHECKED : BST_CHECKED);
+  if(c == BST_UNCHECKED)
+  {
+    ((CButton*)GetDlgItem(IDC_CHECK_ALL))->SetCheck(BST_UNCHECKED);
+  }
+}
+
+void CKmlDlg::OnLbnChkchangeFileList()
+{
+  int s = m_fileList.GetCurSel();
+  int c = m_fileList.GetCheck(s);
+  m_fileList.SetCheck(s, (c) ? BST_UNCHECKED : BST_CHECKED);
+  if(c == BST_UNCHECKED)
+  {
+    ((CButton*)GetDlgItem(IDC_CHECK_ALL))->SetCheck(BST_UNCHECKED);
+  }
 }

@@ -233,33 +233,9 @@ void COO_geodetic_to_cartesian( const LLA_T* lla_p, POS_T* xyz_p )
 	xyz_p->pz = (N * (1 - WGS84_E2) + lla_p->alt) * s_phi;	
 }
 
-const S16 DefaultLeapSeconds = 17;	//Updated in 2016/02/03
-//UtcConvertGpsToUtcTime
-/*
-typedef struct UTC_TIME_T {
-	S16 year;
-	S16 month;
-	S16 day;
-	S16 day_of_year;
-	S16 hour;
-	S16 minute;
-	F32 sec;
-} UtcTime;
-typedef struct {
-  S16 year;
-  S16 month;
-  S16 day;
-  U08 hour;
-  U08 minute;
-  F32 sec;
-} UTC_T;
-*/
-
-//void UtcConvertGpsToUtcTime(S16 wn, D64 tow, UtcTime *utc_time_p)
+const S16 DefaultLeapSeconds = 18;	//Updated in 2017/01/05
 void  UtcConvertGpsToUtcTime(S16 wn, D64 tow, UtcTime* utc_p)
 {
-	// default leap secs has passed away
-	// const S16 DEFAULT_PRIOR_LEAP_SECS = 17;
 	// GPS Time start at 1980 Jan. 5/6 mid-night
 	const S16 INIT_UTC_YEAR = 1980;     
 	const S16 DAYS_PER_YEAR = 365;
@@ -268,14 +244,6 @@ void  UtcConvertGpsToUtcTime(S16 wn, D64 tow, UtcTime* utc_p)
 		{ 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
 	const S16 day_of_leap_year_month_table[] = 
 		{ 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
-
-	//S16 i;
-	//S32 tow_int;
-	//D64 tow_frac;
-	//S32 total_utc_sec, total_utc_day;
-	//S32 passed_leap_days, passed_utc_years,
-	//	day_of_utc_year, leap_days_of_prev_years;
-	//S32 sec_of_day;
 	const S16* month_tbl_p = day_of_year_month_table;
 
 	S32 tow_int = (U32)floor(tow);
@@ -954,33 +922,44 @@ WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)
 
 	if(nReturn > wlf_timeout)
 	{
-		AfxMessageBox("Unknow Error!");
+		//AfxMessageBox("Unknow Error!");
 		Utility::Log(__FUNCTION__, "return", (int)nReturn);
 	}
 	Utility::Log(__FUNCTION__, "return", (int)nReturn);
 	return nReturn;
 }
-
-
-//void DisplayStaticInt(CDialog* pDlg, UINT uid, LPCSTR format, int data)
-//{
-//  CString txt;
-//  txt.Format(format, data);
-//  pDlg->GetDlgItem(uid)->SetWindowText(txt);
-//}
-//
-//void DisplayStaticFloat(CDialog* pDlg, UINT uid, LPCSTR format, double data)
-//{
-//  CString txt;
-//  txt.Format(format, data);
-//  pDlg->GetDlgItem(uid)->SetWindowText(txt);
-//}
-
+ 
 bool PreprocessInputLine(U08 *buf, int& bufLen)
 {
-  //Find text sentence
   U08 *start = NULL, *end = NULL;
   U08* iter = (U08*)(buf + bufLen - 1);
+  //Find binary sentence
+  do
+  {
+    if(*iter == 0x0D && *(iter + 1) == 0x0A)
+    {
+      end = iter + 1;
+    }
+  
+    if(0xA0 == *iter && 0xA1 == *(iter + 1) && end != NULL)
+    {
+      start = iter;
+      break;
+    }
+  } while(iter-- != buf);
+
+  if(start != NULL && end != NULL)
+  {
+    memcpy(buf, start, end - start + 1);
+    bufLen = end - start + 1;
+    buf[bufLen] = 0;
+    return true;
+  }
+
+  //Find text sentence
+  start = NULL;
+  end = NULL;
+  iter = buf + bufLen - 1;
   do
   {
     if(*iter == 0x0D && *(iter + 1) == 0x0A)
@@ -999,32 +978,6 @@ bool PreprocessInputLine(U08 *buf, int& bufLen)
     int a = 0;
   }
   if(start != NULL && end != NULL && (end - start) > 7 && (end - start) < 128 && *(end - 4) == '*')
-  {
-    memcpy(buf, start, end - start + 1);
-    bufLen = end - start + 1;
-    buf[bufLen] = 0;
-    return true;
-  }
-
-  //Find binary sentence
-  start = NULL;
-  end = NULL;
-  iter = buf + bufLen - 1;
-  do
-  {
-    if(*iter == 0x0D && *(iter + 1) == 0x0A)
-    {
-      end = iter + 1;
-    }
-  
-    if(0xA0 == *iter && 0xA1 == *(iter + 1) && end != NULL)
-    {
-      start = iter;
-      break;
-    }
-  } while(iter-- != buf);
-
-  if(start != NULL && end != NULL)
   {
     memcpy(buf, start, end - start + 1);
     bufLen = end - start + 1;
@@ -1058,4 +1011,202 @@ bool ReadOneLineInFile(CFile& f, char* buffer, int size)
   }
     
   return true;
+}
+
+bool IsPrintable(const char c)
+{
+  return ((c >= 0x20 && c <= 0x7E) || (c == 0x09) || (c == 0x0D) || (c == 0x0A));
+}
+
+bool AllPrintable(const char* buffer, int len)
+{
+  const char* ptr = buffer;
+  int printableCount = 0;
+  for(int i = 0; i < len; ++i)
+  {
+    if(IsPrintable(*ptr))
+    {
+      ++printableCount;
+    }
+    ++ptr;
+  }
+  if(printableCount >= (len * 3 / 4))
+  {
+    return true;
+  }
+  return false;
+}
+
+//---------------------------------------------------------
+// GetBitData: get data from big-endian bits in U08 array
+//
+// Input:   buff - buffer array
+//          pos  - bit position from start of data (bits)
+//          len  - bit length (bits) (len<=32)
+//          dataLen - length of output data
+
+// Output:  data - output data pointr
+// Return:  NONE
+//---------------------------------------------------------
+void GetBitData(U08 buff[], int pos, int len, U08* data, int dataLen)
+{
+  int i, o;
+  if(len <= 0 || dataLen * 8 < len)
+  {
+    return;
+  }
+
+  U08* oPtr = data;
+  memset(data, 0, dataLen);
+  for(i = (pos + len - 1), o = 0; i >= pos; --i, ++o)
+  {
+    U08 imask = 1UL << (7 - i % 8);
+    U08 omask = 1UL << (o % 8);
+    if(buff[i/8] & imask)
+    {
+      *oPtr |= omask;
+    }
+    else
+    {
+      *oPtr &= ~omask;
+    }
+    if(o % 8 == 7)
+    {
+      ++oPtr;
+    }
+  }
+}
+
+//---------------------------------------------------------
+// GetByteDataFromBE: get data from big-endian bytes in U08 array
+//
+// Input:   buff - buffer array
+//          pos  - byte position from start of data (bytes)
+//          len  - byte length (bytes) (len<=32)
+//          dataLen - length of output data (bytes)
+
+// Output:  data - output data pointr
+// Return:  NONE
+//---------------------------------------------------------
+void GetByteDataFromBE(U08 buff[], int pos, int len, U08* data, int dataLen)
+{
+  if(len <= 0 || dataLen < len)
+  {
+    return;
+  }
+
+  memset(data, 0, dataLen);
+  int i;
+  for(i = pos + len - 1; i >= pos; --i)
+  {
+    *data = buff[i];
+    ++data;
+  }
+}
+
+//---------------------------------------------------------
+// GetByteDataFromBE: get data from little-endian bytes in U08 array
+//
+// Input:   buff - buffer array
+//          pos  - byte position from start of data (bytes)
+//          len  - byte length (bytes) (len<=32)
+//          dataLen - length of output data (bytes)
+
+// Output:  data - output data pointr
+// Return:  NONE
+//---------------------------------------------------------
+void GetByteDataFromLE(U08 buff[], int pos, int len, U08* data, int dataLen)
+{
+  int i;
+  if(len <= 0 || dataLen < len)
+  {
+    return;
+  }
+
+  memset(data, 0, dataLen);
+  for(i = pos; i < pos + len; ++i)
+  {
+    *data = buff[i];
+    ++data;
+  }
+}
+
+void ConvertInt38Sign(S64* d)
+{
+  U08* ptr = (U08*)d;
+  if(ptr[4] & 0x20)
+  {
+    ptr[5] = 0xFF;
+    ptr[6] = 0xFF;
+    ptr[7] = 0xFF;
+    ptr[4] |= 0xF0;
+  }
+}
+
+int GetBitFlagCounts(U08* d, int size)
+{  
+  int count = 0;
+  for(int i = 0; i < size * 8; ++i)
+  {
+    if((d[i / 8] >> (8 - (i % 8) - 1)) & 0x1)
+    {
+      ++count;
+    }
+  }
+  return count;
+}
+
+void CooCartesianToGeodetic(const POS_T* xyz_p, LLA_T* lla_p)
+{
+	D64 p;
+	D64 theta;
+	D64 temp;
+	D64 s_theta, c_theta, s_phi, c_phi;
+	D64 phi; // latitude
+
+	p = sqrt( (xyz_p->px)*(xyz_p->px) + (xyz_p->py)*(xyz_p->py) );
+
+	if( p <= 0.01f )
+	{
+		lla_p->lat = (xyz_p->pz >= 0)?(PI/2.0):(-PI/2.0);
+		lla_p->lon = 0.0;
+		lla_p->alt = (F32)(fabs(xyz_p->pz) - WGS84_RB);
+		return;
+	}
+
+	theta = atan2( ( xyz_p->pz*WGS84_RA ), ( p*WGS84_RB ) );
+	s_theta = sin(theta);
+	c_theta = cos(theta);    
+
+	temp = ( xyz_p->pz + WGS84_E2P*WGS84_RB*s_theta*s_theta*s_theta ); 
+	phi = atan2( temp, ( p - WGS84_E2*WGS84_RA*c_theta*c_theta*c_theta ) );
+
+	s_phi = sin(phi);
+	c_phi = cos(phi);
+
+	lla_p->lat = phi;    
+	lla_p->lon = atan2( xyz_p->py, xyz_p->px );
+	lla_p->alt = (F32)( (p / c_phi) - ( WGS84_RA / sqrt(1.0 - WGS84_E2*s_phi*s_phi ) ) );
+}
+
+void ConvertEcefToLonLatAlt(D64 ecefX, D64 ecefY, D64 ecefZ, D64& latitude, D64& longitude, D64& altitude)
+{
+	POS_T pos;
+	pos.px = (D64)ecefX;
+	pos.py = (D64)ecefY;
+	pos.pz = (D64)ecefZ;
+
+	LLA_T lla;
+	CooCartesianToGeodetic(&pos, &lla);
+
+	lla.lat *= R2D;
+	lla.lon *= R2D;
+	double lat_d = (S16)fabs(lla.lat );
+	double lon_d = (S16)fabs(lla.lon );
+	double lat_m = fmod( fabs(lla.lat), 1.0) * 60.0;
+	double lon_m = fmod( fabs(lla.lon), 1.0) * 60.0;
+
+	latitude = lat_d * 100.0 + lat_m;
+	longitude = lon_d * 100.0 + lon_m;
+	altitude = lla.alt;
 }

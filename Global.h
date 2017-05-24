@@ -46,6 +46,41 @@ typedef matrix<float> Matrix;
 #define COM_BUFFER_SIZE   (16 * 1024)              // 
 #define KNOTS2KMHR  1.852F
 #define MS2KMHR     3.6F
+#define VIEWER_REG_PATH "Software\\GNSSViewer\\GPS"
+
+// Bit constants
+#define BIT0        (0x01)
+#define BIT1        (0x02)
+#define BIT2        (0x04)
+#define BIT3        (0x08)
+#define BIT4        (0x10)
+#define BIT5        (0x20)
+#define BIT6        (0x40)
+#define BIT7        (0x80)
+#define BIT8        (0x0100)
+#define BIT9        (0x0200)
+#define BIT10       (0x0400)
+#define BIT11       (0x0800)
+#define BIT12       (0x1000)
+#define BIT13       (0x2000)
+#define BIT14       (0x4000)
+#define BIT15       (0x8000)
+#define BIT16       (0x00010000L)
+#define BIT17       (0x00020000L)
+#define BIT18       (0x00040000L)
+#define BIT19       (0x00080000L)
+#define BIT20       (0x00100000L)
+#define BIT21       (0x00200000L)
+#define BIT22       (0x00400000L)
+#define BIT23       (0x00800000L)
+#define BIT24       (0x01000000L)
+#define BIT25       (0x02000000L)
+#define BIT26       (0x04000000L)
+#define BIT27       (0x08000000L)
+#define BIT28       (0x10000000L)
+#define BIT29       (0x20000000L)
+#define BIT30       (0x40000000L)
+#define BIT31       (0x80000000L)
 
 struct Setting
 {
@@ -59,7 +94,7 @@ struct Setting
 		CRegistry reg;
 		reg.SetRootKey(HKEY_CURRENT_USER);
 
-		if(reg.SetKey("Software\\GNSSViewer\\GPS", false))
+		if(reg.SetKey(VIEWER_REG_PATH, false))
 		{
 			reg.WriteInt("comport", comPort);
 			reg.WriteInt("baudrate", baudrate);
@@ -67,7 +102,7 @@ struct Setting
 			reg.WriteInt("setting_earthBitmap", earthBitmap);
 		}
 
-		if(IS_DEBUG && reg.SetKey("Software\\GNSSViewer\\GPS", false))
+		if(IS_DEBUG && reg.SetKey(VIEWER_REG_PATH, false))
 		{
 			reg.WriteInt("setting_delayBeforeBinsize", delayBeforeBinsize);
 			reg.WriteInt("setting_boostBaudrateIndex", boostBaudIndex);
@@ -85,6 +120,7 @@ struct Setting
 			reg.WriteInt("setting_defaultTimeout", defaultTimeout);
 			reg.WriteInt("setting_scatterCount", scatterCount);
 			reg.WriteInt("setting_downloadRomInternal", downloadRomInternal);
+			reg.WriteInt("setting_downloadUseBinExternal", downloadUseBinExternal);
 
 			reg.WriteInt("recentScatterCenterCount", recentScatterCenter.GetCount());
 			for(int i = 0; i < recentScatterCenter.GetCount(); ++i)
@@ -104,7 +140,7 @@ struct Setting
 		const double defaultCenterLat = 24.784893606;
 		const double defaultCenterAlt = 100.0;
 
-		if(IS_DEBUG && reg.SetKey("Software\\GNSSViewer\\GPS", true))
+		if(IS_DEBUG && reg.SetKey(VIEWER_REG_PATH, true))
 		{
 			delayBeforeBinsize = reg.ReadInt("setting_delayBeforeBinsize", 0);
 			boostBaudIndex = reg.ReadInt("setting_boostBaudrateIndex", BAUDRATE_DEFAULT);
@@ -121,6 +157,7 @@ struct Setting
 			defaultTimeout = reg.ReadInt("setting_defaultTimeout", DefaultTimeout);
 			scatterCount = reg.ReadInt("setting_scatterCount", MAX_SCATTER_COUNT);
 			downloadRomInternal = reg.ReadInt("setting_downloadRomInternal", FALSE);
+			downloadUseBinExternal = reg.ReadInt("setting_downloadUseBinExternal", FALSE);
 
 			int recentCount = reg.ReadInt("recentScatterCenterCount", 0);
 			for(int i = 0; i < recentCount; ++i)
@@ -156,9 +193,10 @@ struct Setting
 			defaultTimeout = DefaultTimeout;
 			scatterCount = MAX_SCATTER_COUNT;
       downloadRomInternal = FALSE;
+      downloadUseBinExternal = FALSE;
 		}
 
-		if(reg.SetKey("Software\\GNSSViewer\\GPS", true))
+		if(reg.SetKey(VIEWER_REG_PATH, true))
 		{
 			comPort = reg.ReadInt("comport", 0);
 			baudrate = reg.ReadInt("baudrate", 1);
@@ -218,6 +256,7 @@ struct Setting
 	BOOL checkNmeaError;
 	BOOL downloadTesting;
 	BOOL downloadRomInternal;
+  BOOL downloadUseBinExternal;
 	BOOL responseLog;
 	CString responseLogPath;
 	BOOL specifyCenter;
@@ -315,9 +354,9 @@ extern Setting g_setting;
 extern const double R2D;
 extern const COLORREF g_panelBkColor;
 
-extern U08 type;
-extern U08 attribute;
-extern U08 msgid;
+//extern U08 type;
+//extern U08 attribute;
+//extern U08 msgid;
 
 //extern U08  slgga;	
 //extern U08  slgsa;
@@ -372,6 +411,15 @@ WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)
 
 bool ReadOneLineInFile(CFile& f, char* buffer, int size);
 bool PreprocessInputLine(U08 *buf, int& bufLen);
+bool IsPrintable(const char c);
+bool AllPrintable(const char* buffer, int len);
+void GetBitData(U08 buff[], int pos, int len, U08* data, int dataLen);
+void GetByteDataFromLE(U08 buff[], int pos, int len, U08* data, int dataLen);
+void GetByteDataFromBE(U08 buff[], int pos, int len, U08* data, int dataLen);
+void ConvertInt38Sign(S64* d);
+int GetBitFlagCounts(U08* d, int size);
+void CooCartesianToGeodetic(const POS_T* xyz_p, LLA_T* lla_p);
+void ConvertEcefToLonLatAlt(D64 ecefX, D64 ecefY, D64 ecefZ, D64& latitude, D64& longitude, D64& altitude);
 
 template <class T>
 void DisplayStatic(CDialog* pDlg, UINT uid, LPCSTR format, T data)

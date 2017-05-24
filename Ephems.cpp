@@ -1,4 +1,4 @@
-// Ephems.cpp : 實作檔
+// Ephems.cpp
 //
 
 #include "stdafx.h"
@@ -22,7 +22,6 @@ UINT GetEphmsThread(LPVOID pParam)
 		break;
 	case CGetEphemerisDlg::BeidouEphemeris:
 		CGPSDlg::gpsDlg->GetBeidouEphms(g_SV, FALSE);	
-		//ASSERT(FALSE);
 		break;
 	case CGetEphemerisDlg::GalileoEphemeris:
 		ASSERT(FALSE);
@@ -33,8 +32,8 @@ UINT GetEphmsThread(LPVOID pParam)
 	}
 	return 0;
 }
-// CGetEphemerisDlg 對話方塊
 
+// CGetEphemerisDlg 
 IMPLEMENT_DYNAMIC(CGetEphemerisDlg, CDialog)
 CGetEphemerisDlg::CGetEphemerisDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_GETEPHEMERIS, pParent)
@@ -62,7 +61,7 @@ BEGIN_MESSAGE_MAP(CGetEphemerisDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// CGetEphemerisDlg 訊息處理常式
+// CGetEphemerisDlg
 
 BOOL CGetEphemerisDlg::OnInitDialog()
 {

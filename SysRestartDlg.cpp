@@ -79,21 +79,21 @@ BOOL CSysRestartDlg::OnInitDialog()
 	m_utcsecond.SetCurSel(now.wSecond);
 
 	CString tmpString;
-	Utility::GetRegValue(HKEY_CURRENT_USER, "Software\\GNSSViewer\\GPS", "lat", tmpString);
+	Utility::GetRegValue(HKEY_CURRENT_USER, VIEWER_REG_PATH, "lat", tmpString);
 	if(tmpString.IsEmpty()) 
 	{
 		tmpString = "25";
 	}
 	m_latitude.SetWindowText(tmpString);
 
-	Utility::GetRegValue(HKEY_CURRENT_USER, "Software\\GNSSViewer\\GPS", "lon", tmpString);
+	Utility::GetRegValue(HKEY_CURRENT_USER, VIEWER_REG_PATH, "lon", tmpString);
 	if(tmpString.IsEmpty()) 
 	{
 		tmpString = "124";
 	}
 	m_longitude.SetWindowText(tmpString);
 
-	Utility::GetRegValue(HKEY_CURRENT_USER, "Software\\GNSSViewer\\GPS", "alt", tmpString);
+	Utility::GetRegValue(HKEY_CURRENT_USER, VIEWER_REG_PATH, "alt", tmpString);
 	if(tmpString.IsEmpty()) 
 	{
 		tmpString = "100";
@@ -157,11 +157,11 @@ void CSysRestartDlg::OnBnClickedOk()
 
 	CString tmp;
 	m_latitude.GetWindowText(tmp);
-	Utility::SetRegValue(HKEY_CURRENT_USER, "Software\\GNSSViewer\\GPS", "lat", tmp);
+	Utility::SetRegValue(HKEY_CURRENT_USER, VIEWER_REG_PATH, "lat", tmp);
 	m_longitude.GetWindowText(tmp);
-	Utility::SetRegValue(HKEY_CURRENT_USER, "Software\\GNSSViewer\\GPS", "lon", tmp);
+	Utility::SetRegValue(HKEY_CURRENT_USER, VIEWER_REG_PATH, "lon", tmp);
 	m_altitude.GetWindowText(tmp);
-	Utility::SetRegValue(HKEY_CURRENT_USER, "Software\\GNSSViewer\\GPS", "alt", tmp);
+	Utility::SetRegValue(HKEY_CURRENT_USER, VIEWER_REG_PATH, "alt", tmp);
 
 	AfxBeginThread(ResetThread, this);	
 	OnOK();
@@ -239,10 +239,9 @@ void CSysRestartDlg::OnCbnCloseupSrmode()
 	}
 }
 
-
 void CSysRestartDlg::Restart()
 {
-	CGPSDlg::gpsDlg->m_CloseBtn.ShowWindow(0);
+	CGPSDlg::gpsDlg->m_CloseBtn.ShowWindow(SW_HIDE);
 	int i;
 	U08 messages[22] = {0};
 

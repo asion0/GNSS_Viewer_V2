@@ -3,17 +3,16 @@
 //#include "afxwin.h"
 
 
-// CConfigNmeaIntervalDlg 對話方塊
+// CConfigNmeaIntervalDlg
 
 class CConfigNmeaIntervalDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CConfigNmeaIntervalDlg)
 
 public:
-	CConfigNmeaIntervalDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CConfigNmeaIntervalDlg(CWnd* pParent = NULL);   
 	virtual ~CConfigNmeaIntervalDlg();
 
-// 對話方塊資料
 #if (CUSTOMER_ID==SWID)	//SWID customize
 	enum { IDD = IDD_CONFIG_NMEA_INTERVAL2_V8 };
 #else
@@ -24,7 +23,7 @@ protected:
 	CComboBox m_attr;
 	U08 m_attrib;
 
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 	virtual BOOL OnInitDialog();
 	void AdjustValue(int nPos, CScrollBar* pScrollBar);
 

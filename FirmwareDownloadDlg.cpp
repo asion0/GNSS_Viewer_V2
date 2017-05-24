@@ -60,7 +60,7 @@ BOOL CFirmwareDownloadDlg::OnInitDialog()
 
 	CRegistry reg;
 	reg.SetRootKey(HKEY_CURRENT_USER);
-	if(reg.SetKey("Software\\GNSSViewer\\GPS", true))
+	if(reg.SetKey(VIEWER_REG_PATH, true))
 	{
 		m_nLoaderType = (LoaderType)reg.ReadInt("fw_ic_type", (int)UsingExternalLoader);
 		m_nBaudrateIdx = reg.ReadInt("fw_baudrate", g_setting.boostBaudIndex);
@@ -99,7 +99,7 @@ void CFirmwareDownloadDlg::OnOK()
 
 	CRegistry reg;
 	reg.SetRootKey(HKEY_CURRENT_USER);
-	if(reg.SetKey("Software\\GNSSViewer\\GPS", false))
+	if(reg.SetKey(VIEWER_REG_PATH, false))
 	{
 		reg.WriteInt("fw_ic_type", m_nLoaderType);
 		reg.WriteInt("fw_baudrate", m_nBaudrateIdx);

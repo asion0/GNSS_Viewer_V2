@@ -94,7 +94,7 @@ public:
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedEnableWaas();
 	afx_msg void OnBnClickedEnableEgnos();
-	afx_msg void OnBnClickedEnableMasa();
+	afx_msg void OnBnClickedEnableMsas();
 	afx_msg void OnBnClickedEnableGagan();
 	afx_msg void OnBnClickedEnableAll();
 
@@ -112,6 +112,58 @@ protected:
 	BOOL m_bGAGAN;
 	BOOL m_bAll;
 	int m_nAttribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigSBAS2
+class CConfigSBAS2 : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigSBAS2)
+public:
+	CConfigSBAS2(CWnd* pParent = NULL);   
+	virtual ~CConfigSBAS2() {};
+
+	virtual void DoCommand();
+
+protected:  //members
+	BOOL m_bEnable;
+	BOOL m_bRanging;
+	BOOL m_bCorrection;
+	int m_nUraMask;
+	int m_nTrackingChannel;
+	BOOL m_bWAAS;
+	BOOL m_bEGNOS;
+	BOOL m_bMSAS;
+	BOOL m_bGAGAN;
+	BOOL m_bAll;
+	int m_nAttribute;
+
+	BOOL m_bWaasSpec;
+	BOOL m_bEgnosSpec;
+	BOOL m_bMsasSpec;
+	BOOL m_bGaganSpec;
+  U08 m_u11, m_u12, m_u13;
+  U08 m_u21, m_u22, m_u23;
+  U08 m_u31, m_u32, m_u33;
+  U08 m_u41, m_u42, m_u43;
+protected:  //functions
+  void UpdateStatus();
+  int GetUserTaqble(U08& u1, U08& u2, U08& u3, UINT id1,  UINT id2, UINT id3);
+
+	afx_msg void OnBnClickedOk();
+	afx_msg void OnBnClickedEnableWaas();
+	afx_msg void OnBnClickedEnableEgnos();
+	afx_msg void OnBnClickedEnableMsas();
+	afx_msg void OnBnClickedEnableGagan();
+	afx_msg void OnBnClickedEnableAll();
+	afx_msg void OnBnClickedWaasSpecify();
+	afx_msg void OnBnClickedEgnosSpecify();
+	afx_msg void OnBnClickedMsasSpecify();
+	afx_msg void OnBnClickedGaganSpecify();
+	afx_msg void OnBnClickedApplyDefault();
+
+	virtual BOOL OnInitDialog();
 
 	DECLARE_MESSAGE_MAP()
 };
@@ -705,6 +757,7 @@ protected:
 	U08 m_rtkMode;
 	U08 m_baseOpt;
 	U08 m_roverOpt;
+	U08 m_pkbOpt;
 	U32 m_srvValue1;
 	U32 m_srvValue2;
 	D64 m_sttValue1;

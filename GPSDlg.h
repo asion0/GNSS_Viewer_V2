@@ -32,6 +32,7 @@
 #define UWM_UPDATE_PSTI031		(WM_USER + 0x10B)
 #define UWM_UPDATE_PSTI032		(WM_USER + 0x10C)
 #define UWM_DO_ZENLANE_CMD    (WM_USER + 0x10D)
+#define UWM_TEST_XN112_START  (WM_USER + 0x10E)
 
 #define GNSS_CHANEL_LIMIT	16
 
@@ -167,6 +168,7 @@ enum {
 	DELAY_PLUGIN_TIMER,
   ZENLANE_INIT_TIMER,
   ZENLANE_QUERY_TIMER,
+  XN116_TESTER_TIMER,
 };
 
 enum { 
@@ -180,8 +182,8 @@ class CSoftImDwDlg;
 class CSerial;
 class CSnrBarChartGps;
 class CSnrBarChartGlonass;
-class CSnrBarChartGpsGlonass;
-class CSnrBarChartBeidouL2;
+class CSnrBarChartDual;
+class CSnrBarChartL2;
 class CSnrBarChartBeidou;
 class CSnrBarChartGalileo;
 class CSnrBarChart;
@@ -253,7 +255,9 @@ public:
 		ParallelDownloadType0,
 		ParallelDownloadType1,
 		RomExternalDownload,
-		CustomerUpgrade
+		CustomerUpgrade,
+    FileLoader,
+    FileLoaderInBinCmd,
 	} m_DownloadMode;
 
 	enum InfoTabStat {
@@ -283,7 +287,6 @@ protected:
 	CString m_lastGlEphFile;
 	CString m_lastBdEphFile;
 
-	CSerialAgents m_serialAgents;
 	CColorStatic m_ttff;
 	CColorStatic m_date;
 	CColorStatic m_time;
@@ -346,13 +349,17 @@ public:
 	CBitmapButton m_CloseBtn;
 	CString m_nmeaPlayFilePath;
 	HANDLE m_nmeaPlayThread;
+
 	int m_nmeaPlayInterval;
 	bool m_nmeaPlayPause;
+
 	CCriticalSection _nmeaPlayInterval;
 	CCriticalSection csSatelliteStruct;
+
 #if defined(SAINTMAX_UI)
 	CButton m_nmea0183msg;
 #endif
+
 	Satellite satecopy_gps[MAX_SATELLITE];
 	Satellite sate_gps[MAX_SATELLITE];	
 	Satellite satecopy_gnss[MAX_SATELLITE];
@@ -361,12 +368,19 @@ public:
 	Satellite sate_bd[MAX_SATELLITE];	
 	Satellite satecopy_ga[MAX_SATELLITE];
 	Satellite sate_ga[MAX_SATELLITE];	
-#if(SUPPORT_L2_GSV2)
+#if(SUPPORT_BDL2_GSV2)
+	Satellite satecopy2_gps[MAX_SATELLITE];
+	Satellite sate2_gps[MAX_SATELLITE];	
 	Satellite satecopy2_bd[MAX_SATELLITE];
 	Satellite sate2_bd[MAX_SATELLITE];	
 #endif
+  BOOL NeedUpdate();
+
 protected:
-	CBitmapButton m_SetOriginBtn;	
+  DWORD m_mouseMouingTick;
+  BOOL  m_mouseNoMoving;
+
+  CBitmapButton m_SetOriginBtn;	
 	CBitmapButton m_ClearBtn;		
 	CBitmapButton m_DownloadBtn;
 	CBitmapButton m_EarthSettingBtn;
@@ -433,7 +447,8 @@ public:
 	//for Beidou
 	GPGSA m_bdgsaMsg, m_bdgsaMsgCopy, m_bdgsaMsgCopy1;
 	GPGSV m_bdgsvMsg, m_bdgsvMsgCopy, m_bdgsvMsgCopy1;
-#if(SUPPORT_L2_GSV2)
+#if(SUPPORT_BDL2_GSV2)
+	GPGSV m_gpgsv2Msg, m_gpgsv2MsgCopy, m_gpgsv2MsgCopy1;
 	GPGSV m_bdgsv2Msg, m_bdgsv2MsgCopy, m_bdgsv2MsgCopy1;
 #endif
 	//for Galileo
@@ -482,7 +497,9 @@ public:
 	bool SendToTargetNoAck(U08*,U16);
 	bool SendToTargetNoWait(U08*,U16,LPCSTR);
 	bool TIMEOUT_METHOD(time_t,time_t);
-	U08 BinaryProc(unsigned char*,int);
+	U16 RtcmProc(unsigned char*,int);
+	U16 UbloxProc(U08* buffer, int len, CFile* fo = NULL);
+	U08 BinaryProc(U08* buffer, int len, CFile* fo = NULL);
 	void CopyNmeaToUse();
 	void ClearQue();
 	void Copy_NMEA_Memery();
@@ -493,6 +510,8 @@ public:
 	void GetRegister(U08*);	
 	void LogConfigure();
 	void MSG_PROC();
+  void DoFlag();
+  void ParsingMessage(BOOL isPlayer = FALSE);
 	void QueryMsg(unsigned char*);
 	void Restart(U08* messages, BOOL restoreConnection = TRUE);
 	void ScanGPS();
@@ -500,7 +519,6 @@ public:
 	void ScanGPS2();
 	void ScatterPlot(CDC *dc);
 	void SetEphms(U08 continues);
-
 	void SetPort(U08,int mode);
 #if(_MODULE_SUP_800_)
 	void ShowPsti004001();
@@ -539,9 +557,11 @@ public:
 	void ShowTime(void);
 	void Terminate(void);
 	void TerminateGPSThread();
-	void Initialization();
 	void SetFacMsg(unsigned char*);	
 	void continue_write_nmea();
+protected:
+  void InitDownloadBaudRate();
+  void Initialization();
 
 private:
 	HANDLE handle_version;
@@ -645,6 +665,9 @@ public:
 	CString m_strDownloadImage2;
 	int m_nSlaveSourceBaud;
 	int m_nSlaveTargetBaud;
+  BOOL downloadAddTag;
+  U32 tagAddress;
+  U32 tagValue;
 
 	bool CheckTagType();
 	bool Download();
@@ -745,6 +768,14 @@ public:
 	CmdErrorCode QueryRegister16(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryConstellationCapability(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryTiming(CmdExeMode nMode, void* outputData);
+	CmdErrorCode BinaryQueryClockOffset(CmdExeMode nMode, void* outputData);
+	CmdErrorCode InsdrAccelerometerSelfTest(CmdExeMode nMode, void* outputData);
+	CmdErrorCode InsdrGyroscopeSelfTest(CmdExeMode nMode, void* outputData);
+	CmdErrorCode InsdrAccumulateAngleStart(CmdExeMode nMode, void* outputData);
+	CmdErrorCode InsdrAccumulateAngleStop(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QuerySbasDefault(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QuerySbas(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QuerySbas2(CmdExeMode nMode, void* outputData);
 
   U08 m_nGeofecingNo;
 
@@ -776,7 +807,6 @@ protected:
 	CmdErrorCode QueryDrInfo(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDrHwParameter(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGnssSelectionForNavigationSystem(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QuerySbas(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySagps(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryQzss(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryNoisePowerControl(CmdExeMode nMode, void* outputData);
@@ -785,7 +815,8 @@ protected:
 	CmdErrorCode QueryParameterSearchEngineNumber(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryAgpsStatus(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDatalogLogStatus(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryGetAlmanac(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryGetGpsAlmanac(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryGetBeidouAlmanac(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPositionFixNavigationMask(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryChannelDoppler(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryNmeaIntervalV8(CmdExeMode nMode, void* outputData);
@@ -836,6 +867,7 @@ protected:
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 	virtual BOOL OnInitDialog();
+  bool WriteAddressToFile(const CString& filename, const U32 start, const U32 size);
 
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
@@ -845,6 +877,7 @@ protected:
 	afx_msg void OnBnClickedPlay();
 	afx_msg void OnBnClickedStop();
 	afx_msg void OnTimer(UINT nIDEvent);
+  afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnBnClickedClose();
 	afx_msg void OnCbnCloseupCoordinate();
 	afx_msg void OnCbnCloseupEnuscale();
@@ -900,10 +933,12 @@ protected:
 	afx_msg void OnBnClickedDownload();
 	afx_msg void OnFileSaveNmea();
 	afx_msg void OnFileSaveBinary();
+	afx_msg void OnSaveBinaryNoParsing();
 	afx_msg void OnVerifyFirmware();
 	afx_msg void OnFilePlayNmea();
 	afx_msg void OnConverterKml();
 	afx_msg void OnRawMeasurementOutputConvert();
+	afx_msg void OnUbloxBinaryOutputConvert();
 	afx_msg void OnHosLogToNmea();
 	afx_msg void OnBnClickedScanAll();
 	afx_msg void OnBnClickedScanPort();
@@ -935,6 +970,7 @@ protected:
 	afx_msg void OnBinaryConfiguremultipath();
 	//afx_msg void OnWaasWaas();
 	afx_msg void OnShowGpsAlmanac();
+	afx_msg void OnShowBeidouAlmanac();
 	afx_msg void OnDecodeGpsAlmanac();
 	afx_msg void OnGetGpsAlmanac();
 	afx_msg void OnBinaryQuerybinarymsginterval();
@@ -962,6 +998,7 @@ protected:
 	afx_msg LRESULT OnUpdatePsti031(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnUpdatePsti032(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnDoZenlaneCmd(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnTestXn112Start(WPARAM wParam, LPARAM lParam);
 
 	afx_msg void OnMinihomerSettagecco();
 	afx_msg void OnMinihomerQuerytag();
@@ -996,6 +1033,7 @@ protected:
 	afx_msg void OnLineAssistance();
 	//afx_msg void On1ppstimingQueryppspulseclksrc();
 	afx_msg void OnBinaryConfigureSBAS();
+	afx_msg void OnBinaryConfigureSBAS2();
 	afx_msg void OnBinaryConfigureSAGPS();
 	afx_msg void OnBinaryConfigureQZSS();
 	afx_msg void OnBinaryConfigureDGPS();
@@ -1027,6 +1065,7 @@ protected:
 	afx_msg void OnTestExternalSrec();
 	afx_msg void OnIqPlot();
 	afx_msg void OnReadMemToFile();
+	afx_msg void OnReadMemToFile2();
 	afx_msg void OnWriteMemToFile();
 	afx_msg void OnUpgradeDownload();
 	afx_msg void OnPatch();
@@ -1108,8 +1147,12 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryDrInfo); }
 	afx_msg void OnQueryDrHwParameter()
 	{ GenericQuery(&CGPSDlg::QueryDrHwParameter); }
+	afx_msg void OnQuerySbasDefault()
+	{ GenericQuery(&CGPSDlg::QuerySbasDefault); }
 	afx_msg void OnQuerySbas()
 	{ GenericQuery(&CGPSDlg::QuerySbas); }
+	afx_msg void OnQuerySbas2()
+	{ GenericQuery(&CGPSDlg::QuerySbas2); }
 	afx_msg void OnQuerySagps()
 	{ GenericQuery(&CGPSDlg::QuerySagps); }
 	afx_msg void OnQueryQzss()
@@ -1243,6 +1286,17 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryPsti004); }
 	afx_msg void OnReCalcuteGlonassIfb()
 	{ GenericQuery(&CGPSDlg::ReCalcuteGlonassIfb); }
+	afx_msg void OnBinaryQueryClockOffset()
+	{ GenericQuery(&CGPSDlg::BinaryQueryClockOffset); }
+
+	afx_msg void OnInsdrAccelerometerSelfTest()
+	{ GenericQuery(&CGPSDlg::InsdrAccelerometerSelfTest); }
+	afx_msg void OnInsdrGyroscopeSelfTest()
+	{ GenericQuery(&CGPSDlg::InsdrGyroscopeSelfTest); }
+	afx_msg void OnInsdrAccumulateAngleStart()
+	{ GenericQuery(&CGPSDlg::InsdrAccumulateAngleStart); }
+	afx_msg void OnInsdrAccumulateAngleStop()
+	{ GenericQuery(&CGPSDlg::InsdrAccumulateAngleStop); }
 
 	struct MenuItemEntry {
 		BOOL showOption;
@@ -1337,13 +1391,13 @@ protected:
 
 	CLabel m_wgs84_x,m_wgs84_y,m_wgs84_z;
 	CLabel m_enu_e,m_enu_n,m_enu_u;
-	CSnrBarChartGpsGlonass* gpsSnrBar;
-	CSnrBarChartGlonass* gnssSnrBar;
 	CSnrBarChartGalileo* gaSnrBar;
 
-#if(SUPPORT_L2_GSV2)
-	CSnrBarChartBeidouL2* bdSnrBar;
+#if(SUPPORT_BDL2_GSV2)
+	CSnrBarChartL2* gpsSnrBar;
+	CSnrBarChartL2* bdSnrBar;
 #else
+	CSnrBarChartDual* gpsSnrBar;
 	CSnrBarChartBeidou* bdSnrBar;
 #endif
 	CPic_Scatter* pic_scatter;
@@ -1371,5 +1425,10 @@ protected:
 	void ShowFormatError(U08* cmd, U08* ack);
 	void SwitchInfoTab();
   void InitMessageBox(MsgMode mode);
-
+#if defined(XN120_TESTER)
+  CString m_strXn120Version;
+  int m_nXn120TestSatus;
+  void DoXn120Tester();
+  void Xn116TesterEvent();
+#endif
 };

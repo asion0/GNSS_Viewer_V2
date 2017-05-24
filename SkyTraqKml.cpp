@@ -295,9 +295,21 @@ void CSkyTraqKml::WriteKMLPath(CFile& f, double lon, double lat, double alt, con
 		{
 			qMode.Format("Estimated Mode");
 		}
+		else if(q==PositionFix2d)
+		{
+			qMode.Format("Position Fix 2D");
+		}
+		else if(q==PositionFix3d)
+		{
+			qMode.Format("Position Fix 3D");
+		}
+		else if(q==DgpsMode)
+		{
+			qMode.Format("DGPS");
+		}
 		else
 		{
-			qMode.Format("%d", (int)q);
+			qMode.Format("%d", q);
 		}
 
 		if(noPointText)

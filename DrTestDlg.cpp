@@ -78,7 +78,7 @@ void DrTestDlg::OnDestroy()
     }
     CGPSDlg::gpsDlg->TempBoostBaudrate(TRUE);
 
-  	CDialog::OnClose();
+  	CDialog::OnDestroy();
 }
 
 void DrTestDlg::OnTimer(UINT_PTR nIDEvent)
@@ -221,3 +221,4 @@ void DrTestDlg::OnTimer(UINT_PTR nIDEvent)
 
   CDialog::OnTimer(nIDEvent);
 }
+

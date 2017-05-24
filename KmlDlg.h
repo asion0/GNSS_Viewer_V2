@@ -2,17 +2,18 @@
 #include "NMEA.h"
 #include "SkyTraqKml.h"
 #include "afxcmn.h"
+#include "afxwin.h"
 
-// CKmlDlg 對話方塊
+// CKmlDlg 
 class CKmlDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CKmlDlg)
 public:
-	CKmlDlg(CWnd* pParent = NULL);   // 標準建構函式
+	CKmlDlg(CWnd* pParent = NULL);   
 	virtual ~CKmlDlg();
 	
 	static CKmlDlg* kmlDlg;
-// 對話方塊資料
+
 	enum { IDD = IDD_PLAYER_DIALOG };
 	enum { NumOfCheckBox = 75};
 
@@ -22,11 +23,12 @@ public:
 
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedCheck76();
+	afx_msg void OnBnClickedCheckAll();
 
 protected:
 	bool isConvertFinish;
 
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 	virtual BOOL OnInitDialog();	
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 
@@ -39,12 +41,12 @@ public:
 	CString sPath;
 	CString FileName[200];
 	CString FilePath[200];
-	void GetDatFile();
+	//void GetDatFile();
 	CButton m_check[NumOfCheckBox];		
-	void GetAllDatFile();	
-	unsigned char num;
+	//void GetAllDatFile();	
+	//unsigned char num;
 	unsigned char NumOfFile;
-	unsigned char NoOfFile;
+	//unsigned char NoOfFile;
 	CEdit m_directory;
 	CEdit m_alltxt;
 	CButton m_selectall;
@@ -87,4 +89,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	CProgressCtrl m_progress;
+  afx_msg void OnLbnSelchangeFileList();
+  afx_msg void OnLbnChkchangeFileList();
+  CCheckListBox m_fileList;
+  void GetDataFiles(BOOL autoChecked);
 };

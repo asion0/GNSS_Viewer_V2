@@ -263,21 +263,50 @@
 // .242 20161123 Fix 0xA8 speed issue, request from Andrew.
 // .243 20161124 Modify [RTCM Measurement Data Output] for checking setting value and module type, request from Andrew and Ryan.
 // .244 20161124 Modify [RTCM Measurement Data Output] for UI status issue, request from Ken.
-// .245 20161128 Add [Write Clock Offser], request from Oliver.
+// .245 20161128 Add [Write Clock Offset], request from Oliver.
 // .246 20161130 Add [INS DR Test], request from Angus.
 // .247 20161201 Add Raw menu and add BASE POSITION commands, request from Ryan.
-// .248 20161202 Fixed some bugs in  BASE POSITION commands.
-// .249 20161202 Fixed some text in  BASE POSITION commands.
+// .248 20161202 Fixed some bugs in BASE POSITION commands.
+// .249 20161202 Fixed some text in BASE POSITION commands.
+// .250 20161212 Add RTK precisely kinematic base mode, request from Ryan.
+// .251 20161212 Parser supports RAW+NMEA, [Configure RTK Mode And Operational Function] add description, request from Ryan.
+// .252 20161228 New Save HostLog function.
+// .253 20170104 Fixed compatibility issues with Windows XP, reprot from Andrew.
+// .254 20170105 Display time when 0xE5 output, reprot from Ryan.
+// .254 20170105 Fix NMEA sentence error issue in Binary output mode, report from Leo.
+// .254 20170106 Add [Query Clock Offset] in Binary menu, request from Oliver.
+// .255 20170106 New parser for multiple message RTCM_NEW_PARSER.
+// .256 20170112 Add [Show Beidou Almanac] in menu, requast from forum user.
+// .257 20170117 Add SHOW_COM_SELECT flag for show COM port select, requast from forum Leo.
+// .258 20170117 Add RTCM / Ublox convert, requast from Roger and Andrew.
+// .259 20170220 Move INS DR menu to customer release version, requast from Oliver.
+// .260 20170120 Fix some crash issue in parser, requast from Alex.
+// .260 20170224 Add DR prodeuction commands in INS DR menu, requast from Angus.
+// .261 20170309 Fix KML converter bugs in quality mode, requast from Kevin.
+// .262 20170309 Fix KML converter bugs (GSA parsing) in quality mode, requast from Kevin.
+// .263 20170315 Add GPS L2 support(GPGSV2), requast from Eric.
+// .264 20170322 Automatically fill in fields, requast from Ryan and Ken.
+// .265 20170328 Support new 0xA8 format, size is 0x3F, requast from Andrew.
+// .266 20170328 Fix 0xA8 time seconds not continuious issue, requast from Andrew.
+// .267 20170405 Add all baud rate in download panel, requast from Leo.
+// .268 20170407 XN120 change SNR test range (38 to 36), requast from Leo.
+// .269 20170407 Add [Configure / Query SBAS Advance] and [Query SBAS Default], requast from Kevin.
+// .270 20170413 Fix NMEA Parser bug, report from Ardrew.
+// .271 20170413 Modify some Query / Configure SBAS Advance strings, requast from Kevin.
+// .272 20170421 Modify [Reset RTK Engine], requast from Ryan.
+// .273 20170426 Add [Read 0x60000000 to a File (1KB)], requast from Patrick.
+// .273 20170426 Fix issue in GetBinaryAck(), when receive 0xA0, 0xA1 in content will no response. 
+// .274 20170524 Test EON Flash Loader and modify some flow.
 
 #define SW_FUN_DATALOG		        0x0001
 #define SW_FUN_AGPS				        0x0002
-#define SW_FUN_DR				          0x0004
+#define SW_FUN_DR				          0x0004                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
 
 #define SOFTWARE_FUNCTION		      (SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				          0
 //title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 #define APP_CAPTION				        "GNSS Viewer"
-#define APP_VERSION				        "2.0.249"
+#define APP_VERSION				        "2.0.274"
 #define APP_TITLE				          ""
 #define APP_MODULE				        "Venus 8"
 
@@ -370,10 +399,71 @@
 #define CUSTOMER_CWQX_160815  		0   //上海長望氣象, Add 1200, 2400 bps, maximum 115200 bps
 #define FIX_DOWNLOAD_115200   		0   //Download can only use 115200 bps
 #define CUSTOMER_ZENLANE_160808  	0   //善領科技, Add customized commands
-#define SUPPORT_L2_GSV2         	0   //Support L2 information in GSV2 token.
+#define SUPPORT_BDL2_GSV2         0   //Support BDL2 information in GSV2 token.
+#define RTCM_NEW_PARSER         	1   //Use RTCM new parser.
+#define SHOW_COM_SELECT           1   //Show COM port select in [Configure Serial Port]
+#define SMALL_UI                  0   //Small UI, No Earth View, Scatter and menu
+#define KML_USE_CHECKLISTBOX      1   //Use CCheckListBox in CKmlDlg
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-#if defined(SWCFG_VENDOR_GNSS_CUSTOMER_PRODUCTION_OLIVER20161128) //20161128 for Oliver
+#if defined(SWCFG_VENDOR_GNSS_XN120_TESTER_BEIDOU) //20170308 for Leo
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef APP_MODULE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef MORE_INFO
+ #undef _TAB_LAYOUT_
+ #undef SMALL_UI
+ #undef CLIENT_WIDTH
+ #undef CLIENT_HEIGHT
+
+ #define APP_CAPTION			          "XN120 Tester Viewer"
+ #define APP_TITLE				          "(GPS + BEIDOU2)"
+ #define APP_MODULE				          ""
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define MORE_INFO				          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			          0		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define SMALL_UI			              1
+ #define CLIENT_WIDTH			    577
+ #define CLIENT_HEIGHT			  341
+ #define XN120_TESTER
+ #define XN120_TESTER_BEIDOU
+
+#elif defined(SWCFG_VENDOR_GNSS_XN120_TESTER) //20170308 for Leo
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef APP_MODULE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef MORE_INFO
+ #undef _TAB_LAYOUT_
+ #undef SMALL_UI
+ #undef CLIENT_WIDTH
+ #undef CLIENT_HEIGHT
+
+ #define APP_CAPTION			          "XN120 Tester Viewer"
+ #define APP_TITLE				          "(GPS Only)"
+ #define APP_MODULE				          ""
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define MORE_INFO				          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			          0		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define SMALL_UI			              1
+ #define CLIENT_WIDTH			    577
+ #define CLIENT_HEIGHT			  341
+ #define XN120_TESTER
+
+#elif defined(SWCFG_VENDOR_GNSS_CUSTOMER_PRODUCTION_OLIVER20161128) //20161128 for Oliver
  #undef APP_CAPTION
  #undef APP_TITLE
  #undef APP_VERSION				    
@@ -395,8 +485,9 @@
  #define MORE_INFO				0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
  #define _TAB_LAYOUT_			1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
  #define PRODUCTION_OLIVER20161128
+ #define CUSTOMIZE_COSDSTART_BUTTON
 
-#elif defined(SWCFG_VENDOR_GNSS_NMEAPLAYER_L2) //20161018 For Patrick and Evan
+#elif defined(SWCFG_VENDOR_GNSS_NMEAPLAYER_BDL2) //20161018 For Patrick and Evan
  #undef APP_CAPTION
  #undef APP_TITLE
  #undef GNSS_VIEWER
@@ -409,7 +500,7 @@
  #undef CLIENT_HEIGHT
  #undef MORE_INFO
  #undef _TAB_LAYOUT_
- #undef SUPPORT_L2_GSV2
+ #undef SUPPORT_BDL2_GSV2
 
  #define APP_CAPTION			        "GNSS Viewer"
  #define APP_TITLE				        "NMEA Player"
@@ -423,9 +514,9 @@
  #define CLIENT_HEIGHT			      614
  #define MORE_INFO				        0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
  #define _TAB_LAYOUT_			        1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
- #define SUPPORT_L2_GSV2          1
+ #define SUPPORT_BDL2_GSV2          1
 
-#elif defined(SWCFG_VENDOR_GNSS_L2_NMEA)  //20161018 For Patrick and Evan
+#elif defined(SWCFG_VENDOR_GNSS_BDL2_NMEA)  //20161018 For Patrick and Evan
  #undef APP_CAPTION
  #undef APP_TITLE
  #undef GNSS_VIEWER
@@ -435,7 +526,7 @@
  #undef SHOW_ERROR_NMEA_NOTIFY
  #undef MORE_INFO
  #undef _TAB_LAYOUT_
- #undef SUPPORT_L2_GSV2
+ #undef SUPPORT_BDL2_GSV2
 
  #define APP_CAPTION			        "GNSS Viewer"
  #define APP_TITLE				        "Internal Use L2"
@@ -446,7 +537,7 @@
  #define SHOW_ERROR_NMEA_NOTIFY   1
  #define MORE_INFO				        0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
  #define _TAB_LAYOUT_			        1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
- #define SUPPORT_L2_GSV2          1
+ #define SUPPORT_BDL2_GSV2          1
 
 #elif defined(SWCFG_VENDOR_GNSS_GENERAL_ZENLANE_160808)  //For 善領科技, 20160808, Request from Leo
  #undef APP_CAPTION
@@ -608,8 +699,8 @@
  #define SHOW_PATCH_MENU		  1
  #define UPGRADE_DOWNLOAD		  0
  #define UPGRADE_CRC			    0xFFFFFFFF
- #define UPGRADE_DUEDATE_Y		2016
- #define UPGRADE_DUEDATE_M		8
+ #define UPGRADE_DUEDATE_Y		2017
+ #define UPGRADE_DUEDATE_M		1
  #define UPGRADE_DUEDATE_D		31
  #define UPGRADE_ADD_TAG		  1
  #define UPGRADE_TAG_VALUE		0xA012
@@ -690,19 +781,20 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
+ #undef SMALL_UI
  #undef CLIENT_WIDTH
  #undef CLIENT_HEIGHT
  #undef AUTO_QUERY_VERSION
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"SANITMAX Release"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			1
- #define SAINTMAX_UI			1
- #define CLIENT_WIDTH			577
- #define CLIENT_HEIGHT			341
+ #define APP_CAPTION			    "GNSS Viewer"
+ #define APP_TITLE				    "SANITMAX Release"
+ #define GNSS_VIEWER			    1
+ #define IS_DEBUG				      0
+ #define BAUDRATE_DEFAULT		  7
+ #define TIMING_MODE			    1
+ #define SMALL_UI			        1
+ #define CLIENT_WIDTH			    577
+ #define CLIENT_HEIGHT			  341
  #define AUTO_QUERY_VERSION		1
 
 #elif defined(SWCFG_VENDOR_GNSS_ETEN20160330)	//Request from Leo
@@ -758,20 +850,22 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
+ #undef SMALL_UI
  #undef CLIENT_WIDTH
  #undef CLIENT_HEIGHT
  #undef AUTO_QUERY_VERSION
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"SANITMAX Release"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			1
- #define SAINTMAX_UI			 1
- #define CLIENT_WIDTH			577
- #define CLIENT_HEIGHT			341
+ #define APP_CAPTION			    "GNSS Viewer"
+ #define APP_TITLE				    "SANITMAX Release"
+ #define GNSS_VIEWER			    1
+ #define IS_DEBUG				      0
+ #define BAUDRATE_DEFAULT		  7
+ #define TIMING_MODE			    1
+ #define SMALL_UI			        1
+ #define CLIENT_WIDTH			    577
+ #define CLIENT_HEIGHT			  341
  #define AUTO_QUERY_VERSION		1
+ #define SAINTMAX_UI			    1
 
 #elif defined(SWCFG_VENDOR_GNSS_NMEAPLAYER_RTK)	//20151130 request from Oliver
  #undef APP_CAPTION

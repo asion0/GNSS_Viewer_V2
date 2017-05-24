@@ -1,9 +1,9 @@
-// MsgList.cpp : 實作檔
+// MsgList.cpp
 //
 
 #include "stdafx.h"
 #include "MsgList.h"
-
+#include "GPSDlg.h"
 
 // CMsgList
 #define SCAN_TIMER		1
@@ -19,7 +19,6 @@ CMsgList::~CMsgList()
 {
 }
 
-
 BEGIN_MESSAGE_MAP(CMsgList, CListCtrl)
 	ON_WM_TIMER()
 	ON_WM_DESTROY()
@@ -27,7 +26,7 @@ BEGIN_MESSAGE_MAP(CMsgList, CListCtrl)
 	ON_WM_RBUTTONUP()
 END_MESSAGE_MAP()
 
-// CMsgList 訊息處理常式
+// CMsgList
 void CALLBACK CMsgList::AsyncMessageAdd(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
 	((CMsgList*)CWnd::FromHandle(hwnd))->ProcessTextBuffer();
@@ -35,7 +34,7 @@ void CALLBACK CMsgList::AsyncMessageAdd(HWND hwnd, UINT uMsg, UINT_PTR idEvent, 
 
 void CMsgList::OnTimer(UINT_PTR nIDEvent)
 {
-	// TODO: 在此加入您的訊息處理常式程式碼和 (或) 呼叫預設值
+	// TODO
 	//Utility::Log(__FUNCTION__, "OnTimer", nIDEvent);
 
 	CListCtrl::OnTimer(nIDEvent);
@@ -56,7 +55,7 @@ void CMsgList::OnSize(UINT nType, int cx, int cy)
 	CListCtrl::OnSize(nType, cx, cy);
 	if(!m_scanTimer)
 	{
-		SetTimer(SCAN_TIMER, 20, AsyncMessageAdd);
+		SetTimer(SCAN_TIMER, 100, AsyncMessageAdd);
 		m_scanTimer = true;
 	}
 }
@@ -84,7 +83,17 @@ void CMsgList::ProcessTextBuffer()
 	{
 		return;
 	}
-
+  if(!CGPSDlg::gpsDlg->NeedUpdate())
+  {
+    if(m_textBuffer.GetCount() > 0)
+    {
+	    m_textBufferCritSect.Lock();
+	    m_textBuffer.RemoveAll();
+	    m_textBufferCritSect.Unlock();
+    }
+    return;
+  }
+  SetRedraw(FALSE);
   if(m_maxLine < GetItemCount())
 	{
 		DeleteAllItems();
@@ -100,13 +109,15 @@ void CMsgList::ProcessTextBuffer()
 
 	RECT r;
 	GetItemRect(0, &r, LVIR_BOUNDS);
-	Scroll(CSize(0, (r.bottom - r.top) * GetItemCount()));	
+	Scroll(CSize(0, (r.bottom - r.top) * GetItemCount()));
+
+  SetRedraw(TRUE);
 }
 
 void CMsgList::OnRButtonUp(UINT nFlags, CPoint point)
 {
 	return;
-	// TODO: 在此加入您的訊息處理常式程式碼和 (或) 呼叫預設值
+	// TODO
 	const UINT_PTR IDM_SELECTALL = 0x80fb;
 	const UINT_PTR IDM_COPY = 0x80fc;
 	const UINT_PTR IDM_CLEAR = 0x80fd;

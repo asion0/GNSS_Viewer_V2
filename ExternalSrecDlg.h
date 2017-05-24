@@ -30,4 +30,5 @@ public:
 	afx_msg void OnDestroy();
 protected:
 	virtual void OnOK();
+  bool m_isV6;
 };

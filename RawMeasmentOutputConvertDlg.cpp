@@ -4,6 +4,8 @@
 #include "stdafx.h"
 #include "RawMeasmentOutputConvertDlg.h"
 #include "GPS.h"
+#include "MessageParser.h"
+#include "GPSDlg.h"
 
 #define UWM_RAW_PROGRESS		(WM_USER + 0x1039)
 // CRawMeasmentOutputConvertDlg
@@ -230,6 +232,65 @@ UINT RawMeasmentOutputConvertThread(LPVOID pParam)
   return 0;
 }
 
+static CFile convertFile;
+static DWORD ReadFileOneChar(U08* c, int timeout)
+{
+  DWORD dwBytesRead = 0;
+  dwBytesRead = convertFile.Read(c, 1);
+  if(dwBytesRead == 0)
+  {
+    return MessageParser::READERROR;
+  }
+  return dwBytesRead;
+}
+
+UINT UbloxBinaryOutputConvertThread(LPVOID pParam)
+{
+	CRawMeasmentOutputConvertDlg* pDlg = (CRawMeasmentOutputConvertDlg*)pParam;
+	DWORD length = 0;	
+
+	static U08 buffer[COM_BUFFER_SIZE] = {0};
+  convertFile.Open(pDlg->GetFilePath(), CFile::modeRead);
+	CString strOutput = pDlg->GetFilePath();
+	strOutput += ".txt";
+	CFile fo(strOutput, CFile::modeWrite | CFile::modeCreate);
+	ULONGLONG total = convertFile.GetLength();
+	WPARAM progress = 0;
+	pDlg->PostMessage(UWM_RAW_PROGRESS, progress);
+  MessageType lastType = MtUnknown;
+  MessageParser mp;
+
+  mp.SetCancelTransmission(&cancelConvert);
+  mp.SetReadOneCharCallback(ReadFileOneChar);
+
+	while(!cancelConvert)
+	{	
+    MessageType type = mp.GetParsingData(buffer, sizeof(buffer) - 1, &length, 5000);
+		//length = GetBinary(buffer, sizeof(buffer), f);
+		if(progress != (WPARAM)(MaxProgress * (double)convertFile.GetPosition() / total))
+		{
+			progress = (WPARAM)(MaxProgress * (double)convertFile.GetPosition() / total);
+			pDlg->PostMessage(UWM_RAW_PROGRESS, progress);
+		}
+		//p->SetPos((int)f.GetPosition());
+		if(type == MtReadError)
+		{
+			break;
+		}
+ 		if(type == UbloxMessage)
+    {
+			  CGPSDlg::gpsDlg->UbloxProc(buffer, length + 1, &fo);
+    }  
+	}
+	fo.Close();
+	convertFile.Close();
+  if(!cancelConvert)
+  {
+	  pDlg->PostMessage(UWM_RAW_PROGRESS, MaxProgress, TRUE);
+  }
+  return 0;
+}
+
 bool ReadOneLineInFile(CFile& f, char* buffer, int size);
 bool PreprocessInputLine(U08 *buf, int& bufLen);
 bool AllPrintable(const char* buffer, int len);
@@ -342,7 +403,11 @@ void CRawMeasmentOutputConvertDlg::OnBnClickedGo()
     {
 		  pThread = AfxBeginThread(RawMeasmentOutputConvertHostLogThread, this);
     }
-		CProgressCtrl *p = (CProgressCtrl*)GetDlgItem(IDC_PROGRESS1);
+    else if(mode == UbloxBinary)
+    {
+		  pThread = AfxBeginThread(UbloxBinaryOutputConvertThread, this);
+    }		
+    CProgressCtrl *p = (CProgressCtrl*)GetDlgItem(IDC_PROGRESS1);
 		p->SetRange32(0, MaxProgress);
 		p->SetPos(0);
 		m_convertRunning = true;

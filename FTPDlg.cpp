@@ -346,7 +346,8 @@ bool CFTPDlg::TransferFile(BinaryData& ephData)
 		totalBytes += sentBytes;
 		if((totalBytes % sentBytes) == 0)
 		{
-			if(wlf_ok == WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, 2000, NULL))
+      WlfResult r = WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, 2000, NULL);
+			if(wlf_ok != r)
 			{
 				ret = false;
 				break;

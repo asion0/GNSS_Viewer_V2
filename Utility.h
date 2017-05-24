@@ -19,41 +19,58 @@
 class BinaryData;
 namespace Utility
 {
+  //Log functions
 	void Log(const char* str1, const char* str2, int n);
 	void LogFatal(const char* str1, const char* str2, int n);
 
+  //Registry functions
 	DWORD GetRegValue(HKEY hKeyHandle, LPCTSTR lpSubkey, LPCTSTR lpRegName, CString &csRegvalue);
 	DWORD GetRegValue(HKEY hKeyHandle, LPCTSTR lpSubkey, LPCTSTR lpRegName, int &nRegvalue);
 	DWORD SetRegValue(HKEY hKeyHandle, LPCTSTR lpSubkey, LPCTSTR lpRegName, LPCTSTR szRegvalue);
 	DWORD SetRegValue(HKEY hKeyHandle, LPCTSTR lpSubkey, LPCTSTR lpRegName, int &nRegvalue);
+
+  //Data convertion
 	BOOL ReadU8FileToUText(LPCTSTR pszFile, CStringW& strOutText);
 	BOOL WriteUTextToU8File(LPCTSTR pszFile, LPCWSTR pszInputText);
 	void ConvertBE2LE(void* pBuffer, int nSize);
 	BOOL ReadUFileToUText(LPCTSTR pszFile, CStringW& strOutText, BOOL& bBigEndian);
 	BOOL WriteUTextToUBFile(LPCTSTR pszFile, LPCWSTR pszInputText, BOOL bBigEndian);
-	DWORD ExecuteExternalFileW(LPCWSTR csCmdLine, CString& strResult);
-	BOOL ExecuteExeNoWait(LPCSTR csCmdLine);
-	bool IsProcessRunning(LPWSTR processName);
-	bool IsNamedPipeUsing(LPCTSTR name);
-	BOOL DeleteDirectory(LPCTSTR pszSrcDir, BOOL bSilent, BOOL bConfirm);
-	BOOL CopyFiles(LPCTSTR pszSrcFiles, LPCTSTR pszDestFolder, LPCTSTR pszNewName, BOOL bSilent, BOOL bConfirm);
-	CString GetFilePath(LPCTSTR pszPathname);
-	CString GetFileName(LPCTSTR pszPathname);
-	BOOL RenameFile(LPCTSTR pszSrcFile, LPCTSTR pszNewName, BOOL bSilent, BOOL bConfirm);
-	CString GetFileExt(LPCTSTR pszPathname);
-	BOOL CopyResToFile(LPCTSTR szDesFileName, DWORD dRes, LPCTSTR szType);
-	BOOL ParserMacResourceString(LPCTSTR pszLine, CString& strLeft, CString& strRight);
-	double GetPrivateProfileDouble(LPCSTR appName, LPCSTR keyName, LPCSTR defaultString, LPCSTR fileName);
-	bool IsFileExist(const char* filePath);
 	int LSB(char lsb);
 	int MSB(char msb);
 	int GetHexValue(char highByte, char lowByte);
 	int GetOctValue(char highByte, char lowByte);
-	CString ErrorString(DWORD err);
-	int FindNextNoneSpaceChar(LPCSTR pszInput, bool forward = true);
 	bool ConvertHexToBinary(LPCSTR pszInput, BinaryData& binData);
 	bool ConvertBinaryToHex(const BinaryData& binData, CString& strOutput, int startIndex, int maxCount, int lineCount);
+
+  //Procress functions
+	DWORD ExecuteExternalFileW(LPCWSTR csCmdLine, CString& strResult);
+	BOOL ExecuteExeNoWait(LPCSTR csCmdLine);
+	bool IsProcessRunning(LPWSTR processName);
+
+  //Pipe utilities
+	bool IsNamedPipeUsing(LPCTSTR name);
+
+  //IO functions
+	BOOL DeleteDirectory(LPCTSTR pszSrcDir, BOOL bSilent, BOOL bConfirm);
+	BOOL CopyFiles(LPCTSTR pszSrcFiles, LPCTSTR pszDestFolder, LPCTSTR pszNewName, BOOL bSilent, BOOL bConfirm);
+	BOOL RenameFile(LPCTSTR pszSrcFile, LPCTSTR pszNewName, BOOL bSilent, BOOL bConfirm);
+	bool IsFileExist(const char* filePath);
+	BOOL CopyResToFile(LPCTSTR szDesFileName, DWORD dRes, LPCTSTR szType);
 	CString GetSpecialFolder(INT iFolder);	//See define: CSIDL_APPDATA
+
+  //Path utilities
+	CString GetFilePath(LPCTSTR pszPathname);
+	CString GetFileName(LPCTSTR pszPathname);
+  CString GetFilePathName(LPCTSTR pszPathname);
+	CString GetFileExt(LPCTSTR pszPathname);
+
+  //Profile ini parser
+	double GetPrivateProfileDouble(LPCSTR appName, LPCSTR keyName, LPCSTR defaultString, LPCSTR fileName);
+  U32 GetPrivateProfileHex(LPCSTR appName, LPCSTR keyName, U32 defaultValue, LPCSTR fileName);
+
+  BOOL ParserMacResourceString(LPCTSTR pszLine, CString& strLeft, CString& strRight);
+	CString ErrorString(DWORD err);
+	int FindNextNoneSpaceChar(LPCSTR pszInput, bool forward = true);
 	CString GetNameAttachPid(LPCSTR name);
 	void DoEvents();
 	void GetErrorString(CString& msg, DWORD errorCode);

@@ -44,7 +44,7 @@ BOOL CParallelDownloadDlg::OnInitDialog()
 
 	CRegistry reg;
 	reg.SetRootKey(HKEY_CURRENT_USER);
-	if(reg.SetKey("Software\\GNSSViewer\\GPS", true))
+	if(reg.SetKey(VIEWER_REG_PATH, true))
 	{
 		//m_nBaudrateIdx = reg.ReadInt("pl_baudrate", setting->boostBaudIndex);
 		//m_nBaudrateIdx = setting->boostBaudIndex;
@@ -87,7 +87,7 @@ void CParallelDownloadDlg::OnOK()
 
 	CRegistry reg;
 	reg.SetRootKey(HKEY_CURRENT_USER);
-	if(reg.SetKey("Software\\GNSSViewer\\GPS", false))
+	if(reg.SetKey(VIEWER_REG_PATH, false))
 	{
 		//reg.WriteInt("pl_baudrate", m_nBaudrateIdx);
 		reg.WriteInt("pl_flashtype", m_nFlashType);
