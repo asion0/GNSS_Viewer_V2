@@ -864,7 +864,7 @@
 #define IDC_LON                         1348
 #define IDC_LAT                         1349
 #define IDC_SPY_CENTER                  1350
-#define IDR_INTERNAL_LOADER_SPECIAL     1351
+//#define IDR_INTERNAL_LOADER_SPECIAL     1351
 #define IDC_PASS_THROUGH                1351
 #define IDC_LAT2                        1351
 #define IDC_ALT                         1351
@@ -1295,6 +1295,8 @@
 #define ID_QUERY_SBAS2                  33165
 #define ID_QUERY_SBAS_DEFAULT           33166
 #define ID_READ_MEM_TO_FILE2            33167
+#define ID_ENTER_RTK_DEBUG_MODE         33168
+#define ID_BACK_RTK_DEBUG_MODE          33169
 
 // Next default values for new objects
 // 

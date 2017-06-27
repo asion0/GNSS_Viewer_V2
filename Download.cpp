@@ -14,8 +14,8 @@ const int BinSizeTimeout = 20*1000;
 
 typedef struct 
 {
-	char inputFile[256];
-	char outputFile[256];
+	char inputFile[MyMaxPath];
+	char outputFile[MyMaxPath];
 	int gg12a;
 	unsigned long long tagAddress;
 } Param;
@@ -242,7 +242,7 @@ UINT CGPSDlg::GetSrecFromResource(int buad)
 	switch(m_DownloadMode)
 	{
 		case EnternalLoader:
-			ASSERT(FALSE);
+			srecTable = v8AddTagSrecTable;
 			break;
 		case FileLoader:
 			ASSERT(FALSE);
@@ -849,7 +849,6 @@ U08 GetPromBinCheckSum(const U08* b, int size)
 
 U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 {
-	
 	Param promTag;
 	int extraSize = ParserBinFile(prom_path, &promTag);
 	char messages[100] = {0};
@@ -1007,27 +1006,23 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 	return RETURN_NO_ERROR;		
 }
 
-U08 CGPSDlg::PlRomNoAllocV8(const CString& prom_path)
+U08 CGPSDlg::PlRomNoAllocV8(const CString& promPath)
 {
-	Param promTag;
-	int extraSize = ParserBinFile(prom_path, &promTag);
+  Param promTag = { 0 };
+	int extraSize = ParserBinFile(promPath, &promTag);
 	char messages[100] = {0};
 
 	//CFile f;
-	BinaryData binFile(prom_path);
-	//if(0 == f.Open(prom_path, CFile::modeRead))
+	BinaryData binFile(promPath);
 	if(binFile.Size() == 0)
 	{
 		::AfxMessageBox("PROM bin file not found!");
 		return RETURN_ERROR;
 	}
 
-	//DWORD promLen = (DWORD)f.GetLength();
 	DWORD promLen = (DWORD)binFile.Size();
 
-	//f.SeekToBegin();
 	binFile.Seek(0);
-	//U08 mycheck = GetPromBinCheckSum(f, promLen);
 	U08 mycheck = GetPromBinCheckSum(binFile, promLen);
 
 #ifdef TEST_SREC
@@ -1042,23 +1037,23 @@ U08 CGPSDlg::PlRomNoAllocV8(const CString& prom_path)
 		CString strBinsizeCmd;
 		if(m_DownloadMode == InternalLoaderV8AddTag || downloadAddTag)
 		{
-      if(m_DownloadMode == InternalLoaderV8AddTag)
-      {
-			  tagAddress = 0xAAA56556;	//V8 tag address is 0xFCFFC ^ 0xAAAAAAAA
-			  tagValue = 0x5555AAAA;	//default tag is 0xFFFF ^ 0x55555555 (No Tag)
-      }
-			//U32 tagValue = 0x55555A54;	//Skytraq DR tag is 0x0F01 ^ 0x55555555
-			if(m_customerId==OlinkStar)
-			{
-				tagValue = 0x55555E54;	//OLinkStar tag is 0x0B01 ^ 0x55555555
-			}
-			else if(m_DownloadMode == InternalLoaderV8AddTag)
-			{
-				tagValue = 0x55555F54;	//Skytraq tag is 0x0A01 ^ 0x55555555
-			}
+      //if(m_DownloadMode == InternalLoaderV8AddTag)
+      //{
+			//  tagAddress = 0xAAA56556;	//V8 tag address is 0xFCFFC ^ 0xAAAAAAAA
+			//  tagValue = 0x5555AAAA;	//default tag is 0xFFFF ^ 0x55555555 (No Tag)
+      //}
+			////U32 tagValue = 0x55555A54;	//Skytraq DR tag is 0x0F01 ^ 0x55555555
+			//if(m_customerId==OlinkStar)
+			//{
+			//	tagValue = 0x55555E54;	//OLinkStar tag is 0x0B01 ^ 0x55555555
+			//}
+			//else if(m_DownloadMode == InternalLoaderV8AddTag)
+			//{
+			//	tagValue = 0x55555F54;	//Skytraq tag is 0x0A01 ^ 0x55555555
+			//}
 			checkCode = promLen + mycheck + m_nDownloadBaudIdx + tagAddress + tagValue;
-			strBinsizeCmd.Format("BINSIZ2 = %d %d %u %u %u %u ", promLen, mycheck, m_nDownloadBaudIdx,
-									tagAddress, tagValue, checkCode);
+			strBinsizeCmd.Format("BINSIZ2 = %d %d %u %u %u %u ", 
+        promLen, mycheck, m_nDownloadBaudIdx, tagAddress, tagValue, checkCode);
       downloadAddTag = FALSE;
       tagAddress = 0;
       tagValue = 0;
@@ -1215,14 +1210,14 @@ void CGPSDlg::GetLoaderDownloadCmd(char* msg, int size)
 	}
 }
 
-bool CGPSDlg::DownloadLoader()
+bool CGPSDlg::DownloadLoader(DownloadMode mode)
 {
 	ScopeTimer t("DownloadLoader()");
 	const int bufferSize = 256;
 	char messages[100] = {0};
 	//U08 dummy[9] = {0xa0, 0xa1, 0x00, 0x02, 0x00, 0x00, 0x01, 0x0d, 0x0a};
 
-	if(m_DownloadMode != EnternalLoaderInBinCmd && m_DownloadMode != FileLoaderInBinCmd)
+	if(mode != EnternalLoaderInBinCmd && mode != FileLoaderInBinCmd)
 	{
 		GetLoaderDownloadCmd(messages, sizeof(messages));
 		
@@ -1264,10 +1259,10 @@ bool CGPSDlg::DownloadLoader()
 		//bool b = false;
 		if(!b)
 		{
-			m_DownloadMode = EnternalLoader;
-			BoostBaudrate(FALSE);
+			//m_DownloadMode = EnternalLoader;
+			//BoostBaudrate(FALSE);
 			//add_msgtolist("Upload Loader command NACK.");	
-			return DownloadLoader();
+			return false;
 		}
 		else
 		{
@@ -1287,8 +1282,8 @@ bool CGPSDlg::DownloadLoader()
 	CString externalSrecFile;
 	theApp.CheckExternalSrec(externalSrecFile);
 
-	if(EnternalLoaderInBinCmd == m_DownloadMode || 
-     FileLoader == m_DownloadMode || FileLoaderInBinCmd == m_DownloadMode)
+	if(EnternalLoaderInBinCmd == mode || 
+     FileLoader == mode || FileLoaderInBinCmd == mode)
 	{
     if(externalSrecFile.IsEmpty())
     {
@@ -1297,14 +1292,6 @@ bool CGPSDlg::DownloadLoader()
     else
     {
 		  srec.ReadFromFile(externalSrecFile);
-      //if(FileLoader == m_DownloadMode)
-      //{
-      //  m_DownloadMode = EnternalLoader;
-      //}
-      //else if(FileLoaderInBinCmd == m_DownloadMode)
-      //{
-      //  m_DownloadMode = FileLoader;
-      //}
     }
 	}
 	else
@@ -1375,7 +1362,7 @@ bool CGPSDlg::DownloadLoader()
 //	m_psoftImgDlDlg->m_msg.SetWindowText("Flash loading is OK!");
 	m_psoftImgDlDlg->PostMessage(UWM_SETPROMPT_MSG, IDS_FLASHWRITINGOK_MSG);
 
-	switch(m_DownloadMode)
+	switch(mode)
 	{
 		case ParallelDownloadType0:
 		case ParallelDownloadType1:
@@ -1402,53 +1389,6 @@ bool CGPSDlg::DownloadLoader()
 		default:
 			ASSERT(FALSE);
 	}
-
-	return true;
-}
-
-BOOL VarifyPassword(const CString& pwd)
-{
-	if(!_CREATE_LICENSE_TAG_)
-	{
-		return true;
-	}
-
-	const char ConvertTabe[] = "0123456789abcdfghijkmnpqrstuvwyz";
-	CString key, binPart, answer;
-	CTime currentTime = CTime::GetCurrentTime();
-	key.Format("SkytraqTagGPSViewer%d%d", currentTime.GetYear() - 2000, (currentTime.GetMonth() - 1) / 3);
-	CString shaData = CryptHash::HashStringSHA1(key);
-
-	for(int i = shaData.GetLength()-1; i>0; i-=3)
-	{
-		binPart = shaData[i - 1];
-		binPart += shaData[i];
-		answer += ConvertTabe[strtol(binPart, NULL, 16) % strlen(ConvertTabe)];
-	}
-	return 0 == answer.CompareNoCase(pwd);
-}
-
-bool CGPSDlg::QueryPassword()
-{
-	if(!_CREATE_LICENSE_TAG_)
-	{
-		return true;
-	}
-#ifdef _DEBUG
-		return true;
-#endif
-	CInputPassword dlg;
-	CString pwInput;
-	INT_PTR nResponse = dlg.DoModal();
-	if(nResponse==IDCANCEL)
-	{
-		return false;
-	}
-
-	if(!VarifyPassword(dlg.GetPassword()))
-	{
-		return false;
-	}
 	return true;
 }
 
@@ -1460,8 +1400,240 @@ UINT ShowDownloadProgressThread(LPVOID pParam)
 	return 0;	
 }
 
-const int SpiBaudIndex = 9;
-bool SecondRun = false;
+bool IsV8FirstRomVersion(const BinaryData& ackCmd)
+{
+  if(ackCmd[7] == 2 && ackCmd[8] == 0 && ackCmd[9] == 2 &&
+      ackCmd[15] == 13 && ackCmd[16] == 2 && ackCmd[17] == 21)
+  {
+    return true;
+  }
+  return false;
+}
+
+bool IsV8NewLoaderVersion(const BinaryData& ackCmd)
+{
+  if(ackCmd[13] > 27)
+  {
+    return true;
+  }
+  return false;
+}
+
+static const int SpiBaudIndex = 9;
+//static bool SecondRun = false;
+bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
+{
+  bool isSuccessful = true;
+	ScopeTimer t("Download()");
+
+	switch(m_DownloadMode)
+	{
+		case EnternalLoader:
+		case FileLoader:
+		case InternalLoaderV6Gps:
+		case InternalLoaderV6Gnss:
+		case InternalLoaderV6Gg12a:
+		case InternalLoaderV6GpsAddTag:
+		case InternalLoaderV6GpsDelTag:
+		case InternalLoaderV6GnssAddTag:
+		case InternalLoaderV6GnssDelTag:
+		case ParallelDownloadType0:
+		case ParallelDownloadType1:
+		case InternalLoaderV8AddTag:
+		case RomExternalDownload:
+		case InternalLoaderSpecial:
+		case EnternalLoaderInBinCmd:
+		case FileLoaderInBinCmd:
+      if(boostBaudRate)
+      {
+			  BoostBaudrate(FALSE);
+      }
+		{
+			//1. Boost baud rate 2. Download Loader 
+			m_psoftImgDlDlg = new CSoftImDwDlg;	
+			AfxBeginThread(ShowDownloadProgressThread, 0); 
+			if(!DownloadLoader(m_DownloadMode))
+			{
+        if(restoreConnection)
+        {
+				  add_msgtolist("Software image download failed...");	 
+				  ::AfxMessageBox("Load loader into RAM failed!");
+        }
+				m_psoftImgDlDlg->SetFinish(true);	
+        if(boostBaudRate)
+        {
+				  BoostBaudrate(TRUE);
+        }
+        if(restoreConnection)
+        {
+			    SetMode();
+			    CreateGPSThread();
+        }
+				//m_gpsdoInProgress = false;
+        if(EnternalLoaderInBinCmd==m_DownloadMode)
+        {
+          m_DownloadMode = InternalLoaderV8;
+          return RealDownload(restoreConnection, boostBaudRate);
+        }
+				return false;
+			}
+			break;
+		}
+		case HostBasedDownload:
+		case HostBasedCmdOnly:
+		case InternalLoaderV8:
+		case CustomerDownload:
+		case GpsdoMasterSlave:
+		{	//Using command to initial loader.
+			U08 msg[9] = {0};
+			int cmdSize = 0;	
+			if(m_DownloadMode==InternalLoaderV8 || m_DownloadMode==GpsdoMasterSlave)
+			{
+				msg[0] = 0x0B;
+				msg[1] = (U08)m_nDownloadBaudIdx;
+				msg[2] = (U08)0;
+				msg[3] = (U08)0;
+				msg[4] = (U08)0;
+				msg[5] = (U08)m_nDownloadBufferIdx;
+				cmdSize = 6;
+			}
+			else if(m_DownloadMode==CustomerDownload)
+			{
+				msg[0] = 0x64;
+				msg[1] = 0x7F;
+				msg[2] = HIBYTE(m_customerId);
+				msg[3] = LOBYTE(m_customerId);
+				msg[4] = 0;
+				msg[5] = (U08)m_nDownloadBaudIdx;
+				msg[6] = 0;
+				msg[7] = 0;
+				msg[8] = 0;
+				cmdSize = 9;
+
+				m_DownloadMode = InternalLoaderV8;
+			}
+			else
+			{
+				msg[0] = 0x64;
+				msg[1] = 0x10;
+				msg[2] = (U08)m_nDownloadBaudIdx;
+				msg[3] = (U08)m_nDownloadBufferIdx;
+				cmdSize = 4;
+			}
+
+			int len = SetMessage(msg, cmdSize);
+			if(!SendToTarget(CGPSDlg::m_inputMsg, len, "Loader start...", true))
+			{
+				isSuccessful = false;
+			}
+			if(restoreConnection)
+			{
+				CloseOpenUart();
+				m_serial->ResetPort(m_nDownloadBaudIdx);
+				m_BaudRateCombo.SetCurSel(m_nDownloadBaudIdx);
+				Sleep(200);
+			}
+			break;
+		}
+		default:
+			ASSERT(FALSE);
+	}
+
+	if(m_DownloadMode==HostBasedCmdOnly)
+	{
+		//m_gpsdoInProgress = false;
+		return false;
+	} 
+
+	if(NULL == m_serial) 
+  {
+    return false;
+  }
+	if(isSuccessful)
+	{
+		if(NULL==m_psoftImgDlDlg)
+		{
+			m_psoftImgDlDlg = new CSoftImDwDlg;	
+			AfxBeginThread(ShowDownloadProgressThread, 0); 
+		}
+		if(g_setting.delayBeforeBinsize)
+		{
+			Sleep(g_setting.delayBeforeBinsize);
+		}
+
+		//isSuccessful = FirmwareUpdate((m_DownloadMode==GpsdoMasterSlave && SecondRun) ? m_strDownloadImage2 : m_strDownloadImage);
+		isSuccessful = FirmwareUpdate(m_strDownloadImage);
+		if(isSuccessful)
+		{
+			CString strMsg;
+			strMsg.Format("Download total time %d seconds.", t.GetDuration() / 1000);
+			add_msgtolist(strMsg);
+			DeleteNmeaMemery();
+			m_firstDataIn = false;
+			m_inputMode = NmeaMessageMode;	
+			SetMsgType(NmeaMessageMode);
+		}
+		else
+		{
+			add_msgtolist("Software Image Download Failed...");
+			::AfxMessageBox("Download failed!");
+		}
+	}
+	else
+	{
+		add_msgtolist("Software Image Download Failed...");
+		::AfxMessageBox("Download failed!");
+	}
+
+	if(m_psoftImgDlDlg)
+	{
+		m_psoftImgDlDlg->SetFinish(true);	
+	}
+
+	if(NULL == m_serial) return false;
+  if(boostBaudRate)
+  {
+	  BoostBaudrate(TRUE);
+  }
+	if(g_setting.downloadTesting)
+	{
+		Sleep(3000);
+	}
+
+	//if(GpsdoMasterSlave == m_DownloadMode)
+	//{
+	//	SecondRun = (SecondRun) ? false : true;
+	//	if(SecondRun)
+	//	{
+	//		Sleep(1000);
+	//		continue;
+	//	}
+	//	else
+	//	{
+	//		GpsdoLeaveDownload(Return, NULL);
+	//		if(g_setting.downloadTesting)
+	//		{
+	//			Sleep(1000);
+	//		}
+	//	}
+	//}
+
+
+	//if(m_gpsdoInProgress)
+	//{
+	//	return isSuccessful;
+	//}
+
+  if(restoreConnection)
+  {
+	  SetMode();
+	  m_firstDataIn = false;
+	  ClearInformation();
+	  CreateGPSThread();
+  }
+	return isSuccessful;
+}
+
 bool CGPSDlg::Download()
 {
 	if(m_DownloadMode == CustomerUpgrade)
@@ -1471,38 +1643,53 @@ bool CGPSDlg::Download()
 
 	if(m_DownloadMode == GpsdoMasterSlave)
 	{
-		return Download3();
+		return DownloadMasterSlave();
 	}
 
 	//Create Tag version need authenticate.
-	if(!QueryPassword())
-	{	//Password authentication failed!
-		SetMode();
-		CreateGPSThread();
-		m_gpsdoInProgress = false;
-		return false;
-	}
+  //20170524 Alex remove QueryPassword
+	//if(!QueryPassword())
+	//{	//Password authentication failed!
+	//	SetMode();
+	//	CreateGPSThread();
+	//	m_gpsdoInProgress = false;
+	//	return false;
+	//}
 
 	bool isSuccessful = true;
 	do 
 	{	//Download test loop
 		customerCrc = 0;
-		if((_CREATE_LICENSE_TAG_ && m_DownloadMode==InternalLoaderV8) || (m_DownloadMode == EnternalLoader))
+		//U16 crcCode = 0;
+    BinaryData ackVer;
+		BOOL hasAckVersion = FALSE;
+		m_nDefaultTimeout = 5000;
+    
+    //if((_CREATE_LICENSE_TAG_ && m_DownloadMode==InternalLoaderV8) || (m_DownloadMode == EnternalLoader))
+		if(m_DownloadMode == EnternalLoader)
 		{
 			m_DownloadMode = InternalLoaderV8AddTag;
 		}
+    
+    U32 chipmode = 0;
+    U32 tmpTrgAdd = m_regAddress;
+    m_regAddress = 0x2000F010;
+		if(m_DownloadMode != FileLoader && !DOWNLOAD_IMMEDIATELY && 
+       Ack == QueryRegister(Return, &chipmode))
+		{
+			chipmode = (chipmode >> 20) & 0x07;
+		} 
+    m_regAddress = tmpTrgAdd;
 
-		U16 crcCode = 0;
-		BOOL hasAckVersion = FALSE;
-		m_nDefaultTimeout = 5000;
-		if(m_DownloadMode != FileLoader && 
-       !DOWNLOAD_IMMEDIATELY && 
-       Ack == QuerySoftwareCrcSystemCode(Return, &crcCode))
+		if(m_DownloadMode != FileLoader && !DOWNLOAD_IMMEDIATELY && 
+       Ack == QuerySoftwareVersionSystemCode(Return, &ackVer))
 		{
 			hasAckVersion = TRUE;
 		}
 		m_nDefaultTimeout = g_setting.defaultTimeout;
 
+    //Special case for OLinkStar to added tag.
+    /*
 		if(m_DownloadMode != EnternalLoader && CUSTOMER_DOWNLOAD && m_customerId==OlinkStar)
 		{
 			if(hasAckVersion && (crcCode==0xD3CF || crcCode==0x00A0  || crcCode==0x0724 || crcCode==0x6469))
@@ -1512,11 +1699,30 @@ bool CGPSDlg::Download()
 				customerCrc = crcCode;
 			}
 		}
-		else if(m_DownloadMode == InternalLoaderV8 && (crcCode == 0xe463 /*|| crcCode == 0x74cf*/))
-		{	
-      if(!g_setting.downloadRomInternal)
-      { //V8 ROM Code A must use external loader.
-			  m_DownloadMode = RomExternalDownload;
+		else */
+    //if(m_DownloadMode == InternalLoaderV8 && (crcCode == 0xe463 /*|| crcCode == 0x74cf*/))
+    if(m_DownloadMode == InternalLoaderV8)
+    {
+      if(!hasAckVersion)
+      {
+				::AfxMessageBox("Device no response!");
+        return false;
+      }
+      else if(IsV8FirstRomVersion(ackVer) && !g_setting.downloadRomInternal)
+      { //V8 ROM A's loader can't support new Winbond and EN25W80B
+        m_DownloadMode = InternalLoaderV8AddTag;
+      }
+      else if(IsV8FirstRomVersion(ackVer) && g_setting.downloadRomInternal)
+      { //Use internal loader of V8 ROM A, only for test
+        m_DownloadMode = InternalLoaderV8;
+      }
+      else if(chipmode == 1 || IsV8NewLoaderVersion(ackVer))
+      { //Winbond flash
+        m_DownloadMode = InternalLoaderV8;
+      }
+      else
+      {
+        m_DownloadMode = InternalLoaderV8AddTag;
       }
 		}
 
@@ -1525,209 +1731,30 @@ bool CGPSDlg::Download()
 			Sleep(100);
 		}
 
-		if(m_DownloadMode==GpsdoMasterSlave && SecondRun)
-		{
-			if(crcCode==0xe463)
-			{
-				::AfxMessageBox("Please change BOOT_SEL to flash, and push reset.");
-			}
-			
-			CmdErrorCode err = GpsdoEnterDownload(Return, NULL);
-			m_nDownloadBaudIdx = 5;
-			SetBaudrate(m_nDownloadBaudIdx);		//115200 bps
-			Sleep(1000);
+		//if(m_DownloadMode == GpsdoMasterSlave && SecondRun)
+		//{
+		//	if(IsV8FirstRomVersion(ackVer))
+		//	{
+		//		::AfxMessageBox("Please change BOOT_SEL to flash, and push reset.");
+		//	}
+		//	
+		//	CmdErrorCode err = GpsdoEnterDownload(Return, NULL);
+		//	m_nDownloadBaudIdx = 5;
+		//	SetBaudrate(m_nDownloadBaudIdx);		//115200 bps
+		//	Sleep(1000);
 
-			if(Ack != err)
-			{
-				::AfxMessageBox("Can't download GPSDO Slave!");
-				break;
-			}
-		}
-
-		ScopeTimer t("Download()");
-	
-		switch(m_DownloadMode)
-		{
-			case EnternalLoader:
-			case FileLoader:
-			case InternalLoaderV6Gps:
-			case InternalLoaderV6Gnss:
-			case InternalLoaderV6Gg12a:
-			case InternalLoaderV6GpsAddTag:
-			case InternalLoaderV6GpsDelTag:
-			case InternalLoaderV6GnssAddTag:
-			case InternalLoaderV6GnssDelTag:
-			case ParallelDownloadType0:
-			case ParallelDownloadType1:
-			case InternalLoaderV8AddTag:
-			case RomExternalDownload:
-			case InternalLoaderSpecial:
-				BoostBaudrate(FALSE);
-			case FileLoaderInBinCmd:
-			case EnternalLoaderInBinCmd:
-			{
-				//1. Boost baud rate 2. Download Loader 
-				m_psoftImgDlDlg = new CSoftImDwDlg;	
-				AfxBeginThread(ShowDownloadProgressThread, 0); 
-				if(!DownloadLoader())
-				{
-					add_msgtolist("Software image download failed...");	 
-					::AfxMessageBox("Load loader into RAM failed!");
-					m_psoftImgDlDlg->SetFinish(true);	
-					BoostBaudrate(TRUE);
-					SetMode();
-					CreateGPSThread();
-					m_gpsdoInProgress = false;
-					return false;
-				}
-				break;
-			}
-			case HostBasedDownload:
-			case HostBasedCmdOnly:
-			case InternalLoaderV8:
-			case CustomerDownload:
-			case GpsdoMasterSlave:
-			{	//Using command to initial loader.
-				U08 msg[9] = {0};
-				int cmdSize = 0;	
-				if(m_DownloadMode==InternalLoaderV8 || m_DownloadMode==GpsdoMasterSlave)
-				{
-					msg[0] = 0x0B;
-					msg[1] = (U08)m_nDownloadBaudIdx;
-					msg[2] = (U08)0;
-					msg[3] = (U08)0;
-					msg[4] = (U08)0;
-					msg[5] = (U08)m_nDownloadBufferIdx;
-					cmdSize = 6;
-				}
-				else if(m_DownloadMode==CustomerDownload)
-				{
-					msg[0] = 0x64;
-					msg[1] = 0x7F;
-					msg[2] = HIBYTE(m_customerId);
-					msg[3] = LOBYTE(m_customerId);
-					msg[4] = 0;
-					msg[5] = (U08)m_nDownloadBaudIdx;
-					msg[6] = 0;
-					msg[7] = 0;
-					msg[8] = 0;
-					cmdSize = 9;
-
-					m_DownloadMode = InternalLoaderV8;
-				}
-				else
-				{
-					msg[0] = 0x64;
-					msg[1] = 0x10;
-					msg[2] = (U08)m_nDownloadBaudIdx;
-					msg[3] = (U08)m_nDownloadBufferIdx;
-					cmdSize = 4;
-				}
-
-				int len = SetMessage(msg, cmdSize);
-				if(!SendToTarget(CGPSDlg::m_inputMsg, len, "Loader start...", true))
-				{
-					isSuccessful = false;
-				}
-				else if(m_nDownloadBaudIdx < SpiBaudIndex)
-				{
-					CloseOpenUart();
-					m_serial->ResetPort(m_nDownloadBaudIdx);
-					m_BaudRateCombo.SetCurSel(m_nDownloadBaudIdx);
-					Sleep(200);
-				}
-				break;
-			}
-			default:
-				ASSERT(FALSE);
-		}
-
-		if(m_DownloadMode==HostBasedCmdOnly)
-		{
-			m_gpsdoInProgress = false;
-			return false;
-		} 
-
-		if(NULL == m_serial) return false;
-		if(isSuccessful)
-		{
-			if(NULL==m_psoftImgDlDlg)
-			{
-				m_psoftImgDlDlg = new CSoftImDwDlg;	
-				AfxBeginThread(ShowDownloadProgressThread, 0); 
-			}
-			if(g_setting.delayBeforeBinsize)
-			{
-				Sleep(g_setting.delayBeforeBinsize);
-			}
-
-			isSuccessful = FirmwareUpdate((m_DownloadMode==GpsdoMasterSlave && SecondRun) ? m_strDownloadImage2 : m_strDownloadImage);
-			if(isSuccessful)
-			{
-				CString strMsg;
-				strMsg.Format("Download total time %d seconds.", t.GetDuration() / 1000);
-				add_msgtolist(strMsg);
-				DeleteNmeaMemery();
-				m_firstDataIn = false;
-				m_inputMode = NmeaMessageMode;	
-				SetMsgType(NmeaMessageMode);
-			}
-			else
-			{
-				add_msgtolist("Software Image Download Failed...");
-				::AfxMessageBox("Download failed!");
-			}
-		}
-		else
-		{
-			add_msgtolist("Software Image Download Failed...");
-			::AfxMessageBox("Download failed!");
-		}
-
-		if(m_psoftImgDlDlg)
-		{
-			m_psoftImgDlDlg->SetFinish(true);	
-		}
-
-		if(NULL == m_serial) return false;
-		BoostBaudrate(TRUE);
-		if(g_setting.downloadTesting)
-		{
-			Sleep(3000);
-		}
-
-		if(GpsdoMasterSlave == m_DownloadMode)
-		{
-			SecondRun = (SecondRun) ? false : true;
-			if(SecondRun)
-			{
-				Sleep(1000);
-				continue;
-			}
-			else
-			{
-				GpsdoLeaveDownload(Return, NULL);
-				if(g_setting.downloadTesting)
-				{
-					Sleep(1000);
-				}
-			}
-		}
+		//	if(Ack != err)
+		//	{
+		//		::AfxMessageBox("Can't download GPSDO Slave!");
+		//		break;
+		//	}
+		//}
+    isSuccessful = RealDownload();
 		if(!g_setting.downloadTesting)
 		{
 			break;
 		}
 	} while(1);
-
-	if(m_gpsdoInProgress)
-	{
-		return isSuccessful;
-	}
-
-	SetMode();
-	m_firstDataIn = false;
-	ClearInformation();
-	CreateGPSThread();
 	return isSuccessful;
 }
 
@@ -1827,7 +1854,7 @@ bool CGPSDlg::Download2()
 	{
 		BoostBaudrate(FALSE);
 		m_DownloadMode = InternalLoaderV8AddTag;
-		if(!DownloadLoader())
+		if(!DownloadLoader(m_DownloadMode))
 		{
 			add_msgtolist("Software image download failed...");	 
 			::AfxMessageBox("Load loader into RAM failed!");
@@ -1835,7 +1862,7 @@ bool CGPSDlg::Download2()
 			BoostBaudrate(TRUE);
 			SetMode();
 			CreateGPSThread();
-			m_gpsdoInProgress = false;
+			//m_gpsdoInProgress = false;
 			if(SHOW_PATCH_MENU)
 			{
 				patchLog.Format("PatchResult: %08X%08X", patchData, patchStatus);
@@ -1922,12 +1949,12 @@ bool CGPSDlg::Download2()
 		Sleep(3000);
 	}
 
-	if(m_gpsdoInProgress)
-	{
-		GpsdoLeaveDownload(Display, NULL);
-		SetBaudrate(5);
-		m_gpsdoInProgress = false;
-	}
+	//if(m_gpsdoInProgress)
+	//{
+	//	GpsdoLeaveDownload(Display, NULL);
+	//	SetBaudrate(5);
+	//	m_gpsdoInProgress = false;
+	//}
 	if(SHOW_PATCH_MENU)
 	{
 		patchLog.Format("PatchResult: %08X%08X", patchData, patchStatus);
@@ -1943,7 +1970,8 @@ bool CGPSDlg::Download2()
 
 bool CGPSDlg::Download3()
 {
-	m_DownloadMode = InternalLoaderV8;
+  /*
+	m_DownloadMode = InternalLoaderV8AddTag;
 	m_nDownloadBaudIdx = ((CComboBox*)GetDlgItem(IDC_DL_BAUDRATE))->GetCurSel();
 	//m_nDownloadBaudIdx += 5;	//Download Baudrate start in 115200
 	m_gpsdoInProgress = true;
@@ -2040,13 +2068,89 @@ bool CGPSDlg::Download3()
 	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Configure master COM1 successfully", false);
 	Sleep(500);	//Wait for master firmware boot.
 
-
 	BoostBaudrate(TRUE);
 
 	SetMode();
 	m_firstDataIn = false;
 	ClearInformation();
 	CreateGPSThread();
+  */
 	return true;
+}
+
+
+bool CGPSDlg::DownloadMasterSlave()
+{
+  const int passThroughDlBaudIdx = 5; //Pass through download baud must be 115200;
+
+  DownloadMode downloadMode = m_DownloadMode;
+  int downloadBaudIdx = m_nDownloadBaudIdx;
+  CString strDownloadImage = m_strDownloadImage;
+	m_DownloadMode = EnternalLoaderInBinCmd;
+
+  bool isSuccessful = true;
+	if(g_setting.GetBaudrateIndex() != m_nDownloadBaudIdx)
+	{
+    if(Ack != SetPort0Baud(m_nDownloadBaudIdx, ChangeToTemp))
+    {
+      ::AfxMessageBox("Download failed!");
+      goto End;
+    }
+  }
+
+	isSuccessful = RealDownload(false, false);
+  if(!isSuccessful)
+  {
+    ::AfxMessageBox("Download failed!");
+    goto End;
+  }
+  m_serial->ResetPort(m_masterFwBaudIdx);
+  m_BaudRateCombo.SetCurSel(m_masterFwBaudIdx);
+  Sleep(1000);    //Wait new FW ready
+
+  if(m_masterFwBaudIdx != passThroughDlBaudIdx)
+	{
+    if(Ack != SetPort0Baud(passThroughDlBaudIdx, ChangeToTemp))
+    {
+      ::AfxMessageBox("Download failed!");
+      goto End;
+    }
+  }
+
+  if(Ack != InsdrEnterUart(Return, NULL))
+  {
+    ::AfxMessageBox("Download failed!");
+    goto End;
+  }
+  Sleep(1000);    //Wait slave FW ready
+
+  m_strDownloadImage = m_strDownloadImage2;
+  m_nDownloadBaudIdx = passThroughDlBaudIdx;
+  m_DownloadMode = EnternalLoaderInBinCmd;
+  isSuccessful = RealDownload(false, false);
+  if(!isSuccessful)
+  {
+    ::AfxMessageBox("Download failed!");
+    goto End;
+  }
+
+  if(Ack != InsdrLeaveUart(Return, NULL))
+  {
+      ::AfxMessageBox("Back from pass-through failed!");
+      goto End;
+  }
+  ::AfxMessageBox("Master / slave download success.");
+End:
+  m_serial->ResetPort(m_masterFwBaudIdx);
+  m_BaudRateCombo.SetCurSel(m_masterFwBaudIdx);
+  g_setting.SetBaudrateIndex(m_masterFwBaudIdx);
+  m_strDownloadImage = strDownloadImage;
+  m_nDownloadBaudIdx = downloadBaudIdx;
+
+	SetMode();
+	m_firstDataIn = false;
+	ClearInformation();
+	CreateGPSThread();
+	return isSuccessful;
 }
 

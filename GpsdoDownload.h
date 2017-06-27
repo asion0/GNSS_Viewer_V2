@@ -14,8 +14,8 @@ public:
 	//enum { IDD = IDD_GPSDO_DOWNLOAD };
 	CString m_strMasterPath;
 	CString m_strSlavePath;
-	int m_slaveSourceBaud;
-	int m_slaveTargetBaud;
+	int m_downloadBaudIdx;
+	int m_masterFwBaudIdx;
 
 protected:
 	void SaveSetting();

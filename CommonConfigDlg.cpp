@@ -1436,7 +1436,7 @@ void ConfigBinaryMeasurementDataOutDlg::OnBnClickedOk()
 
 void ConfigBinaryMeasurementDataOutDlg::UpdateStatus()
 {
-  ((CButton*)GetDlgItem(IDC_EXT_RAW_MEAS))->ShowWindow((m_newCmd) ? SW_SHOW : SW_HIDE);
+  ((CButton*)GetDlgItem(IDC_EXT_RAW_MEAS))->EnableWindow((m_newCmd) ? TRUE : FALSE);
 }
 
 void ConfigBinaryMeasurementDataOutDlg::DoCommand()

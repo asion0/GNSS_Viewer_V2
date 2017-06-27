@@ -164,7 +164,11 @@ IDB_EARTH4              PNG						"res\\Earth_-10_26.png"
 IDB_EARTH5              PNG						"res\\Earth_28_-98.png"
 IDB_EARTH6              PNG						"res\\Earth_-10_-60.png"
 
+#ifdef _NAVIC_CONVERT_
+IDB_GPS_SNR_T           BITMAP        "res\\NavicSnrT.bmp"
+#else
 IDB_GPS_SNR_T           BITMAP        "res\\GpsSnrT.bmp"
+#endif
 IDB_BEIDOU_SNR_T        BITMAP        "res\\BeidouSnrT.bmp"
 IDB_GA_SNR_T			      BITMAP				"res\\GaSnrT.bmp"
 
@@ -207,7 +211,7 @@ IDR_V8_DL_SREC_230400 SREC						"res\\loader_v8_download_230400.srec"
 IDR_V8_DL_SREC_460800 SREC						"res\\loader_v8_download_460800.srec"
 
 IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag.srec"
-IDR_INTERNAL_LOADER_SPECIAL     SREC  "res\\loader_v8_new.srec"
+//IDR_INTERNAL_LOADER_SPECIAL     SREC  "res\\loader_v8_new.srec"
 
 /////////////////////////////////////////////////////////////////////////////
 //

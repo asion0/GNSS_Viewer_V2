@@ -392,7 +392,7 @@ protected:
 	CClipboardListBox m_responseList;	
 
 	char m_currentDir[MyMaxPath];
-	bool m_gpsdoInProgress;
+	//bool m_gpsdoInProgress;
 	CFile m_convertFile;
 	CString m_nmeaFilePath;
 	GNSS_T m_gnss;
@@ -519,7 +519,8 @@ public:
 	void ScanGPS2();
 	void ScatterPlot(CDC *dc);
 	void SetEphms(U08 continues);
-	void SetPort(U08,int mode);
+	bool SetPort(U08, int mode);
+  CmdErrorCode SetPort0Baud(U08 baudIdx, U08 mode);
 #if(_MODULE_SUP_800_)
 	void ShowPsti004001();
 #endif
@@ -664,18 +665,20 @@ public:
 	CString m_strDownloadImage;
 	CString m_strDownloadImage2;
 	int m_nSlaveSourceBaud;
-	int m_nSlaveTargetBaud;
+	int m_masterFwBaudIdx;
   BOOL downloadAddTag;
   U32 tagAddress;
   U32 tagValue;
 
 	bool CheckTagType();
+	bool RealDownload(bool restoreConnection = true, bool boostBaudRate = true);
 	bool Download();
 	bool Download2();
 	bool Download3();
+	bool DownloadMasterSlave();
 	void SetBaudrate(int b);
 	BOOL GetShowBinaryCmdData() { return m_bShowBinaryCmdData; }
-	void BoostBaudrate(BOOL bRestore, BoostMode mode = ChangeToTemp, bool isForce = false);
+	bool BoostBaudrate(BOOL bRestore, BoostMode mode = ChangeToTemp, bool isForce = false);
 	void TempBoostBaudrate(BOOL bRestore, int boostBaudIndex = 5, int timeout = 1000);
 	
 	void SetInputMode(MsgMode i) { m_inputMode = i; }
@@ -738,9 +741,9 @@ private:
 		bool needSleep, CWnd* notifyWnd);
 	int SendRomBufferCustomerUpgrade(const U08* sData, int sDataSize, BinaryData &f, int fbinSize, 
 		bool needSleep, CWnd* notifyWnd);
-	bool DownloadLoader();
+	bool DownloadLoader(DownloadMode mode);
 	UINT GetSrecFromResource(int baud);
-	bool QueryPassword();
+	//bool QueryPassword();
 	void GetLoaderDownloadCmd(char* msg, int size);
 	//Data Log functions
 	bool DatalogReadAll(int start_id,int offset, U08 *datalog,long size,long *receive_count );
@@ -863,6 +866,8 @@ protected:
 	CmdErrorCode QueryRtkParameters(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPstmDeviceAddress(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPstnLatLonDigits(CmdExeMode nMode, void* outputData);
+	CmdErrorCode EnterRtkDebugMode(CmdExeMode nMode, void* outputData);
+	CmdErrorCode BackRtkDebugMode(CmdExeMode nMode, void* outputData);
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
@@ -1297,6 +1302,11 @@ protected:
 	{ GenericQuery(&CGPSDlg::InsdrAccumulateAngleStart); }
 	afx_msg void OnInsdrAccumulateAngleStop()
 	{ GenericQuery(&CGPSDlg::InsdrAccumulateAngleStop); }
+
+	afx_msg void OnEnterRtkDebugMode()
+	{ GenericQuery(&CGPSDlg::EnterRtkDebugMode); }
+	afx_msg void OnBackRtkDebugMode()
+	{ GenericQuery(&CGPSDlg::BackRtkDebugMode); }
 
 	struct MenuItemEntry {
 		BOOL showOption;

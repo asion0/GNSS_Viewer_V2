@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG;"
+				PreprocessorDefinitions="_DEBUG;_TAB_LAYOUT_;_NAVIC_CONVERT_"
 				Culture="1033"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
@@ -133,7 +133,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				WholeProgramOptimization="true"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_GNSS_XN120_TESTER"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_GNSS_LITEON_170531"
 				StringPooling="true"
 				MinimalRebuild="false"
 				RuntimeLibrary="0"
@@ -150,7 +150,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG;"
+				PreprocessorDefinitions="NDEBUG;_TAB_LAYOUT_"
 				Culture="1033"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
@@ -159,7 +159,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="Exe/XN120_Tester(GPS).exe"
+				OutputFile="Exe/GNSS_Viewer-CustomerReleaseL.exe"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				EnableUAC="false"
@@ -2038,6 +2038,193 @@
 				CommandLine="Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
+		<Configuration
+			Name="Navic_General|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="1"
+			CharacterSet="2"
+			ManagedExtensions="0"
+			WholeProgramOptimization="3"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				PreprocessorDefinitions="NDEBUG"
+				MkTypLibCompatible="false"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				WholeProgramOptimization="true"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_NAVIC_GENERAL"
+				StringPooling="true"
+				MinimalRebuild="false"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				TreatWChar_tAsBuiltInType="true"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="StdAfx.h"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="0"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="NDEBUG;_TAB_LAYOUT_;_NAVIC_CONVERT_"
+				Culture="1033"
+				AdditionalIncludeDirectories="$(IntDir)"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				OutputFile="Exe/GNSS_Viewer(NAVIC)-CustomerRelease.exe"
+				LinkIncremental="1"
+				GenerateManifest="false"
+				EnableUAC="false"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				LinkTimeCodeGeneration="1"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine="Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Navic_InternalUse|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="1"
+			CharacterSet="2"
+			ManagedExtensions="0"
+			WholeProgramOptimization="3"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				PreprocessorDefinitions="NDEBUG"
+				MkTypLibCompatible="false"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				WholeProgramOptimization="true"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_NAVIC_INTERNALUSE"
+				StringPooling="true"
+				MinimalRebuild="false"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				TreatWChar_tAsBuiltInType="true"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="StdAfx.h"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="0"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="NDEBUG;_TAB_LAYOUT_;_NAVIC_CONVERT_"
+				Culture="1033"
+				AdditionalIncludeDirectories="$(IntDir)"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				OutputFile="Exe/GNSS_Viewer(NAVIC)-InternalUse.exe"
+				LinkIncremental="1"
+				GenerateManifest="false"
+				EnableUAC="false"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				LinkTimeCodeGeneration="1"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine="Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -2370,6 +2557,22 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Navic_General|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Navic_InternalUse|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\VerifyFwDlg.cpp"
@@ -2608,6 +2811,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CommonConfigDlg.h"
+				>
+			</File>
+			<File
 				RelativePath="Download.cpp"
 				>
 			</File>
@@ -2673,10 +2880,6 @@
 			</File>
 			<File
 				RelativePath="BinaryMSG.h"
-				>
-			</File>
-			<File
-				RelativePath=".\CommonConfigDlg.h"
 				>
 			</File>
 			<File

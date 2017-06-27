@@ -844,34 +844,35 @@ WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)
 	{
 		WlfResult result;
 		const char* string;
+    int len;
 	} WlfEntry;
 
 	WlfEntry feedbackTable[] = {
-		{ wlf_Ready, "READY"},
-		{ wlf_Ready1, "READY1"},
-		{ wlf_Ready2, "READY2"},
-		{ wlf_error41, "Error41"},
-		{ wlf_error42, "Error42"},
-		{ wlf_error43, "Error43"},
+		{ wlf_Ready, "READY", 5},
+		{ wlf_Ready1, "READY1", 6},
+		{ wlf_Ready2, "READY2", 6},
+		{ wlf_error41, "Error41", 7},
+		{ wlf_error42, "Error42", 7},
+		{ wlf_error43, "Error43", 7},
 		//^^^^^^^^^for Loader debug
-		{ wlf_error5, "Error5"},
-		{ wlf_error4, "Error4"},
-		{ wlf_error3, "Error3"},
-		{ wlf_error2, "Error2"},
-		{ wlf_error1, "Error1"},
-		{ wlf_resendbin, "Resendbin"},
-		{ wlf_reset, "Reset"},
-		{ wlf_resend, "Resend"},
-		{ wlf_end, "END"},
-		{ wlf_ok, "OK"},
-		{ wlf_None, "WAIT"},
-		{ wlf_None, ""},
+		{ wlf_error5, "Error5", 6},
+		{ wlf_error4, "Error4", 6},
+		{ wlf_error3, "Error3", 6},
+		{ wlf_error2, "Error2", 6},
+		{ wlf_error1, "Error1", 6},
+		{ wlf_resendbin, "Resendbin", 9},
+		{ wlf_reset, "Reset", 5},
+		{ wlf_resend, "Resend", 6},
+		{ wlf_end, "END", 3},
+		{ wlf_ok, "OK", 2},
+		{ wlf_None, "WAIT", 4},
+		//{ wlf_None, ""},
 	};
 
 	WlfResult nReturn = wlf_ok;
-	CString strAckCmd;
+	//CString strAckCmd;
 	ScopeTimer t;
-
+  U08 buffer[COM_BUFFER_SIZE] = { 0 };
 	while(1)
 	{
 		if(t.GetDuration() > (DWORD)TimeoutLimit && msgWnd != NULL)
@@ -885,9 +886,9 @@ WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)
 			break;
 		}
 
-		strAckCmd.Empty();
-		DWORD len = serial->GetString(strAckCmd.GetBuffer(1024), 1024, TimeoutLimit - t.GetDuration());
-		strAckCmd.ReleaseBuffer();
+		//strAckCmd.Empty();
+		DWORD len = serial->GetString(buffer, COM_BUFFER_SIZE, TimeoutLimit - t.GetDuration());
+		//strAckCmd.ReleaseBuffer();
 
 		if(!ReadOK(len))
 		{	
@@ -898,11 +899,12 @@ WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)
 		{
 			nReturn = wlf_None;
 			int tableSize = sizeof(feedbackTable) / sizeof(feedbackTable[0]);
-			//while(buff[0] && tableSize--)
+      CString strAckCmd = (LPCSTR)buffer;
 			while(tableSize--)
 			{
-				//if(0==strcmp(buff, feedbackTable[tableSize].string)) 
-				if(0==strAckCmd.Compare(feedbackTable[tableSize].string)) 
+				//if(0 == strAckCmd.Compare(feedbackTable[tableSize].string)) 
+        int find = strAckCmd.Find(feedbackTable[tableSize].string);
+        if(find >= 0 && find == strAckCmd.GetLength() - feedbackTable[tableSize].len)
 				{
 					nReturn = feedbackTable[tableSize].result;
 					break;

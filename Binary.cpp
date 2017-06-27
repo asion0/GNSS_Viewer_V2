@@ -192,6 +192,10 @@ static CommandEntry cmdTable[] =
 	{ 0x7A, 0x0A, 3, 0x7A, 0x0A },
 	//QueryPstnLatLonDigitsCmd
 	{ 0x7A, 0x0A, 3, 0x7A, 0x0A },
+  //EnterRtkDebugModeCmd
+  { 0x7A, 0x0B, 5, 0x7A, 0x0B },
+  //BackRtkDebugModeCmd
+  { 0x7A, 0x0B, 5, 0x7A, 0x0B },
 	//QueryChannelDopplerCmd,
 	{ 0x7B, 0xFF, 2, 0xFE, 0x00 },
 	//QueryChannelClockOffsetCmd,
@@ -281,6 +285,8 @@ enum SqBinaryCmd
 	ReadSup800UserDataCmd,
 	QueryPstmDeviceAddressCmd,
 	QueryPstnLatLonDigitsCmd,
+  EnterRtkDebugModeCmd,
+  BackRtkDebugModeCmd,
 	QueryChannelDopplerCmd,
 	QueryChannelClockOffsetCmd,
 	QueryDrHwParameterCmd,
@@ -376,6 +382,7 @@ bool CGPSDlg::SendToTarget(U08* message, U16 length, LPCSTR promptMessage, int t
 	{	
     if((int)t.GetDuration() > timeout)
     {
+      DWORD time = t.GetDuration();
       break;
     }
 	  int retLen = m_serial->GetBinary(buffer, sizeof(buffer) - 1, timeout);
@@ -2886,34 +2893,27 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareVersionSystemCode(CmdExeMode nMode, 
 	cmd.SetU08(1, cmdTable[QuerySwVerSysCmd].cmdId);
 	cmd.SetU08(2, cmdTable[QuerySwVerSysCmd].cmdSubId);
 
-	if(NoWait==nMode)
+	if(NoWait == nMode)
 	{
 		ExcuteBinaryCommandNoWait(QuerySwVerSysCmd, &cmd);
 		return Ack;
 	}
 
 	BinaryData ackCmd;
-  CmdErrorCode err = ExcuteBinaryCommand(QuerySwVerSysCmd, &cmd, &ackCmd);
+  CmdErrorCode err = ExcuteBinaryCommand(QuerySwVerSysCmd, &cmd, &ackCmd, (nMode == Display) ? 3000 : 1000);
 	if(err != Ack)
 	{
 		return err;
 	}
 
-  CString strMsg;
 	if(Return == nMode)
 	{	//Return command data
-    CString* strOutput = (CString*)outputData;
-	  strMsg.Format("%s%d.%d.%d\r\n", "Kernel Version ", ackCmd[7], ackCmd[8], ackCmd[9]);
-	  *strOutput = strMsg;
-	  strMsg.Format("%s%d.%d.%d\r\n", "Software Version ", ackCmd[11], ackCmd[12], ackCmd[13]);
-	  *strOutput += strMsg;
-	  strMsg.Format("%s%d.%d.%d\r\n", "Revision ", ackCmd[15] + 2000, ackCmd[16], ackCmd[17]);
-	  *strOutput += strMsg;
+    *((BinaryData*)outputData) = ackCmd;
 		return err;
 	}
 
-	CString strExt;
-	if(Ack==QueryVersionExtension(Return, &strExt))
+	CString strMsg, strExt;
+	if(Ack == QueryVersionExtension(Return, &strExt))
 	{
 	}
 
@@ -4322,21 +4322,26 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRegister(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(5, LOBYTE(LOWORD(m_regAddress)));
 
 	BinaryData ackCmd;
-	if(Ack == ExcuteBinaryCommand(QueryRegisterCmd, &cmd, &ackCmd))
+  CmdErrorCode ack = ExcuteBinaryCommand(QueryRegisterCmd, &cmd, &ackCmd);
+  if(Ack != ack)
+  {
+	  return Timeout;
+  }
+
+	U32 data = MAKELONG(MAKEWORD(ackCmd[8], ackCmd[7]), MAKEWORD(ackCmd[6], ackCmd[5]));
+	if(nMode == Return)
 	{
-		U32 data = MAKELONG(MAKEWORD(ackCmd[8], ackCmd[7]), MAKEWORD(ackCmd[6], ackCmd[5]));
-		if(nMode==Return)
-		{
-			*((U32*)outputData) = data;
-			return Ack;
-		} 
-		CString strMsg;
-		strMsg.Format("Get Register in 0x%08X", m_regAddress);
-		add_msgtolist(strMsg);
-		strMsg.Format("0x%08X (%d)", data, data);
-		add_msgtolist(strMsg);
+		*((U32*)outputData) = data;
+		return Ack;
 	}
-	return Timeout;
+
+	CString strMsg;
+	strMsg.Format("Get Register in 0x%08X", m_regAddress);
+	add_msgtolist(strMsg);
+	strMsg.Format("0x%08X (%d)", data, data);
+	add_msgtolist(strMsg);
+
+	return Ack;
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::QueryRegister16(CmdExeMode nMode, void* outputData)
@@ -5671,8 +5676,8 @@ CGPSDlg::CmdErrorCode CGPSDlg::GpsdoEnterUart(CmdExeMode nMode, void* outputData
 	cmd.SetU08(4, GPSDO_PASS_THROUGH);
 
 	ClearQue();
-	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Enter Slave UART Pass Through successfully", true);	
-	return Timeout;
+	bool r = SendToTarget(cmd.GetBuffer(), cmd.Size(), "Enter Slave UART Pass Through successfully", true);	
+	return (r) ? Ack : Timeout;
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::InsdrEnterUart(CmdExeMode nMode, void* outputData)
@@ -5684,8 +5689,8 @@ CGPSDlg::CmdErrorCode CGPSDlg::InsdrEnterUart(CmdExeMode nMode, void* outputData
 	cmd.SetU08(4, GPSDO_PASS_THROUGH);
 
 	ClearQue();
-	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Enter UART pass through for slave ROM code", true);	
-	return Timeout;
+	bool r = SendToTarget(cmd.GetBuffer(), cmd.Size(), "Enter UART pass through for slave ROM code", true);	
+	return (r) ? Ack : Timeout;
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::GpsdoLeaveUart(CmdExeMode nMode, void* outputData)
@@ -5710,8 +5715,8 @@ CGPSDlg::CmdErrorCode CGPSDlg::InsdrLeaveUart(CmdExeMode nMode, void* outputData
 	cmd.SetU08(4, 0x00);
 
 	ClearQue();
-	SendToTarget(cmd.GetBuffer(), cmd.Size(), "Back To Master successfully", true);	
-	return Timeout;
+	bool r = SendToTarget(cmd.GetBuffer(), cmd.Size(), "Back To Master successfully", true);	
+	return (r) ? Ack : Timeout;
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::QueryUartPass(CmdExeMode nMode, void* outputData)
@@ -6925,13 +6930,13 @@ void CGPSDlg::OnGpsdoFirmwareDownload()
 		return;
 	}
 
-	m_nDownloadBaudIdx = 7;
+	m_nDownloadBaudIdx = dlg.m_downloadBaudIdx;
 	m_nDownloadBufferIdx = 0;
 	m_DownloadMode = GpsdoMasterSlave;
 	m_strDownloadImage = dlg.m_strMasterPath;
 	m_strDownloadImage2 = dlg.m_strSlavePath;
-	m_nSlaveSourceBaud = dlg.m_slaveSourceBaud;
-	m_nSlaveTargetBaud = dlg.m_slaveTargetBaud;
+	//m_nSlaveSourceBaud = dlg.m_downloadBaudIdx;
+	m_masterFwBaudIdx = dlg.m_masterFwBaudIdx;
 
 	::AfxBeginThread(DownloadThread, 0);
 }
@@ -7474,7 +7479,8 @@ CGPSDlg::CmdErrorCode CGPSDlg::BinaryQueryClockOffset(CmdExeMode nMode, void* ou
 	add_msgtolist(strMsg);
 	strMsg.Format("FALSH Clock Offset: %d", (S32)flashClkOst);
 	add_msgtolist(strMsg);
-	return Timeout;
+
+	return Ack;
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::InsdrAccelerometerSelfTest(CmdExeMode nMode, void* outputData)
@@ -7632,7 +7638,20 @@ void CGPSDlg::DoXn120Tester()
 
   m_strXn120Version = "";
   m_nXn120TestSatus = 1;
-  QuerySoftwareVersionSystemCode(Return, &m_strXn120Version);
+
+  //QuerySoftwareVersionSystemCode(Return, &m_strXn120Version);
+  BinaryData ackCmd;
+  QuerySoftwareVersionSystemCode(Return, &ackCmd);
+  CString strMsg;
+  m_strXn120Version = "";
+
+  strMsg.Format("%s%d.%d.%d\r\n", "Kernel Version ", ackCmd[7], ackCmd[8], ackCmd[9]);
+  m_strXn120Version = strMsg;
+  strMsg.Format("%s%d.%d.%d\r\n", "Software Version ", ackCmd[11], ackCmd[12], ackCmd[13]);
+  m_strXn120Version += strMsg;
+  strMsg.Format("%s%d.%d.%d\r\n", "Revision ", ackCmd[15] + 2000, ackCmd[16], ackCmd[17]);
+  m_strXn120Version += strMsg;
+
   //::AfxMessageBox(strVersion);
 
 	SetInputMode(NoOutputMode);
@@ -7641,3 +7660,30 @@ void CGPSDlg::DoXn120Tester()
 }
 #endif
 
+CGPSDlg::CmdErrorCode CGPSDlg::EnterRtkDebugMode(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(cmdTable[EnterRtkDebugModeCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[EnterRtkDebugModeCmd].cmdId);
+	cmd.SetU08(2, cmdTable[EnterRtkDebugModeCmd].cmdSubId);
+	cmd.SetU08(3, 0x01);
+	cmd.SetU08(4, 0x01);
+	cmd.SetU08(5, 0x00);
+
+	BinaryData ackCmd;
+ 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(cmd.GetBuffer(), cmd.Size(), "Enter RTK debug mode successfully", false);
+	return Ack;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::BackRtkDebugMode(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(cmdTable[BackRtkDebugModeCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[BackRtkDebugModeCmd].cmdId);
+	cmd.SetU08(2, cmdTable[BackRtkDebugModeCmd].cmdSubId);
+	cmd.SetU08(3, 0x01);
+	cmd.SetU08(4, 0x00);
+	cmd.SetU08(5, 0x00);
+
+	BinaryData ackCmd;
+ 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(cmd.GetBuffer(), cmd.Size(), "Back from RTK debug mode successfully", false);
+	return Ack;
+}

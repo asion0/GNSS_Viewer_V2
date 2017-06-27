@@ -23,22 +23,28 @@ void CPic_Earth::InitCheck()
 	CRect chkRect;
 
 	chkRect.SetRect(262, 170, 306, 190);
-	m_gpCheck.Create( "GPS", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT,  
+	m_gpCheck.Create( "GPS", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_RIGHT,  
                    chkRect, this, 1023);  
 	m_gpCheck.SetCheck(1);
 
-	chkRect.SetRect(236, 190, 306, 210);
-	m_glCheck.Create( "Glonass", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT,  
+#ifdef _NAVIC_CONVERT_
+	chkRect.SetRect(250, 190, 306, 210);
+	m_glCheck.Create( "NAVIC", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_RIGHT,  
                    chkRect, this, 1024); 
+#else
+	chkRect.SetRect(236, 190, 306, 210);
+	m_glCheck.Create( "Glonass", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_RIGHT,  
+                   chkRect, this, 1024); 
+#endif
 	m_glCheck.SetCheck(1);
 
 	chkRect.SetRect(244, 210, 306, 230);
-	m_bdCheck.Create( "Beidou", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT,  
+	m_bdCheck.Create( "Beidou", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_RIGHT,  
                    chkRect, this, 1025);  
 	m_bdCheck.SetCheck(1);
 
 	chkRect.SetRect(244, 230, 306, 250);
-	m_gaCheck.Create( "Galileo", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT,  
+	m_gaCheck.Create( "Galileo", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_RIGHT,  
                   chkRect, this, 1026);  
 	m_gaCheck.SetCheck(1);
 }
@@ -176,6 +182,12 @@ void CPic_Earth::DrawEarthSate(CDC* dc, UISetting* s, Satellite* sate, GPGSV* gs
 
 		//bool isInUse = IsFixed(qtyInd) && !CheckInUse(id, gsa);
 		bool isInUse = !CheckInUse(id, gsa);
+
+#ifdef _NAVIC_CONVERT_
+		CSnrBarChart::DrawBarChartId(dc, s, isInUse, x, y, 
+      (NMEA::GetGNSSSystem(id) == NMEA::Glonass) ? id - 64 : id, true);
+#else
 		CSnrBarChart::DrawBarChartId(dc, s, isInUse, x, y, id, true);
+#endif
 	}
 }

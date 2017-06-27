@@ -128,8 +128,11 @@ protected:
   void Init(int t);
 	virtual void DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGSA* gsa, 
 				GPGGA* gga, Satellite* sate);
+#if FLOAT_SNR
+  F32 GetGsv2Snr(int id);
+#else
   int GetGsv2Snr(int id);
-
+#endif
 	GPGSV* gsvData2;
 	GPGSA* gsaData2;
 	GPGGA* ggaData2;

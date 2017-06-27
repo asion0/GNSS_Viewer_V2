@@ -13,6 +13,7 @@ enum NmeaType
 	MSG_BDGSA,
 	MSG_GAGSA,
 	MSG_GNGSA,
+	MSG_GIGSA,
 
 	MSG_GPGSV,
   MSG_GPGSV2,
@@ -21,6 +22,7 @@ enum NmeaType
 	MSG_BDGSV2,
 	MSG_GAGSV,
 	MSG_GNGSV,
+	MSG_GIGSV,
 
 	MSG_RMC,
 	MSG_GLL,
@@ -83,7 +85,8 @@ typedef struct GPGSA
 	U16     SatelliteID[MAX_SATELLITE];
 	F32     PDOP;
 	F32     HDOP;
-   	F32     VDOP;
+  F32     VDOP;
+  U16     SystemId;
 }GPGSA, *pGPGSA, &rGPGSA;
 
 typedef struct GPVTG
@@ -100,7 +103,11 @@ typedef struct Satellite
 	U16     SatelliteID;
 	U16     Elevation;
 	U16     Azimuth;
+#if (FLOAT_SNR)
+  F32     SNR;
+#else
 	U16     SNR;
+#endif
 }Satellite, *pSatellite, &rSatellite;
 
 typedef struct GPGSV
@@ -443,10 +450,12 @@ public:
 	void ShowGPGSVmsg(GPGSV&, const char* ,int);
 	void ShowGPGSVmsg2(GPGSV&, GPGSV&, GPGSV&, GPGSV&, const char* ,int);
 	void ShowGLGSVmsg(GPGSV&, const char*, int);
+	void ShowGIGSVmsg(GPGSV&, const char*, int);
 	void ShowGAGSVmsg(GPGSV&, const char*, int);
 	void ShowGNGSVmsg(GPGSV&, GPGSV&, GPGSV&, GPGSV&, const char*, int);
 	void ShowBDGSVmsg(GPGSV&, const char*, int);
 	void ShowGLGSAmsg(GPGSA& msg_glgsa,const char* pt,int offset);
+	void ShowGIGSAmsg(GPGSA& msg_glgsa,const char* pt,int offset);
 	void ShowGPGSAmsg(GPGSA& msg_gpgsa,const char* pt,int offset);
 	//void ShowGPGSAmsg(GPGSA& msg_gpgsa, GPGSA& msg_glgsa, GPGSA& msg_bdgsa, const char* pt, int offset);
 	void ShowGNGSAmsg(GPGSA& msg_gpgsa, GPGSA& msg_glgsa, GPGSA& msg_bdgsa, GPGSA& msg_gagsa, const char* pt, int offset);

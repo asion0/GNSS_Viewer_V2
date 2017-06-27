@@ -297,6 +297,14 @@
 // .273 20170426 Add [Read 0x60000000 to a File (1KB)], requast from Patrick.
 // .273 20170426 Fix issue in GetBinaryAck(), when receive 0xA0, 0xA1 in content will no response. 
 // .274 20170524 Test EON Flash Loader and modify some flow.
+// .275 20170525 Support EON Flash download and check chipmode.
+// .276 20170531 Add LITEON customer version, request from Oliver.
+// .277 20170531 Support EON Flash download and protected 3/4 flassh, request from Patrick.
+// .278 20170608 Add profile for NAVIC support, request from Oliver and Terrance.
+// .279 20170608 Add FLOAT_SNR to support NMEA GSV output flaot in CN, request from Oliver.
+// .280 20170622 Navic support NMEA 183 4.1, modify GSA/GSV parser, request from Oliver.
+// .281 20170622 Fix NMEA Parser bugs, request from Terrance.
+// .282 20170623 Support master/slave download, request from Oliver.
 
 #define SW_FUN_DATALOG		        0x0001
 #define SW_FUN_AGPS				        0x0002
@@ -306,7 +314,7 @@
 #define IS_DEBUG				          0
 //title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 #define APP_CAPTION				        "GNSS Viewer"
-#define APP_VERSION				        "2.0.274"
+#define APP_VERSION				        "2.0.282"
 #define APP_TITLE				          ""
 #define APP_MODULE				        "Venus 8"
 
@@ -344,12 +352,12 @@
 //Using external SREC file directly, no prompt.
 #define _ALWAYS_USE_EXTERNAL_SREC_	0
 //Add a tag for DR Firmware.
-#define _CREATE_LICENSE_TAG_	    0
+//#define _CREATE_LICENSE_TAG_	    0
 //for [Reset Motion Sensor] Command
 #define RESET_MOTION_SENSOR		    0
 //Show eCompass calibration UI in Viewer
 #define ECOMPASS_CALIBRATION	    0
-#define TIMING_MODE				        0
+#define TIMING_MODE				        1   //20170531, Alex modified from 0 to 1.
 //Information has multiple pages
 #define _TAB_LAYOUT_			        0
 
@@ -404,9 +412,66 @@
 #define SHOW_COM_SELECT           1   //Show COM port select in [Configure Serial Port]
 #define SMALL_UI                  0   //Small UI, No Earth View, Scatter and menu
 #define KML_USE_CHECKLISTBOX      1   //Use CCheckListBox in CKmlDlg
+#define LITEON_CUSTOMIZE          0   //Use LITEON special version
+#define FLOAT_SNR                 0   //Use FLOAT SNR in GSV token
+
+
+
+//#define _NAVIC_CONVERT_           1   //Use FLOAT SNR in GSV token
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-#if defined(SWCFG_VENDOR_GNSS_XN120_TESTER_BEIDOU) //20170308 for Leo
+#if defined(SWCFG_VENDOR_NAVIC_INTERNALUSE) //20170608 for Oliver demo
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef SHOW_ERROR_NMEA_NOTIFY
+ #undef MAX_SCATTER_COUNT
+ #undef _TAB_LAYOUT_
+
+ #define APP_CAPTION			        "GNSS Viewer(NAVIC)"
+ #define APP_TITLE				        "Internal Use"
+ #define GNSS_VIEWER			        1
+ #define IS_DEBUG				          1
+ #define BAUDRATE_DEFAULT		      7
+ #define SHOW_ERROR_NMEA_NOTIFY   1
+ #define MAX_SCATTER_COUNT		    1000
+ #define _TAB_LAYOUT_			        1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define _NAVIC_CONVERT_			    1	  //Please add _NAVIC_CONVERT_ in resource prheader
+
+#elif defined(SWCFG_VENDOR_NAVIC_GENERAL)
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef _TAB_LAYOUT_
+
+ #define APP_CAPTION			        "GNSS Viewer(NAVIC)"
+ #define APP_TITLE				        "Customer Release"
+ #define GNSS_VIEWER			        1
+ #define IS_DEBUG				          0
+ #define BAUDRATE_DEFAULT		      7
+ #define _TAB_LAYOUT_			        1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define _NAVIC_CONVERT_			    1	  //Please add _NAVIC_CONVERT_ in resource prheader
+
+#elif defined(SWCFG_VENDOR_GNSS_LITEON_170531) //20170531 for LITEON
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef APP_MODULE
+ #undef BAUDRATE_DEFAULT
+ #undef _TAB_LAYOUT_
+ #undef LITEON_CUSTOMIZE
+
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Customer Release"
+ #define APP_MODULE				          ""
+ #define BAUDRATE_DEFAULT		        5
+ #define _TAB_LAYOUT_			          1 //Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define LITEON_CUSTOMIZE           1
+
+#elif defined(SWCFG_VENDOR_GNSS_XN120_TESTER_BEIDOU) //20170308 for Leo
  #undef APP_CAPTION
  #undef APP_TITLE
  #undef APP_MODULE

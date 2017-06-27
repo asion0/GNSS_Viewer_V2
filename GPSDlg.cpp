@@ -456,6 +456,9 @@ bool CGPSDlg::NmeaProc(const char* buffer, int offset, NmeaType& nmeaType)
 	case MSG_GLGSA:
 		nmea.ShowGLGSAmsg(m_glgsaMsgCopy, buffer, offset);
 		break;
+	case MSG_GIGSA:
+		nmea.ShowGIGSAmsg(m_glgsaMsgCopy, buffer, offset);
+		break;
 	case MSG_GNGSA:
 		nmea.ShowGNGSAmsg(m_gpgsaMsgCopy, m_glgsaMsgCopy, m_bdgsaMsgCopy, m_gagsaMsgCopy, buffer, offset);
 		break;
@@ -499,7 +502,10 @@ bool CGPSDlg::NmeaProc(const char* buffer, int offset, NmeaType& nmeaType)
 	case MSG_GLGSV:
 		nmea.ShowGLGSVmsg(m_glgsvMsgCopy, buffer, offset);
 		break;
-	case MSG_BDGSV:
+	case MSG_GIGSV:
+		nmea.ShowGLGSVmsg(m_glgsvMsgCopy, buffer, offset);
+		break;
+  case MSG_BDGSV:
 		nmea.ShowBDGSVmsg(m_bdgsvMsgCopy, buffer, offset);
 		break;
 #if(SUPPORT_BDL2_GSV2)
@@ -552,6 +558,15 @@ if(!m_isConnectOn)
 	U08 id = buffer[5];
 	U08 sid = buffer[6];
 	CString strOutput;
+
+  //For Liteon Debug Mode convertion
+  if(msgType == 0x6A && id == 0xFF && sid == 0x01)
+  {
+      msgType = buffer[9];
+      buffer += 5;
+      len -= 5;
+  }
+
 //{
 //static int ccc = 0;
 //++ccc;
@@ -1426,7 +1441,7 @@ CGPSDlg::CGPSDlg(CWnd* pParent /*=NULL*/)
 	DeleteNmeaMemery();
 	m_dataLogDecompressMode = 1;
 	m_customerId = CUSTOMER_ID;
-	m_gpsdoInProgress = false;
+	//m_gpsdoInProgress = false;
 	m_nDefaultTimeout = g_setting.defaultTimeout;
 	m_coorFormat = DegreeMinuteSecond;
 	m_copyLatLon = FALSE;
@@ -1675,7 +1690,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_MESSAGE(UWM_SHOW_TIME, OnShowTime)
 	ON_MESSAGE(UWM_SHOW_RMC_TIME, OnShowRMCTime)
 	ON_MESSAGE(UWM_UPDATE_UI, OnUpdateUI)
-	ON_MESSAGE(UWM_GPSDO_HI_DOWNLOAD, OnGpsdoHiDownload)
+	//ON_MESSAGE(UWM_GPSDO_HI_DOWNLOAD, OnGpsdoHiDownload)
 	ON_MESSAGE(UWM_DO_ZENLANE_CMD, OnDoZenlaneCmd)
 #if defined(XN120_TESTER)
 	ON_MESSAGE(UWM_TEST_XN112_START, OnTestXn112Start)
@@ -1807,6 +1822,10 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_QUERY_GEOFENCE4, OnQueryGeofence4)
 	ON_COMMAND(ID_QUERY_GEOFENCE_RESULT, OnQueryGeofenceResult)
 	ON_COMMAND(ID_QUERY_GEOFENCE_RESULTEX, OnQueryGeofenceResultEx)
+
+	ON_COMMAND(ID_ENTER_RTK_DEBUG_MODE, OnEnterRtkDebugMode)
+	ON_COMMAND(ID_BACK_RTK_DEBUG_MODE, OnBackRtkDebugMode)
+
 	ON_COMMAND(ID_QUERY_RTK_MODE, OnQueryRtkMode)
 	ON_COMMAND(ID_QUERY_RTK_MODE2, OnQueryRtkMode2)
 	ON_COMMAND(ID_QUERY_BASE_POSITION, OnQueryBasePosition)
@@ -3587,18 +3606,15 @@ void CGPSDlg::OnHelpAbout()
 
 bool CGPSDlg::CloseOpenUart()
 {
-	if(NULL == m_serial) return false;
-	m_serial->Close();
-	delete m_serial;
-	m_serial = NULL;
-
+  if(NULL == m_serial) 
+  {
+    m_serial = new CSerial;
+  }
+  m_serial->Close();
+  //delete m_serial;
+  //m_serial = NULL;
 	Sleep(200);
-	m_serial = new CSerial;
-
-  //160726 Test
-	//CString comPort;
-	//comPort.Format("COM%d", g_setting.GetComPort());
-	//if(!m_serial->OpenByBaudrate(comPort, (int)(1.5 * Setting::BaudrateTable[g_setting.GetBaudrateIndex()])))
+	//m_serial = new CSerial;
 	if(!m_serial->Open(g_setting.GetComPort(), g_setting.GetBaudrateIndex()))
 	{
 		DisplayComportError(g_setting.GetComPort(), m_serial->errorCode);
@@ -4169,7 +4185,28 @@ int CGPSDlg::SetMessage2(U08* dst, U08* src, int srcLen)
 	return srcLen + 7;
 }
 
-void CGPSDlg::SetPort(U08 port, int mode)
+CGPSDlg::CmdErrorCode CGPSDlg::SetPort0Baud(U08 baudIdx, U08 mode)
+{	    
+	BinaryCommand cmd(4);
+	cmd.SetU08(1, 0x05);    //Command Id
+	cmd.SetU08(2, 0x00);    //Port number 0 or 1
+	cmd.SetU08(3, baudIdx); //Baud rate index
+	cmd.SetU08(4, mode);    //Mode : 0 - SRAM, 1 - Flash, 2 - Temp
+
+	ClearQue();
+  CString strMsg;
+  strMsg.Format("Change baud rate to %d...", g_setting.BaudrateValue(baudIdx));
+	bool r = SendToTarget(cmd.GetBuffer(), cmd.Size(), strMsg, true);	
+  if(r)
+  {
+    m_serial->ResetPort(baudIdx);
+	  m_BaudRateCombo.SetCurSel(baudIdx);
+	  Sleep(100);
+  }
+	return (r) ? Ack : Timeout;
+}
+
+bool CGPSDlg::SetPort(U08 port, int mode)
 {
 	U08 messages[11] = {0};
 
@@ -4190,17 +4227,26 @@ void CGPSDlg::SetPort(U08 port, int mode)
 	messages[8] = checksum;
 	messages[9] = 0x0d;
 	messages[10] = 0x0a;
-	for(int i=0; i<10; ++i)
-	{
-		if(SendToTarget(messages, 11, "", true))
-		{
-			break;
-		}
-	}
+//	for(int i=0; i<10; ++i)
+//	{
+		//if(SendToTarget(messages, 11, "", true))
+		//{
+		//	break;
+		//}
+//	}
+  bool r = SendToTarget(messages, 11, "", true);
+  if(!r)
+  {
+	  CloseOpenUart();
+	  m_BaudRateCombo.SetCurSel(port);
+	  Sleep(100);
+    return r;
+  }
 	CloseOpenUart();
 	m_serial->ResetPort(port);
 	m_BaudRateCombo.SetCurSel(port);
 	Sleep(100);
+  return r;
 }
 
 void CGPSDlg::OnBinaryGetrgister()
@@ -5194,7 +5240,8 @@ void CGPSDlg::Load_Menu()
 		{ UPGRADE_DOWNLOAD, MF_STRING, ID_UPGRADE_DOWNLOAD, "Upgrade", NULL },
 		{ SHOW_PATCH_MENU, MF_STRING, ID_PATCH, "Patch!", NULL },
 
-		//{ IS_DEBUG, MF_STRING, ID_GPSDO_FW_DOWNLOAD, "Master/Slave Firmware Download", NULL },
+		{ 1, MF_STRING, ID_GPSDO_FW_DOWNLOAD, "Master/Slave Firmware Download", NULL },
+		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ IS_DEBUG, MF_STRING, ID_FILE_SETUP, "S&etup", NULL },
 		{ 1, MF_STRING, ID_FILE_EXIT, "E&xit", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
@@ -5347,6 +5394,13 @@ void CGPSDlg::Load_Menu()
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
 
+	static MenuItemEntry RtkDebugModeMenu[] =
+	{
+		{ 1, MF_STRING, ID_ENTER_RTK_DEBUG_MODE, "Enter RTK Debug Mode", NULL },
+		{ 1, MF_STRING, ID_BACK_RTK_DEBUG_MODE, "Back from RTK Debug Mode", NULL },
+		{ 0, 0, 0, NULL, NULL }	//End of table
+	};
+
 	static MenuItemEntry SignalDisturbanceMenu[] =
 	{
 		{ 1, MF_STRING, ID_QUERY_SIG_DISTUR_DATA, "Query Signal Disturbance Data", NULL },
@@ -5378,10 +5432,11 @@ void CGPSDlg::Load_Menu()
 		{ IS_DEBUG, MF_STRING, ID_QUERY_CUSTOMER_ID, "Query Customer ID", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CONFIG_DOZE_MODE, "Configure GNSS Doze Mode", NULL },
 		//20160408 Add GPSDO menu to customer release version for Patrick's customer.
-		{ 1, MF_POPUP, 0, "GPSDO Control", GpsdoControlMenu },
-		{ _V8_SUPPORT, MF_POPUP, 0, "SUP800 User Data Storage", Sup800Menu },
-		{ IS_DEBUG, MF_POPUP, 0, "Signal Disturbance Test", SignalDisturbanceMenu },
-		{ IS_DEBUG, MF_POPUP, 0, "Geofencing", GeoFencingMenu },
+		{ !LITEON_CUSTOMIZE, MF_POPUP, 0, "GPSDO Control", GpsdoControlMenu },
+		{ !LITEON_CUSTOMIZE, MF_POPUP, 0, "SUP800 User Data Storage", Sup800Menu },
+		{ IS_DEBUG && !LITEON_CUSTOMIZE, MF_POPUP, 0, "Geofencing", GeoFencingMenu },
+		{ IS_DEBUG || LITEON_CUSTOMIZE, MF_POPUP, 0, "RTK Debug Mode", RtkDebugModeMenu },
+		{ IS_DEBUG , MF_POPUP, 0, "Signal Disturbance Test", SignalDisturbanceMenu },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_SBAS_DEFAULT, "Query SBAS Default", NULL },
 		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 1, MF_STRING, ID_QUERY_SBAS, "Query SBAS", NULL },
@@ -5983,7 +6038,7 @@ bool CGPSDlg::DoDownload(int dlBaudIdx)
 #endif
 	//Detect Loader Type
 	BOOL usingInternal = ((CButton*)GetDlgItem(IDC_IN_LOADER))->GetCheck();
-	BOOL isCheat = ((GetAsyncKeyState(VK_LSHIFT) & 0x8000) && (GetAsyncKeyState(VK_LMENU)& 0x8000));
+	BOOL isCheat = IS_DEBUG && (GetAsyncKeyState(VK_LSHIFT) & 0x8000) && (GetAsyncKeyState(VK_LMENU)& 0x8000);
 
 	m_DownloadMode = (usingInternal) ? InternalLoaderV8 : EnternalLoaderInBinCmd;
 	if(CUSTOMER_DOWNLOAD)
@@ -7720,13 +7775,14 @@ void CGPSDlg::OnQuery1PpsOutputMode()
 	}
 }
 
-void CGPSDlg::BoostBaudrate(BOOL bRestore, BoostMode mode, bool isForce)
+bool CGPSDlg::BoostBaudrate(BOOL bRestore, BoostMode mode, bool isForce)
 {
+  bool r = true;
 	if(bRestore)
 	{
 		if((isForce || ChangeToTemp != mode) && (g_setting.GetBaudrateIndex() != m_nDownloadBaudIdx))
 		{
-			SetPort(g_setting.GetBaudrateIndex(), (int)mode);
+			r = SetPort(g_setting.GetBaudrateIndex(), (int)mode);
 			Sleep(1000);
 		}
 		CloseOpenUart();
@@ -7737,10 +7793,11 @@ void CGPSDlg::BoostBaudrate(BOOL bRestore, BoostMode mode, bool isForce)
 	{
 		if(g_setting.GetBaudrateIndex() != m_nDownloadBaudIdx)
 		{
-			SetPort(m_nDownloadBaudIdx, (int)mode);
+			r = SetPort(m_nDownloadBaudIdx, (int)mode);
 			Sleep(1000);
 		}
 	}
+  return r;
 }
 
 void CGPSDlg::TempBoostBaudrate(BOOL bRestore, int boostBaudIndex, int timeout)
@@ -8649,17 +8706,17 @@ LRESULT CGPSDlg::OnUpdateUI(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-LRESULT CGPSDlg::OnGpsdoHiDownload(WPARAM wParam, LPARAM lParam)
-{
-	WaitForSingleObject(g_gpsThread, INFINITE);
-	m_gpsdoInProgress = true;
-	if(!DoDownload(7))
-	{
-		m_gpsdoInProgress = false;
-	}
-
-	return 0;
-}
+//LRESULT CGPSDlg::OnGpsdoHiDownload(WPARAM wParam, LPARAM lParam)
+//{
+//	WaitForSingleObject(g_gpsThread, INFINITE);
+//	m_gpsdoInProgress = true;
+//	if(!DoDownload(7))
+//	{
+//		m_gpsdoInProgress = false;
+//	}
+//
+//	return 0;
+//}
 
 LRESULT CGPSDlg::OnDoZenlaneCmd(WPARAM wParam, LPARAM lParam)
 {
@@ -8690,7 +8747,7 @@ void CGPSDlg::GetGPSStatus()
 		return;
 	}
 	if(m_serial == NULL)
-	{	//Close GPSThread very fast. The connection already cloesd.
+	{	//Close GPSThread very fast. The connection is cloesd.
 		return;
 	}
 	QuerySoftwareVersionSystemCode(NoWait, NULL);

@@ -3,9 +3,15 @@
 class UISetting
 {
 public:
-	UISetting(COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, 
+#if FLOAT_SNR
+  UISetting(COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, 
+		COLORREF, COLORREF, COLORREF, COLORREF, UINT, UINT, 
+    int idFontSize = 17, int barFontSize = 12);
+#else
+  UISetting(COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, 
 		COLORREF, COLORREF, COLORREF, COLORREF, UINT, UINT, 
     int idFontSize = 17, int barFontSize = 16);
+#endif
 	//UISetting(void);
 	~UISetting(void);
 
