@@ -305,6 +305,16 @@
 // .280 20170622 Navic support NMEA 183 4.1, modify GSA/GSV parser, request from Oliver.
 // .281 20170622 Fix NMEA Parser bugs, request from Terrance.
 // .282 20170623 Support master/slave download, request from Oliver.
+// .283 20170628 Navic version support KML converter, request from Ken.
+// .284 20170630 Official release for internal use.
+// .285 20170710 Add NAV_MOWING_MODE, request from Leo and Ryan.
+// .286 20170710 Support DataLog with crc16, request from Andrew.
+// .287 20170712 Support PSTI033 parsing and Query/Configure commands, request from Oliver.
+// .288 20170714 Move Liteon Debug Mode to RTK menu and Customer Release version, request from Leo.
+// .289 20170814 Fix slave download issue, request from Ken, Andrew.
+// .290 20170815 define NEW_SBAS2 for SBAS Advance commands changed, request from Kevin
+// .291 20170821 Support NMEA 4.1 L2 Beidou and GLONASS, request from Eric
+// .292 20170823 Fix new SBAS2 bugs, request from Kevin
 
 #define SW_FUN_DATALOG		        0x0001
 #define SW_FUN_AGPS				        0x0002
@@ -314,7 +324,7 @@
 #define IS_DEBUG				          0
 //title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 #define APP_CAPTION				        "GNSS Viewer"
-#define APP_VERSION				        "2.0.282"
+#define APP_VERSION				        "2.0.292"
 #define APP_TITLE				          ""
 #define APP_MODULE				        "Venus 8"
 
@@ -335,41 +345,23 @@
 
 //Default download boost baudrate
 #define BAUDRATE_DEFAULT		      5		//8=921600,7=460800,6=230400,5=115200,4=57600,3=38400,2=19200,1=9600,0=4800
-//Define FIRMWARE_DOWNLOAD 0 to disable download UI in Viewer
-#define FIRMWARE_DOWNLOAD		      1
-//Default scatter count
-#define MAX_SCATTER_COUNT		      300
-
-#define ODOMETER_SUPPORT		      0
-//#define BINARY_MESSAGE_INTERVAL	0
+#define FIRMWARE_DOWNLOAD		      1   //Define FIRMWARE_DOWNLOAD 0 to disable download UI in Viewer
+#define MAX_SCATTER_COUNT		      300 //Default scatter count
+#define ODOMETER_SUPPORT		      0   //Show "Reset Odometer" button
 #define ACTIVATE_MINIHOMER		    0
 #define NMEA_INPUT				        0
 #define GSA_MAX_SATELLITE		      12
-//Download using resend protocol
-#define RESEND_DOWNLOAD			      1
-//Display binary command in and ack in respond view.
-#define _SHOW_BINARY_DATA_		    1
-//Using external SREC file directly, no prompt.
-#define _ALWAYS_USE_EXTERNAL_SREC_	0
-//Add a tag for DR Firmware.
-//#define _CREATE_LICENSE_TAG_	    0
-//for [Reset Motion Sensor] Command
-#define RESET_MOTION_SENSOR		    0
-//Show eCompass calibration UI in Viewer
-#define ECOMPASS_CALIBRATION	    0
+#define _SHOW_BINARY_DATA_		    1   //Display [Show Binary Data] in menu
+#define _ALWAYS_USE_EXTERNAL_SREC_	0 //Using external SREC file directly, no prompt.
+#define ECOMPASS_CALIBRATION	    0   //Show eCompass calibration UI in Viewer
 #define TIMING_MODE				        1   //20170531, Alex modified from 0 to 1.
-//Information has multiple pages
-#define _TAB_LAYOUT_			        0
-
-//#define _BAUTRATE_IDX_6_		    891200
-#define OPEN_PINNING_RESERVE	    1
-#define RESET_MOTION_SENSOR		    0
+#define _TAB_LAYOUT_			        0   //Information has multiple pages
+#define OPEN_PINNING_RESERVE	    1   //Show [Disable] in position pining UI
 #define _V8_SUPPORT				        1
 #define GG12A					            0
 #define SHOW_CLOCK_OFFSET		      0
 #define SHOW_NOISE				        0
 #define DATA_POI				          0
-#define TWIN_DATALOG			        0
 #define CUSTOMER_DOWNLOAD		      0
 #define CUSTOMER_ID				        Sktyraq
 
@@ -414,10 +406,10 @@
 #define KML_USE_CHECKLISTBOX      1   //Use CCheckListBox in CKmlDlg
 #define LITEON_CUSTOMIZE          0   //Use LITEON special version
 #define FLOAT_SNR                 0   //Use FLOAT SNR in GSV token
+#define NAV_MOWING_MODE           0   //Add mowing machine mode in Navigation Mode
+#define USE_EXTERNAL_DN_BIN_CMD   1   //Download external loader use binary command
+#define NEW_SBAS2                 1   //Remove user define submask field in SBAS2 commands.
 
-
-
-//#define _NAVIC_CONVERT_           1   //Use FLOAT SNR in GSV token
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 #if defined(SWCFG_VENDOR_NAVIC_INTERNALUSE) //20170608 for Oliver demo

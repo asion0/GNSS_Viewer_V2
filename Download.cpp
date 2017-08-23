@@ -1166,14 +1166,11 @@ U08 CGPSDlg::PlRomCustomerUpgrade(UINT rid)
 				isEnd = false;
 				break;
 			case wlf_resendbin:
-				//Utility::Log(__FUNCTION__, messages, __LINE__);
 				bResendbin = true;
 				isEnd = false;
 				break;
 			default:
 				ProcessWlfResult(wlf);
-				//Utility::LogFatal(__FUNCTION__, messages, __LINE__);
-				//fclose(f);
 				return RETURN_ERROR;		        
 				break;
 			}	//switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, TIME_OUT_MS, &m_responseList))	
@@ -1256,12 +1253,8 @@ bool CGPSDlg::DownloadLoader(DownloadMode mode)
 		int len = SetMessage(msg, sizeof(msg));
 
 		bool b = SendToTarget(m_inputMsg, len, "Send upload loader successfully", 6000);
-		//bool b = false;
 		if(!b)
 		{
-			//m_DownloadMode = EnternalLoader;
-			//BoostBaudrate(FALSE);
-			//add_msgtolist("Upload Loader command NACK.");	
 			return false;
 		}
 		else
@@ -1470,7 +1463,7 @@ bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
 			    CreateGPSThread();
         }
 				//m_gpsdoInProgress = false;
-        if(EnternalLoaderInBinCmd==m_DownloadMode)
+        if(EnternalLoaderInBinCmd == m_DownloadMode)
         {
           m_DownloadMode = InternalLoaderV8;
           return RealDownload(restoreConnection, boostBaudRate);
@@ -1600,30 +1593,6 @@ bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
 		Sleep(3000);
 	}
 
-	//if(GpsdoMasterSlave == m_DownloadMode)
-	//{
-	//	SecondRun = (SecondRun) ? false : true;
-	//	if(SecondRun)
-	//	{
-	//		Sleep(1000);
-	//		continue;
-	//	}
-	//	else
-	//	{
-	//		GpsdoLeaveDownload(Return, NULL);
-	//		if(g_setting.downloadTesting)
-	//		{
-	//			Sleep(1000);
-	//		}
-	//	}
-	//}
-
-
-	//if(m_gpsdoInProgress)
-	//{
-	//	return isSuccessful;
-	//}
-
   if(restoreConnection)
   {
 	  SetMode();
@@ -1673,16 +1642,24 @@ bool CGPSDlg::Download()
     
     U32 chipmode = 0;
     U32 tmpTrgAdd = m_regAddress;
+    CmdErrorCode ackQueryReg = Timeout;
+    CmdErrorCode ackQueryVer = Timeout;
     m_regAddress = 0x2000F010;
-		if(m_DownloadMode != FileLoader && !DOWNLOAD_IMMEDIATELY && 
-       Ack == QueryRegister(Return, &chipmode))
+		if(m_DownloadMode != FileLoader && !DOWNLOAD_IMMEDIATELY)
+    {
+      ackQueryReg = QueryRegister(Return, &chipmode);
+    }
+    if(Ack == ackQueryReg)
 		{
 			chipmode = (chipmode >> 20) & 0x07;
 		} 
     m_regAddress = tmpTrgAdd;
 
-		if(m_DownloadMode != FileLoader && !DOWNLOAD_IMMEDIATELY && 
-       Ack == QuerySoftwareVersionSystemCode(Return, &ackVer))
+		if(m_DownloadMode != FileLoader && !DOWNLOAD_IMMEDIATELY)
+    {
+      ackQueryVer = QuerySoftwareVersionSystemCode(Return, &ackVer);
+    }
+    if(Ack == ackQueryVer)
 		{
 			hasAckVersion = TRUE;
 		}
@@ -1720,9 +1697,13 @@ bool CGPSDlg::Download()
       { //Winbond flash
         m_DownloadMode = InternalLoaderV8;
       }
+      else if(ackQueryReg == Timeout && hasAckVersion)
+      { //RTK Slave fw
+        m_DownloadMode = InternalLoaderV8;
+      }
       else
       {
-        m_DownloadMode = InternalLoaderV8AddTag;
+        m_DownloadMode = EnternalLoaderInBinCmd;
       }
 		}
 

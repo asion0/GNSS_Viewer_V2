@@ -379,6 +379,7 @@ CConfigSBAS2::CConfigSBAS2(CWnd* pParent /*=NULL*/)
 	m_bMSAS = FALSE;
 	m_bGAGAN = FALSE;
 	m_nAttribute = 0;
+  cmdMode = (NEW_SBAS2) ? ConfigSBAS2New : ConfigSBAS2Old;
 }
 
 BEGIN_MESSAGE_MAP(CConfigSBAS2, CCommonConfigDlg)
@@ -403,58 +404,87 @@ BOOL CConfigSBAS2::OnInitDialog()
   BinaryData ackCmd;
   CString txt, title;
   this->GetWindowText(title);
-	if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QuerySbas2(CGPSDlg::Return, &ackCmd))
-	{
-    title += " (Query success)";
-    ((CButton*)GetDlgItem(IDC_ENABLE_SBAS))->SetCheck(ackCmd[6]);
-	  ((CComboBox*)GetDlgItem(IDC_ENABLE_NAV))->SetCurSel(ackCmd[7]);
-    txt.Format("%d", ackCmd[8]);
-	  GetDlgItem(IDC_URAMASK)->SetWindowText(txt);
-    ((CButton*)GetDlgItem(IDC_ENABLE_CORRECTION))->SetCheck(ackCmd[9]);
-    txt.Format("%d", ackCmd[10]);
-	  GetDlgItem(IDC_NUMBER_CHANNEL)->SetWindowText(txt);
 
-    ((CButton*)GetDlgItem(IDC_ENABLE_ALL))->SetCheck(((ackCmd[11] & 0x80) ? TRUE : FALSE));
-	  if(!(ackCmd[11] & 0x80))
+#if(NEW_SBAS2)
+    GetDlgItem(IDC_WAAS_SPEC)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_EGNOS_SPEC)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_MSAS_SPEC)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_GAGAN_SPEC)->ShowWindow(SW_HIDE);
+#endif
+
+  CGPSDlg::CmdErrorCode err = CGPSDlg::gpsDlg->QuerySbas2(CGPSDlg::Return, &ackCmd);
+
+	if(CGPSDlg::Ack == err)
+	{
+    U16 cmdLen = ConvertLeonU16(ackCmd.Ptr(2));
+    cmdMode = (cmdLen == 24) ? ConfigSBAS2New : ConfigSBAS2Old;
+    if(cmdMode == ConfigSBAS2Old)
+    {
+      GetDlgItem(IDC_WAAS_SPEC)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_EGNOS_SPEC)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_MSAS_SPEC)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_GAGAN_SPEC)->ShowWindow(SW_SHOW);
+    }
+
+    int idx = 5;
+    title += " (Query success)";
+    ((CButton*)GetDlgItem(IDC_ENABLE_SBAS))->SetCheck(ackCmd[++idx]);
+	  ((CComboBox*)GetDlgItem(IDC_ENABLE_NAV))->SetCurSel(ackCmd[++idx]);
+    txt.Format("%d", ackCmd[++idx]);
+	  GetDlgItem(IDC_URAMASK)->SetWindowText(txt);
+    ((CButton*)GetDlgItem(IDC_ENABLE_CORRECTION))->SetCheck(ackCmd[++idx]);
+    txt.Format("%d", ackCmd[++idx]);
+	  GetDlgItem(IDC_NUMBER_CHANNEL)->SetWindowText(txt);
+    U08 flag = ackCmd[++idx];   //11
+    ((CButton*)GetDlgItem(IDC_ENABLE_ALL))->SetCheck(((flag & 0x80) ? TRUE : FALSE));
+	  if(!(flag & 0x80))
 	  {
-      ((CButton*)GetDlgItem(IDC_ENABLE_WAAS))->SetCheck(((ackCmd[11] & 0x01) ? TRUE : FALSE));
-      ((CButton*)GetDlgItem(IDC_ENABLE_EGNOS))->SetCheck(((ackCmd[11] & 0x02) ? TRUE : FALSE));
-      ((CButton*)GetDlgItem(IDC_ENABLE_MSAS))->SetCheck(((ackCmd[11] & 0x04) ? TRUE : FALSE));
-      ((CButton*)GetDlgItem(IDC_ENABLE_GAGAN))->SetCheck(((ackCmd[11] & 0x08) ? TRUE : FALSE));
+      ((CButton*)GetDlgItem(IDC_ENABLE_WAAS))->SetCheck(((flag & 0x01) ? TRUE : FALSE));
+      ((CButton*)GetDlgItem(IDC_ENABLE_EGNOS))->SetCheck(((flag & 0x02) ? TRUE : FALSE));
+      ((CButton*)GetDlgItem(IDC_ENABLE_MSAS))->SetCheck(((flag & 0x04) ? TRUE : FALSE));
+      ((CButton*)GetDlgItem(IDC_ENABLE_GAGAN))->SetCheck(((flag & 0x08) ? TRUE : FALSE));
 	  }
 
-    ((CButton*)GetDlgItem(IDC_WAAS_SPEC))->SetCheck(((ackCmd[12] & 0x01) ? TRUE : FALSE));
-    ((CButton*)GetDlgItem(IDC_EGNOS_SPEC))->SetCheck(((ackCmd[12] & 0x02) ? TRUE : FALSE));
-    ((CButton*)GetDlgItem(IDC_MSAS_SPEC))->SetCheck(((ackCmd[12] & 0x04) ? TRUE : FALSE));
-    ((CButton*)GetDlgItem(IDC_GAGAN_SPEC))->SetCheck(((ackCmd[12] & 0x08) ? TRUE : FALSE));
+    if(cmdMode == ConfigSBAS2Old)
+    {
+      U08 flagUser = ackCmd[++idx]; //12
+      ((CButton*)GetDlgItem(IDC_WAAS_SPEC))->SetCheck(((flagUser & 0x01) ? TRUE : FALSE));
+      ((CButton*)GetDlgItem(IDC_EGNOS_SPEC))->SetCheck(((flagUser & 0x02) ? TRUE : FALSE));
+      ((CButton*)GetDlgItem(IDC_MSAS_SPEC))->SetCheck(((flagUser & 0x04) ? TRUE : FALSE));
+      ((CButton*)GetDlgItem(IDC_GAGAN_SPEC))->SetCheck(((flagUser & 0x08) ? TRUE : FALSE));
+    }
 
-    txt.Format("%d", ackCmd[14]);
-    GetDlgItem(IDC_U11)->SetWindowText((ackCmd[13] > 0) ? txt : "");
-    txt.Format("%d", ackCmd[15]);
-    GetDlgItem(IDC_U12)->SetWindowText((ackCmd[13] > 1) ? txt : "");
-    txt.Format("%d", ackCmd[16]);
-    GetDlgItem(IDC_U13)->SetWindowText((ackCmd[13] > 2) ? txt : "");
+    U08 count = ackCmd[++idx];
+    txt.Format("%d", ackCmd[++idx]);
+    GetDlgItem(IDC_U11)->SetWindowText((count > 0) ? txt : "");
+    txt.Format("%d", ackCmd[++idx]);
+    GetDlgItem(IDC_U12)->SetWindowText((count > 1) ? txt : "");
+    txt.Format("%d", ackCmd[++idx]);
+    GetDlgItem(IDC_U13)->SetWindowText((count > 2) ? txt : "");
 
-    txt.Format("%d", ackCmd[18]);
-    GetDlgItem(IDC_U21)->SetWindowText((ackCmd[17] > 0) ? txt : "");
-    txt.Format("%d", ackCmd[19]);
-    GetDlgItem(IDC_U22)->SetWindowText((ackCmd[17] > 1) ? txt : "");
-    txt.Format("%d", ackCmd[20]);
-    GetDlgItem(IDC_U23)->SetWindowText((ackCmd[17] > 2) ? txt : "");
+    count = ackCmd[++idx];
+    txt.Format("%d", ackCmd[++idx]);
+    GetDlgItem(IDC_U21)->SetWindowText((count > 0) ? txt : "");
+    txt.Format("%d", ackCmd[++idx]);
+    GetDlgItem(IDC_U22)->SetWindowText((count > 1) ? txt : "");
+    txt.Format("%d", ackCmd[++idx]);
+    GetDlgItem(IDC_U23)->SetWindowText((count> 2) ? txt : "");
 
-    txt.Format("%d", ackCmd[22]);
-    GetDlgItem(IDC_U31)->SetWindowText((ackCmd[21] > 0) ? txt : "");
-    txt.Format("%d", ackCmd[23]);
-    GetDlgItem(IDC_U32)->SetWindowText((ackCmd[21] > 1) ? txt : "");
-    txt.Format("%d", ackCmd[24]);
-    GetDlgItem(IDC_U33)->SetWindowText((ackCmd[21] > 2) ? txt : "");
+    count = ackCmd[++idx];
+    txt.Format("%d", ackCmd[++idx]);
+    GetDlgItem(IDC_U31)->SetWindowText((count > 0) ? txt : "");
+    txt.Format("%d", ackCmd[++idx]);
+    GetDlgItem(IDC_U32)->SetWindowText((count > 1) ? txt : "");
+    txt.Format("%d", ackCmd[++idx]);
+    GetDlgItem(IDC_U33)->SetWindowText((count > 2) ? txt : "");
 
-    txt.Format("%d", ackCmd[26]);
-    GetDlgItem(IDC_U41)->SetWindowText((ackCmd[25] > 0) ? txt : "");
-    txt.Format("%d", ackCmd[27]);
-    GetDlgItem(IDC_U42)->SetWindowText((ackCmd[25] > 1) ? txt : "");
-    txt.Format("%d", ackCmd[28]);
-    GetDlgItem(IDC_U43)->SetWindowText((ackCmd[25] > 2) ? txt : "");
+    count = ackCmd[++idx];
+    txt.Format("%d", ackCmd[++idx]);
+    GetDlgItem(IDC_U41)->SetWindowText((count > 0) ? txt : "");
+    txt.Format("%d", ackCmd[++idx]);
+    GetDlgItem(IDC_U42)->SetWindowText((count > 1) ? txt : "");
+    txt.Format("%d", ackCmd[++idx]);
+    GetDlgItem(IDC_U43)->SetWindowText((count > 2) ? txt : "");
   }
   else
   {
@@ -619,10 +649,13 @@ void CConfigSBAS2::OnBnClickedOk()
 	m_bGAGAN = ((CButton*)GetDlgItem(IDC_ENABLE_GAGAN))->GetCheck();
 	m_bAll = ((CButton*)GetDlgItem(IDC_ENABLE_ALL))->GetCheck();
 
-	m_bWaasSpec = ((CButton*)GetDlgItem(IDC_WAAS_SPEC))->GetCheck();
-	m_bEgnosSpec = ((CButton*)GetDlgItem(IDC_EGNOS_SPEC))->GetCheck();
-	m_bMsasSpec = ((CButton*)GetDlgItem(IDC_MSAS_SPEC))->GetCheck();
-	m_bGaganSpec = ((CButton*)GetDlgItem(IDC_GAGAN_SPEC))->GetCheck();
+  if(cmdMode == ConfigSBAS2Old)
+  {
+    m_bWaasSpec = ((CButton*)GetDlgItem(IDC_WAAS_SPEC))->GetCheck();
+    m_bEgnosSpec = ((CButton*)GetDlgItem(IDC_EGNOS_SPEC))->GetCheck();
+    m_bMsasSpec = ((CButton*)GetDlgItem(IDC_MSAS_SPEC))->GetCheck();
+    m_bGaganSpec = ((CButton*)GetDlgItem(IDC_GAGAN_SPEC))->GetCheck();
+  }
 
   int n;
   n = GetUserTaqble(m_u11, m_u12, m_u13, IDC_U11, IDC_U12, IDC_U13);
@@ -631,27 +664,61 @@ void CConfigSBAS2::OnBnClickedOk()
 		AfxMessageBox("Invalid user subsystem mask!");
 		return;
   }
+  if(NEW_SBAS2 && cmdMode == ConfigSBAS2New)
+  {
+    if(m_bWAAS && n == 0)
+    {
+		  AfxMessageBox("Please set at least one user subsystem mask!");
+		  return;
+    }
+  }
+
   n = GetUserTaqble(m_u21, m_u22, m_u23, IDC_U21, IDC_U22, IDC_U23);
   if(n == -1)
   {
 		AfxMessageBox("Invalid user subsystem mask!");
 		return;
   }
+  if(NEW_SBAS2 && cmdMode == ConfigSBAS2New)
+  {
+    if(m_bEGNOS && n == 0)
+    {
+		  AfxMessageBox("Please set at least one user subsystem mask!");
+		  return;
+    }
+  }
+
   n = GetUserTaqble(m_u31, m_u32, m_u33, IDC_U31, IDC_U32, IDC_U33);
   if(n == -1)
   {
 		AfxMessageBox("Invalid user subsystem mask!");
 		return;
   }
+  if(NEW_SBAS2 && cmdMode == ConfigSBAS2New)
+  {
+    if(m_bMSAS && n == 0)
+    {
+		  AfxMessageBox("Please set at least one user subsystem mask!");
+		  return;
+    }
+  }
+
   n = GetUserTaqble(m_u41, m_u42, m_u43, IDC_U41, IDC_U42, IDC_U43);
   if(n == -1)
   {
 		AfxMessageBox("Invalid user subsystem mask!");
 		return;
   }
+  if(NEW_SBAS2 && cmdMode == ConfigSBAS2New)
+  {
+    if(m_bGAGAN && n == 0)
+    {
+		  AfxMessageBox("Please set at least one user subsystem mask!");
+		  return;
+    }
+  }
 
 	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
-
 	OnOK();
 }
 
@@ -663,30 +730,46 @@ void CConfigSBAS2::UpdateStatus()
 	BOOL enableGagan = ((CButton*)GetDlgItem(IDC_ENABLE_GAGAN))->GetCheck();
 	BOOL enableAll = ((CButton*)GetDlgItem(IDC_ENABLE_ALL))->GetCheck();
 
-  BOOL specWass = ((CButton*)GetDlgItem(IDC_WAAS_SPEC))->GetCheck();
-	BOOL specEgnos = ((CButton*)GetDlgItem(IDC_EGNOS_SPEC))->GetCheck();
-	BOOL specMsas = ((CButton*)GetDlgItem(IDC_MSAS_SPEC))->GetCheck();
-	BOOL specGagan = ((CButton*)GetDlgItem(IDC_GAGAN_SPEC))->GetCheck();
+  if(cmdMode == ConfigSBAS2Old || !NEW_SBAS2)
+  {
+    BOOL specWass = ((CButton*)GetDlgItem(IDC_WAAS_SPEC))->GetCheck();
+	  BOOL specEgnos = ((CButton*)GetDlgItem(IDC_EGNOS_SPEC))->GetCheck();
+	  BOOL specMsas = ((CButton*)GetDlgItem(IDC_MSAS_SPEC))->GetCheck();
+	  BOOL specGagan = ((CButton*)GetDlgItem(IDC_GAGAN_SPEC))->GetCheck();
 
-  ((CButton*)GetDlgItem(IDC_WAAS_SPEC))->EnableWindow(enableWass);
-  ((CButton*)GetDlgItem(IDC_EGNOS_SPEC))->EnableWindow(enableEgnos);
-  ((CButton*)GetDlgItem(IDC_MSAS_SPEC))->EnableWindow(enableMsas);
-  ((CButton*)GetDlgItem(IDC_GAGAN_SPEC))->EnableWindow(enableGagan);
+    ((CButton*)GetDlgItem(IDC_WAAS_SPEC))->EnableWindow(enableWass);
+    ((CButton*)GetDlgItem(IDC_EGNOS_SPEC))->EnableWindow(enableEgnos);
+    ((CButton*)GetDlgItem(IDC_MSAS_SPEC))->EnableWindow(enableMsas);
+    ((CButton*)GetDlgItem(IDC_GAGAN_SPEC))->EnableWindow(enableGagan);
 
-
-  ((CEdit*)GetDlgItem(IDC_U11))->EnableWindow(enableWass && specWass);
-  ((CEdit*)GetDlgItem(IDC_U12))->EnableWindow(enableWass && specWass);
-  ((CEdit*)GetDlgItem(IDC_U13))->EnableWindow(enableWass && specWass);
-  ((CEdit*)GetDlgItem(IDC_U21))->EnableWindow(enableEgnos && specEgnos);
-  ((CEdit*)GetDlgItem(IDC_U22))->EnableWindow(enableEgnos && specEgnos);
-  ((CEdit*)GetDlgItem(IDC_U23))->EnableWindow(enableEgnos && specEgnos);
-  ((CEdit*)GetDlgItem(IDC_U31))->EnableWindow(enableMsas && specMsas);
-  ((CEdit*)GetDlgItem(IDC_U32))->EnableWindow(enableMsas && specMsas);
-  ((CEdit*)GetDlgItem(IDC_U33))->EnableWindow(enableMsas && specMsas);
-  ((CEdit*)GetDlgItem(IDC_U41))->EnableWindow(enableGagan && specGagan);
-  ((CEdit*)GetDlgItem(IDC_U42))->EnableWindow(enableGagan && specGagan);
-  ((CEdit*)GetDlgItem(IDC_U43))->EnableWindow(enableGagan && specGagan);
-
+    ((CEdit*)GetDlgItem(IDC_U11))->EnableWindow(enableWass && specWass);
+    ((CEdit*)GetDlgItem(IDC_U12))->EnableWindow(enableWass && specWass);
+    ((CEdit*)GetDlgItem(IDC_U13))->EnableWindow(enableWass && specWass);
+    ((CEdit*)GetDlgItem(IDC_U21))->EnableWindow(enableEgnos && specEgnos);
+    ((CEdit*)GetDlgItem(IDC_U22))->EnableWindow(enableEgnos && specEgnos);
+    ((CEdit*)GetDlgItem(IDC_U23))->EnableWindow(enableEgnos && specEgnos);
+    ((CEdit*)GetDlgItem(IDC_U31))->EnableWindow(enableMsas && specMsas);
+    ((CEdit*)GetDlgItem(IDC_U32))->EnableWindow(enableMsas && specMsas);
+    ((CEdit*)GetDlgItem(IDC_U33))->EnableWindow(enableMsas && specMsas);
+    ((CEdit*)GetDlgItem(IDC_U41))->EnableWindow(enableGagan && specGagan);
+    ((CEdit*)GetDlgItem(IDC_U42))->EnableWindow(enableGagan && specGagan);
+    ((CEdit*)GetDlgItem(IDC_U43))->EnableWindow(enableGagan && specGagan);
+  }
+  else
+  {
+    ((CEdit*)GetDlgItem(IDC_U11))->EnableWindow(enableWass);
+    ((CEdit*)GetDlgItem(IDC_U12))->EnableWindow(enableWass);
+    ((CEdit*)GetDlgItem(IDC_U13))->EnableWindow(enableWass);
+    ((CEdit*)GetDlgItem(IDC_U21))->EnableWindow(enableEgnos);
+    ((CEdit*)GetDlgItem(IDC_U22))->EnableWindow(enableEgnos);
+    ((CEdit*)GetDlgItem(IDC_U23))->EnableWindow(enableEgnos);
+    ((CEdit*)GetDlgItem(IDC_U31))->EnableWindow(enableMsas);
+    ((CEdit*)GetDlgItem(IDC_U32))->EnableWindow(enableMsas);
+    ((CEdit*)GetDlgItem(IDC_U33))->EnableWindow(enableMsas);
+    ((CEdit*)GetDlgItem(IDC_U41))->EnableWindow(enableGagan);
+    ((CEdit*)GetDlgItem(IDC_U42))->EnableWindow(enableGagan);
+    ((CEdit*)GetDlgItem(IDC_U43))->EnableWindow(enableGagan);
+  }
 }
 
 void CConfigSBAS2::OnBnClickedEnableWaas()
@@ -788,29 +871,34 @@ void CConfigSBAS2::OnBnClickedApplyDefault()
 
 void CConfigSBAS2::DoCommand()
 {
-	BinaryData cmd(22);
-	*cmd.GetBuffer(0) = 0x62;
-	*cmd.GetBuffer(1) = 0x05;
-	*cmd.GetBuffer(2) = (U08)m_bEnable;
-	*cmd.GetBuffer(3) = (U08)m_bRanging;
-	*cmd.GetBuffer(4) = (U08)m_nUraMask;
-	*cmd.GetBuffer(5) = (U08)m_bCorrection;
-	*cmd.GetBuffer(6) = (U08)m_nTrackingChannel;
-	*cmd.GetBuffer(7) = (U08)(m_bWAAS | (m_bEGNOS << 1) | (m_bMSAS << 2) | (m_bGAGAN << 3) | (m_bAll << 7));
-	*cmd.GetBuffer(8) = (U08)(m_bWaasSpec | (m_bEgnosSpec << 1) | (m_bMsasSpec << 2) | (m_bGaganSpec << 3));
-	*cmd.GetBuffer(9) = (U08)m_u11;
-	*cmd.GetBuffer(10) = (U08)m_u12;
-	*cmd.GetBuffer(11) = (U08)m_u13;
-	*cmd.GetBuffer(12) = (U08)m_u21;
-	*cmd.GetBuffer(13) = (U08)m_u22;
-	*cmd.GetBuffer(14) = (U08)m_u23;
-	*cmd.GetBuffer(15) = (U08)m_u31;
-	*cmd.GetBuffer(16) = (U08)m_u32;
-	*cmd.GetBuffer(17) = (U08)m_u33;
-	*cmd.GetBuffer(18) = (U08)m_u41;
-	*cmd.GetBuffer(19) = (U08)m_u42;
-	*cmd.GetBuffer(20) = (U08)m_u43;
-	*cmd.GetBuffer(21) = (U08)m_nAttribute;
+  BinaryData cmd((cmdMode == ConfigSBAS2New) ? 21 : 22);
+
+  int idx = -1;
+	*cmd.GetBuffer(++idx) = 0x62;
+	*cmd.GetBuffer(++idx) = 0x05;
+	*cmd.GetBuffer(++idx) = (U08)m_bEnable;
+	*cmd.GetBuffer(++idx) = (U08)m_bRanging;
+	*cmd.GetBuffer(++idx) = (U08)m_nUraMask;
+	*cmd.GetBuffer(++idx) = (U08)m_bCorrection;
+	*cmd.GetBuffer(++idx) = (U08)m_nTrackingChannel;
+	*cmd.GetBuffer(++idx) = (U08)(m_bWAAS | (m_bEGNOS << 1) | (m_bMSAS << 2) | (m_bGAGAN << 3) | (m_bAll << 7));
+  if(cmdMode == ConfigSBAS2Old)
+  {
+	  *cmd.GetBuffer(++idx) = (U08)(m_bWaasSpec | (m_bEgnosSpec << 1) | (m_bMsasSpec << 2) | (m_bGaganSpec << 3));
+  }
+	*cmd.GetBuffer(++idx) = (U08)m_u11;
+	*cmd.GetBuffer(++idx) = (U08)m_u12;
+	*cmd.GetBuffer(++idx) = (U08)m_u13;
+	*cmd.GetBuffer(++idx) = (U08)m_u21;
+	*cmd.GetBuffer(++idx) = (U08)m_u22;
+	*cmd.GetBuffer(++idx) = (U08)m_u23;
+	*cmd.GetBuffer(++idx) = (U08)m_u31;
+	*cmd.GetBuffer(++idx) = (U08)m_u32;
+	*cmd.GetBuffer(++idx) = (U08)m_u33;
+	*cmd.GetBuffer(++idx) = (U08)m_u41;
+	*cmd.GetBuffer(++idx) = (U08)m_u42;
+	*cmd.GetBuffer(++idx) = (U08)m_u43;
+	*cmd.GetBuffer(++idx) = (U08)m_nAttribute;
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure SBAS Advance successfully";
@@ -1512,9 +1600,10 @@ void CConfigLeapSeconds::DoCommand()
 }
 
 // CConfigPowerMode 
+/*
 IMPLEMENT_DYNAMIC(CConfigPowerMode, CCommonConfigDlg)
 
-CConfigPowerMode::CConfigPowerMode(CWnd* pParent /*=NULL*/)
+CConfigPowerMode::CConfigPowerMode(CWnd* pParent)
 : CCommonConfigDlg(IDD_CONFIG_POWER_MODE, pParent)
 {
 
@@ -1554,8 +1643,8 @@ void CConfigPowerMode::DoCommand()
 	configPrompt = "Configure PowerMode successfully";
   AfxBeginThread(ConfigThread, 0);
 }
-
-// CConfigParamSearchEngineSleepCRiteria 
+*/
+// CConfigParamSearchEngineSleepCriteria 
 IMPLEMENT_DYNAMIC(CConfigParamSearchEngineSleepCriteria, CCommonConfigDlg)
 
 CConfigParamSearchEngineSleepCriteria::CConfigParamSearchEngineSleepCriteria(CWnd* pParent /*=NULL*/)
@@ -2392,7 +2481,6 @@ BOOL CConfigGeofencing::OnInitDialog()
 		GetDlgItem(IDC_COOR_TEXT2)->SetWindowText("Latitude");
 		GetDlgItem(IDC_POINTS_PMT)->SetWindowText("2. Add multiple coordinates, separated by \r\ncommas and rows(Ctrl + Enter).\r\ne.g.:\r\n121.008697445,24.784915663\r\n121.008810556,24.784965052\r\n121.008853770,24.784854644\r\n121.008751459,24.784811388");
 	}
-
 
   for(int i = 0; i < points.GetCount(); ++i)
   {
@@ -4016,6 +4104,9 @@ BOOL CConfigPstiInterval::OnInitDialog()
   case 32:
 	  ack = CGPSDlg::gpsDlg->QueryPsti032(CGPSDlg::Return, &interval);
     break;
+  case 33:
+	  ack = CGPSDlg::gpsDlg->QueryPsti033(CGPSDlg::Return, &interval);
+    break;
   default:
     ASSERT(FALSE);
     break;
@@ -4510,5 +4601,218 @@ void ConfigRtcmMeasurementDataOutDlg::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure RTCMMeasurementDataOut successfully";
+  AfxBeginThread(ConfigThread, 0);
+}
+
+// CConfigWatchTrackback 
+IMPLEMENT_DYNAMIC(CConfigWatchTrackback, CCommonConfigDlg)
+
+CConfigWatchTrackback::CConfigWatchTrackback(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_RTK_MODE, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigWatchTrackback, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigWatchTrackback::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigWatchTrackback 
+BOOL CConfigWatchTrackback::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+	//((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);
+	//((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigWatchTrackback::OnBnClickedOk()
+{	
+	//m_mode = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
+	//m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
+void CConfigWatchTrackback::DoCommand()
+{
+	//CWaitCursor wait;
+	//BinaryData cmd(4);
+	//*cmd.GetBuffer(0) = 0x6A;
+	//*cmd.GetBuffer(1) = 0x01;
+	//*cmd.GetBuffer(2) = (U08)m_mode;
+	//*cmd.GetBuffer(3) = (U08)m_attribute;
+
+	//configCmd.SetData(cmd);
+	//configPrompt = "Configure RTK mode successfully";
+	//if(m_mode == 1)	//Base mode
+	//{	//Base mode should set to 1 Hz.
+	//	AfxBeginThread(ConfigRtkThread, 0);
+	//}
+	//else
+	//{
+	//	AfxBeginThread(ConfigThread, 0);
+	//}
+}
+
+
+// CLogConfigureControlDlg 
+IMPLEMENT_DYNAMIC(CLogConfigureControlDlg, CCommonConfigDlg)
+
+CLogConfigureControlDlg::CLogConfigureControlDlg(CWnd* pParent /*=NULL*/, CmdType cmd)
+	: CCommonConfigDlg(IDD_LOG_FILTER_DLG, pParent)
+{
+  m_cmd = cmd;
+}
+
+BEGIN_MESSAGE_MAP(CLogConfigureControlDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CLogConfigureControlDlg::OnBnClickedOk)
+  ON_BN_CLICKED(IDC_ENABLE, &CLogConfigureControlDlg::OnBnClickedEnable)
+
+END_MESSAGE_MAP()
+
+// ConfigRtcmMeasurementDataOutDlg
+BOOL CLogConfigureControlDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+  CString title;
+  BinaryData ackCmd;
+  this->GetWindowText(title);
+
+  CGPSDlg::CmdErrorCode ack = CGPSDlg::Timeout;
+  int startI = 0;
+  if(m_cmd == Cmd17h)
+  {
+    ack = CGPSDlg::gpsDlg->QueryDatalogLogStatus(CGPSDlg::Return, &ackCmd);
+    startI = 13;
+  }
+  else if(m_cmd == Cmd740Ch)
+  {
+    ack = CGPSDlg::gpsDlg->QueryDatalogWatchLogStatus(CGPSDlg::Return, &ackCmd);
+    startI = 15;
+  }
+
+  if(CGPSDlg::Ack == ack)
+  {
+    title += " (Query success)";
+    int dataBase = 15;
+    DisplayStatic(this, IDC_EMAXT, "%d", MAKELONG(MAKEWORD(ackCmd[dataBase], ackCmd[dataBase + 1]), MAKEWORD(ackCmd[dataBase + 2], ackCmd[dataBase + 3])));
+    DisplayStatic(this, IDC_EMINT, "%d", MAKELONG(MAKEWORD(ackCmd[dataBase + 4], ackCmd[dataBase + 5]), MAKEWORD(ackCmd[dataBase + 6], ackCmd[dataBase + 7])));
+    DisplayStatic(this, IDC_EMAXD, "%d", MAKELONG(MAKEWORD(ackCmd[dataBase + 8], ackCmd[dataBase + 9]), MAKEWORD(ackCmd[dataBase + 10], ackCmd[dataBase + 11])));
+    DisplayStatic(this, IDC_EMIND, "%d", MAKELONG(MAKEWORD(ackCmd[dataBase + 12], ackCmd[dataBase + 13]), MAKEWORD(ackCmd[dataBase + 14], ackCmd[dataBase + 15])));
+    DisplayStatic(this, IDC_EMAXV, "%d", MAKELONG(MAKEWORD(ackCmd[dataBase + 16], ackCmd[dataBase + 17]), MAKEWORD(ackCmd[dataBase + 18], ackCmd[dataBase + 19])));
+    DisplayStatic(this, IDC_EMINV, "%d", MAKELONG(MAKEWORD(ackCmd[dataBase + 20], ackCmd[dataBase + 21]), MAKEWORD(ackCmd[dataBase + 22], ackCmd[dataBase + 23])));
+    ((CButton*)GetDlgItem(IDC_ENABLE))->SetCheck(ackCmd[dataBase + 24]);
+    ((CComboBox*)GetDlgItem(IDC_FIFOMODE))->SetCurSel(ackCmd[dataBase + 25]);
+  }
+  else
+  {
+    DisplayStatic(this, IDC_EMAXT, "%d", 3600);
+    DisplayStatic(this, IDC_EMINT, "%d", 5);
+    DisplayStatic(this, IDC_EMAXD, "%d", 100);
+    DisplayStatic(this, IDC_EMIND, "%d", 0);
+    DisplayStatic(this, IDC_EMAXV, "%d", 100);
+    DisplayStatic(this, IDC_EMINV, "%d", 0);
+    ((CButton*)GetDlgItem(IDC_ENABLE))->SetCheck(FALSE);
+    ((CComboBox*)GetDlgItem(IDC_FIFOMODE))->SetCurSel(0);
+  }
+  this->SetWindowText(title);
+	UpdateStatus();
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CLogConfigureControlDlg::OnBnClickedOk()
+{
+  CString txt;
+
+	m_enable = ((CButton*)GetDlgItem(IDC_ENABLE))->GetCheck();
+	GetDlgItem(IDC_EMAXT)->GetWindowText(txt);
+	m_maxT = atoi(txt);
+	GetDlgItem(IDC_EMINT)->GetWindowText(txt);
+	m_minT = atoi(txt);
+	GetDlgItem(IDC_EMAXD)->GetWindowText(txt);
+	m_maxD = atoi(txt);
+	GetDlgItem(IDC_EMIND)->GetWindowText(txt);
+	m_minD = atoi(txt);
+	GetDlgItem(IDC_EMAXV)->GetWindowText(txt);
+	m_maxV = atoi(txt);
+	GetDlgItem(IDC_EMINV)->GetWindowText(txt);
+	m_minV = atoi(txt);
+  m_fifoMode = ((CComboBox*)GetDlgItem(IDC_FIFOMODE))->GetCurSel();
+
+  OnOK();
+}
+
+void CLogConfigureControlDlg::UpdateStatus()
+{
+  BOOL enable = ((CButton*)GetDlgItem(IDC_ENABLE))->GetCheck();
+
+	GetDlgItem(IDC_EMAXT)->EnableWindow(enable);
+	GetDlgItem(IDC_EMINT)->EnableWindow(enable);
+	GetDlgItem(IDC_EMAXD)->EnableWindow(enable);
+	GetDlgItem(IDC_EMIND)->EnableWindow(enable);
+	GetDlgItem(IDC_EMAXV)->EnableWindow(enable);
+	GetDlgItem(IDC_EMINV)->EnableWindow(enable);
+	GetDlgItem(IDC_FIFOMODE)->EnableWindow(enable);
+}
+
+void CLogConfigureControlDlg::OnBnClickedEnable()
+{
+	UpdateStatus();
+}
+
+void CLogConfigureControlDlg::DoCommand()
+{
+	BinaryData cmd;
+  int i = 0;
+  if(m_cmd == Cmd17h)
+  {
+    cmd.Alloc(27);
+	  *cmd.GetBuffer(i++) = 0x17;
+  }
+  else if(m_cmd == Cmd740Ch)
+  {
+     cmd.Alloc(29);
+    *cmd.GetBuffer(i++) = 0x7A;
+    *cmd.GetBuffer(i++) = 0x0C;
+    *cmd.GetBuffer(i++) = 0x0D;
+  }
+	*cmd.GetBuffer(i++) = HIBYTE(HIWORD(m_maxT));
+	*cmd.GetBuffer(i++) = LOBYTE(HIWORD(m_maxT));
+	*cmd.GetBuffer(i++) = HIBYTE(LOWORD(m_maxT));
+	*cmd.GetBuffer(i++) = LOBYTE(LOWORD(m_maxT));
+
+ 	*cmd.GetBuffer(i++) = HIBYTE(HIWORD(m_minT));
+	*cmd.GetBuffer(i++) = LOBYTE(HIWORD(m_minT));
+	*cmd.GetBuffer(i++) = HIBYTE(LOWORD(m_minT));
+	*cmd.GetBuffer(i++) = LOBYTE(LOWORD(m_minT));
+
+	*cmd.GetBuffer(i++) = HIBYTE(HIWORD(m_maxD));
+	*cmd.GetBuffer(i++) = LOBYTE(HIWORD(m_maxD));
+	*cmd.GetBuffer(i++) = HIBYTE(LOWORD(m_maxD));
+	*cmd.GetBuffer(i++) = LOBYTE(LOWORD(m_maxD));
+
+	*cmd.GetBuffer(i++) = HIBYTE(HIWORD(m_minD));
+	*cmd.GetBuffer(i++) = LOBYTE(HIWORD(m_minD));
+	*cmd.GetBuffer(i++) = HIBYTE(LOWORD(m_minD));
+	*cmd.GetBuffer(i++) = LOBYTE(LOWORD(m_minD));
+
+	*cmd.GetBuffer(i++) = HIBYTE(HIWORD(m_maxV));
+	*cmd.GetBuffer(i++) = LOBYTE(HIWORD(m_maxV));
+	*cmd.GetBuffer(i++) = HIBYTE(LOWORD(m_maxV));
+	*cmd.GetBuffer(i++) = LOBYTE(LOWORD(m_maxV));
+
+	*cmd.GetBuffer(i++) = HIBYTE(HIWORD(m_minV));
+	*cmd.GetBuffer(i++) = LOBYTE(HIWORD(m_minV));
+	*cmd.GetBuffer(i++) = HIBYTE(LOWORD(m_minV));
+	*cmd.GetBuffer(i++) = LOBYTE(LOWORD(m_minV));
+  
+  *cmd.GetBuffer(i++) = m_enable;
+  *cmd.GetBuffer(i++) = m_fifoMode;
+
+	configCmd.SetData(cmd);
+	configPrompt = "Log Configure Data Logging Criteria successfully";
   AfxBeginThread(ConfigThread, 0);
 }

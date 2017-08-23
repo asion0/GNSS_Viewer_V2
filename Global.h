@@ -354,19 +354,6 @@ extern Setting g_setting;
 extern const double R2D;
 extern const COLORREF g_panelBkColor;
 
-//extern U08 type;
-//extern U08 attribute;
-//extern U08 msgid;
-
-//extern U08  slgga;	
-//extern U08  slgsa;
-//extern U08  slgsv;
-//extern U08  slgll;
-//extern U08  slrmc;
-//extern U08  slvtg;
-//extern U08  slzda;
-//extern U08  slgns;
-
 extern HANDLE g_connectEvent;
 extern HANDLE g_closeEvent;
 extern CWaitReadLog* WRL;
@@ -428,3 +415,8 @@ void DisplayStatic(CDialog* pDlg, UINT uid, LPCSTR format, T data)
   txt.Format(format, data);
   pDlg->GetDlgItem(uid)->SetWindowText(txt);
 }
+
+U16 GetCrc16(const void *buf, U32 len);
+LPCSTR GetU16HexString(const U16 d);
+LPCSTR GetBinString(const U32 d, int len);
+

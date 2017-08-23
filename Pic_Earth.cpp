@@ -132,26 +132,26 @@ void CPic_Earth::Show_EarthChart(CDC *dc)
 {
 	if(m_gpCheck.GetCheck())
 	{
-		DrawEarthSate(dc, &gpUI, CGPSDlg::gpsDlg->sate_gps, &CGPSDlg::gpsDlg->m_gpgsvMsg, &CGPSDlg::gpsDlg->m_gpgsaMsg, &CGPSDlg::gpsDlg->m_gpggaMsg);
+		DrawEarthSate(dc, &gpUI, &CGPSDlg::gpsDlg->sate_gp, &CGPSDlg::gpsDlg->m_gpgsvMsg, &CGPSDlg::gpsDlg->m_gpgsaMsg, &CGPSDlg::gpsDlg->m_gpggaMsg);
 	}
 
 	if(m_glCheck.GetCheck())
 	{
-		DrawEarthSate(dc, &glUI, CGPSDlg::gpsDlg->sate_gnss, &CGPSDlg::gpsDlg->m_glgsvMsg, &CGPSDlg::gpsDlg->m_glgsaMsg, &CGPSDlg::gpsDlg->m_gpggaMsg);
+		DrawEarthSate(dc, &glUI, &CGPSDlg::gpsDlg->sate_gl, &CGPSDlg::gpsDlg->m_glgsvMsg, &CGPSDlg::gpsDlg->m_glgsaMsg, &CGPSDlg::gpsDlg->m_gpggaMsg);
 	}
 
 	if(m_bdCheck.GetCheck())
 	{
-		DrawEarthSate(dc, &bdUI, CGPSDlg::gpsDlg->sate_bd, &CGPSDlg::gpsDlg->m_bdgsvMsg, &CGPSDlg::gpsDlg->m_bdgsaMsg, &CGPSDlg::gpsDlg->m_gpggaMsg);
+		DrawEarthSate(dc, &bdUI, &CGPSDlg::gpsDlg->sate_bd, &CGPSDlg::gpsDlg->m_bdgsvMsg, &CGPSDlg::gpsDlg->m_bdgsaMsg, &CGPSDlg::gpsDlg->m_gpggaMsg);
 	}
 
 	if(m_gaCheck.GetCheck())
 	{
-		DrawEarthSate(dc, &gaUI, CGPSDlg::gpsDlg->sate_ga, &CGPSDlg::gpsDlg->m_gagsvMsg, &CGPSDlg::gpsDlg->m_gagsaMsg, &CGPSDlg::gpsDlg->m_gpggaMsg);
+		DrawEarthSate(dc, &gaUI, &CGPSDlg::gpsDlg->sate_ga, &CGPSDlg::gpsDlg->m_gagsvMsg, &CGPSDlg::gpsDlg->m_gagsaMsg, &CGPSDlg::gpsDlg->m_gpggaMsg);
 	}
 }
 
-void CPic_Earth::DrawEarthSate(CDC* dc, UISetting* s, Satellite* sate, GPGSV* gsv, GPGSA* gsa, GPGGA* gga)
+void CPic_Earth::DrawEarthSate(CDC* dc, UISetting* s, Satellites* sate, GPGSV* gsv, GPGSA* gsa, GPGGA* gga)
 {
 	int centerX = 250 / 2;
 	int centerY = 250 / 2;
@@ -159,9 +159,11 @@ void CPic_Earth::DrawEarthSate(CDC* dc, UISetting* s, Satellite* sate, GPGSV* gs
 	double ele = 0.0;	       
 	int id = 0;
 
-	for(int i=0; i<gsv->NumOfSate; ++i)
+	for(int i = 0; i < sate->GetSateCount(); ++i)
 	{
-		id = sate[i].SatelliteID;
+		//id = sate[i].SatelliteID;
+    const Satellite* pSate = sate->GetSateIndex(i);
+    id = pSate->SatelliteID;
 		if(id == 0)
 		{
 			continue;	
@@ -169,8 +171,8 @@ void CPic_Earth::DrawEarthSate(CDC* dc, UISetting* s, Satellite* sate, GPGSV* gs
 		//Elevation 0~90 degrees
 		//Azimuth  0~359 degrees
 		//Elevation = 75*cos(satellites[i].Elevation*PI/180);	
-		U16 azimuth = sate[i].Azimuth;
-		U16 elevation = sate[i].Elevation;
+		U16 azimuth = pSate->Azimuth;
+		U16 elevation = pSate->Elevation;
 		U16 qtyInd = gga->GPSQualityIndicator;
 
 		ele = 114.0 - ( 114.0 * elevation / 90.0);			

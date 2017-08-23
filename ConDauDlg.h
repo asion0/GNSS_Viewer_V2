@@ -1,4 +1,5 @@
 #pragma once
+/*
 #include "afxwin.h"
 #include "afxcmn.h"
 
@@ -27,3 +28,4 @@ public:
 	CComboBox m_attribute;
 	afx_msg void OnBnClickedDatumTest();
 };
+*/

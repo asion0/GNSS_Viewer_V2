@@ -43,12 +43,17 @@ void CConMultiMode::OnBnClickedOk()
 	if(((CButton*)GetDlgItem(IDC_BUILD_IN))->GetCheck())
 	{
 		mode = m_mode.GetCurSel();
-    CString txt;
-    m_mode.GetWindowText(txt);
-    if(txt == "Quadcopter")
+    //Index 6 is skipped.
+    if(mode >= 6)
     {
-      mode = 7;
+      mode += 1;
     }
+    //CString txt;
+    //m_mode.GetWindowText(txt);
+    //if(txt == "Quadcopter")
+    //{
+    //  mode = 7;
+    //}
 	}
 	else	
 	{
@@ -84,6 +89,12 @@ BOOL CConMultiMode::OnInitDialog()
 	//m_mode.AddString("Surveying and mapping");
   //20160808 Add new mode but skip index 6, requast from Terrance
 	m_mode.AddString("Quadcopter");
+  //20170710 Add new mode but skip index 6, requast from Leo and Ryan
+  if(NAV_MOWING_MODE)
+  {
+	  m_mode.AddString("Mower");
+  }
+
 	GetDlgItem(IDC_CUSTOM_NAV)->SetWindowText("0");
 
 	m_mode.SetCurSel(0);

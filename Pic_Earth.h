@@ -2,6 +2,7 @@
 
 class UISetting;
 struct Satellite;
+class Satellites;
 struct GPGSV;
 struct GPGSA;
 struct GPGGA;
@@ -19,7 +20,7 @@ public:
 private:
 	void Refresh_EarthChart(CDC *dc);
 	void Show_EarthChart(CDC *dc);
-	void DrawEarthSate(CDC* dc, UISetting* s, Satellite* sate, GPGSV* gsv, GPGSA* gsa, GPGGA* gga);
+	void DrawEarthSate(CDC* dc, UISetting* s, Satellites* sate, GPGSV* gsv, GPGSA* gsa, GPGGA* gga);
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnPaint();

@@ -389,68 +389,80 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 		{
 			if(glonass_c==0)
 			{
-				memset(CGPSDlg::gpsDlg->nmea.satellites_gnss, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_gnss));
+				//memset(CGPSDlg::gpsDlg->nmea.satellites_gl, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_gl));
+        CGPSDlg::gpsDlg->nmea.satellites_gl.Clear();
 			}
 			if (sv.channel_status & 0x30)
 			{
 				CGPSDlg::gpsDlg->m_glgsaMsgCopy.SatelliteID[fixed_glonass_c] = sv.prn;
-				fixed_glonass_c++;
+				++fixed_glonass_c;
 			}
-			CGPSDlg::gpsDlg->nmea.satellites_gnss[glonass_c].SatelliteID = sv.prn;
-			CGPSDlg::gpsDlg->nmea.satellites_gnss[glonass_c].SNR = sv.cn0;
-			CGPSDlg::gpsDlg->nmea.satellites_gnss[glonass_c].Elevation = sv.elevation;
-			CGPSDlg::gpsDlg->nmea.satellites_gnss[glonass_c].Azimuth = sv.azimuth;
+
+      CGPSDlg::gpsDlg->nmea.satellites_gl.SetSate( sv.prn, sv.elevation, sv.azimuth, sv.cn0);
+			//CGPSDlg::gpsDlg->nmea.satellites_gl[glonass_c].SatelliteID = sv.prn;
+			//CGPSDlg::gpsDlg->nmea.satellites_gl[glonass_c].SNR = sv.cn0;
+			//CGPSDlg::gpsDlg->nmea.satellites_gl[glonass_c].Elevation = sv.elevation;
+			//CGPSDlg::gpsDlg->nmea.satellites_gl[glonass_c].Azimuth = sv.azimuth;
 			glonass_c++;
 		}
 		else if(NMEA::Gps == NMEA::GetGNSSSystem(sv.prn))
 		{
 			if(gps_c==0)
 			{
-				memset(CGPSDlg::gpsDlg->nmea.satellites_gps, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_gps));
+				//memset(CGPSDlg::gpsDlg->nmea.satellites_gp, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_gp));
+        CGPSDlg::gpsDlg->nmea.satellites_gp.Clear();
 			}
 			if (sv.channel_status & 0x30)
 			{
 				CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID[fixed_gps_c] = sv.prn;
 				fixed_gps_c++;
 			}
-			CGPSDlg::gpsDlg->nmea.satellites_gps[gps_c].SatelliteID = sv.prn;
-			CGPSDlg::gpsDlg->nmea.satellites_gps[gps_c].SNR = sv.cn0;
-			CGPSDlg::gpsDlg->nmea.satellites_gps[gps_c].Elevation = sv.elevation;
-			CGPSDlg::gpsDlg->nmea.satellites_gps[gps_c].Azimuth = sv.azimuth;
+
+      CGPSDlg::gpsDlg->nmea.satellites_gp.SetSate( sv.prn, sv.elevation, sv.azimuth, sv.cn0);
+			//CGPSDlg::gpsDlg->nmea.satellites_gp[gps_c].SatelliteID = sv.prn;
+			//CGPSDlg::gpsDlg->nmea.satellites_gp[gps_c].SNR = sv.cn0;
+			//CGPSDlg::gpsDlg->nmea.satellites_gp[gps_c].Elevation = sv.elevation;
+			//CGPSDlg::gpsDlg->nmea.satellites_gp[gps_c].Azimuth = sv.azimuth;
 			gps_c++;
 		}
 		else if(NMEA::Beidou == NMEA::GetGNSSSystem(sv.prn))
 		{
 			if(beidou_c==0)
 			{
-				memset(CGPSDlg::gpsDlg->nmea.satellites_bd, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_bd));
+				//memset(CGPSDlg::gpsDlg->nmea.satellites_bd, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_bd));
+        CGPSDlg::gpsDlg->nmea.satellites_bd.Clear();
 			}
 			if (sv.channel_status & 0x30)
 			{
 				CGPSDlg::gpsDlg->m_bdgsaMsgCopy.SatelliteID[fixed_beidou_c] = sv.prn;
 				fixed_beidou_c++;
 			}
-			CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].SatelliteID = sv.prn;
-			CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].SNR = sv.cn0;
-			CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].Elevation = sv.elevation;
-			CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].Azimuth = sv.azimuth;
+
+      CGPSDlg::gpsDlg->nmea.satellites_bd.SetSate( sv.prn, sv.elevation, sv.azimuth, sv.cn0);
+			//CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].SatelliteID = sv.prn;
+			//CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].SNR = sv.cn0;
+			//CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].Elevation = sv.elevation;
+			//CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].Azimuth = sv.azimuth;
 			beidou_c++;
 		}
 		else if(NMEA::Galileo == NMEA::GetGNSSSystem(sv.prn))
 		{
 			if(galileo_c==0)
 			{
-				memset(CGPSDlg::gpsDlg->nmea.satellites_ga, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_ga));
+				//memset(CGPSDlg::gpsDlg->nmea.satellites_ga, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_ga));
+        CGPSDlg::gpsDlg->nmea.satellites_ga.Clear();
 			}
 			if (sv.channel_status & 0x30)
 			{
 				CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID[fixed_galileo_c] = sv.prn;
 				fixed_galileo_c++;
 			}
-			CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].SatelliteID = sv.prn;
-			CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].SNR = sv.cn0;
-			CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].Elevation = sv.elevation;
-			CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].Azimuth = sv.azimuth;
+
+      CGPSDlg::gpsDlg->nmea.satellites_ga.SetSate( sv.prn, sv.elevation, sv.azimuth, sv.cn0);
+			//CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].SatelliteID = sv.prn;
+			//CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].SNR = sv.cn0;
+			//CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].Elevation = sv.elevation;
+			//CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].Azimuth = sv.azimuth;
 			galileo_c++;
 		}
 	}
@@ -1275,10 +1287,12 @@ void ShowRtcm1077(U08* src, bool convertOnly, CString* pStr)
   for (int i = 0; i < satNum; ++i)
 	{
     int bitOrder = GetNoneZeroBitPosition((U08*)(&msm_header.sat_mask), sizeof(msm_header.sat_mask), i);
-	  CGPSDlg::gpsDlg->nmea.satellites_gps[pos + i].SatelliteID = 1 + bitOrder;
-	  CGPSDlg::gpsDlg->nmea.satellites_gps[pos + i].SNR = sigData[i].snr_ext_resol / 16;
-	  CGPSDlg::gpsDlg->nmea.satellites_gps[pos + i].Elevation = 0;
-	  CGPSDlg::gpsDlg->nmea.satellites_gps[pos + i].Azimuth = 0;
+
+    CGPSDlg::gpsDlg->nmea.satellites_gp.SetSate(1 + bitOrder, 0, 0, sigData[i].snr_ext_resol / 16);
+	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].SatelliteID = 1 + bitOrder;
+	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].SNR = sigData[i].snr_ext_resol / 16;
+	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].Elevation = 0;
+	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].Azimuth = 0;
   }
 	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfSate = satNum;
 	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfMessage = 1;
@@ -1300,10 +1314,12 @@ void ShowRtcm1107(U08* src, bool convertOnly, CString* pStr)
   for (int i = 0; i < satNum; ++i)
 	{
     int bitOrder = GetNoneZeroBitPosition((U08*)(&msm_header.sat_mask), sizeof(msm_header.sat_mask), i);
-	  CGPSDlg::gpsDlg->nmea.satellites_gps[pos + i].SatelliteID = 33 + bitOrder;
-	  CGPSDlg::gpsDlg->nmea.satellites_gps[pos + i].SNR = sigData[i].snr_ext_resol / 16;
-	  CGPSDlg::gpsDlg->nmea.satellites_gps[pos + i].Elevation = 0;
-	  CGPSDlg::gpsDlg->nmea.satellites_gps[pos + i].Azimuth = 0;
+
+    CGPSDlg::gpsDlg->nmea.satellites_gp.SetSate(33 + bitOrder, 0, 0, sigData[i].snr_ext_resol / 16);
+	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].SatelliteID = 33 + bitOrder;
+	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].SNR = sigData[i].snr_ext_resol / 16;
+	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].Elevation = 0;
+	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].Azimuth = 0;
   }
 	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfSate = satNum;
 	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfMessage = 1;
@@ -1325,10 +1341,12 @@ void ShowRtcm1117(U08* src, bool convertOnly, CString* pStr)
   for (int i = 0; i < satNum; ++i)
 	{
     int bitOrder = GetNoneZeroBitPosition((U08*)(&msm_header.sat_mask), sizeof(msm_header.sat_mask), i);
-	  CGPSDlg::gpsDlg->nmea.satellites_gps[pos + i].SatelliteID = 193 + bitOrder;
-	  CGPSDlg::gpsDlg->nmea.satellites_gps[pos + i].SNR = sigData[i].snr_ext_resol / 16;
-	  CGPSDlg::gpsDlg->nmea.satellites_gps[pos + i].Elevation = 0;
-	  CGPSDlg::gpsDlg->nmea.satellites_gps[pos + i].Azimuth = 0;
+
+    CGPSDlg::gpsDlg->nmea.satellites_gp.SetSate(193 + bitOrder, 0, 0, sigData[i].snr_ext_resol / 16);
+	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].SatelliteID = 193 + bitOrder;
+	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].SNR = sigData[i].snr_ext_resol / 16;
+	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].Elevation = 0;
+	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].Azimuth = 0;
   }
 	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfSate = satNum;
 	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfMessage = 1;
@@ -1350,10 +1368,12 @@ void ShowRtcm1127(U08* src, bool convertOnly, CString* pStr)
   for (int i = 0; i < satNum; ++i)
 	{
     int bitOrder = GetNoneZeroBitPosition((U08*)(&msm_header.sat_mask), sizeof(msm_header.sat_mask), i);
-	  CGPSDlg::gpsDlg->nmea.satellites_bd[pos + i].SatelliteID = 201 + bitOrder;
-	  CGPSDlg::gpsDlg->nmea.satellites_bd[pos + i].SNR = sigData[i].snr_ext_resol / 16;
-	  CGPSDlg::gpsDlg->nmea.satellites_bd[pos + i].Elevation = 0;
-	  CGPSDlg::gpsDlg->nmea.satellites_bd[pos + i].Azimuth = 0;
+
+    CGPSDlg::gpsDlg->nmea.satellites_bd.SetSate(201 + bitOrder, 0, 0, sigData[i].snr_ext_resol / 16);
+	  //CGPSDlg::gpsDlg->nmea.satellites_bd[pos + i].SatelliteID = 201 + bitOrder;
+	  //CGPSDlg::gpsDlg->nmea.satellites_bd[pos + i].SNR = sigData[i].snr_ext_resol / 16;
+	  //CGPSDlg::gpsDlg->nmea.satellites_bd[pos + i].Elevation = 0;
+	  //CGPSDlg::gpsDlg->nmea.satellites_bd[pos + i].Azimuth = 0;
   }                
 	CGPSDlg::gpsDlg->m_bdgsvMsgCopy.NumOfSate = satNum;
 	CGPSDlg::gpsDlg->m_bdgsvMsgCopy.NumOfMessage = 1;
@@ -1375,10 +1395,12 @@ void ShowRtcm1087(U08* src, bool convertOnly, CString* pStr)
   for (int i = 0; i < satNum; ++i)
 	{
     int bitOrder = GetNoneZeroBitPosition((U08*)(&msm_header.sat_mask), sizeof(msm_header.sat_mask), i);
-	  CGPSDlg::gpsDlg->nmea.satellites_gnss[pos + i].SatelliteID = 65 + bitOrder;
-	  CGPSDlg::gpsDlg->nmea.satellites_gnss[pos + i].SNR = sigData[i].snr_ext_resol / 16;
-	  CGPSDlg::gpsDlg->nmea.satellites_gnss[pos + i].Elevation = 0;
-	  CGPSDlg::gpsDlg->nmea.satellites_gnss[pos + i].Azimuth = 0;
+
+    CGPSDlg::gpsDlg->nmea.satellites_gl.SetSate(65 + bitOrder, 0, 0, sigData[i].snr_ext_resol / 16);
+	  //CGPSDlg::gpsDlg->nmea.satellites_gl[pos + i].SatelliteID = 65 + bitOrder;
+	  //CGPSDlg::gpsDlg->nmea.satellites_gl[pos + i].SNR = sigData[i].snr_ext_resol / 16;
+	  //CGPSDlg::gpsDlg->nmea.satellites_gl[pos + i].Elevation = 0;
+	  //CGPSDlg::gpsDlg->nmea.satellites_gl[pos + i].Azimuth = 0;
   }                
 	CGPSDlg::gpsDlg->m_glgsvMsgCopy.NumOfSate = satNum;
 	CGPSDlg::gpsDlg->m_glgsvMsgCopy.NumOfMessage = 1;
@@ -1595,70 +1617,82 @@ void ShowUbxNavSvInfo(U08* src, bool convertOnly, CString* pStr)
 
 		if(NMEA::Gps == gs)
 		{
-			if(gps_c==0)
+			if(gps_c == 0)
 			{
-				memset(CGPSDlg::gpsDlg->nmea.satellites_gps, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_gps));
+				//memset(CGPSDlg::gpsDlg->nmea.satellites_gp, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_gp));
+        CGPSDlg::gpsDlg->nmea.satellites_gp.Clear();
 			}
 			if (sv.SV_status & 0x01)
 			{
 				CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID[fixed_gps_c] = sv.prn;
 				fixed_gps_c++;
 			}
-			CGPSDlg::gpsDlg->nmea.satellites_gps[gps_c].SatelliteID = sv.prn;
-			CGPSDlg::gpsDlg->nmea.satellites_gps[gps_c].SNR = sv.cn0;
-			CGPSDlg::gpsDlg->nmea.satellites_gps[gps_c].Elevation = elev;
-			CGPSDlg::gpsDlg->nmea.satellites_gps[gps_c].Azimuth = sv.azimuth;
+
+      CGPSDlg::gpsDlg->nmea.satellites_gp.SetSate(sv.prn, elev, sv.azimuth, sv.cn0);
+			//CGPSDlg::gpsDlg->nmea.satellites_gp[gps_c].SatelliteID = sv.prn;
+			//CGPSDlg::gpsDlg->nmea.satellites_gp[gps_c].SNR = sv.cn0;
+			//CGPSDlg::gpsDlg->nmea.satellites_gp[gps_c].Elevation = elev;
+			//CGPSDlg::gpsDlg->nmea.satellites_gp[gps_c].Azimuth = sv.azimuth;
 			gps_c++;
 		}
 		else if(NMEA::Glonass == gs)
 		{
 			if(glonass_c==0)
 			{
-				memset(CGPSDlg::gpsDlg->nmea.satellites_gnss, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_gnss));
+				//memset(CGPSDlg::gpsDlg->nmea.satellites_gl, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_gl));
+        CGPSDlg::gpsDlg->nmea.satellites_gl.Clear();
 			}
 			if (sv.SV_status & 0x01)
 			{
 				CGPSDlg::gpsDlg->m_glgsaMsgCopy.SatelliteID[fixed_glonass_c] = sv.prn;
 				fixed_glonass_c++;
 			}
-			CGPSDlg::gpsDlg->nmea.satellites_gnss[glonass_c].SatelliteID = sv.prn;
-			CGPSDlg::gpsDlg->nmea.satellites_gnss[glonass_c].SNR = sv.cn0;
-			CGPSDlg::gpsDlg->nmea.satellites_gnss[glonass_c].Elevation = elev;
-			CGPSDlg::gpsDlg->nmea.satellites_gnss[glonass_c].Azimuth = sv.azimuth;
+
+      CGPSDlg::gpsDlg->nmea.satellites_gl.SetSate(sv.prn, elev, sv.azimuth, sv.cn0);
+			//CGPSDlg::gpsDlg->nmea.satellites_gl[glonass_c].SatelliteID = sv.prn;
+			//CGPSDlg::gpsDlg->nmea.satellites_gl[glonass_c].SNR = sv.cn0;
+			//CGPSDlg::gpsDlg->nmea.satellites_gl[glonass_c].Elevation = elev;
+			//CGPSDlg::gpsDlg->nmea.satellites_gl[glonass_c].Azimuth = sv.azimuth;
 			glonass_c++;
     }
 		else if(NMEA::Beidou == gs)
 		{
 			if(beidou_c==0)
 			{
-				memset(CGPSDlg::gpsDlg->nmea.satellites_bd, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_bd));
+				//memset(CGPSDlg::gpsDlg->nmea.satellites_bd, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_bd));
+        CGPSDlg::gpsDlg->nmea.satellites_bd.Clear();
 			}
 			if (sv.SV_status & 0x01)
 			{
 				CGPSDlg::gpsDlg->m_bdgsaMsgCopy.SatelliteID[fixed_beidou_c] = sv.prn;
 				fixed_beidou_c++;
 			}
-			CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].SatelliteID = sv.prn;
-			CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].SNR = sv.cn0;
-			CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].Elevation = elev;
-			CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].Azimuth = sv.azimuth;
+
+      CGPSDlg::gpsDlg->nmea.satellites_bd.SetSate(sv.prn, elev, sv.azimuth, sv.cn0);
+			//CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].SatelliteID = sv.prn;
+			//CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].SNR = sv.cn0;
+			//CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].Elevation = elev;
+			//CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].Azimuth = sv.azimuth;
 			beidou_c++;
     }
 		else if(NMEA::Galileo == gs)
 		{
 			if(galileo_c==0)
 			{
-				memset(CGPSDlg::gpsDlg->nmea.satellites_ga, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_ga));
+//				memset(CGPSDlg::gpsDlg->nmea.satellites_ga, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_ga));
+        CGPSDlg::gpsDlg->nmea.satellites_ga.Clear();
 			}
 			if (sv.SV_status & 0x01)
 			{
 				CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID[fixed_galileo_c] = sv.prn;
 				fixed_galileo_c++;
 			}
-			CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].SatelliteID = sv.prn;
-			CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].SNR = sv.cn0;
-			CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].Elevation = elev;
-			CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].Azimuth = sv.azimuth;
+
+      CGPSDlg::gpsDlg->nmea.satellites_ga.SetSate(sv.prn, elev, sv.azimuth, sv.cn0);
+   //   CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].SatelliteID = sv.prn;
+			//CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].SNR = sv.cn0;
+			//CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].Elevation = elev;
+			//CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].Azimuth = sv.azimuth;
 			galileo_c++;
     }
 	  CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfSate = gps_c;

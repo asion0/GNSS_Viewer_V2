@@ -57,6 +57,7 @@ void CLogFilterDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CLogFilterDlg, CDialog)
 	ON_BN_CLICKED(IDOK, OnBnClickedOk)
+  ON_BN_CLICKED(IDC_ENABLE, &CLogFilterDlg::OnBnClickedEnable)
 END_MESSAGE_MAP()
 
 BOOL CLogFilterDlg::OnInitDialog()
@@ -94,4 +95,9 @@ void CLogFilterDlg::OnBnClickedOk()
 		CGPSDlg::gpsDlg->m_logFlashInfo.fifo_mode = m_fifomode.GetCurSel();
 	}
 	OnOK();
+}
+
+void CLogFilterDlg::OnBnClickedEnable()
+{
+  // TODO: 在此加入控制項告知處理常式程式碼
 }

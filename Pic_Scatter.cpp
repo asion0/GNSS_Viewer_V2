@@ -717,8 +717,6 @@ void CPic_Scatter::DrawScatterAltitude(CDC *dc, double initH , double h)
 
 	CPen *oldPen = dc->SelectObject(&(s->inUseSnrBarPen));
 	CBrush br(s->inUseSnrBarPenColor);
-	//CBrush *oldBrush = dc->SelectObject(&br);
-	//CBrush *oldBrush = dc->SelectObject(&(gpUI.noUseSnrBarBrush));
 
 	dc->MoveTo(247, 21); dc->LineTo(256, 21);
 	dc->MoveTo(248, 71); dc->LineTo(257, 71);
@@ -726,10 +724,6 @@ void CPic_Scatter::DrawScatterAltitude(CDC *dc, double initH , double h)
 	dc->MoveTo(248, 171); dc->LineTo(257, 171);
 	dc->MoveTo(247, 220); dc->LineTo(256, 220);
 
-	//dc->FillRect(CRect(249, 21, 254, 221), &(s->inUseSnrBarBrush));	//h == (initH + 2 * g_scatterData.m_enuScale)
-	//dc->FillRect(CRect(249, 121, 254, 221), &(s->inUseSnrBarBrush));	//h == initH
-	//dc->FillRect(CRect(249, 220, 254, 221), &(s->inUseSnrBarBrush));	//h == (initH - 2 * g_scatterData.m_enuScale)
-//g_scatterData.m_enuScale;
 	dc->FillRect(CRect(249, 21, 254, 221), &br);	//h == (initH + 2 * g_scatterData.m_enuScale)
 	double h1 = initH + 2 * g_scatterData.m_enuScale;
 	const int barHeight = 200;
@@ -742,8 +736,6 @@ void CPic_Scatter::DrawScatterAltitude(CDC *dc, double initH , double h)
 	{
 		dc->FillRect(CRect(249, 21 + bar, 254, 221), &(s->inUseSnrBarBrush));	//h == (initH - 2 * g_scatterData.m_enuScale)
 	}
-
-	//dc->SelectObject(oldBrush);
 	dc->SelectObject(oldPen);
 }
 

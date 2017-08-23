@@ -12,7 +12,7 @@ public:
 	CLogFilterDlg(CWnd* pParent = NULL);   
 	virtual ~CLogFilterDlg();
 
-	enum { IDD = IDD_LOGFILTERDLG };
+	enum { IDD = IDD_LOG_FILTER_DLG };
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
@@ -33,4 +33,5 @@ public:
 	CStatic m_lbl_mic;
 	virtual BOOL OnInitDialog();
 	afx_msg void OnBnClickedOk();
+  afx_msg void OnBnClickedEnable();
 };

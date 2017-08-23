@@ -50,6 +50,8 @@ static CommandEntry cmdTable[] =
 	{ 0x15, 0xFF, 1, 0xB9, 0x00 },
 	//QueryDatalogLogStatusCmd,
 	{ 0x17, 0xFF, 1, 0x94, 0x00 },
+	//DatalogClearCmd,
+	{ 0x19, 0xFF, 1, 0x83, 0x00 },
 	//QueryBinaryMeasurementDataOutCmd,
 	{ 0x1F, 0xFF, 1, 0x89, 0x00 },
 	//QueryRtcmMeasurementDataOutCmd,
@@ -196,6 +198,8 @@ static CommandEntry cmdTable[] =
   { 0x7A, 0x0B, 5, 0x7A, 0x0B },
   //BackRtkDebugModeCmd
   { 0x7A, 0x0B, 5, 0x7A, 0x0B },
+	//QueryDatalogWatchCmd,
+	{ 0x7A, 0X0C, 3, 0x7A, 0x0C },
 	//QueryChannelDopplerCmd,
 	{ 0x7B, 0xFF, 2, 0xFE, 0x00 },
 	//QueryChannelClockOffsetCmd,
@@ -214,6 +218,7 @@ enum SqBinaryCmd
 	QueryPositionRateCmd,
 	QueryPowerModeCmd,
 	QueryDatalogLogStatusCmd,
+  DatalogClearCmd,
 	QueryBinaryMeasurementDataOutCmd,
 	QueryRtcmMeasurementDataOutCmd,
   QueryBasePositionCmd,
@@ -287,6 +292,7 @@ enum SqBinaryCmd
 	QueryPstnLatLonDigitsCmd,
   EnterRtkDebugModeCmd,
   BackRtkDebugModeCmd,
+  QueryDatalogWatchCmd,
 	QueryChannelDopplerCmd,
 	QueryChannelClockOffsetCmd,
 	QueryDrHwParameterCmd,
@@ -857,13 +863,13 @@ void CGPSDlg::VerifyDataLogFormat(U08 *datalog, long *size)
 {
 	long count = 0;
 	U08* buff = new U08[*size];
-	for(long i=0; i<*size; i+=0x1000)
+	for(long i = 0; i < *size; i += 0x1000)
 	{
 		U08 *bufferIter = &datalog[i];
 		long tmp_count = 0;
 		while(1)
 		{
-			U08 type = bufferIter[0] & 0xE0;
+			U08 type = bufferIter[0] & 0xF0;
 			if(type == 0x40 || type == 0x60)
 			{
 				bufferIter += 18;
@@ -879,11 +885,31 @@ void CGPSDlg::VerifyDataLogFormat(U08 *datalog, long *size)
 				bufferIter += 20;
 				tmp_count += 20;
 			}
+			else if(type == 0x50 || type == 0x70)
+			{
+				bufferIter += 20;
+				tmp_count += 20;
+			}
+			else if(type == 0x90)
+			{
+				bufferIter += 10;
+				tmp_count += 10;
+			}
+			else if(type == 0x30 || type == 0xD0)
+			{
+				bufferIter += 22;
+				tmp_count += 22;
+			}
+			//else if(type == 0xF0)
+			//{
+			//	bufferIter += 2;
+			//	tmp_count += 2;
+			//}
 			else
 			{
 				break;
 			}
-		}
+		} //while(1)
 		memcpy(&buff[count], &datalog[i], tmp_count);
 		count += tmp_count;
 	}
@@ -954,170 +980,6 @@ bool CGPSDlg::VerifyDataLogBuffer(U08 *buff, U08 *datalog, U08 *ptr_last, int si
 	}
 	return isEnd;
 }
-
-U08 CGPSDlg::MinihomerQuerytag()
-{
-	U08 msg[1] ,checksum=0;
-	CString temp;
-	U32 data = 0;
-	U08 buff[100];
-	int k1,k2;
-	time_t start,end;
-
-	msg[0]=0x7D; //msgid
-
-	int len = CGPSDlg::gpsDlg->SetMessage(msg,sizeof(msg));
-
-	CGPSDlg::gpsDlg->ClearQue();
-	if(CGPSDlg::gpsDlg->SendToTarget(CGPSDlg::m_inputMsg,len, "Query miniHomer tag successfully", true))
-	{
-		start = clock();
-		while(1)
-		{
-			memset(buff, 0, 100);
-			if(NULL == CGPSDlg::gpsDlg->m_serial) return false;
-			CGPSDlg::gpsDlg->m_serial->GetBinary(buff, sizeof(buff));			
-			len = buff[2]<<8|buff[3];		
-			k1=len+5;
-			k2=len+6;
-			if((buff[0]==0xa0) && (buff[1]==0xa1) && (buff[4]==0xD1) && (buff[k2-1]==0x0d)&&(buff[k2]==0x0a))
-			{
-				for(int i=0;i<(int) buff[3];i++)
-					checksum^=buff[i+4];			
-				if(checksum == buff[k2-2])
-				{
-					U08 size = buff[5];
-					
-					if(buff[5] == 0xFF)
-					{
-						CGPSDlg::gpsDlg->add_msgtolist("No Tag");
-					}else
-					{
-						temp.Append("Tag = ");
-						for (int i=0;i<size;i++)
-						{
-							temp.AppendFormat("0x%02X ",buff[6+i]);
-						}
-						CGPSDlg::gpsDlg->add_msgtolist(temp);
-					}
-
-					break;
-				}
-			}
-			end=clock();	
-			if(CGPSDlg::gpsDlg->TIMEOUT_METHOD_QUICK(start,end))
-				break;	
-		}		
-	}
-	else
-		CGPSDlg::gpsDlg->add_msgtolist("Query DR Info Fail.");
-
-	CGPSDlg::gpsDlg->SetMode();
-	CGPSDlg::gpsDlg->CreateGPSThread();
-	return TRUE;	
-}
-
-UINT MinihomerQuerytagThread(LPVOID pParam)
-{	
-	CGPSDlg::gpsDlg->MinihomerQuerytag();
-	return TRUE;	
-}
-
-void CGPSDlg::OnMinihomerQuerytag()
-{
-	if(!CheckConnect())
-	{
-		return;
-	}
-	AfxBeginThread(MinihomerQuerytagThread, 0);	
-}
-
-UINT ActivateminiHomerThread(LPVOID pParam)
-{	
-	CGPSDlg::gpsDlg->activate_minihomer();
-	return TRUE;	
-}
-
-void CGPSDlg::set_minihomerid(U08* id,int id_len)
-{
-	U08 msg[11], checksum=0;
-	CString temp;
-	U32 data = 0;
-
-	msg[0]=0x74; // set device_id;
-	memcpy(&msg[1],id,id_len);
-
-	int len = SetMessage(msg,sizeof(msg));
-
-	ClearQue();
-	if(SendToTarget(CGPSDlg::m_inputMsg,len, "Set miniHomer Device ID successfully", true) != 1)
-		add_msgtolist("Set miniHomer Device ID Fail.");	
-}
-
-void CGPSDlg::set_minihomerkey(U08* key,int key_len)
-{
-	U08 msg[65] ,checksum=0;
-	CString temp;
-	U32 data = 0;
-
-	msg[0]=0x75; // set device_id;
-	memcpy(&msg[1],key,key_len);
-
-	int len = SetMessage(msg,sizeof(msg));
-
-	ClearQue();
-	if(SendToTarget(CGPSDlg::m_inputMsg,len, "Set miniHomer Device Key successfully", true) != 1)
-		add_msgtolist("Set miniHomer Device Key Fail.");	
-}
-
-void CGPSDlg::activate_minihomer()
-{
-	CRedirector m_redir;
-	char cmd_path[1024];
-	GetCurrentDirectory(1024, cmd_path);
-	strcat_s(cmd_path, sizeof(cmd_path), "\\Create_miniHomer_Activate_Code.exe -c -s");
-
-	m_redir.Close();
-	m_redir.Open(cmd_path);
-
-	m_redir.Wait();
-
-	TRACE("%s",m_redir.std_output);
-	m_redir.Close();
-
-	U08 id[10];
-	U08 key[64];
-
-	CString retval = m_redir.std_output;
-		
-	int start = retval.Find("id=")+3;
-	for (int i=0;i<10;i++)
-	{
-		id[i] = Utility::GetOctValue(retval[start+i*2], retval[start+i*2+1]);
-	}
-
-	start = retval.Find("signature=")+10;
-	for (int i=0;i<64;i++)
-	{
-		key[i] = Utility::GetOctValue(retval[start+i*2], retval[start+i*2+1]);
-	}
-	
-	set_minihomerid(id,sizeof(id));
-	set_minihomerkey(key,sizeof(key));
-
-	SetMode();
-	CreateGPSThread();
-	return;	
-}
-
-void CGPSDlg::OnMinihomerActivate()
-{
-	if(!CheckConnect())
-	{
-		return;
-	}
-	AfxBeginThread(ActivateminiHomerThread, 0);	
-}	
 
 inline const char *go_next_dot(const char *buff)
 {
@@ -1263,9 +1125,8 @@ void CGPSDlg::parse_sti_32_message(LPCSTR buff, int len) // for timing module
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
 	ptr = go_next_dot(ptr);
-	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
-
+	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
 	m_psti032.eastProjection = (F32)atof(ptr);
 
@@ -1285,6 +1146,45 @@ void CGPSDlg::parse_sti_32_message(LPCSTR buff, int len) // for timing module
 	m_psti032.baselineCourse = (F32)atof(ptr);
 
 	PostMessage(UWM_UPDATE_PSTI032, (WPARAM)&m_psti032, 0);
+}
+
+void CGPSDlg::parse_sti_33_message(LPCSTR buff, int len) // for timing module
+{
+	const char *ptr = buff;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	int version = atoi(ptr);
+
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	U08 r = ptr[0];
+
+	ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+	int cycleSilped = atoi(ptr);
+
+  if(r == 'R')
+  {
+	  memset(&m_psti033R, 0, sizeof(&m_psti033R));
+	  m_psti033R.version = version;
+	  m_psti033R.receiver = r;
+	  m_psti033R.numCycleSlippedTotal = cycleSilped;  
+	  PostMessage(UWM_UPDATE_PSTI033, (WPARAM)&m_psti033R, 0);
+  }
+  else
+  {
+	  memset(&m_psti033B, 0, sizeof(&m_psti033B));
+	  m_psti033B.version = version;
+	  m_psti033B.receiver = r;
+	  m_psti033B.numCycleSlippedTotal = cycleSilped;  
+	  PostMessage(UWM_UPDATE_PSTI033, (WPARAM)&m_psti033B, 1);
+  }
 }
 #endif
 
@@ -1370,9 +1270,13 @@ void CGPSDlg::parse_sti_message(const char *buff,int len)
 	}
 #endif
 #if (_TAB_LAYOUT_)
-	else if(psti_id == 32)		// for jamming interference
+	else if(psti_id == 32)	
 	{
 		parse_sti_32_message(buff, len);
+	}
+	else if(psti_id == 33)	
+	{
+		parse_sti_33_message(buff, len);
 	}
 #endif
 #if(_MODULE_SUP_800_)
@@ -2426,7 +2330,13 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPositionRate(CmdExeMode nMode, void* outputD
 	return Timeout;
 }
 
-const TEL el[] = 
+typedef struct ellipsoidlist
+{
+	D64 a;
+	D64 I_F;
+} TEL;
+
+static const TEL el[] = 
 {
 	{0,0},
 	{6377563.396,	299.3249646},
@@ -2454,7 +2364,17 @@ const TEL el[] =
 	{6378137,	    298.257223563}
 };
 
-const TDRL datum[] =
+typedef struct datumreferencelist
+{
+	S16 DeltaX;
+	S16 DeltaY;
+	S16 DeltaZ;
+	D64 Semi_Major_Axis;
+	D64 Inversd_Flattening;
+	U08 EllipsoidIndex;
+} TDRL;
+
+static const TDRL datum[] =
 {
 	{   0,    0,    0, el[23].a, el[23].I_F,23},
 	{-118,  -14,  218, el[7].a,  el[7].I_F ,23},   
@@ -3602,122 +3522,245 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySbas2(CmdExeMode nMode, void* outputData)
 		return err;
   }
 
+  U16 cmdLen = ConvertLeonU16(ackCmd.Ptr(2));
 	CString strMsg = "Query SBAS Advanced successfully";
 	add_msgtolist(strMsg);
-	strMsg.Format("SBAS system: %s", ((ackCmd[6]) ? "Enable" : "Disable"));
-	add_msgtolist(strMsg);
-	if(ackCmd[7] == 0)
-	{
-		strMsg.Format("Ranging : %s", "Disable");
-	}
-	else if(ackCmd[7] == 1)
-	{
-		strMsg.Format("Ranging : %s", "Enable");
-	}
-	else
-	{
-		strMsg.Format("Ranging : %s", "Auto");
-	}
-	add_msgtolist(strMsg);
-	strMsg.Format("Ranking URA Mask: %d", ackCmd[8]);
-	add_msgtolist(strMsg);
-	strMsg.Format("Correction: %s", ((ackCmd[9]) ? "Enable" : "Disable"));
-	add_msgtolist(strMsg);
-	strMsg.Format("Number of tracking channels: %d", ackCmd[10]);
-	add_msgtolist(strMsg);
-	strMsg.Format("All: %s", ((ackCmd[11] & 0x80) ? "Enable" : "Disable"));
-	add_msgtolist(strMsg);	
-	if(!(ackCmd[11] & 0x80))
-	{
-		strMsg.Format("WAAS: %s (%s)", (ackCmd[11] & 0x01) ? "Enable" : "Disable",
-      (ackCmd[12] & 0x01) ? "Modify default PRN" : "Default search PRN");
-		add_msgtolist(strMsg);
-		if(ackCmd[12] & 0x01)
-    {
-      CString txt;
-      const int MaxTableSize = 3;
-      strMsg.Format("WAAS search PRN (%d): ", ackCmd[13]);
-      for(int i = 0; i < MaxTableSize && i < ackCmd[13]; ++i)
-      {
-        if(ackCmd[14 + i] != 0)
-        {
-          txt.Format("%d", ackCmd[14 + i]);
-          if(i != 0)
-          {
-            strMsg += ", ";
-          }
-          strMsg += txt;
-        }
-      }
+  if(25 == cmdLen)  //Old style
+  {
+	  strMsg.Format("SBAS system: %s", ((ackCmd[6]) ? "Enable" : "Disable"));
+	  add_msgtolist(strMsg);
+	  if(ackCmd[7] == 0)
+	  {
+		  strMsg.Format("Ranging : %s", "Disable");
+	  }
+	  else if(ackCmd[7] == 1)
+	  {
+		  strMsg.Format("Ranging : %s", "Enable");
+	  }
+	  else
+	  {
+		  strMsg.Format("Ranging : %s", "Auto");
+	  }
+	  add_msgtolist(strMsg);
+	  strMsg.Format("Ranking URA Mask: %d", ackCmd[8]);
+	  add_msgtolist(strMsg);
+	  strMsg.Format("Correction: %s", ((ackCmd[9]) ? "Enable" : "Disable"));
+	  add_msgtolist(strMsg);
+	  strMsg.Format("Number of tracking channels: %d", ackCmd[10]);
+	  add_msgtolist(strMsg);
+	  strMsg.Format("All: %s", ((ackCmd[11] & 0x80) ? "Enable" : "Disable"));
+	  add_msgtolist(strMsg);	
+	  if(!(ackCmd[11] & 0x80))
+	  {
+		  strMsg.Format("WAAS: %s (%s)", (ackCmd[11] & 0x01) ? "Enable" : "Disable",
+        (ackCmd[12] & 0x01) ? "Modify default PRN" : "Default search PRN");
 		  add_msgtolist(strMsg);
-    }
+		  if(ackCmd[12] & 0x01)
+      {
+        CString txt;
+        const int MaxTableSize = 3;
+        strMsg.Format("WAAS search PRN (%d): ", ackCmd[13]);
+        for(int i = 0; i < MaxTableSize && i < ackCmd[13]; ++i)
+        {
+          if(ackCmd[14 + i] != 0)
+          {
+            txt.Format("%d", ackCmd[14 + i]);
+            if(i != 0)
+            {
+              strMsg += ", ";
+            }
+            strMsg += txt;
+          }
+        }
+		    add_msgtolist(strMsg);
+      }
 
-		strMsg.Format("EGNOS: %s(%s)", ((ackCmd[11] & 0x02) ? "Enable" : "Disable"),
-      (ackCmd[12] & 0x02) ? "Modify default PRN" : "Default search PRN");
-		add_msgtolist(strMsg);
-		if(ackCmd[12] & 0x02)
-    {
-      CString txt;
-      strMsg.Format("EGNOS search PRN (%d): ", ackCmd[17]);
-      for(int i = 0; i < 3 && i < ackCmd[17]; ++i)
-      {
-        if(ackCmd[14 + i] != 0)
-        {
-          txt.Format("%d", ackCmd[18 + i]);
-          if(i != 0)
-          {
-            strMsg += ", ";
-          }
-          strMsg += txt;
-        }
-      }
+		  strMsg.Format("EGNOS: %s(%s)", ((ackCmd[11] & 0x02) ? "Enable" : "Disable"),
+        (ackCmd[12] & 0x02) ? "Modify default PRN" : "Default search PRN");
 		  add_msgtolist(strMsg);
-    }
+		  if(ackCmd[12] & 0x02)
+      {
+        CString txt;
+        strMsg.Format("EGNOS search PRN (%d): ", ackCmd[17]);
+        for(int i = 0; i < 3 && i < ackCmd[17]; ++i)
+        {
+          if(ackCmd[14 + i] != 0)
+          {
+            txt.Format("%d", ackCmd[18 + i]);
+            if(i != 0)
+            {
+              strMsg += ", ";
+            }
+            strMsg += txt;
+          }
+        }
+		    add_msgtolist(strMsg);
+      }
 
-		strMsg.Format("MSAS: %s (%s)", ((ackCmd[11] & 0x04) ? "Enable" : "Disable"),
-      (ackCmd[12] & 0x04) ? "Modify default PRN" : "Default search PRN");
-		add_msgtolist(strMsg);
-		if(ackCmd[12] & 0x04)
-    {
-      CString txt;
-      strMsg.Format("MSAS search PRN (%d): ", ackCmd[21]);
-      for(int i = 0; i < 3 && i < ackCmd[21]; ++i)
-      {
-        if(ackCmd[14 + i] != 0)
-        {
-          txt.Format("%d", ackCmd[22 + i]);
-          if(i != 0)
-          {
-            strMsg += ", ";
-          }
-          strMsg += txt;
-        }
-      }
+		  strMsg.Format("MSAS: %s (%s)", ((ackCmd[11] & 0x04) ? "Enable" : "Disable"),
+        (ackCmd[12] & 0x04) ? "Modify default PRN" : "Default search PRN");
 		  add_msgtolist(strMsg);
-    }
+		  if(ackCmd[12] & 0x04)
+      {
+        CString txt;
+        strMsg.Format("MSAS search PRN (%d): ", ackCmd[21]);
+        for(int i = 0; i < 3 && i < ackCmd[21]; ++i)
+        {
+          if(ackCmd[14 + i] != 0)
+          {
+            txt.Format("%d", ackCmd[22 + i]);
+            if(i != 0)
+            {
+              strMsg += ", ";
+            }
+            strMsg += txt;
+          }
+        }
+		    add_msgtolist(strMsg);
+      }
+      
+      strMsg.Format("GAGAN: %s (%s)", ((ackCmd[11] & 0x08) ? "Enable" : "Disable"),
+        (ackCmd[12] & 0x08) ? "Modify default PRN" : "Default search PRN");
+		  add_msgtolist(strMsg);
+		  if(ackCmd[12] & 0x08)
+      {
+        CString txt;
+        strMsg.Format("GAGAN search PRN (%d): ", ackCmd[25]);
+        for(int i = 0; i < 3 && i < ackCmd[25]; ++i)
+        {
+          if(ackCmd[14 + i] != 0)
+          {
+            txt.Format("%d", ackCmd[26 + i]);
+            if(i != 0)
+            {
+              strMsg += ", ";
+            }
+            strMsg += txt;
+          }
+        }
+		    add_msgtolist(strMsg);
+      }
+	  }
+  }
+  else
+  { //New Style
+    int idx = 5;
+
+	  strMsg.Format("SBAS system: %s", ((ackCmd[++idx]) ? "Enable" : "Disable"));
+	  add_msgtolist(strMsg);
+    U08 ranging = ackCmd[++idx];
+	  if(ranging == 0)
+	  {
+		  strMsg.Format("Ranging : %s", "Disable");
+	  }
+	  else if(ranging == 1)
+	  {
+		  strMsg.Format("Ranging : %s", "Enable");
+	  }
+	  else
+	  {
+		  strMsg.Format("Ranging : %s", "Auto");
+	  }
+	  add_msgtolist(strMsg);
+	  strMsg.Format("Ranking URA Mask: %d", ackCmd[++idx]);
+	  add_msgtolist(strMsg);
+	  strMsg.Format("Correction: %s", ((ackCmd[++idx]) ? "Enable" : "Disable"));
+	  add_msgtolist(strMsg);
+	  strMsg.Format("Number of tracking channels: %d", ackCmd[++idx]);
+	  add_msgtolist(strMsg);
+
+    U08 enableMask = ackCmd[++idx]; //11
+  #if(!NEW_SBAS2)
+    U08 userMask = ackCmd[++idx]; //12
+  #endif
+	  strMsg.Format("All: %s", ((enableMask & 0x80) ? "Enable" : "Disable"));
+	  add_msgtolist(strMsg);	
     
-    strMsg.Format("GAGAN: %s (%s)", ((ackCmd[11] & 0x08) ? "Enable" : "Disable"),
-      (ackCmd[12] & 0x08) ? "Modify default PRN" : "Default search PRN");
-		add_msgtolist(strMsg);
-		if(ackCmd[12] & 0x08)
-    {
-      CString txt;
-      strMsg.Format("GAGAN search PRN (%d): ", ackCmd[25]);
-      for(int i = 0; i < 3 && i < ackCmd[25]; ++i)
-      {
-        if(ackCmd[14 + i] != 0)
-        {
-          txt.Format("%d", ackCmd[26 + i]);
-          if(i != 0)
-          {
-            strMsg += ", ";
-          }
-          strMsg += txt;
-        }
-      }
+    const int MaxTableSize = 3;
+    CString txt;
+	  if(!(enableMask & 0x80))
+	  {
+		  strMsg.Format("WAAS: %s", (enableMask & 0x01) ? "Enable" : "Disable");
 		  add_msgtolist(strMsg);
-    }
-	}
+      if(enableMask & 0x01)
+      {
+        strMsg.Format("WAAS search PRN(%d): ", ackCmd[idx + 1]);
+        for(int i = 0; i < MaxTableSize && i < ackCmd[idx + 1]; ++i)
+        {
+          if(ackCmd[idx + 2 + i] != 0)
+          {
+            txt.Format("%d", ackCmd[idx + 2 + i]);
+            if(i != 0)
+            {
+              strMsg += ", ";
+            }
+            strMsg += txt;
+          }
+        }
+	      add_msgtolist(strMsg);
+      }
+
+		  strMsg.Format("EGNOS: %s", (enableMask & 0x02) ? "Enable" : "Disable");
+      add_msgtolist(strMsg);
+      if(enableMask & 0x02)
+      {
+        strMsg.Format("EGNOS search PRN(%d): ", ackCmd[idx + 5]);
+        for(int i = 0; i < 3 && i < ackCmd[idx + 5]; ++i)
+        {
+          if(ackCmd[idx + 6 + i] != 0)
+          {
+            txt.Format("%d", ackCmd[idx + 6 + i]);
+            if(i != 0)
+            {
+              strMsg += ", ";
+            }
+            strMsg += txt;
+          }
+        }
+	      add_msgtolist(strMsg);
+      }
+    
+		  strMsg.Format("MSAS: %s", (enableMask & 0x04) ? "Enable" : "Disable");
+      add_msgtolist(strMsg);
+      if(enableMask & 0x04)
+      {
+        strMsg.Format("MSAS search PRN(%d): ", ackCmd[idx + 9]);
+        for(int i = 0; i < 3 && i < ackCmd[idx + 9]; ++i)
+        {
+          if(ackCmd[idx + 10 + i] != 0)
+          {
+            txt.Format("%d", ackCmd[idx + 10 + i]);
+            if(i != 0)
+            {
+              strMsg += ", ";
+            }
+            strMsg += txt;
+          }
+        }
+	      add_msgtolist(strMsg);
+      }
+      
+ 		  strMsg.Format("GAGAN: %s", (enableMask & 0x08) ? "Enable" : "Disable");
+		  add_msgtolist(strMsg);
+      if(enableMask & 0x08)
+      {
+        strMsg.Format("GAGAN search PRN(%d): ", ackCmd[idx + 13]);
+        for(int i = 0; i < 3 && i < ackCmd[idx + 13]; ++i)
+        {
+          if(ackCmd[idx + 14 + i] != 0)
+          {
+            txt.Format("%d", ackCmd[idx + 14 + i]);
+            if(i != 0)
+            {
+              strMsg += ", ";
+            }
+            strMsg += txt;
+          }
+        }
+	      add_msgtolist(strMsg);
+      }
+	  }
+  }
 	return Ack;
 }
 
@@ -4193,123 +4236,225 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssNmeaTalkId(CmdExeMode nMode, void* outpu
 
 CGPSDlg::CmdErrorCode CGPSDlg::QueryDatalogLogStatus(CmdExeMode nMode, void* outputData)
 {
-	SYSTEMTIME	now; 
-	GetSystemTime(&now);
-
 	BinaryCommand cmd(cmdTable[QueryDatalogLogStatusCmd].cmdSize);
 	cmd.SetU08(1, cmdTable[QueryDatalogLogStatusCmd].cmdId);
 
 	BinaryData ackCmd;
-	CmdErrorCode ret = ExcuteBinaryCommand(QueryDatalogLogStatusCmd, &cmd, &ackCmd);
-	if(Return==nMode)
+	CmdErrorCode err = ExcuteBinaryCommand(QueryDatalogLogStatusCmd, &cmd, &ackCmd);
+	if(err != Ack)
 	{
-		return ret;
+		return err;
 	}
 
-	if(!ret)
+	if(Return == nMode)
 	{
-		LogFlashInfo1 logInfo = {0};
-//		memcpy(&logInfo.log_flash_current_prt, &ackCmd[5], sizeof(U32));
-		logInfo.log_flash_current_prt = MAKELONG(MAKEWORD(ackCmd[5], ackCmd[6]), MAKEWORD(ackCmd[7], ackCmd[8]));
-//		memcpy(&logInfo.sector_left, &ackCmd[9], sizeof(U16));
-		logInfo.sector_left = MAKEWORD(ackCmd[9], ackCmd[10]);
-//		memcpy(&logInfo.total_sector, &ackCmd[11], sizeof(U16));
-		logInfo.total_sector = MAKEWORD(ackCmd[11], ackCmd[12]);
-//		memcpy(&logInfo.max_time, &ackCmd[13], sizeof(U32));
-		logInfo.max_time = MAKELONG(MAKEWORD(ackCmd[13], ackCmd[14]), MAKEWORD(ackCmd[15], ackCmd[16]));
-//		memcpy(&logInfo.min_time, &ackCmd[17], sizeof(U32));
-		logInfo.min_time = MAKELONG(MAKEWORD(ackCmd[17], ackCmd[18]), MAKEWORD(ackCmd[19], ackCmd[20]));
-//		memcpy(&logInfo.max_distance, &ackCmd[21], sizeof(U32));
-		logInfo.max_distance = MAKELONG(MAKEWORD(ackCmd[21], ackCmd[22]), MAKEWORD(ackCmd[23], ackCmd[24]));
-//		memcpy(&logInfo.min_distance, &ackCmd[25], sizeof(U32));
-		logInfo.min_distance = MAKELONG(MAKEWORD(ackCmd[25], ackCmd[26]), MAKEWORD(ackCmd[27], ackCmd[28]));
-//		memcpy(&logInfo.max_speed, &ackCmd[29], sizeof(U32));
-		logInfo.max_speed = MAKELONG(MAKEWORD(ackCmd[29], ackCmd[30]), MAKEWORD(ackCmd[31], ackCmd[32]));
-//		memcpy(&logInfo.min_speed, &ackCmd[33], sizeof(U32));
-		logInfo.min_speed = MAKELONG(MAKEWORD(ackCmd[33], ackCmd[34]), MAKEWORD(ackCmd[35], ackCmd[36]));
-//		memcpy(&logInfo.datalog_enable, &ackCmd[37], sizeof(U08));
-		logInfo.datalog_enable = ackCmd[37];
-//		memcpy(&logInfo.fifo_mode, &ackCmd[38], sizeof(U08));
-		logInfo.fifo_mode = ackCmd[38];
+    *((BinaryData*)outputData) = ackCmd;
+		return err;
+	}
+
+	LogFlashInfo1 logInfo = {0};
+	logInfo.log_flash_current_prt = MAKELONG(MAKEWORD(ackCmd[5], ackCmd[6]), MAKEWORD(ackCmd[7], ackCmd[8]));
+	logInfo.sector_left = MAKEWORD(ackCmd[9], ackCmd[10]);
+	logInfo.total_sector = MAKEWORD(ackCmd[11], ackCmd[12]);
+	logInfo.max_time = MAKELONG(MAKEWORD(ackCmd[13], ackCmd[14]), MAKEWORD(ackCmd[15], ackCmd[16]));
+	logInfo.min_time = MAKELONG(MAKEWORD(ackCmd[17], ackCmd[18]), MAKEWORD(ackCmd[19], ackCmd[20]));
+	logInfo.max_distance = MAKELONG(MAKEWORD(ackCmd[21], ackCmd[22]), MAKEWORD(ackCmd[23], ackCmd[24]));
+	logInfo.min_distance = MAKELONG(MAKEWORD(ackCmd[25], ackCmd[26]), MAKEWORD(ackCmd[27], ackCmd[28]));
+	logInfo.max_speed = MAKELONG(MAKEWORD(ackCmd[29], ackCmd[30]), MAKEWORD(ackCmd[31], ackCmd[32]));
+	logInfo.min_speed = MAKELONG(MAKEWORD(ackCmd[33], ackCmd[34]), MAKEWORD(ackCmd[35], ackCmd[36]));
+	logInfo.datalog_enable = ackCmd[37];
+	logInfo.fifo_mode = ackCmd[38];
 #if DATA_POI
-//		memcpy(&logInfo.poi_entry, &ackCmd[39], sizeof(U32));
-		logInfo.poi_entry = MAKELONG(MAKEWORD(ackCmd[39], ackCmd[40]), MAKEWORD(ackCmd[41], ackCmd[42]));
-//		memcpy(&logInfo.autolog_full, &ackCmd[43], sizeof(U08));
-		logInfo.autolog_full = ackCmd[43];
-//		memcpy(&logInfo.poi_full, &ackCmd[44], sizeof(U08));
-		logInfo.poi_full = ackCmd[44];
+	logInfo.poi_entry = MAKELONG(MAKEWORD(ackCmd[39], ackCmd[40]), MAKEWORD(ackCmd[41], ackCmd[42]));
+	logInfo.autolog_full = ackCmd[43];
+	logInfo.poi_full = ackCmd[44];
 #endif
 
-		add_msgtolist("Get Log Status successfully");
-		add_msgtolist("---------  Log Status  ---------");
-		CString strMsg;
-		if(logInfo.total_sector)
+	add_msgtolist("Get Log Status successfully");
+	add_msgtolist("---------  Log Status  ---------");
+	CString strMsg;
+	if(logInfo.total_sector)
+	{
+		if(logInfo.sector_left == 0x0)
 		{
-			if(logInfo.sector_left == 0x0)
-			{
-				strMsg = "Sector Full!";
-			}
-			else if((logInfo.sector_left &0x80000000) != 0)
-			{
-				logInfo.sector_left = logInfo.sector_left << 1 >> 1;
-				strMsg.Format("Circular Sector left: %d / %d", logInfo.sector_left, logInfo.total_sector);
-			}
-			else if((logInfo.sector_left &0x80000000) == 0)
-			{
-				logInfo.sector_left = logInfo.sector_left << 1 >> 1;
-				strMsg.Format("Sector left: %d / %d", logInfo.sector_left, logInfo.total_sector);
-			}
+			strMsg = "Sector Full!";
 		}
-		else
+		else if((logInfo.sector_left &0x80000000) != 0)
 		{
-			if(logInfo.sector_left == 0x0)
-			{
-				strMsg = "Sector Full!";
-			}
-			else if((logInfo.sector_left &0x80000000) != 0)
-			{
-				logInfo.sector_left = logInfo.sector_left << 1 >> 1;
-				strMsg.Format("Circular Sector left: %d", logInfo.sector_left);
-			}
-			else if((logInfo.sector_left &0x80000000) == 0)
-			{
-				logInfo.sector_left = logInfo.sector_left << 1 >> 1;
-				strMsg.Format("Sector left: %d", logInfo.sector_left);
-			}
+			logInfo.sector_left = logInfo.sector_left << 1 >> 1;
+			strMsg.Format("Circular Sector left: %d / %d", logInfo.sector_left, logInfo.total_sector);
 		}
-		add_msgtolist(strMsg);
-		strMsg.Format("max T: %d, min T: %d", logInfo.max_time, logInfo.min_time);
-		add_msgtolist(strMsg);
-		strMsg.Format("max D: %d, min D: %d", logInfo.max_distance, logInfo.min_distance);
-		add_msgtolist(strMsg);
-		strMsg.Format("max V: %d, min V: %d", logInfo.max_speed, logInfo.min_speed);
-		add_msgtolist(strMsg);
-		strMsg.Format("Datalog: %s", (logInfo.datalog_enable) ? "Enable" : "Disable");
-		add_msgtolist(strMsg);
-		strMsg.Format("FIFO mode: %s", (logInfo.fifo_mode) ? "Circular" : "Oneway");
-		
-		if(DATA_POI && TWIN_DATALOG)
+		else if((logInfo.sector_left &0x80000000) == 0)
 		{
-			strMsg.Format("POI entry Datalogger1 : %d", logInfo.poi_entry & 0xffff);
-			add_msgtolist(strMsg);
-			strMsg.Format("POI entry Datalogger2 : %d", logInfo.poi_entry >> 16);
-			add_msgtolist(strMsg);
-			strMsg.Format("Autolog full : %d", logInfo.autolog_full);
-			add_msgtolist(strMsg);
-			strMsg.Format("POIlog full : %d", logInfo.poi_full);
-			add_msgtolist(strMsg);
-		}
-		else if(DATA_POI && !TWIN_DATALOG)
-		{
-			strMsg.Format("POI entry Datalogger1 : %d", logInfo.poi_entry);
-			add_msgtolist(strMsg);
-			strMsg.Format("Autolog full : %d", logInfo.autolog_full);
-			add_msgtolist(strMsg);
-			strMsg.Format("POIlog full : %d", logInfo.poi_full);
-			add_msgtolist(strMsg);
+			logInfo.sector_left = logInfo.sector_left << 1 >> 1;
+			strMsg.Format("Sector left: %d / %d", logInfo.sector_left, logInfo.total_sector);
 		}
 	}
-	return ret;
+	else
+	{
+		if(logInfo.sector_left == 0x0)
+		{
+			strMsg = "Sector Full!";
+		}
+		else if((logInfo.sector_left &0x80000000) != 0)
+		{
+			logInfo.sector_left = logInfo.sector_left << 1 >> 1;
+			strMsg.Format("Circular Sector left: %d", logInfo.sector_left);
+		}
+		else if((logInfo.sector_left &0x80000000) == 0)
+		{
+			logInfo.sector_left = logInfo.sector_left << 1 >> 1;
+			strMsg.Format("Sector left: %d", logInfo.sector_left);
+		}
+	}
+	add_msgtolist(strMsg);
+	strMsg.Format("max T: %d, min T: %d", logInfo.max_time, logInfo.min_time);
+	add_msgtolist(strMsg);
+	strMsg.Format("max D: %d, min D: %d", logInfo.max_distance, logInfo.min_distance);
+	add_msgtolist(strMsg);
+	strMsg.Format("max V: %d, min V: %d", logInfo.max_speed, logInfo.min_speed);
+	add_msgtolist(strMsg);
+	strMsg.Format("Datalog: %s", (logInfo.datalog_enable) ? "Enable" : "Disable");
+	add_msgtolist(strMsg);
+	strMsg.Format("FIFO mode: %s", (logInfo.fifo_mode) ? "Circular" : "Oneway");
+#if DATA_POI		
+	strMsg.Format("POI entry Datalogger1 : %d", logInfo.poi_entry);
+	add_msgtolist(strMsg);
+	strMsg.Format("Autolog full : %d", logInfo.autolog_full);
+	add_msgtolist(strMsg);
+	strMsg.Format("POIlog full : %d", logInfo.poi_full);
+	add_msgtolist(strMsg);
+#endif
+
+  return err;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryDatalogWatchLogStatus(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryDatalogWatchCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryDatalogWatchCmd].cmdId);
+  cmd.SetU08(2, cmdTable[QueryDatalogWatchCmd].cmdSubId);
+	cmd.SetU08(3, 0x0C);
+
+	BinaryData ackCmd;
+	CmdErrorCode err = ExcuteBinaryCommand(QueryDatalogWatchCmd, &cmd, &ackCmd, (nMode == Display) ? 3000 : 1000);
+	if(err != Ack)
+	{
+    return err;
+  }
+
+	if(Return == nMode)
+	{
+    *((BinaryData*)outputData) = ackCmd;
+		return err;
+	}
+
+	LogFlashInfo1 logInfo = {0};
+	logInfo.log_flash_current_prt = MAKELONG(MAKEWORD(ackCmd[7], ackCmd[8]), MAKEWORD(ackCmd[9], ackCmd[10]));
+	logInfo.sector_left = MAKEWORD(ackCmd[11], ackCmd[12]);
+	logInfo.total_sector = MAKEWORD(ackCmd[13], ackCmd[14]);
+	logInfo.max_time = MAKELONG(MAKEWORD(ackCmd[15], ackCmd[16]), MAKEWORD(ackCmd[17], ackCmd[18]));
+	logInfo.min_time = MAKELONG(MAKEWORD(ackCmd[19], ackCmd[20]), MAKEWORD(ackCmd[21], ackCmd[22]));
+	logInfo.max_distance = MAKELONG(MAKEWORD(ackCmd[23], ackCmd[24]), MAKEWORD(ackCmd[25], ackCmd[26]));
+	logInfo.min_distance = MAKELONG(MAKEWORD(ackCmd[27], ackCmd[28]), MAKEWORD(ackCmd[29], ackCmd[30]));
+	logInfo.max_speed = MAKELONG(MAKEWORD(ackCmd[31], ackCmd[32]), MAKEWORD(ackCmd[33], ackCmd[34]));
+	logInfo.min_speed = MAKELONG(MAKEWORD(ackCmd[35], ackCmd[36]), MAKEWORD(ackCmd[37], ackCmd[38]));
+	logInfo.datalog_enable = ackCmd[39];
+	logInfo.fifo_mode = ackCmd[40];
+
+	add_msgtolist("Get Log Status successfully");
+	add_msgtolist("------ Log Status ------");
+	CString strMsg;
+	if(logInfo.total_sector)
+	{
+		if(logInfo.sector_left == 0x0)
+		{
+			strMsg = "Sector Full!";
+		}
+		else if((logInfo.sector_left &0x80000000) != 0)
+		{
+			logInfo.sector_left = logInfo.sector_left << 1 >> 1;
+			strMsg.Format("Circular Sector left: %d / %d", logInfo.sector_left, logInfo.total_sector);
+		}
+		else if((logInfo.sector_left &0x80000000) == 0)
+		{
+			logInfo.sector_left = logInfo.sector_left << 1 >> 1;
+			strMsg.Format("Sector left: %d / %d", logInfo.sector_left, logInfo.total_sector);
+		}
+	}
+	else
+	{
+		if(logInfo.sector_left == 0x0)
+		{
+			strMsg = "Sector Full!";
+		}
+		else if((logInfo.sector_left &0x80000000) != 0)
+		{
+			logInfo.sector_left = logInfo.sector_left << 1 >> 1;
+			strMsg.Format("Circular Sector left: %d", logInfo.sector_left);
+		}
+		else if((logInfo.sector_left &0x80000000) == 0)
+		{
+			logInfo.sector_left = logInfo.sector_left << 1 >> 1;
+			strMsg.Format("Sector left: %d", logInfo.sector_left);
+		}
+	}
+	add_msgtolist(strMsg);
+	strMsg.Format("max T: %d, min T: %d", logInfo.max_time, logInfo.min_time);
+	add_msgtolist(strMsg);
+	strMsg.Format("max D: %d, min D: %d", logInfo.max_distance, logInfo.min_distance);
+	add_msgtolist(strMsg);
+	strMsg.Format("max V: %d, min V: %d", logInfo.max_speed, logInfo.min_speed);
+	add_msgtolist(strMsg);
+	strMsg.Format("Datalog: %s", (logInfo.datalog_enable) ? "Enable" : "Disable");
+	add_msgtolist(strMsg);
+	strMsg.Format("FIFO mode: %s", (logInfo.fifo_mode) ? "Circular" : "Oneway");
+
+	return err;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::DatalogClear(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[DatalogClearCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[DatalogClearCmd].cmdId);
+
+	BinaryData ackCmd;
+	CmdErrorCode err = ExcuteBinaryCommand(QueryDatalogWatchCmd, &cmd, &ackCmd, (nMode == Display) ? 3000 : 1000);
+	if(err != Ack)
+	{
+    return err;
+  }
+
+	if(Return == nMode)
+	{
+    //*((BinaryData*)outputData) = ackCmd;
+		return err;
+	}
+
+	add_msgtolist("DataLog Clear successfully");
+	return err;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::DatalogWatchClear(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[DatalogClearCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[DatalogClearCmd].cmdId);
+
+	BinaryData ackCmd;
+	CmdErrorCode err = ExcuteBinaryCommand(QueryDatalogWatchCmd, &cmd, &ackCmd, (nMode == Display) ? 3000 : 1000);
+	if(err != Ack)
+	{
+    return err;
+  }
+
+	if(Return == nMode)
+	{
+    //*((BinaryData*)outputData) = ackCmd;
+		return err;
+	}
+
+	add_msgtolist("DataLog Clear successfully");
+	return err;
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::QueryRegister(CmdExeMode nMode, void* outputData)
@@ -4517,6 +4662,9 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryNavigationModeV8(CmdExeMode nMode, void* out
 			break;
 		case 7:
 			strMsg.SetString("Navigation Mode: Quadcopter");
+			break;
+		case 8:
+			strMsg.SetString("Navigation Mode: Mower");
 			break;
 		default:
 			strMsg.Format("Navigation Mode: %d", ackCmd[6]);
@@ -5047,6 +5195,35 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti032(CmdExeMode nMode, void* outputData)
 	strMsg = "Query PSTI032 Interval successfully";
 	add_msgtolist(strMsg);
 	strMsg.Format("PSTI032 Interval : %d", ackCmd[6]);
+	add_msgtolist(strMsg);
+
+	return err;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti033(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryPstiCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryPstiCmd].cmdId);
+	cmd.SetU08(2, cmdTable[QueryPstiCmd].cmdSubId);
+	cmd.SetU08(3, 33);
+
+	BinaryData ackCmd;
+  CmdErrorCode err = ExcuteBinaryCommand(QueryPstiCmd, &cmd, &ackCmd, 800);
+	if(err != Ack)
+	{
+		return err;
+	}
+
+	if(Return == nMode)
+	{	//Return command length
+		*((U08*)outputData) = ackCmd[6];
+		return err;
+	}
+
+	CString strMsg;
+	strMsg = "Query PSTI033 Interval successfully";
+	add_msgtolist(strMsg);
+	strMsg.Format("PSTI033 Interval : %d", ackCmd[6]);
 	add_msgtolist(strMsg);
 
 	return err;
@@ -6134,7 +6311,7 @@ void CGPSDlg::OnConfigureSerialNumber()
 		CreateGPSThread();
 	}
 }
-
+/*
 void CGPSDlg::OnBinaryConfiguredatum()
 {
 	if(!CheckConnect())
@@ -6150,7 +6327,7 @@ void CGPSDlg::OnBinaryConfiguredatum()
 		CreateGPSThread();
 	}
 }
-
+*/
 void CGPSDlg::OnConfigureSerialPort()
 {
 	if(!CheckConnect())
@@ -7115,13 +7292,13 @@ void CGPSDlg::OnConfigRtcmMeasurementDataOut()
 	ConfigRtcmMeasurementDataOutDlg dlg;
 	DoCommonConfig(&dlg);
 }
-
+/*
 void CGPSDlg::OnBinaryConfigurepowermode()
 {
 	CConfigPowerMode dlg;
 	DoCommonConfig(&dlg);
 }
-
+*/
 void CGPSDlg::OnSup800EraseData()
 {
 	CSUP800EraseUserDataDlg dlg;
@@ -7217,6 +7394,12 @@ void CGPSDlg::OnConfigRtkMode()
 	DoCommonConfig(&dlg);
 }
 
+void CGPSDlg::OnConfigWatchTrackback()
+{
+	CConfigWatchTrackback dlg;
+	DoCommonConfig(&dlg);
+}
+
 void CGPSDlg::OnConfigRtkParameters()
 {
 	CConfigRtkParameters dlg;
@@ -7297,6 +7480,13 @@ void CGPSDlg::OnConfigPsti032()
 {
 	CConfigPstiInterval dlg;
   dlg.SetPsti(32);
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigPsti033()
+{
+	CConfigPstiInterval dlg;
+  dlg.SetPsti(33);
 	DoCommonConfig(&dlg);
 }
 

@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+/*
 #include "GPS.h"
 #include "ConDauDlg.h"
 #include "GPSDlg.h"
@@ -308,7 +309,7 @@ UINT CigDauThread(LPVOID pParam)
 }
 
 IMPLEMENT_DYNAMIC(CConDauDlg, CDialog)
-CConDauDlg::CConDauDlg(CWnd* pParent /*=NULL*/)
+CConDauDlg::CConDauDlg(CWnd* pParent)
 	: CDialog(CConDauDlg::IDD, pParent)
 {
 }
@@ -439,3 +440,4 @@ void CConDauDlg::OnBnClickedDatumTest()
 	
 }
 
+*/

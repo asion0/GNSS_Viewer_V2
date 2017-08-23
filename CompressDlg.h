@@ -47,8 +47,8 @@ public:
 	void FULL_DATA();
   void INC_DATA();
 
-	FIX_FULL FixFull;
-	FIX_INC  FixInc;
+	FixFull_T FixFull;
+	FixCompact_T  FixInc;
 	FIX_NONE FixNone;
 	LogFlashInfo1 LogFlashInfo;
 	

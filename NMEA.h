@@ -98,17 +98,128 @@ typedef struct GPVTG
 	U08     Mode;           //N=not valid, A=Auto, D=Diff, E=Estimated, M=Manual, S=Simulator
 }GPVTG, *pGPVTG, &rGPVTG;
 
-typedef struct Satellite
+struct Satellite
 {	
-	U16     SatelliteID;
-	U16     Elevation;
-	U16     Azimuth;
+  U16     SatelliteID;
+  U16     Elevation;
+  U16     Azimuth;
 #if (FLOAT_SNR)
-  F32     SNR;
+  F32     snr[2];
 #else
-	U16     SNR;
+  U16     snr[2];
 #endif
-}Satellite, *pSatellite, &rSatellite;
+};
+
+class Satellites
+{
+public:
+  Satellites(void) { Init(); }
+  virtual ~Satellites(void) {}
+
+  void Clear() { Init(); }
+#if (FLOAT_SNR)
+  void SetSate(int prn, int ele, int azi, F32 snr0, F32 snr1 = -1)
+#else
+  void SetSate(int prn, int ele, int azi, int snr0, int snr1 = 0)
+#endif
+  {
+    int idx = GetPrnIndex(prn);
+    if(idx == -1)
+    {
+      idx = index++;
+      inOrder = false;
+    }
+    sate[idx].SatelliteID = prn,
+    sate[idx].Elevation = ele;
+    sate[idx].Azimuth = azi;
+
+    if(snr0 != -1)
+    {
+      sate[idx].snr[0] = snr0;
+    }
+    if(snr1 != -1)
+    {
+      sate[idx].snr[1] = snr1;
+    }
+  }
+
+  int GetSateCount() { return index; }
+  const Satellite* GetSateIndex(int idx) { return &sate[idx]; }
+
+  void Sort()
+  {
+    if(inOrder)
+      return;
+    Satellite temp;
+    for(int i = 0; i < index; ++i)
+    {
+      for(int j = i + 1; j < index; ++j)
+      {
+        if(sate[i].SatelliteID > sate[j].SatelliteID)
+        {
+          temp = sate[i];
+          sate[i] = sate[j];
+          sate[j] = temp;
+        }
+      }
+    }
+    inOrder = true;
+  }
+
+  void ClearPrnInRange(int prnStart, int prnEnd)
+  {
+    int i, j;
+    for(i = 0; i < index; ++i)
+    {
+      if(sate[i].SatelliteID >= prnStart && sate[i].SatelliteID <= prnEnd)
+      {
+        sate[i].SatelliteID = 0;
+      }
+    }
+
+    int pos = -1;
+    for(i = 0; i < index; ++i)
+    {
+      if(sate[i].SatelliteID == 0)
+      {
+        for(j = i; j < index; ++j)
+        {
+          if(sate[j].SatelliteID != 0)
+          {
+            sate[i] = sate[j];
+            sate[j].SatelliteID = 0;
+            break;
+          }
+        }
+        if(j == index)
+        {
+          break;
+        }
+      }
+    }	
+    index = i;
+  }
+protected:
+  Satellite sate[MAX_SATELLITE];
+  int index;
+  bool inOrder;
+
+protected:
+  void Init() 
+  { 
+    memset(&sate, 0, sizeof(sate));  index = 0; inOrder = true; 
+  }
+  int GetPrnIndex(int prn)
+  {
+    for(int i = 0; i < index; ++i)
+    {
+      if(sate[i].SatelliteID == prn)
+        return i;
+    }
+    return -1;
+  }
+
+};
 
 typedef struct GPGSV
 {	
@@ -117,6 +228,7 @@ typedef struct GPGSV
   U16     NumOfSate;
 	U08     have_gps;
 	U08     have_gnss;
+  U08     signalId;
 	Satellite    sates[4];
 }GPGSV, *pGPGSV, &rGPGSV;
 
@@ -352,19 +464,23 @@ protected:
 		{
 			gpSate[i].Azimuth = 0;
 			gpSate[i].Elevation = 0;
-			gpSate[i].SNR = SHRT_MAX;
+			//gpSate[i].SNR = SHRT_MAX;
+      memset(gpSate[i].snr, 0, sizeof(gpSate[i].snr));
 			gpSate[i].SatelliteID = SHRT_MAX;
 			glSate[i].Azimuth = 0;
 			glSate[i].Elevation = 0;
-			glSate[i].SNR = SHRT_MAX;
+			//glSate[i].SNR = SHRT_MAX;
+      memset(glSate[i].snr, 0, sizeof(glSate[i].snr));
 			glSate[i].SatelliteID = SHRT_MAX;
 			bdSate[i].Azimuth = 0;
 			bdSate[i].Elevation = 0;
-			bdSate[i].SNR = SHRT_MAX;
+			//bdSate[i].SNR = SHRT_MAX;
+      memset(bdSate[i].snr, 0, sizeof(bdSate[i].snr));
 			bdSate[i].SatelliteID = SHRT_MAX;
 			gaSate[i].Azimuth = 0;
 			gaSate[i].Elevation = 0;
-			gaSate[i].SNR = SHRT_MAX;
+			//gaSate[i].SNR = SHRT_MAX;
+      memset(gaSate[i].snr, 0, sizeof(gaSate[i].snr));
 			gaSate[i].SatelliteID = SHRT_MAX;
 		}
 	}
@@ -429,15 +545,22 @@ public:
 	static bool GetFirstGsaIn() { return firstGsaIn; }
   
   int ClearSatellitesInRange(GNSS_System gs, int prnStart, int prnEnd);
-	Satellite satellites_gps[MAX_SATELLITE];
-	Satellite satellites_gnss[MAX_SATELLITE];
-	Satellite satellites_bd[MAX_SATELLITE];
-	Satellite satellites_ga[MAX_SATELLITE];
+	//Satellite satellites_gp[MAX_SATELLITE];
+	//Satellite satellites_gl[MAX_SATELLITE];
+	//Satellite satellites_bd[MAX_SATELLITE];
+	//Satellite satellites_ga[MAX_SATELLITE];
+	Satellites satellites_gp;
+	Satellites satellites_gl;
+	Satellites satellites_bd;
+	Satellites satellites_ga;
 
 #if(SUPPORT_BDL2_GSV2)
-	Satellite satellites2_gps[MAX_SATELLITE];
+	Satellite satellites2_gp[MAX_SATELLITE];
+	Satellite satellites2_gl[MAX_SATELLITE];
 	Satellite satellites2_bd[MAX_SATELLITE];
+
 	void ShowGPGSV2msg(GPGSV&, const char*, int);
+	void ShowGLGSV2msg(GPGSV&, const char*, int);
 	void ShowBDGSV2msg(GPGSV&, const char*, int);
 #endif
 
@@ -448,7 +571,11 @@ public:
 	void ShowGPRMCmsg(GPRMC&, const char* ,int);
 	void ShowGPVTGmsg(GPVTG&, const char* ,int);
 	void ShowGPGSVmsg(GPGSV&, const char* ,int);
-	void ShowGPGSVmsg2(GPGSV&, GPGSV&, GPGSV&, GPGSV&, const char* ,int);
+//#if(SUPPORT_BDL2_GSV2)
+//  void ShowGPGSVmsg2(GPGSV& rgpgsv, GPGSV& rgpgsv2, GPGSV& rglgsv, GPGSV& rglgsv2, GPGSV& rbdgsv, GPGSV& rbdgsv2, GPGSV& rgagsv, LPCSTR pt, int len);
+//#else
+  void ShowGPGSVmsg2(GPGSV& rgpgsv, GPGSV& rglgsv, GPGSV& rbdgsv, GPGSV& rgagsv, LPCSTR pt, int len);
+//#endif
 	void ShowGLGSVmsg(GPGSV&, const char*, int);
 	void ShowGIGSVmsg(GPGSV&, const char*, int);
 	void ShowGAGSVmsg(GPGSV&, const char*, int);

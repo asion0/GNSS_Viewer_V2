@@ -124,6 +124,12 @@ public:
 	CConfigSBAS2(CWnd* pParent = NULL);   
 	virtual ~CConfigSBAS2() {};
 
+ enum CommandMode
+  {
+    ConfigSBAS2Old,
+    ConfigSBAS2New,
+  };
+
 	virtual void DoCommand();
 
 protected:  //members
@@ -138,11 +144,15 @@ protected:  //members
 	BOOL m_bGAGAN;
 	BOOL m_bAll;
 	int m_nAttribute;
+  CommandMode cmdMode;
 
-	BOOL m_bWaasSpec;
+//#if(!NEW_SBAS2)
+  BOOL m_bWaasSpec;
 	BOOL m_bEgnosSpec;
 	BOOL m_bMsasSpec;
 	BOOL m_bGaganSpec;
+//#endif
+
   U08 m_u11, m_u12, m_u13;
   U08 m_u21, m_u22, m_u23;
   U08 m_u31, m_u32, m_u33;
@@ -386,6 +396,7 @@ protected:
 };
 
 // CConfigPowerMode 
+/*
 class CConfigPowerMode : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigPowerMode)
@@ -404,6 +415,7 @@ protected:
 	
 	DECLARE_MESSAGE_MAP()
 };
+*/
 
 // CConfigParamSearchEngineSleepCRiteria
 class CConfigParamSearchEngineSleepCriteria : public CCommonConfigDlg
@@ -1069,6 +1081,61 @@ protected:
 	U08 m_field10;
 	U08 m_attribute;
   U16 cnstMode;
+	void UpdateStatus();
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigWatchTrackback
+class CConfigWatchTrackback : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigWatchTrackback)
+public:
+	CConfigWatchTrackback(CWnd* pParent = NULL);   
+	virtual ~CConfigWatchTrackback() {};
+
+	virtual void DoCommand();
+	virtual BOOL OnInitDialog();
+
+	afx_msg void OnBnClickedOk();
+protected:
+//	U08 m_attribute;
+//  U16 cnstMode;
+//	void UpdateStatus();
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CLogConfigureControlDlg
+class CLogConfigureControlDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CLogConfigureControlDlg)
+public:
+  enum CmdType
+  {
+    Cmd17h,
+    Cmd740Ch
+  };
+
+	CLogConfigureControlDlg(CWnd* pParent = NULL, CmdType cmd = Cmd17h);   
+	virtual ~CLogConfigureControlDlg() {};
+
+	virtual void DoCommand();
+	virtual BOOL OnInitDialog();
+
+	afx_msg void OnBnClickedOk();
+  afx_msg void OnBnClickedEnable();
+protected:
+  CmdType m_cmd;
+  U08 m_enable;
+	S32 m_maxT;
+  S32 m_minT;
+	S32 m_maxD;
+	S32 m_minD;
+	S32 m_maxV;
+	S32 m_minV;
+  U08 m_fifoMode;
+
 	void UpdateStatus();
 
 	DECLARE_MESSAGE_MAP()

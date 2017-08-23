@@ -32,10 +32,10 @@ public:
     GPGSV *msg_bdgsv;
     GPGSV *msg_gagsv;
 
-	Satellite* satellites_gps;
-	Satellite* satellites_gnss;
-	Satellite* satellites_bd;
-	Satellite* satellites_ga;
+	Satellites* satellites_gp;
+	Satellites* satellites_gl;
+	Satellites* satellites_bd;
+	Satellites* satellites_ga;
 private:
 	CFile kmlFile;
 	bool iniWriteKml;
@@ -55,7 +55,7 @@ private:
 	void AddStartPoint(CFile& kmlFile);
 	void AddEndPoint(CFile& kmlFile);
 	char CheckGsa(int p, GPGSA *gsa);
-	CString GenerateSatelliteTable(Satellite* s, GPGSA *gsa);
+	CString GenerateSatelliteTable(Satellites* s, GPGSA *gsa);
 	CString GetSatelliteInfo();
 
 };

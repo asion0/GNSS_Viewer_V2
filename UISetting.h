@@ -47,4 +47,6 @@ extern UISetting bdl1UI;
 extern UISetting bdl2UI;
 extern UISetting gpl1UI;
 extern UISetting gpl2UI;
+extern UISetting gll1UI;
+extern UISetting gll2UI;
 

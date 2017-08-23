@@ -52,7 +52,7 @@
 #define IDD_CON_DOP                     202
 #define IDD_DLGCOMPRESS                 208
 #define IDD_DLGSETFILTER                210
-#define IDD_LOGFILTERDLG                211
+#define IDD_LOG_FILTER_DLG                211
 #define IDD_SOFTWAREIMAGEDOWNLOAD       213
 #define IDD_CFG_SUBSEC_REG              214
 #define IDD_GETRGSDLG                   215
@@ -240,6 +240,8 @@
 #define IDD_DR_TEST                     498
 #define IDD_SAVE_BINARY_NOPARSING       499
 #define IDD_CFG_SBAS2                   500
+#define IDB_CYCLE_SLIP                  501
+#define IDD_CONFIG_WATCH_TRACKBACK      502
 #define IDC_CONNECT                     1000
 #define IDC_CLOSE                       1001
 #define IDC_SETORIGIN                   1002
@@ -864,7 +866,6 @@
 #define IDC_LON                         1348
 #define IDC_LAT                         1349
 #define IDC_SPY_CENTER                  1350
-//#define IDR_INTERNAL_LOADER_SPECIAL     1351
 #define IDC_PASS_THROUGH                1351
 #define IDC_LAT2                        1351
 #define IDC_ALT                         1351
@@ -1048,6 +1049,9 @@
 #define IDC_GAGAN_SPEC                  1483
 #define IDC_APPLY_DEFAULT               1484
 #define IDC_GROUP                       1485
+#define IDC_CYCLE_SLIP                  1486
+#define IDC__MIN_DISTANCE               1486
+#define IDC_CYCLE_SLIP_T                1487
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_SYSTEM_RESTART               32811
@@ -1297,6 +1301,15 @@
 #define ID_READ_MEM_TO_FILE2            33167
 #define ID_ENTER_RTK_DEBUG_MODE         33168
 #define ID_BACK_RTK_DEBUG_MODE          33169
+#define ID_QUERY_PSTI033                33170
+#define ID_CONFIG_PSTI033               33171
+#define ID_CONFIG_WATCH_TRACKBACK       33172
+#define ID_LOGW_STATUS                  33173
+#define ID_LOGW_CONFIGURE               33174
+#define ID_LOGW_CLEAR                   33175
+#define ID_LOGW_DECOMPRESS              33176
+#define ID_LOGW_READ                    33177
+#define ID_LOGW_CLEAR                   33175
 
 // Next default values for new objects
 // 
@@ -1304,7 +1317,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        479
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1486
+#define _APS_NEXT_CONTROL_VALUE         1487
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

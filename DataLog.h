@@ -59,16 +59,16 @@ struct LogFlashInfo1
 typedef struct 
 {
 	U16 word[9];
-}FIX_FULL;
+} FixFull_T;
 
 typedef struct 
 {
 	U16 word[4];
-}FIX_INC;
+}FixCompact_T;
 
 typedef struct{
 	U16 word[10];
-}FIX_FULL_MULTI_HZ_DATA;
+}FixMultiHz_T;
 
 typedef struct 
 {

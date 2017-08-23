@@ -37,7 +37,7 @@ int NMEA::ParamInt(LPCSTR p, int first, int second, int defaultValue)
 	int sign = 1;
 	if(p[first + 1]=='-')
 	{
-		first++;
+		++first;
 		sign = -1;
 	}
 	int value = defaultValue;
@@ -158,7 +158,7 @@ int NMEA::ScanDot(LPCSTR pt, int len, int dot[MaxNmeaParam])
 {
 	int dotPos = 0;
 	//Pass the beginning "$GPGSV" and the ending "*nn"
-	for(int i=6; i<len-3; ++i)
+	for(int i = 6; i < len - 3; ++i)
 	{
 		if(pt[i] == ',')
 		{
@@ -243,7 +243,7 @@ bool NMEA::GSVProc(GPGSV& rgsv, LPCSTR pt, int len)
 
 	if((dotPos + 1) != 8 && (dotPos + 1) != 12 && 
 		(dotPos + 1) != 16 && (dotPos + 1) != 20 &&
-    (dotPos + 1) != 9 && (dotPos + 1) != 13 &&  //NMEA 183 V4.1 Spec
+    (dotPos + 1) != 9 && (dotPos + 1) != 13 &&  //NMEA 183 V4.0 Spec
 		(dotPos + 1) != 17 && (dotPos + 1) != 21) 
 	{
 		return false;
@@ -254,26 +254,38 @@ bool NMEA::GSVProc(GPGSV& rgsv, LPCSTR pt, int len)
 	{
 		return 0;
 	}
+  BOOL hasSingalId = FALSE;
   if((dotPos + 1) == 9 || (dotPos + 1) == 13 ||  //NMEA 183 V4.1 Spec
 		(dotPos + 1) == 17 || (dotPos + 1) == 21) 
 	{
 		dotPos -= 1;
+    hasSingalId = TRUE;
 	}
 	rgsv.NumOfMessage = ParamInt(pt, dot[0], dot[1], 0);
 	rgsv.SequenceNum = ParamInt(pt, dot[1], dot[2], 0);
 	rgsv.NumOfSate = ParamInt(pt, dot[2], dot[3], 0);
-  for(int i = 3, groupIdx = 0; i < dotPos; i += 4, ++groupIdx)
+  int i = 3;
+  for(int groupIdx = 0; i < dotPos; i += 4, ++groupIdx)
 	{
 		rgsv.sates[groupIdx].SatelliteID = ParamInt(pt, dot[i], dot[i+1], 0);
 		rgsv.sates[groupIdx].Elevation = ParamInt(pt, dot[i+1], dot[i+2], 0);
 		rgsv.sates[groupIdx].Azimuth = ParamInt(pt, dot[i+2], dot[i+3], 0);
-#if FLOAT_SNR
-		rgsv.sates[groupIdx].SNR = ParamFloat(pt, dot[i+3], dot[i+4], INVALIDATE_SNR);
+#if (FLOAT_SNR)
+		rgsv.sates[groupIdx].snr[0] = ParamFloat(pt, dot[i+3], dot[i+4], INVALIDATE_SNR);
 #else
-		rgsv.sates[groupIdx].SNR = ParamInt(pt, dot[i+3], dot[i+4], INVALIDATE_SNR);
+		rgsv.sates[groupIdx].snr[0] = ParamInt(pt, dot[i+3], dot[i+4], INVALIDATE_SNR);
 #endif
 	}
-	return true;
+
+  if(hasSingalId)
+  {
+	  rgsv.signalId = ParamInt(pt, dot[i], dot[i + 1], 0);
+  }
+  else
+  {  
+    rgsv.signalId = 0;
+  }	
+  return true;
 }
 
 bool NMEA::GSAProc(GPGSA& rgsa, LPCSTR pt, int len)
@@ -749,10 +761,10 @@ void NMEA::ShowGNGSAmsg(GPGSA& rgpgsa, GPGSA& rglgsa, GPGSA& rbdgsa, GPGSA& rgag
 		      rgagsa.SatelliteID[gaIndex++] = tmpGsa.SatelliteID[i];
 		      hasGaGsa = true;
 		      break;
-	      case 4:
-		      rglgsa.SatelliteID[glIndex++] = tmpGsa.SatelliteID[i];
-		      hasGlGsa = true;
-		      break;
+	      //case 4:
+		     // rbdgsa.SatelliteID[glIndex++] = tmpGsa.SatelliteID[i];
+		     // hasBdGsa = true;
+		     // break;
 	      default:
 		      rbdgsa.SatelliteID[bdIndex++] = tmpGsa.SatelliteID[i];
 		      hasBdGsa = true;
@@ -812,16 +824,21 @@ void NMEA::ShowGPVTGmsg(GPVTG& vtg, LPCSTR pt, int len)
 	VTGProc(vtg,pt,len);
 }
 
-int gpgsv_counter = 0;
-int glgsv_counter = 0;
-int bdgsv_counter = 0;
-int gagsv_counter = 0;
+static int gpgsv_counter = 0;
+static int glgsv_counter = 0;
+static int bdgsv_counter = 0;
+static int gagsv_counter = 0;
 
-bool gpgsvHasGlonass = false;
-bool gpgsvHasBeidou = false;
-bool gpgsvHasGalileo = false;
-bool gpgsvHasGps = false;
+static bool gpgsvHasGlonass = false;
+static bool gpgsvHasBeidou = false;
+static bool gpgsvHasGalileo = false;
+static bool gpgsvHasGps = false;
+
+//#if(SUPPORT_BDL2_GSV2)
+//void NMEA::ShowGPGSVmsg2(GPGSV& rgpgsv, GPGSV& rgpgsv2, GPGSV& rglgsv, GPGSV& rglgsv2, GPGSV& rbdgsv, GPGSV& rbdgsv2, GPGSV& rgagsv, LPCSTR pt, int len)
+//#else
 void NMEA::ShowGPGSVmsg2(GPGSV& rgpgsv, GPGSV& rglgsv, GPGSV& rbdgsv, GPGSV& rgagsv, LPCSTR pt, int len)
+//#endif
 {
 	firstGsaIn = false;
 	GPGSV tmpGsv = { 0 };
@@ -835,66 +852,126 @@ void NMEA::ShowGPGSVmsg2(GPGSV& rgpgsv, GPGSV& rglgsv, GPGSV& rbdgsv, GPGSV& rga
 		gpgsvHasGps = false;
 	}
 
-	for(int i=0; i<4; ++i)
+	for(int i = 0; i < 4; ++i)
 	{
-		Satellite* s = NULL;
+		Satellites* s = NULL;
 		int idx = 0;
 		//int prn = tmpGsv.sates[i].SatelliteID;
 		GNSS_System g = GetGNSSSystem(tmpGsv.sates[i].SatelliteID);
 
-		if(GsUnknown==g)
+		if(GsUnknown == g)
 		{
 			continue;
 		}
 
-		if(Gps==g && !gpgsvHasGps)
+		if(Gps == g && !gpgsvHasGps)
 		{	//first Gps prn in gsv message.
 			gpgsvHasGps = true;
 			gpgsv_counter = 0;
-			memset(satellites_gps, 0, sizeof(satellites_gps));
+      if(tmpGsv.signalId == 0 || tmpGsv.signalId == 1)
+      {
+			  //memset(satellites_gp, 0, sizeof(satellites_gp));
+        satellites_gp.Clear();
+      }
+//#if(SUPPORT_BDL2_GSV2)
+//      else
+//      {
+// 		    memset(satellites2_gp, 0, sizeof(satellites2_gp));
+//      }
+//#endif
 		}
-		else if(Glonass==g && !gpgsvHasGlonass)
+		else if(Glonass == g && !gpgsvHasGlonass)
 		{	//first Gps prn in gsv message.
 			gpgsvHasGlonass = true;
 			glgsv_counter = 0;
-			memset(satellites_gnss, 0, sizeof(satellites_gnss));
+      if(tmpGsv.signalId == 0 || tmpGsv.signalId == 1)
+      {
+			  //memset(satellites_gl, 0, sizeof(satellites_gl));
+        satellites_gl.Clear();
+      }
+//#if(SUPPORT_BDL2_GSV2)
+//      else
+//      {
+// 		    memset(satellites2_gl, 0, sizeof(satellites2_gl));
+//     }
+//#endif
 		}
-		else if(Beidou==g && !gpgsvHasBeidou)
+		else if(Beidou == g && !gpgsvHasBeidou)
 		{	//first Gps prn in gsv message.
 			gpgsvHasBeidou = true;
 			bdgsv_counter = 0;
-			memset(satellites_bd, 0, sizeof(satellites_bd));
+      if(tmpGsv.signalId == 0 || tmpGsv.signalId == 1)
+      {
+			  //memset(satellites_bd, 0, sizeof(satellites_bd));
+        satellites_bd.Clear();
+      }
+//#if(SUPPORT_BDL2_GSV2)
+//      else
+//      {
+// 		    memset(satellites2_bd, 0, sizeof(satellites2_bd));
+//      }
+//#endif
 		}
-		else if(Galileo==g && !gpgsvHasGalileo)
+		else if(Galileo == g && !gpgsvHasGalileo)
 		{	//first Gps prn in gsv message.
 			gpgsvHasGalileo = true;
 			gagsv_counter = 0;
-			memset(satellites_ga, 0, sizeof(satellites_ga));
+			//memset(satellites_ga, 0, sizeof(satellites_ga));
+      satellites_ga.Clear();
 		}
 
-		if(Gps==g)
+		if(Gps == g)
 		{
-			s = satellites_gps;
+      //if(tmpGsv.signalId == 0 || tmpGsv.signalId == 1)
+      {
+			  s = &satellites_gp;
+      }
+//#if(SUPPORT_BDL2_GSV2)
+//      else
+//      {
+//        s = satellites2_gp;
+//      }
+//#endif
 			idx = gpgsv_counter;
 			++gpgsv_counter;
 		}
-		else if(Glonass==g)
+		else if(Glonass == g)
 		{
-			s = satellites_gnss;
+      //if(tmpGsv.signalId == 0 || tmpGsv.signalId == 1)
+      {
+			  s = &satellites_gl;
+      }
+//#if(SUPPORT_BDL2_GSV2)
+//      else
+//      {
+//        s = satellites2_gl;
+//      }
+//#endif
+
 			idx = glgsv_counter;
 			++glgsv_counter;
 			nmeaType = MixGP;
 		}
-		else if(Beidou==g)
+		else if(Beidou == g)
 		{
-			s = satellites_bd;
+      //if(tmpGsv.signalId == 0 || tmpGsv.signalId == 1)
+      {
+			  s = &satellites_bd;
+      }
+//#if(SUPPORT_BDL2_GSV2)
+//      else
+//      {
+//        s = satellites2_bd;
+//      }
+//#endif
+
 			idx = bdgsv_counter;
 			++bdgsv_counter;
 			nmeaType = MixGP;
 		}
-		else if(Galileo==g)
+		else if(Galileo == g)
 		{
-			s = satellites_ga;
+			s = &satellites_ga;
 			idx = gagsv_counter;
 			++gagsv_counter;
 			nmeaType = MixGP;
@@ -904,27 +981,57 @@ void NMEA::ShowGPGSVmsg2(GPGSV& rgpgsv, GPGSV& rglgsv, GPGSV& rbdgsv, GPGSV& rga
 		{
 			continue;
 		}
-		s[idx].SatelliteID = tmpGsv.sates[i].SatelliteID;
-		s[idx].Elevation   = tmpGsv.sates[i].Elevation;
-		s[idx].Azimuth     = tmpGsv.sates[i].Azimuth;
-		s[idx].SNR         = tmpGsv.sates[i].SNR;   
+    s->SetSate(tmpGsv.sates[i].SatelliteID, tmpGsv.sates[i].Elevation, tmpGsv.sates[i].Azimuth,
+      (tmpGsv.signalId == 0 || tmpGsv.signalId == 1) ? tmpGsv.sates[i].snr[0] : -1,
+      (tmpGsv.signalId == 0 || tmpGsv.signalId == 1) ? -1 : tmpGsv.sates[i].snr[0]);
+		//s[idx].SatelliteID = tmpGsv.sates[i].SatelliteID;
+		//s[idx].Elevation   = tmpGsv.sates[i].Elevation;
+		//s[idx].Azimuth     = tmpGsv.sates[i].Azimuth;
+		//s[idx].SNR         = tmpGsv.sates[i].snr[0];   
 	}
 
 	if(gpgsvHasGlonass)
 	{
-		rglgsv = tmpGsv;
+    //if(tmpGsv.signalId == 0 || tmpGsv.signalId == 1)
+    //{
+		    rglgsv = tmpGsv;
+    //}
+//#if(SUPPORT_BDL2_GSV2)
+//    else
+//    {
+//		    rglgsv2 = tmpGsv;
+//    }
+//#endif
 	}
 	if(gpgsvHasBeidou)
 	{
-		rbdgsv = tmpGsv;
+    //if(tmpGsv.signalId == 0 || tmpGsv.signalId == 1)
+    //{
+		    rbdgsv = tmpGsv;
+    //}
+//#if(SUPPORT_BDL2_GSV2)
+//    else
+//    {
+//		    rbdgsv2 = tmpGsv;
+//    }
+//#endif
 	}
 	if(gpgsvHasGalileo)
 	{
 		rgagsv = tmpGsv;
-	}
+  }
 	if(gpgsvHasGps)
 	{
-		rgpgsv = tmpGsv;
+    //if(tmpGsv.signalId == 0 || tmpGsv.signalId == 1)
+    //{
+		    rgpgsv = tmpGsv;
+    //}
+//#if(SUPPORT_BDL2_GSV2)
+//    else
+//    {
+//		    rgpgsv2 = tmpGsv;
+//    }
+//#endif
 	}
 }
 
@@ -939,7 +1046,7 @@ void NMEA::ShowGPGSV2msg(GPGSV& gpgsv, LPCSTR pt, int len)
 	if(1 == gpgsv.SequenceNum)
 	{
 		gpgsv_counter = 0;
-		memset(satellites2_gps, 0, sizeof(satellites2_gps));
+		//memset(satellites2_gp, 0, sizeof(satellites2_gp));
 	}
 
 	for(int i=0; i<4; ++i)
@@ -948,11 +1055,13 @@ void NMEA::ShowGPGSV2msg(GPGSV& gpgsv, LPCSTR pt, int len)
 		{
 			continue;
 		}
+    satellites_gp.SetSate(tmpGsv.sates[i].SatelliteID, tmpGsv.sates[i].Elevation, tmpGsv.sates[i].Azimuth,
+      -1, tmpGsv.sates[i].snr[0]);
+		//satellites2_gp[gpgsv_counter].SatelliteID = gpgsv.sates[i].SatelliteID;
+		//satellites2_gp[gpgsv_counter].Elevation = gpgsv.sates[i].Elevation;
+		//satellites2_gp[gpgsv_counter].Azimuth = gpgsv.sates[i].Azimuth;
+		//satellites2_gp[gpgsv_counter].SNR = gpgsv.sates[i].SNR;   
 
-		satellites2_gps[gpgsv_counter].SatelliteID = gpgsv.sates[i].SatelliteID;
-		satellites2_gps[gpgsv_counter].Elevation = gpgsv.sates[i].Elevation;
-		satellites2_gps[gpgsv_counter].Azimuth = gpgsv.sates[i].Azimuth;
-		satellites2_gps[gpgsv_counter].SNR = gpgsv.sates[i].SNR;   
 		gpgsv_counter++;
 		if(gpgsv_counter >= MAX_SATELLITE)
 		{
@@ -977,20 +1086,45 @@ void NMEA::ShowGLGSVmsg(GPGSV& glgsv, LPCSTR pt, int len)
 	if(1 == glgsv.SequenceNum)
 	{
 		glgsv_counter = 0;
-		memset(satellites_gnss, 0, sizeof(satellites_gnss));
+    if(glgsv.signalId == 0 || glgsv.signalId == 1)
+    {
+		  //memset(satellites_gl, 0, sizeof(satellites_gl));
+      satellites_gl.Clear();
+    }
+//#if(SUPPORT_BDL2_GSV2)
+//    else
+//    {
+// 		  memset(satellites2_gl, 0, sizeof(satellites2_gl));
+//    }
+//#endif
 	}
 
-	for(int i=0; i<4; ++i)
+	for(int i = 0; i < 4; ++i)
 	{
 		if(0 == glgsv.sates[i].SatelliteID)
 		{
 			continue;
 		}
+    satellites_gl.SetSate(tmpGsv.sates[i].SatelliteID, tmpGsv.sates[i].Elevation, tmpGsv.sates[i].Azimuth,
+      (tmpGsv.signalId == 0 || tmpGsv.signalId == 1) ? tmpGsv.sates[i].snr[0] : -1,
+      (tmpGsv.signalId == 0 || tmpGsv.signalId == 1) ? -1 : tmpGsv.sates[i].snr[0]);
 
-		satellites_gnss[glgsv_counter].SatelliteID = glgsv.sates[i].SatelliteID;
-		satellites_gnss[glgsv_counter].Elevation   = glgsv.sates[i].Elevation;
-		satellites_gnss[glgsv_counter].Azimuth     = glgsv.sates[i].Azimuth;
-		satellites_gnss[glgsv_counter].SNR         = glgsv.sates[i].SNR;   
+//    if(glgsv.signalId == 0 || glgsv.signalId == 1)
+//    {
+//		  satellites_gl[glgsv_counter].SatelliteID = glgsv.sates[i].SatelliteID;
+//		  satellites_gl[glgsv_counter].Elevation   = glgsv.sates[i].Elevation;
+//		  satellites_gl[glgsv_counter].Azimuth     = glgsv.sates[i].Azimuth;
+//		  satellites_gl[glgsv_counter].SNR         = glgsv.sates[i].SNR;   
+//    }
+//#if(SUPPORT_BDL2_GSV2)
+//    else
+//    {
+//		  satellites2_gl[glgsv_counter].SatelliteID = glgsv.sates[i].SatelliteID;
+//		  satellites2_gl[glgsv_counter].Elevation   = glgsv.sates[i].Elevation;
+//		  satellites2_gl[glgsv_counter].Azimuth     = glgsv.sates[i].Azimuth;
+//		  satellites2_gl[glgsv_counter].SNR         = glgsv.sates[i].SNR;   
+//    }
+//#endif
 		glgsv_counter++;
 		if(glgsv_counter >= MAX_SATELLITE)
 		{
@@ -1015,7 +1149,7 @@ void NMEA::ShowGIGSVmsg(GPGSV& glgsv, LPCSTR pt, int len)
 	if(1 == glgsv.SequenceNum)
 	{
 		glgsv_counter = 0;
-		memset(satellites_gnss, 0, sizeof(satellites_gnss));
+		memset(satellites_gl, 0, sizeof(satellites_gnss));
 	}
 
 	for(int i=0; i<4; ++i)
@@ -1025,10 +1159,10 @@ void NMEA::ShowGIGSVmsg(GPGSV& glgsv, LPCSTR pt, int len)
 			continue;
 		}
 
-		satellites_gnss[glgsv_counter].SatelliteID = glgsv.sates[i].SatelliteID;
-		satellites_gnss[glgsv_counter].Elevation   = glgsv.sates[i].Elevation;
-		satellites_gnss[glgsv_counter].Azimuth     = glgsv.sates[i].Azimuth;
-		satellites_gnss[glgsv_counter].SNR         = glgsv.sates[i].SNR;   
+		satellites_gl[glgsv_counter].SatelliteID = glgsv.sates[i].SatelliteID;
+		satellites_gl[glgsv_counter].Elevation   = glgsv.sates[i].Elevation;
+		satellites_gl[glgsv_counter].Azimuth     = glgsv.sates[i].Azimuth;
+		satellites_gl[glgsv_counter].SNR         = glgsv.sates[i].SNR;   
 		glgsv_counter++;
 		if(glgsv_counter >= MAX_SATELLITE)
 		{
@@ -1053,21 +1187,46 @@ void NMEA::ShowBDGSVmsg(GPGSV& bdgsv, LPCSTR pt, int len)
 	if(1 == bdgsv.SequenceNum)
 	{
 		bdgsv_counter = 0;
-		memset(satellites_bd, 0, sizeof(satellites_bd));
+    if(bdgsv.signalId == 0 || bdgsv.signalId == 1)
+    {
+		  //memset(satellites_bd, 0, sizeof(satellites_bd));
+      satellites_bd.Clear();
+    }
+//#if(SUPPORT_BDL2_GSV2)
+//    else
+//    {
+// 		  memset(satellites2_bd, 0, sizeof(satellites2_bd));
+//    }
+//#endif
 	}
 
-	for(int i=0; i<4; ++i)
+	for(int i = 0; i < 4; ++i)
 	{
 		if(0 == bdgsv.sates[i].SatelliteID)
 		{
 			continue;
 		}
+    satellites_bd.SetSate(tmpGsv.sates[i].SatelliteID, tmpGsv.sates[i].Elevation, tmpGsv.sates[i].Azimuth,
+      (tmpGsv.signalId == 0 || tmpGsv.signalId == 1) ? tmpGsv.sates[i].snr[0] : -1,
+      (tmpGsv.signalId == 0 || tmpGsv.signalId == 1) ? -1 : tmpGsv.sates[i].snr[0]);
 
-		satellites_bd[bdgsv_counter].SatelliteID = bdgsv.sates[i].SatelliteID;
-		satellites_bd[bdgsv_counter].Elevation = bdgsv.sates[i].Elevation;
-		satellites_bd[bdgsv_counter].Azimuth = bdgsv.sates[i].Azimuth;
-		satellites_bd[bdgsv_counter].SNR = bdgsv.sates[i].SNR;   
-		bdgsv_counter++;
+//    if(bdgsv.signalId == 0 || bdgsv.signalId == 1)
+//    {
+//		  satellites_bd[bdgsv_counter].SatelliteID = bdgsv.sates[i].SatelliteID;
+//		  satellites_bd[bdgsv_counter].Elevation = bdgsv.sates[i].Elevation;
+//		  satellites_bd[bdgsv_counter].Azimuth = bdgsv.sates[i].Azimuth;
+//		  satellites_bd[bdgsv_counter].SNR = bdgsv.sates[i].SNR;   
+//    }
+//#if(SUPPORT_BDL2_GSV2)
+//    else
+//    {
+//	    satellites2_bd[bdgsv_counter].SatelliteID = bdgsv.sates[i].SatelliteID;
+//		  satellites2_bd[bdgsv_counter].Elevation = bdgsv.sates[i].Elevation;
+//		  satellites2_bd[bdgsv_counter].Azimuth = bdgsv.sates[i].Azimuth;
+//		  satellites2_bd[bdgsv_counter].SNR = bdgsv.sates[i].SNR;     
+//    }
+//#endif
+		++bdgsv_counter;
 		if(bdgsv_counter >= MAX_SATELLITE)
 		{
 			bdgsv_counter = 0;
@@ -1091,7 +1250,7 @@ void NMEA::ShowBDGSV2msg(GPGSV& bdgsv, LPCSTR pt, int len)
 	if(1 == bdgsv.SequenceNum)
 	{
 		bdgsv_counter = 0;
-		memset(satellites2_bd, 0, sizeof(satellites2_bd));
+		//memset(satellites2_bd, 0, sizeof(satellites2_bd));
 	}
 
 	for(int i=0; i<4; ++i)
@@ -1101,11 +1260,14 @@ void NMEA::ShowBDGSV2msg(GPGSV& bdgsv, LPCSTR pt, int len)
 			continue;
 		}
 
-		satellites2_bd[bdgsv_counter].SatelliteID = bdgsv.sates[i].SatelliteID;
-		satellites2_bd[bdgsv_counter].Elevation = bdgsv.sates[i].Elevation;
-		satellites2_bd[bdgsv_counter].Azimuth = bdgsv.sates[i].Azimuth;
-		satellites2_bd[bdgsv_counter].SNR = bdgsv.sates[i].SNR;   
-		bdgsv_counter++;
+    satellites_gp.SetSate(tmpGsv.sates[i].SatelliteID, tmpGsv.sates[i].Elevation, tmpGsv.sates[i].Azimuth,
+      -1, tmpGsv.sates[i].snr[0]);
+    //satellites2_bd[bdgsv_counter].SatelliteID = bdgsv.sates[i].SatelliteID;
+		//satellites2_bd[bdgsv_counter].Elevation = bdgsv.sates[i].Elevation;
+		//satellites2_bd[bdgsv_counter].Azimuth = bdgsv.sates[i].Azimuth;
+		//satellites2_bd[bdgsv_counter].SNR = bdgsv.sates[i].SNR;   
+
+		++bdgsv_counter;
 		if(bdgsv_counter >= MAX_SATELLITE)
 		{
 			bdgsv_counter = 0;
@@ -1129,7 +1291,8 @@ void NMEA::ShowGAGSVmsg(GPGSV& gagsv, LPCSTR pt, int len)
 	if(1 == gagsv.SequenceNum)
 	{
 		gagsv_counter = 0;
-		memset(satellites_ga, 0, sizeof(satellites_ga));
+		//memset(satellites_ga, 0, sizeof(satellites_ga));
+    satellites_ga.Clear();
 	}
 
 	for(int i=0; i<4; ++i)
@@ -1139,11 +1302,15 @@ void NMEA::ShowGAGSVmsg(GPGSV& gagsv, LPCSTR pt, int len)
 			continue;
 		}
 
-		satellites_ga[gagsv_counter].SatelliteID = gagsv.sates[i].SatelliteID;
-		satellites_ga[gagsv_counter].Elevation   = gagsv.sates[i].Elevation;
-		satellites_ga[gagsv_counter].Azimuth     = gagsv.sates[i].Azimuth;
-		satellites_ga[gagsv_counter].SNR         = gagsv.sates[i].SNR;   
-		gagsv_counter++;
+    satellites_ga.SetSate(tmpGsv.sates[i].SatelliteID, tmpGsv.sates[i].Elevation, tmpGsv.sates[i].Azimuth,
+      (tmpGsv.signalId == 0 || tmpGsv.signalId == 1) ? tmpGsv.sates[i].snr[0] : -1,
+      (tmpGsv.signalId == 0 || tmpGsv.signalId == 1) ? -1 : tmpGsv.sates[i].snr[0]);
+
+  //  satellites_ga[gagsv_counter].SatelliteID = gagsv.sates[i].SatelliteID;
+		//satellites_ga[gagsv_counter].Elevation   = gagsv.sates[i].Elevation;
+		//satellites_ga[gagsv_counter].Azimuth     = gagsv.sates[i].Azimuth;
+		//satellites_ga[gagsv_counter].SNR         = gagsv.sates[i].SNR;   
+		++gagsv_counter;
 		if(gagsv_counter >= MAX_SATELLITE)
 		{
 			gagsv_counter=0;
@@ -1165,7 +1332,7 @@ void NMEA::ShowGNGSVmsg(GPGSV& gpgsv, GPGSV& glgsv, GPGSV& bdgsv, GPGSV& gagsv, 
 
 	GPGSV* pGsv = NULL;
 	int* pGsv_counter = NULL;
-	Satellite* pSatellite = NULL;
+	Satellites* s = NULL;
 
 	GNSS_System g = GetGNSSSystem(tmpGsv.sates[0].SatelliteID);
 	switch(g)
@@ -1174,25 +1341,25 @@ void NMEA::ShowGNGSVmsg(GPGSV& gpgsv, GPGSV& glgsv, GPGSV& bdgsv, GPGSV& gagsv, 
 		gpgsv = tmpGsv;
 		pGsv = &gpgsv;
 		pGsv_counter = &gpgsv_counter;
-		pSatellite = satellites_gps;
+		s = &satellites_gp;
 		break;
 	case Glonass:
 		glgsv = tmpGsv;
 		pGsv = &glgsv;
 		pGsv_counter = &glgsv_counter;
-		pSatellite = satellites_gnss;
+		s = &satellites_gl;
 		break;
 	case Beidou:
 		bdgsv = tmpGsv;
 		pGsv = &bdgsv;
 		pGsv_counter = &gpgsv_counter;
-		pSatellite = satellites_bd;
+		s = &satellites_bd;
 		break;
 	case Galileo:
 		gagsv = tmpGsv;
 		pGsv = &gagsv;
 		pGsv_counter = &gpgsv_counter;
-		pSatellite = satellites_ga;
+		s = &satellites_ga;
 		break;
 	default:
 		break;
@@ -1201,7 +1368,8 @@ void NMEA::ShowGNGSVmsg(GPGSV& gpgsv, GPGSV& glgsv, GPGSV& bdgsv, GPGSV& gagsv, 
 	if(1 == tmpGsv.SequenceNum)
 	{
 		*pGsv_counter = 0;
-		memset(pSatellite, 0, sizeof(Satellite) * MAX_SATELLITE);
+		//memset(pSatellite, 0, sizeof(Satellite) * MAX_SATELLITE);
+    s->Clear();
 	}
 
 	for(int i=0; i<4; ++i)
@@ -1211,11 +1379,15 @@ void NMEA::ShowGNGSVmsg(GPGSV& gpgsv, GPGSV& glgsv, GPGSV& bdgsv, GPGSV& gagsv, 
 			continue;
 		}
 
-		pSatellite[*pGsv_counter].SatelliteID = pGsv->sates[i].SatelliteID;
-		pSatellite[*pGsv_counter].Elevation   = pGsv->sates[i].Elevation;
-		pSatellite[*pGsv_counter].Azimuth     = pGsv->sates[i].Azimuth;
-		pSatellite[*pGsv_counter].SNR         = pGsv->sates[i].SNR;   
-		(*pGsv_counter)++;
+    s->SetSate(tmpGsv.sates[i].SatelliteID, tmpGsv.sates[i].Elevation, tmpGsv.sates[i].Azimuth,
+      (tmpGsv.signalId == 0 || tmpGsv.signalId == 1) ? tmpGsv.sates[i].snr[0] : -1,
+      (tmpGsv.signalId == 0 || tmpGsv.signalId == 1) ? -1 : tmpGsv.sates[i].snr[0]);
+  //  pSatellite[*pGsv_counter].SatelliteID = pGsv->sates[i].SatelliteID;
+		//pSatellite[*pGsv_counter].Elevation   = pGsv->sates[i].Elevation;
+		//pSatellite[*pGsv_counter].Azimuth     = pGsv->sates[i].Azimuth;
+		//pSatellite[*pGsv_counter].SNR         = pGsv->sates[i].SNR;   
+
+		++(*pGsv_counter);
 		if(*pGsv_counter >= MAX_SATELLITE)
 		{
 			*pGsv_counter = 0;
@@ -1231,66 +1403,74 @@ void NMEA::ShowGNGSVmsg(GPGSV& gpgsv, GPGSV& glgsv, GPGSV& bdgsv, GPGSV& gagsv, 
 
 void NMEA::ClearSatellites()
 {
-	memset(&satellites_gps, 0, sizeof(satellites_gps));
-	memset(&satellites_gnss, 0, sizeof(satellites_gnss));
-	memset(&satellites_bd, 0, sizeof(satellites_bd));
-	memset(&satellites_ga, 0, sizeof(satellites_ga));
-#if(SUPPORT_BDL2_GSV2)
-	memset(&satellites2_gps, 0, sizeof(satellites_gps));
-	memset(&satellites2_bd, 0, sizeof(satellites2_bd));
-#endif
+	//memset(&satellites_gp, 0, sizeof(satellites_gp));
+	//memset(&satellites_gl, 0, sizeof(satellites_gl));
+	//memset(&satellites_bd, 0, sizeof(satellites_bd));
+	//memset(&satellites_ga, 0, sizeof(satellites_ga));
+  satellites_gp.Clear();
+  satellites_gl.Clear();
+  satellites_bd.Clear();
+  satellites_ga.Clear();
+//#if(SUPPORT_BDL2_GSV2)
+//	memset(&satellites2_gp, 0, sizeof(satellites2_gp));
+//	memset(&satellites2_gl, 0, sizeof(satellites2_gl));
+//	memset(&satellites2_bd, 0, sizeof(satellites2_bd));
+//#endif
 }
 
 int NMEA::ClearSatellitesInRange(GNSS_System gs, int prnStart, int prnEnd)
 {
-  Satellite* sate = NULL;
+  Satellites* s = NULL;
   switch(gs)
   {
   case Gps:
-	  sate = satellites_gps;
+	  s = &satellites_gp;
 	  break;
   case Glonass:
-	  sate = satellites_gnss;
+	  s = &satellites_gl;
 	  break;
   case Beidou:
-	  sate = satellites_bd;
+	  s = &satellites_bd;
 	  break;
   case Galileo:
-	  sate = satellites_ga;
+	  s = &satellites_ga;
 	  break;
   }
-  if(sate == NULL || prnStart > prnEnd)
+  if(s == NULL || prnStart > prnEnd)
   {
     return -1;
   }
-  for(int i = 0; i < MAX_SATELLITE; ++i)
-  {
-    if(sate[i].SatelliteID >= prnStart && sate[i].SatelliteID <= prnEnd)
-    {
-      sate[i].SatelliteID = 0;
-    }
-  }
 
-  int pos = -1;
-  int i, j;
-  for(i = 0; i < MAX_SATELLITE; ++i)
-  {
-    if(sate[i].SatelliteID == 0)
-    {
-      for(j = i; j < MAX_SATELLITE; ++j)
-      {
-        if(sate[j].SatelliteID != 0)
-        {
-          sate[i] = sate[j];
-          sate[j].SatelliteID = 0;
-          break;
-        }
-      }
-      if(j == MAX_SATELLITE)
-      {
-        break;
-      }
-    }
-  }	
-  return i;
+  s->ClearPrnInRange(prnStart, prnEnd);
+
+  //for(int i = 0; i < MAX_SATELLITE; ++i)
+  //{
+  //  if(sate[i].SatelliteID >= prnStart && sate[i].SatelliteID <= prnEnd)
+  //  {
+  //    sate[i].SatelliteID = 0;
+  //  }
+  //}
+
+  //int pos = -1;
+  //int i, j;
+  //for(i = 0; i < MAX_SATELLITE; ++i)
+  //{
+  //  if(sate[i].SatelliteID == 0)
+  //  {
+  //    for(j = i; j < MAX_SATELLITE; ++j)
+  //    {
+  //      if(sate[j].SatelliteID != 0)
+  //      {
+  //        sate[i] = sate[j];
+  //        sate[j].SatelliteID = 0;
+  //        break;
+  //      }
+  //    }
+  //    if(j == MAX_SATELLITE)
+  //    {
+  //      break;
+  //    }
+  //  }
+  //}	
+  return s->GetSateCount();
 }

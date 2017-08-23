@@ -595,25 +595,40 @@ U08 CKmlDlg::NMEA_PROC(const char* buffer, int offset)
 		nmea.ShowGAGSAmsg(msg_gagsa, buffer, offset);
 		kml.msg_gagsa = &msg_gagsa;
 		break;
+	case MSG_GIGSA:
+		nmea.ShowGIGSAmsg(msg_glgsa, buffer, offset);
+		kml.msg_glgsa = &msg_glgsa;
+		break;
 	case MSG_GPGSV:
+		//nmea.ShowGPGSVmsg2(msg_gpgsv, msg_glgsv, msg_bdgsv, msg_gagsv, buffer, offset);
+//#if(SUPPORT_BDL2_GSV2)
+//		nmea.ShowGPGSVmsg2(msg_gpgsv, msg_gpgsv, msg_glgsv, msg_glgsv, msg_bdgsv, msg_bdgsv, msg_gagsv, buffer, offset);
+//#else
 		nmea.ShowGPGSVmsg2(msg_gpgsv, msg_glgsv, msg_bdgsv, msg_gagsv, buffer, offset);
+//#endif
+
 		kml.msg_gpgsv = &msg_gpgsv;
-		kml.satellites_gps = nmea.satellites_gps;
+		kml.satellites_gp = &nmea.satellites_gp;
 		break;
 	case MSG_GLGSV:
 		nmea.ShowGLGSVmsg(msg_glgsv, buffer, offset);
 		kml.msg_glgsv = &msg_glgsv;
-		kml.satellites_gnss = nmea.satellites_gnss;
+		kml.satellites_gl = &nmea.satellites_gl;
 		break;
 	case MSG_BDGSV:
 		nmea.ShowBDGSVmsg(msg_bdgsv, buffer, offset);
 		kml.msg_bdgsv = &msg_bdgsv;
-		kml.satellites_bd = nmea.satellites_bd;
+		kml.satellites_bd = &nmea.satellites_bd;
 		break;
 	case MSG_GAGSV:
 		nmea.ShowGAGSVmsg(msg_gagsv, buffer, offset);
 		kml.msg_gagsv = &msg_gagsv;
-		kml.satellites_ga = nmea.satellites_ga;
+		kml.satellites_ga = &nmea.satellites_ga;
+		break;
+	case MSG_GIGSV:
+		nmea.ShowGLGSVmsg(msg_glgsv, buffer, offset);
+		kml.msg_glgsv = &msg_glgsv;
+		kml.satellites_gl = &nmea.satellites_gl;
 		break;
 	case MSG_GNGSV:
 		//nmea.ShowGAGSVmsg(msg_gagsv, buffer, offset);

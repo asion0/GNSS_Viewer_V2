@@ -127,3 +127,19 @@ UISetting gpl2UI(RGB(255, 255, 204), RGB(150, 150, 150),
 			   RGB(255, 255, 255), RGB(128, 128, 128), //inTxt, noTxt
 			   RGB(255, 255, 255), RGB(128, 194, 255), //inIcoTxt, noIcoTxt, 
 			   IDB_GP_ACT, IDB_GP_DIS, 17, 14);
+
+
+UISetting gll1UI(RGB(255, 255, 204), RGB(150, 150, 150), 
+			   RGB(200, 200, 200), RGB(156, 102, 204), 
+			   RGB(156, 102, 204), RGB(255, 255, 255), 
+			   RGB(255, 255, 255), RGB(128, 128, 128),
+			   RGB(255, 255, 255), RGB(195, 128, 255), //inIcoTxt, noIcoTxt, 
+			   IDB_GL_ACT, IDB_GL_DIS, 17, 14);
+
+
+UISetting gll2UI(RGB(255, 255, 204), RGB(150, 150, 150), 
+			   RGB(200, 200, 200), RGB(156, 102, 204), 
+			   RGB(192, 159, 223), RGB(255, 255, 255), 
+			   RGB(255, 255, 255), RGB(128, 128, 128),
+			   RGB(255, 255, 255), RGB(193, 159, 223), //inIcoTxt, noIcoTxt, 
+			   IDB_GL_ACT, IDB_GL_DIS, 17, 14);

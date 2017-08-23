@@ -9,7 +9,7 @@ CSkyTraqKml::CSkyTraqKml(void)
 	iniWriteKml = false;
     msg_gpgsa = msg_glgsa = msg_bdgsa = msg_gagsa = NULL;
     msg_gpgsv = msg_glgsv = msg_bdgsv = msg_gagsv = NULL;
-	satellites_gps = satellites_gnss = satellites_bd = satellites_ga = NULL;
+	satellites_gp = satellites_gl = satellites_bd = satellites_ga = NULL;
 }
 
 CSkyTraqKml::~CSkyTraqKml(void)
@@ -29,7 +29,7 @@ void CSkyTraqKml::Init(const char *name, int color, bool kml3d, bool bPointList,
 
     msg_gpgsa = msg_glgsa = msg_bdgsa = msg_gagsa = NULL;
     msg_gpgsv = msg_glgsv = msg_bdgsv = msg_gagsv = NULL;
-	satellites_gps = satellites_gnss = satellites_bd = satellites_ga = NULL;
+	satellites_gp = satellites_gl = satellites_bd = satellites_ga = NULL;
 
 	if(pointList)
 	{
@@ -199,30 +199,31 @@ char CSkyTraqKml::CheckGsa(int p, GPGSA *gsa)
 	return 'X';
 }
 
-CString CSkyTraqKml::GenerateSatelliteTable(Satellite* s, GPGSA *gsa)
+CString CSkyTraqKml::GenerateSatelliteTable(Satellites* s, GPGSA *gsa)
 {
 	//"<table class=\"tg\"><tr><th>PRN</th><th>Azimuth</th><th>Elevation</th><th>SNR</th><th>Used</th></tr>" \
 	//"<tr><td>5</td><td>128</td><td>45</td><td>41</td><td>O</td></tr>" \
 	//"<tr><td>6</td><td>315</td><td>89</td><td>40</td><td>X</td></tr>" \
 	//"</table>";
 	CString str = "<table class=\"tg\"><tr><th>PRN</th><th>Azimuth</th><th>Elevation</th><th>SNR</th><th>Used</th></tr>";
-	Satellite* p = s;
-	for(int i = 0; i < MAX_SATELLITE; ++i, ++p)
+	Satellites* p = s;
+	for(int i = 0; i < p->GetSateCount(); ++i, ++p)
 	{
-		if(p->SatelliteID == 0)
-		{
-			break;
-		}
+		//if(p->SatelliteID == 0)
+		//{
+		//	break;
+		//}
+    const Satellite* sate = p->GetSateIndex(i);
 		CString ss;
-		if(p->SNR == INVALIDATE_SNR)
+		if(sate->snr[0] == INVALIDATE_SNR)
 		{
 			ss.Format("<tr><td>%d</td><td>%d</td><td>%d</td><td>--</td><td>%c</td></tr>", 
-				p->SatelliteID, p->Azimuth, p->Elevation, CheckGsa(p->SatelliteID, gsa));
+				sate->SatelliteID, sate->Azimuth, sate->Elevation, CheckGsa(sate->SatelliteID, gsa));
 		}
 		else
 		{
 			ss.Format("<tr><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%c</td></tr>", 
-				p->SatelliteID, p->Azimuth, p->Elevation, p->SNR, CheckGsa(p->SatelliteID, gsa));
+				sate->SatelliteID, sate->Azimuth, sate->Elevation, sate->snr[0], CheckGsa(sate->SatelliteID, gsa));
 		}
 		str += ss;
 	}
@@ -233,38 +234,46 @@ CString CSkyTraqKml::GenerateSatelliteTable(Satellite* s, GPGSA *gsa)
 CString CSkyTraqKml::GetSatelliteInfo()
 {
 	CString str;
-	if(satellites_gps && msg_gpgsa)
+	if(satellites_gp && msg_gpgsa)
 	{
-		std::sort(satellites_gps, (satellites_gps + MAX_SATELLITE), CompareByPRN);
-		if(satellites_gps->SatelliteID > 0)
+		//std::sort(satellites_gp, (satellites_gp + MAX_SATELLITE), CompareByPRN);
+		if(satellites_gp->GetSateCount() > 0)
 		{
+      satellites_gp->Sort();
 			str += "GPS Satellites :<br>";
-			str += GenerateSatelliteTable(satellites_gps, msg_gpgsa);
+			str += GenerateSatelliteTable(satellites_gp, msg_gpgsa);
 		}
 	}
-	if(satellites_gnss && msg_glgsa)
+	if(satellites_gl && msg_glgsa)
 	{
-		std::sort(satellites_gnss, (satellites_gnss + MAX_SATELLITE), CompareByPRN);
-		if(satellites_gnss->SatelliteID > 0)
+		//std::sort(satellites_gl, (satellites_gl + MAX_SATELLITE), CompareByPRN);
+		if(satellites_gl->GetSateCount() > 0)
 		{
+#if(_NAVIC_CONVERT_)
+			str += "NAVIC Satellites :<br>";
+#else
 			str += "GLONASS Satellites :<br>";
-			str += GenerateSatelliteTable(satellites_gnss, msg_glgsa);
+#endif
+      satellites_gp->Sort();
+			str += GenerateSatelliteTable(satellites_gl, msg_glgsa);
 		}
 	}
 	if(satellites_bd && msg_bdgsa)
 	{
-		std::sort(satellites_bd, (satellites_bd + MAX_SATELLITE), CompareByPRN);
-		if(satellites_bd->SatelliteID > 0)
+		//std::sort(satellites_bd, (satellites_bd + MAX_SATELLITE), CompareByPRN);
+		if(satellites_bd->GetSateCount() > 0)
 		{
+      satellites_bd->Sort();
 			str += "Beidou Satellites :<br>";
 			str += GenerateSatelliteTable(satellites_bd, msg_bdgsa);
 		}
 	}
 	if(satellites_ga && msg_gagsa)
 	{
-		std::sort(satellites_ga, (satellites_ga + MAX_SATELLITE), CompareByPRN);
-		if(satellites_ga->SatelliteID > 0)
+		//std::sort(satellites_ga, (satellites_ga + MAX_SATELLITE), CompareByPRN);
+		if(satellites_ga->GetSateCount() > 0)
 		{
+      satellites_ga->Sort();
 			str += "Galileo Satellites :<br>";
 			str += GenerateSatelliteTable(satellites_ga, msg_gagsa);
 		}
