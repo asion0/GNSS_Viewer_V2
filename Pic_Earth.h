@@ -16,6 +16,7 @@ public:
 	CButton m_glCheck;
 	CButton m_bdCheck;
 	CButton m_gaCheck;
+	CButton m_giCheck;
 
 private:
 	void Refresh_EarthChart(CDC *dc);

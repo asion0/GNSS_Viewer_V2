@@ -88,7 +88,7 @@ protected:
 	static bool debugModeOn;
 	static CString debugWorking;
 	static CString debugName;
-	bool m_cancelTransmission;
+	static bool m_cancelTransmission;
 
 	HANDLE m_comDeviceHandle;
 	int m_comPort;
@@ -104,4 +104,8 @@ protected:
 	int WaitingDataIn();
 	bool WriteCommBytes(char* buffer, int bufferSize);
 	bool ResetPortNoDelay(int baud);
+
+public:
+  static DWORD GetComBinaryAck(HANDLE com, void *buffer, DWORD bufferSize, DWORD timeout);
+
 };

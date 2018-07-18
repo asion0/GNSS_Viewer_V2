@@ -14,8 +14,8 @@ static void Log(CString f, int line, CString name = "", int data = 0)
 void ScatterData::SetOrigin()
 {
 	LockEnuData();
-	if(g_setting.specifyCenter && IS_DEBUG)
-	{	//Only Internal Use version support specify center.
+	if(g_setting.specifyCenter)
+	{	
 		m_lon = g_setting.scatterCenterLon;
 		m_lat = g_setting.scatterCenterLat;
 		if(g_setting.specifyCenterAlt)
@@ -55,21 +55,21 @@ void ScatterData::SetRotationMatrix()
 	m_lat = Deg2Rad(m_lat);
 		
 	_WGS842NEU(0,0) = (F32)-sin(m_lon);
-    _WGS842NEU(0,1) = (F32)cos(m_lon);
-    _WGS842NEU(0,2) = 0;
-    _WGS842NEU(1,0) = (F32)(-sin(m_lat)*cos(m_lon));
-    _WGS842NEU(1,1) = (F32)(-sin(m_lat)*sin(m_lon));
-    _WGS842NEU(1,2) = (F32)cos(m_lat);
-    _WGS842NEU(2,0) = (F32)(cos(m_lat)*cos(m_lon));
-    _WGS842NEU(2,1) = (F32)(cos(m_lat)*sin(m_lon));
-    _WGS842NEU(2,2) = (F32)sin(m_lat);
+  _WGS842NEU(0,1) = (F32)cos(m_lon);
+  _WGS842NEU(0,2) = 0;
+  _WGS842NEU(1,0) = (F32)(-sin(m_lat)*cos(m_lon));
+  _WGS842NEU(1,1) = (F32)(-sin(m_lat)*sin(m_lon));
+  _WGS842NEU(1,2) = (F32)cos(m_lat);
+  _WGS842NEU(2,0) = (F32)(cos(m_lat)*cos(m_lon));
+  _WGS842NEU(2,1) = (F32)(cos(m_lat)*sin(m_lon));
+  _WGS842NEU(2,2) = (F32)sin(m_lat);
 }
 
 void ScatterData::InitPos()
 {
 	long double lon, lat;
 	ini_h = CGPSDlg::gpsDlg->m_gpggaMsg.Altitude + CGPSDlg::gpsDlg->m_gpggaMsg.GeoidalSeparation;
-	if(g_setting.specifyCenter && IS_DEBUG)
+	if(g_setting.specifyCenter)
 	{
 		m_lon = g_setting.scatterCenterLon;
 		m_lat = g_setting.scatterCenterLat;
@@ -106,7 +106,7 @@ void ScatterData::InitPos()
 	lon = m_lon;
 	lat = m_lat;
 
-	if(g_setting.specifyCenter && IS_DEBUG)
+	if(g_setting.specifyCenter)
 	{
 
 	}

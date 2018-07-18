@@ -6,7 +6,6 @@
 #include "Redir.h"
 #include "MaskedBitmap.h" 
 #include "Monitor_1PPS.h"
-#include "PositionRateDlg.h"
 #include "SysRestartDlg.h"
 #include "SnrBarChart.h" 
 #include "Pic_Earth.h"
@@ -15,11 +14,8 @@
 #include "Timing_start.h"
 #include "Config_Proprietary.h"
 #include "ConAntennaDetection.h"
-#include "Con1PPS_OutputMode.h"
 #include "ConfigNmeaIntervalDlg.h"
-#include "ConDauDlg.h"
 #include "ConSrePorDlg.h"
-#include "DrMultiHzDlg.h"
 #include "Config1ppsFrequenceOutput.h"
 #include "ConfigEricssonIntervalDlg.h"
 #include "GetAlmanac.h"
@@ -84,6 +80,8 @@ static CommandEntry cmdTable[] =
 	{ 0x4F, 0xFF, 1, 0x93, 0x00 },
 	//GetGpAlmanacCmd,
 	{ 0x50, 0xFF, 2, 0xBE, 0x00 },
+	//GetPpsOutputModeCmd,
+	{ 0x56, 0xFF, 1, 0xC3, 0x00 },
 	//QuerySbasCmd,
 	{ 0x62, 0x02, 2, 0x62, 0x80 },
 	//QueryQzssCmd,
@@ -148,6 +146,8 @@ static CommandEntry cmdTable[] =
 	{ 0x64, 0x7E, 2, 0x64, 0xFF },
 	//QueryVersionExtensionCmd
 	{ 0x64, 0x7D, 2, 0x64, 0xFE },
+	//Query1ppsPulseWidthCmd,
+	{ 0x65, 0x02, 2, 0x65, 0x80 },
 	//Query1ppsFreqencyOutputCmd,
 	{ 0x65, 0x04, 2, 0x65, 0x81 },
 	//QueryGnssKnumberSlotCnr2Cmd,
@@ -164,8 +164,16 @@ static CommandEntry cmdTable[] =
 	{ 0x6A, 0x04, 2, 0x6A, 0x81 },
 	//QueryRtkModeCmd2,
 	{ 0x6A, 0x07, 2, 0x6A, 0x83 },
+	//QueryRtkSlaveBaudCmd,
+	{ 0x6A, 0x0D, 2, 0x6A, 0x85 },
+	//ClearRtkSlaveDataCmd,
+	{ 0x6A, 0x0E, 2, 0x6A, 0x85 },
+	//QueryDrRateCmd,
+	{ 0x6C, 0x01, 2, 0x6C, 0x80 },
+	//QueryDrRawRateCmd,
+	{ 0x6C, 0x05, 2, 0x6C, 0x81 },
 	//QueryDrMultiHzCmd,
-	{ 0x6F, 0x02, 2, 0x6F, 0x80 },
+	//{ 0x6F, 0x02, 2, 0x6F, 0x80 },
 	//QueryRegisterCmd,
 	{ 0x71, 0xFF, 5, 0xC0, 0x00 },
 	//QueryRegisterCmd16,
@@ -235,6 +243,7 @@ enum SqBinaryCmd
 	QueryProprietaryMessageCmd,
 	QueryGnssNmeaTalkIdCmd,
   GetGpAlmanacCmd,
+  GetPpsOutputModeCmd,
 	QuerySbasCmd,
 	QueryQzssCmd,
   QuerySbas2Cmd,
@@ -267,6 +276,7 @@ enum SqBinaryCmd
   QueryPstiCmd2,
 	QuerySha1StringCmd,
 	QueryVersionExtensionCmd,
+  Query1ppsPulseWidthCmd,
 	Query1ppsFreqencyOutputCmd,
 	QueryGnssKnumberSlotCnr2Cmd,
   GetBdAlmanacCmd,
@@ -275,7 +285,11 @@ enum SqBinaryCmd
 	QueryRtkModeCmd,
 	QueryRtkParametersCmd,
 	QueryRtkModeCmd2,
-	QueryDrMultiHzCmd,
+  QueryRtkSlaveBaudCmd,
+  ClearRtkSlaveDataCmd,
+  QueryDrRateCmd,
+  QueryDrRawRateCmd,
+	//QueryDrMultiHzCmd,
 	QueryRegisterCmd,
 	QueryRegisterCmd16,
 	InsdrAccelerometerSelfTestCmd,
@@ -355,6 +369,32 @@ CGPSDlg::CmdErrorCode CGPSDlg::GetCommandReturnType(U08* buff, int tail, bool sh
 	return Timeout;
 }
 
+CGPSDlg::CmdErrorCode CGPSDlg::GetCommandReturnTypeWithoutMsg(U08* buff, int tail, bool showMsg)
+{	
+	if(buff[0]==0xa0 && buff[1]==0xa1 &&
+		(buff[tail-1]==0x0d) && (buff[tail]==0x0a) && (buff[4]==0x83) && (buff[5]==0x0))
+	{ //ACK0 (V6 Firmware will return this before ACK) - 0xa0, 0xa1, l1, l2, 0x83, 0x00, ... ,0x0d, 0x0a
+		return Ack0;
+	}
+	if((buff[0]==0xa0) && (buff[1]==0xa1) &&
+		(buff[tail-1]==0x0d) && (buff[tail]==0x0a) && (buff[4]==0x83))
+	{ //ACK - 0xa0, 0xa1, l1, l2, 0x83, 0xcommandId, ... ,0x0d, 0x0a
+		return Ack;
+	}
+	if((buff[0]==0xa0) && (buff[1]==0xa1) &&
+		(buff[tail-1]==0x0d) && (buff[tail]==0x0a) && (buff[4]==0x84))
+	{ //NACK - 0xa0, 0xa1, l1, l2, 0x84, 0xcommandId, ... ,0x0d, 0x0a
+		return NACK;
+	}
+	if((buff[0]==0xa0) && (buff[1]==0xa1) &&
+		(buff[tail-1]==0x0d) && (buff[tail]==0x0a) && (buff[4]==0x85))
+	{ //FormatError (V8 FW after 2016 will return this when command format error
+    //- 0xa0, 0xa1, l1, l2, 0x85, 0xcommandId, ... ,0x0d, 0x0a
+		return FormatError;
+	}
+	return Timeout;
+}
+
 bool CGPSDlg::SendToTarget(U08* message, U16 length, LPCSTR promptMessage, int timeout)
 {	
   //For old style, timeout is boolean type.
@@ -423,6 +463,104 @@ bool CGPSDlg::SendToTarget(U08* message, U16 length, LPCSTR promptMessage, int t
 		}
 		else if(ack == FormatError)
 		{
+			if(m_bShowBinaryCmdData)
+			{
+				add_msgtolist("FormatError: " + theApp.GetHexString(buffer, retLen));	
+			}
+			ShowFormatError(message, buffer);
+			return false;
+		}
+	}	//while(1)	
+  return false;
+}
+
+bool CGPSDlg::SendToTargetAndCheckAck(U08* message, U16 length, LPCSTR promptMessage, int timeout, int idLen)
+{	
+  //For old style, timeout is boolean type.
+  if(timeout == 1)
+  {
+    timeout = 1000;
+  }
+  else if(timeout == 0)
+  {
+    timeout = 2000;
+  }
+
+	if(m_bShowBinaryCmdData)
+	{
+		add_msgtolist("In : " + theApp.GetHexString(message, length));	
+	}
+
+	ClearQue();
+  if(NULL == m_serial) 
+  {
+    return false;
+  }
+  else
+  {
+	  m_serial->SendData(message, length);
+    //For test
+    //m_serial->SendData(message, length - 3);
+    //Sleep(100);
+	  //m_serial->SendData(message + 8, 3);
+  }
+
+	static U08 buffer[COM_BUFFER_SIZE] = { 0 };
+	ScopeTimer t;
+	while(NULL != m_serial)
+	{	
+#if !defined(_DEBUG) || !defined(NO_TIMEOUT)
+    if((int)t.GetDuration() > timeout)
+    {
+      DWORD time = t.GetDuration();
+      break;
+    }
+#endif
+	  int retLen = m_serial->GetBinary(buffer, sizeof(buffer) - 1, timeout);
+		if(!ReadOK(retLen))
+		{
+			Sleep(10);
+			continue;
+		}
+		buffer[retLen] = 0;
+    if(!PreprocessInputLine(buffer, retLen))
+    {
+      continue;
+    }
+	
+		CmdErrorCode ack = GetCommandReturnTypeWithoutMsg(buffer, retLen - 1, (promptMessage != NULL));	
+		if(ack == Ack)
+		{
+			if(m_bShowBinaryCmdData)
+			{
+				add_msgtolist("Ack: " + theApp.GetHexString(buffer, retLen));	
+			}
+
+			if(strlen(promptMessage))
+			{
+				add_msgtolist(promptMessage);	
+			}
+			return true;
+		}
+		else if(ack == NACK)
+		{
+      if(retLen != 8 + idLen)
+      { //Not a correct NACK
+        continue;
+      }
+		  if((promptMessage != NULL))
+		  {
+			  add_msgtolist("Received NACK...");
+		  }
+			return false;
+		}
+		else if(ack == FormatError)
+		{
+		  if((promptMessage != NULL))
+		  {
+			  add_msgtolist("Received FormatError...");
+		  }
+
 			if(m_bShowBinaryCmdData)
 			{
 				add_msgtolist("FormatError: " + theApp.GetHexString(buffer, retLen));	
@@ -630,7 +768,7 @@ void CGPSDlg::OnDatalogLogReadBatch()
 
 bool CGPSDlg::DataLogReadOffsetCtrl(int startId, int totalSector, int offset, U08 *buffer, long bufferSize, long *receiveBytes)
 {
-	WRL = new CWaitReadLog;
+	g_waitReadDialog = new CWaitReadLog;
 	AfxBeginThread(WaitLogRead, 0);	
 	WaitForSingleObject(waitlog, INFINITE);
 
@@ -653,7 +791,7 @@ bool CGPSDlg::DataLogReadOffsetCtrl(int startId, int totalSector, int offset, U0
 				*receiveBytes += tmp_count;
 				CString displayMessage;
 				displayMessage.Format("Retrieve Log data #%d sector #%d bytes\n", i, *receiveBytes);
-				WRL->msg.SetWindowText(displayMessage);
+				g_waitReadDialog->msg.SetWindowText(displayMessage);
 				Sleep(150);
 				break;
 			}
@@ -813,15 +951,15 @@ void CGPSDlg::LogReadBatchControl()
 	if(DataLogReadOffsetCtrl(0, endPos, 2, buffer, bufferSize, &receiveBytes))
 	{
 		dataLogFile.Write(buffer, receiveBytes);
-		WRL->msg.SetWindowText("Data Log reading complete.");
+		g_waitReadDialog->msg.SetWindowText("Data Log reading complete.");
 		CGPSDlg::gpsDlg->add_msgtolist("Data Log reading successfully");
 	}
 	else
 	{
-		WRL->msg.SetWindowText("Data Log reading fails!");
+		g_waitReadDialog->msg.SetWindowText("Data Log reading fails!");
 		CGPSDlg::gpsDlg->add_msgtolist("Data Log reading fails!");
 	}
-	WRL->IsFinish = true;
+	g_waitReadDialog->IsFinish = true;
 	free(buffer);
 	
 	CGPSDlg::gpsDlg->target_only_restart(0);
@@ -998,38 +1136,45 @@ void CGPSDlg::parse_sti_20_message(const char *buff,int len) // for timing modul
 
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
+  //Field 1
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
+  //Field 2
+	temp.Format("%d",atoi(ptr));
+	GetDlgItem(IDC_GYRO_DATA)->SetWindowText(temp);
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
+  //Field 3
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
+  //Field 4
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
-
+  //Field 5
 	temp.Format("%d",atoi(ptr));
 	m_odo_meter.SetWindowText(temp);
-
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
-
+  //Field 6
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
-
+  //Field 7
 	temp.Format("%d",atoi(ptr));
 	m_backward_indicator.SetWindowText(temp);
-
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
+  //Field 8
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
+  //Field 9
+  ptr = go_next_dot(ptr);
+	if(ptr == NULL) return;
+  //Field 10
 	ptr = go_next_dot(ptr);
 	if(ptr == NULL) return;
-	ptr = go_next_dot(ptr);
-	if(ptr == NULL) return;
-
-	temp.Format("%.2f", atof(ptr));
-	GetDlgItem(IDC_GYRO_DATA)->SetWindowText(temp);
+  //Field 11
+	//temp.Format("%.2f", atof(ptr));
+	//GetDlgItem(IDC_GYRO_DATA)->SetWindowText(temp);
 }
 
 void CGPSDlg::parse_sti_03_message(const char *buff,int len) // for timing module
@@ -1047,7 +1192,7 @@ void CGPSDlg::parse_sti_03_message(const char *buff,int len) // for timing modul
 	m_odo_meter.SetWindowText(temp);
 }
 
-#if (SHOW_RTK_BASELINE || _TAB_LAYOUT_)
+#if (_SHOW_RTK_BASELINE_ || _TAB_LAYOUT_)
 void CGPSDlg::parse_sti_31_message(const char *buff,int len) // for timing module
 {
 	const char *ptr = buff;
@@ -1059,7 +1204,7 @@ void CGPSDlg::parse_sti_31_message(const char *buff,int len) // for timing modul
 
 	CString temp;
 	temp.Format("%.3f",atof(ptr));
-#if (SHOW_RTK_BASELINE)
+#if (_SHOW_RTK_BASELINE_)
 	m_bootStatus.SetWindowText(temp);
 #else
 	m_baselineLength.SetWindowText(temp);
@@ -1067,7 +1212,7 @@ void CGPSDlg::parse_sti_31_message(const char *buff,int len) // for timing modul
 }
 #endif
 
-#if(MORE_INFO || _TAB_LAYOUT_)
+#if(_MORE_INFO_ || _TAB_LAYOUT_)
 void CGPSDlg::parse_sti_30_message(const char *buff,int len) // for timing module
 {
 	const char *ptr = buff;
@@ -1188,7 +1333,7 @@ void CGPSDlg::parse_sti_33_message(LPCSTR buff, int len) // for timing module
 }
 #endif
 
-#if(_MODULE_SUP_800_)
+#if(MODULE_SUP_800)
 void CGPSDlg::parse_sti_04_001_message(const char *buff,int len) // for timing module
 {
 	const char *ptr = buff;
@@ -1257,13 +1402,13 @@ void CGPSDlg::parse_sti_message(const char *buff,int len)
 	{
 		parse_sti_03_message(buff, len);
 	}
-#if (SHOW_RTK_BASELINE || _TAB_LAYOUT_)
+#if (_SHOW_RTK_BASELINE_ || _TAB_LAYOUT_)
 	else if(psti_id == 31)		// for jamming interference
 	{
 		parse_sti_31_message(buff, len);
 	}
 #endif
-#if (MORE_INFO || _TAB_LAYOUT_)
+#if (_MORE_INFO_ || _TAB_LAYOUT_)
 	else if(psti_id == 30)		// for jamming interference
 	{
 		parse_sti_30_message(buff, len);
@@ -1279,7 +1424,7 @@ void CGPSDlg::parse_sti_message(const char *buff,int len)
 		parse_sti_33_message(buff, len);
 	}
 #endif
-#if(_MODULE_SUP_800_)
+#if(MODULE_SUP_800)
 	else if(psti_id == 4)		// for SUP800
 	{
 		ptr = go_next_dot(ptr);
@@ -1408,174 +1553,10 @@ void CGPSDlg::parse_psti_50(const char *buff)		// gnss
 	ptr = NULL;
 }
 
-int position_update_rate;
-int position_update_attr;
-UINT Configurepositionrate(LPVOID param)
-{
-	U08 msg[3];
-
-	msg[0] = 0xE;
-	msg[1] = position_update_rate;
-	msg[2] = position_update_attr;
-
-	int len = CGPSDlg::gpsDlg->SetMessage(msg, sizeof(msg));
-	CGPSDlg::gpsDlg->ClearQue();
-	if(CGPSDlg::gpsDlg->SendToTarget(CGPSDlg::m_inputMsg,len, "Configure Position Rate successfully", true))
-	{
-		Sleep(200);
-#if(_MODULE_SUP_800_)
-    // 20160810, request from Andrew, SUP800 fw can't support baud rate more than 230400
-		if(position_update_rate>20 && g_setting.GetBaudrate()<230400)				//Boost to 230400 when update rate > 20Hz.
-		{
-			CGPSDlg::gpsDlg->ConfigBaudrate(6, position_update_attr);	
-		}
-#else
-    if(position_update_rate > 40 && g_setting.GetBaudrate() < 961600)				//Boost to 961600 when update rate > 40Hz.
-		{
-			CGPSDlg::gpsDlg->ConfigBaudrate(8, position_update_attr);	
-		}
-		else if(position_update_rate>25 && g_setting.GetBaudrate()<460800)				//Boost to 460800 when update rate > 25Hz.
-		{
-			CGPSDlg::gpsDlg->ConfigBaudrate(7, position_update_attr);	
-		}
-		else if(position_update_rate>20 && g_setting.GetBaudrate()<230400)				//Boost to 230400 when update rate > 20Hz.
-		{
-			CGPSDlg::gpsDlg->ConfigBaudrate(6, position_update_attr);	
-		}
-#endif
-		else if(position_update_rate>10 && g_setting.GetBaudrate()<115200)				//Boost to 115200 when update rate > 10Hz.
-		{
-			CGPSDlg::gpsDlg->ConfigBaudrate(5, position_update_attr);	
-		}
-		else if(position_update_rate>2 && g_setting.GetBaudrate()<38400)			//Boost to 38400 when update rate > 2Hz.
-		{
-			CGPSDlg::gpsDlg->ConfigBaudrate(3, position_update_attr);	
-		}
-		else if(position_update_rate>1 && g_setting.GetBaudrate()<9600)			//Boost to 9600 when update rate > 1Hz.
-		{
-			CGPSDlg::gpsDlg->ConfigBaudrate(1, position_update_attr);	
-		}
-		//else
-		//{
-        //Andrew request 20160901, doesn't need restart in this
-		  	//CGPSDlg::gpsDlg->SendRestartCommand(1);
-		//}
-	}
-
-	CGPSDlg::gpsDlg->SetMode();  
-	CGPSDlg::gpsDlg->CreateGPSThread();
-	return 0;	
-}
-
-UINT ConfigureDrMultiHz(LPVOID param)
-{
-	U08 msg[4] = {0};
-
-	msg[0] = 0x6F;
-	msg[1] = 0x01;
-	msg[2] = position_update_rate;
-	msg[3] = position_update_attr;
-
-	int len = CGPSDlg::gpsDlg->SetMessage(msg, sizeof(msg));
-
-	CGPSDlg::gpsDlg->ClearQue();
-	if(CGPSDlg::gpsDlg->SendToTarget(CGPSDlg::m_inputMsg,len, "Configure DR Multi-Hz successfully", true))
-	{
-		Sleep(200);
-		if(position_update_rate > 10 && g_setting.GetBaudrate()<115200)
-		{
-			CGPSDlg::gpsDlg->ConfigBaudrate(5, position_update_attr);		//Boost to 115200 when update rate > 10Hz.
-		}
-		else if(position_update_rate>2 && g_setting.GetBaudrate()<38400)	//Boost to 115200 when update rate > 2Hz.
-		{
-			CGPSDlg::gpsDlg->ConfigBaudrate(3, position_update_attr);		//Boost to 115200 when update rate > 10Hz.
-		}
-		else if(position_update_rate>1 && g_setting.GetBaudrate()<9600)	//Boost to 115200 when update rate > 1Hz.
-		{
-			CGPSDlg::gpsDlg->ConfigBaudrate(1, position_update_attr);		//Boost to 115200 when update rate > 10Hz.
-		}
-		else
-		{
-      //Andrew request 20160901, doesn't need restart in this
-			//CGPSDlg::gpsDlg->SendRestartCommand(1);
-		}
-	}
-	CGPSDlg::gpsDlg->SetMode();  
-	CGPSDlg::gpsDlg->CreateGPSThread();
-	return 0;	
-}
-
 void CGPSDlg::OnConfigurePositionUpdateRate()
 {
-	if(!CheckConnect())
-	{
-		return;
-	}
-	SetInputMode(NoOutputMode);
-	CPositionRateDlg *dlg = new CPositionRateDlg(this);
-
-	if(dlg->DoModal() == IDOK)
-	{
-		position_update_rate = dlg->rate;
-		position_update_attr = dlg->attr;
-		//com_baudrate = g_setting.GetBaudrate();
-#if(CHECK_SAEE_MULTIHZ_ON)
-		if(position_update_rate > 1)
-		{
-			U08 data = 0;
-			U32 data2 = 0;
-			if(Ack == QuerySagps(Return, &data))
-			{
-				if(data != 2)
-				{	//AGPS not disable or ROM version.
-					if(Ack == QueryGnssBootStatus(Return, &data2))
-					{
-						if((LOBYTE(data2) != 1) && HIBYTE(data2) != 0)
-						{	// Not boot from ROM.
-							add_msgtolist("Configure Position Rate Cancel...");	
-							::AfxMessageBox("Please disable SAEE before using multi-hz update rate.");
-
-							SetMode();  
-							CreateGPSThread();
-							return;
-						}
-					}
-				}
-			}
-		}
-#endif
-		AfxBeginThread(Configurepositionrate, 0);
-	}
-	else
-	{
-		SetMode();  
-		CreateGPSThread();
-	}
-}
-
-void CGPSDlg::OnBinaryConfigDrMultiHz()
-{
-	if(!CheckConnect())
-	{
-		return;
-	}
-	SetInputMode(NoOutputMode);
-
-	DrMultiHzDlg *dlg = new DrMultiHzDlg(this);
-
-	if(dlg->DoModal() == IDOK)
-	{
-		position_update_rate = dlg->rate;
-		position_update_attr = dlg->attr;
-		//com_baudrate = g_setting.baudrate;
-		AfxBeginThread(ConfigureDrMultiHz, 0);
-	}
-	else
-	{
-		SetMode();  
-		CreateGPSThread();
-	}
-
+	CPositionUpdateRateDlg dlg;
+	DoCommonConfig(&dlg);
 }
 
 void CGPSDlg::OnBnClickedECompassCalibration()
@@ -1585,7 +1566,6 @@ void CGPSDlg::OnBnClickedECompassCalibration()
 		return;
 	}
 
-	//WaitEvent();
 	ClearQue();
 
 	U08 message[8];
@@ -1803,6 +1783,7 @@ void CGPSDlg::Restart(U08* messages, BOOL restoreConnection /* = TRUE */)
 	bdSnrBar->Invalidate(FALSE);
 #if(!SUPPORT_BDL2_GSV2)
 	gaSnrBar->Invalidate(FALSE);
+	giSnrBar->Invalidate(FALSE);
 #endif
 
 	pic_earth->Invalidate(FALSE);
@@ -1877,7 +1858,7 @@ void CGPSDlg::OnConfigure1PpsPulseWidth()
 		CreateGPSThread();
 	}
 }
-
+/*
 UINT AFX_CDECL Query1ppsPulseWidth(LPVOID param)
 {
 	U08 msg[2];
@@ -1941,7 +1922,7 @@ void CGPSDlg::OnQuery1PpsPulseWidth()
 	//Utility::Log(__FUNCTION__, "start QuerySBAS thread", __LINE__);
 	AfxBeginThread(Query1ppsPulseWidth, 0);	
 }
-
+*/
 long int g_1ppsFrequencyOutput = 0;
 U08 g_1ppsFrequencyOutputAttr = 0;
 UINT Config1ppsFrequencyOutputThread(LPVOID param)
@@ -2657,7 +2638,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryConstellationCapability(CmdExeMode nMode, vo
 		return Timeout;
 	}
 	BinaryData ackCmd;
-  CmdErrorCode err =ExcuteBinaryCommand(QueryConstellationCapabilityCmd, &cmd, &ackCmd);
+  CmdErrorCode err = ExcuteBinaryCommand(QueryConstellationCapabilityCmd, &cmd, &ackCmd);
 	if(err != Ack)
 	{
     return err;
@@ -4681,7 +4662,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssBootStatus(CmdExeMode nMode, void* outpu
 	cmd.SetU08(1, cmdTable[QueryGnssBootStatusCmd].cmdId);
 	cmd.SetU08(2, cmdTable[QueryGnssBootStatusCmd].cmdSubId);
 	
-	if(NoWait==nMode)
+	if(NoWait == nMode)
 	{
 		ExcuteBinaryCommandNoWait(QueryGnssBootStatusCmd, &cmd);
 		return Timeout;
@@ -4734,7 +4715,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssBootStatus(CmdExeMode nMode, void* outpu
 	}
 	return Timeout;
 }
-
+/*
 CGPSDlg::CmdErrorCode CGPSDlg::QueryDrMultiHz(CmdExeMode nMode, void* outputData)
 {	    
 	BinaryCommand cmd(cmdTable[QueryDrMultiHzCmd].cmdSize);
@@ -4750,7 +4731,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryDrMultiHz(CmdExeMode nMode, void* outputData
 	}
 	return Timeout;
 }
-
+*/
 CGPSDlg::CmdErrorCode CGPSDlg::QueryNmeaIntervalV8(CmdExeMode nMode, void* outputData)
 {	    
 	BinaryCommand cmd(cmdTable[QueryNmeaIntervalV8Cmd].cmdSize);
@@ -5142,12 +5123,12 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPstnLatLonDigits(CmdExeMode nMode, void* out
 	return Timeout;
 }
 
-CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti030(CmdExeMode nMode, void* outputData)
+CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QueryPstiCmd].cmdSize);
 	cmd.SetU08(1, cmdTable[QueryPstiCmd].cmdId);
 	cmd.SetU08(2, cmdTable[QueryPstiCmd].cmdSubId);
-	cmd.SetU08(3, 30);
+	cmd.SetU08(3, (U08)m_nPstiNo);
 
 	BinaryData ackCmd;
   CmdErrorCode err = ExcuteBinaryCommand(QueryPstiCmd, &cmd, &ackCmd, 800);
@@ -5163,14 +5144,14 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti030(CmdExeMode nMode, void* outputData)
 	}
 
 	CString strMsg;
-	strMsg = "Query PSTI030 Interval successfully";
+  strMsg.Format("Query PSTI%03d Interval successfully", m_nPstiNo);
 	add_msgtolist(strMsg);
-	strMsg.Format("PSTI030 Interval : %d", ackCmd[6]);
+  strMsg.Format("PSTI%03d Interval : %d", m_nPstiNo, ackCmd[6]);
 	add_msgtolist(strMsg);
 
 	return err;
 }
-
+/*
 CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti032(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QueryPstiCmd].cmdSize);
@@ -5229,6 +5210,35 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti033(CmdExeMode nMode, void* outputData)
 	return err;
 }
 
+CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryPstiCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryPstiCmd].cmdId);
+	cmd.SetU08(2, cmdTable[QueryPstiCmd].cmdSubId);
+	cmd.SetU08(3, (U08)m_nPstiNo);
+
+	BinaryData ackCmd;
+  CmdErrorCode err = ExcuteBinaryCommand(QueryPstiCmd, &cmd, &ackCmd, 800);
+	if(err != Ack)
+	{
+		return err;
+	}
+
+	if(Return == nMode)
+	{	//Return command length
+		*((U08*)outputData) = ackCmd[6];
+		return err;
+	}
+
+	CString strMsg;
+	strMsg = "Query PSTI067 Interval successfully";
+	add_msgtolist(strMsg);
+	strMsg.Format("PSTI067 Interval : %d", ackCmd[6]);
+	add_msgtolist(strMsg);
+
+	return err;
+}
+
 CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti004(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QueryPstiCmd].cmdSize);
@@ -5257,7 +5267,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti004(CmdExeMode nMode, void* outputData)
 
 	return err;
 }
-
+*/
 CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkMode2(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QueryRtkModeCmd2].cmdSize);
@@ -5407,6 +5417,44 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkMode2(CmdExeMode nMode, void* outputData)
 	return Ack;
 }
 
+CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkSlaveBaud(CmdExeMode nMode, void* outputData)
+{ 
+	BinaryCommand cmd(cmdTable[QueryRtkSlaveBaudCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryRtkSlaveBaudCmd].cmdId);
+	cmd.SetU08(2, cmdTable[QueryRtkSlaveBaudCmd].cmdSubId);
+
+	BinaryData ackCmd;
+	CmdErrorCode err = ExcuteBinaryCommand(QueryRtkSlaveBaudCmd, &cmd, &ackCmd, (nMode == Display) ? 3000 : 1000);
+	if(err != Ack)
+	{
+		return err;
+	}
+
+	if(Return == nMode)
+	{	//Return command data
+    *((BinaryData*)outputData) = ackCmd;
+		return err;
+	}
+
+	CString strMsg;
+	strMsg = "Query RTK slave serial port baud rate successfully";
+	add_msgtolist(strMsg);
+  strMsg.Format("Slave baud rate: %d", g_setting.BaudrateValue(ackCmd[6]));
+	add_msgtolist(strMsg);
+
+	return Ack;
+}
+CGPSDlg::CmdErrorCode CGPSDlg::ClearRtkSlaveData(CmdExeMode nMode, void* outputData)
+{ 
+	BinaryCommand cmd(cmdTable[ClearRtkSlaveDataCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[ClearRtkSlaveDataCmd].cmdId);
+	cmd.SetU08(2, cmdTable[ClearRtkSlaveDataCmd].cmdSubId);
+  
+  bool ret = ExecuteConfigureCommand(cmd.GetBuffer(), cmd.Size(), "Clear RTK slave backup data successfully", false);
+
+  return (ret) ? Ack : Timeout;
+}
+
 CGPSDlg::CmdErrorCode CGPSDlg::QueryBasePosition(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[QueryBasePositionCmd].cmdSize);
@@ -5524,6 +5572,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryChannelDoppler(CmdExeMode nMode, void* outpu
 	{
 		add_msgtolist(strMsg);
 	}
+
 	for(int i=0; i<ChannelCount; ++i)
 	{
 		BinaryCommand cmd(cmdTable[QueryChannelDopplerCmd].cmdSize);
@@ -5892,7 +5941,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::InsdrLeaveUart(CmdExeMode nMode, void* outputData
 	cmd.SetU08(4, 0x00);
 
 	ClearQue();
-	bool r = SendToTarget(cmd.GetBuffer(), cmd.Size(), "Back To Master successfully", true);	
+	bool r = SendToTargetAndCheckAck(cmd.GetBuffer(), cmd.Size(), "Back To Master successfully", 1000, 3);	
 	return (r) ? Ack : Timeout;
 }
 
@@ -5995,6 +6044,24 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryCustomerID(CmdExeMode nMode, void* outputDat
 		add_msgtolist(strMsg);
 		strMsg.Format("Customer ID : 0X%08X",
 			MAKELONG(MAKEWORD(ackCmd[8], ackCmd[7]),MAKEWORD(ackCmd[6], ackCmd[5])));
+		add_msgtolist(strMsg);
+	}
+	return Timeout;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::Query1ppsPulseWidth(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(cmdTable[Query1ppsFreqencyOutputCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[Query1ppsFreqencyOutputCmd].cmdId);
+	cmd.SetU08(2, cmdTable[Query1ppsFreqencyOutputCmd].cmdSubId);
+
+	BinaryData ackCmd;
+	if(Ack == ExcuteBinaryCommand(Query1ppsFreqencyOutputCmd, &cmd, &ackCmd))
+	{
+		CString strMsg = "Query 1PPS pulse width successfully";
+		add_msgtolist(strMsg);
+		strMsg.Format("1PPS Pulse Width : %dus",
+			MAKELONG(MAKEWORD(ackCmd[9], ackCmd[8]),MAKEWORD(ackCmd[7], ackCmd[6])));
 		add_msgtolist(strMsg);
 	}
 	return Timeout;
@@ -6208,7 +6275,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryCableDelay(CmdExeMode nMode, void* outputDat
 		strMsg = "Query 1PPS Cable Delay successfully";
 		add_msgtolist(strMsg);
 
-		U32 data = ackCmd[5]<<24 | ackCmd[6]<<16 | ackCmd[7]<<8 | ackCmd[8];
+		S32 data = ackCmd[5]<<24 | ackCmd[6]<<16 | ackCmd[7]<<8 | ackCmd[8];
 		strMsg.Format("Cable delay: %0.2fns", data / 100.0);
 		add_msgtolist(strMsg);
 	}
@@ -6360,14 +6427,14 @@ void CGPSDlg::GetGpsAlmanac(CString m_almanac_filename,U08 sv,U08 continues)
 	ClearQue();
 	if(SendToTarget(m_inputMsg, len, "Get Almance start...", true) == 1)
 	{
-		if(WRL == NULL)
+		if(g_waitReadDialog == NULL)
 		{
-			WRL = new CWaitReadLog;
+			g_waitReadDialog = new CWaitReadLog;
 		}
 		AfxBeginThread(WaitLogRead,0);
 		WaitForSingleObject(waitlog,INFINITE);
-		WRL->SetWindowText("Wait for get almanac");
-		WRL->msg.SetWindowText("Please wait for get almanac!");
+		g_waitReadDialog->SetWindowText("Wait for get almanac");
+		g_waitReadDialog->msg.SetWindowText("Please wait for get almanac!");
 
 		U08 NumsOfEphemeris = 0;
 		fopen_s(&f, m_almanac_filename, "wb+");
@@ -6379,9 +6446,9 @@ void CGPSDlg::GetGpsAlmanac(CString m_almanac_filename,U08 sv,U08 continues)
 			if(wait == 50)
 			{ 
 				Sleep(500);
-				WRL->msg.SetWindowText("Retrieve almanac data is Failed!");
+				g_waitReadDialog->msg.SetWindowText("Retrieve almanac data is Failed!");
 				Sleep(500);
-				WRL->IsFinish = true;
+				g_waitReadDialog->IsFinish = true;
 				add_msgtolist("Retrieve almanac Failed...");	
 				//goto TheLast;
 			}
@@ -6402,15 +6469,15 @@ void CGPSDlg::GetGpsAlmanac(CString m_almanac_filename,U08 sv,U08 continues)
 			NumsOfEphemeris = buff[7];
 			//	}
 			sprintf_s(BINMSG,"Retrieve Satellite ID # %d almanac",NumsOfEphemeris);
-			WRL->msg.SetWindowText(BINMSG);
+			g_waitReadDialog->msg.SetWindowText(BINMSG);
 
 			if(NumsOfEphemeris==32)break;
 			//}
 		}	
 		Sleep(500);
-		WRL->msg.SetWindowText("Retrieve almanac data is completed!");
+		g_waitReadDialog->msg.SetWindowText("Retrieve almanac data is completed!");
 		Sleep(500);
-		WRL->IsFinish = true;
+		g_waitReadDialog->IsFinish = true;
 		add_msgtolist("Retrieve almanac successfully");	
 	}
 
@@ -6607,14 +6674,14 @@ void CGPSDlg::GetGlonassAlmanac(CString m_almanac_filename,U08 sv,U08 continues)
 	ClearQue();
 	if(SendToTarget(m_inputMsg,len, "Get Glonass Almance start...", true) == 1)
 	{
-		if(WRL == NULL)
+		if(g_waitReadDialog == NULL)
 		{
-			WRL = new CWaitReadLog;
+			g_waitReadDialog = new CWaitReadLog;
 		}
-		AfxBeginThread(WaitLogRead,0);
-		WaitForSingleObject(waitlog,INFINITE);
-		WRL->SetWindowText("Wait for get Glonass almanac");
-		WRL->msg.SetWindowText("Please wait for get Glonass almanac!");
+		AfxBeginThread(WaitLogRead, 0);
+		WaitForSingleObject(waitlog, INFINITE);
+		g_waitReadDialog->SetWindowText("Wait for get Glonass almanac");
+		g_waitReadDialog->msg.SetWindowText("Please wait for get Glonass almanac!");
 
 		U08 NumsOfEphemeris = 0;
 
@@ -6626,9 +6693,9 @@ void CGPSDlg::GetGlonassAlmanac(CString m_almanac_filename,U08 sv,U08 continues)
 			wait++;
 			if(wait == 50){ 
 				Sleep(500);
-				WRL->msg.SetWindowText("Retrieve Glonass almanac data is Failed!");
+				g_waitReadDialog->msg.SetWindowText("Retrieve Glonass almanac data is Failed!");
 				Sleep(500);
-				WRL->IsFinish = true;
+				g_waitReadDialog->IsFinish = true;
 				add_msgtolist("Retrieve Glonass almanac Failed...");	
 				//goto TheLast;
 			}
@@ -6651,14 +6718,14 @@ void CGPSDlg::GetGlonassAlmanac(CString m_almanac_filename,U08 sv,U08 continues)
 			NumsOfEphemeris = buff[5];
 			TRACE("NumsOfEphemeris=%d\r\n",NumsOfEphemeris);
 			sprintf_s(BINMSG, sizeof(BINMSG), "Retrieve Glonass Satellite ID # %d almanac", NumsOfEphemeris);
-			WRL->msg.SetWindowText(BINMSG);
+			g_waitReadDialog->msg.SetWindowText(BINMSG);
 
 			if(NumsOfEphemeris==24)break;
 		}	
 		Sleep(500);
-		WRL->msg.SetWindowText("Retrieve Glonass almanac data is completed!");
+		g_waitReadDialog->msg.SetWindowText("Retrieve Glonass almanac data is completed!");
 		Sleep(500);
-		WRL->IsFinish = true;
+		g_waitReadDialog->IsFinish = true;
 		add_msgtolist("Retrieve Glonass almanac successfully");	
 
 	}
@@ -6839,14 +6906,14 @@ void CGPSDlg::GetBeidouAlmanac(CString m_almanac_filename, U08 sv, U08 continues
 	ClearQue();
 	if(SendToTarget(m_inputMsg, len, "Get Beidou2 almance start...", true) == 1)
 	{
-		if(WRL == NULL)
+		if(g_waitReadDialog == NULL)
 		{
-			WRL = new CWaitReadLog;
+			g_waitReadDialog = new CWaitReadLog;
 		}
 		AfxBeginThread(WaitLogRead,0);
 		WaitForSingleObject(waitlog,INFINITE);
-		WRL->SetWindowText("Waiting for get Beidou2 almanac...");
-		WRL->msg.SetWindowText("Please wait for the Beidou2 almanac.");
+		g_waitReadDialog->SetWindowText("Waiting for get Beidou2 almanac...");
+		g_waitReadDialog->msg.SetWindowText("Please wait for the Beidou2 almanac.");
 
     U08 NumsOfEphemeris = 0;
 		fopen_s(&f, m_almanac_filename, "wb+");
@@ -6858,9 +6925,9 @@ void CGPSDlg::GetBeidouAlmanac(CString m_almanac_filename, U08 sv, U08 continues
 			if(wait == 50)
 			{ 
 				Sleep(500);
-				WRL->msg.SetWindowText("Retrieving the Beidou2 almanac data fails!");
+				g_waitReadDialog->msg.SetWindowText("Retrieving the Beidou2 almanac data fails!");
 				Sleep(500);
-				WRL->IsFinish = true;
+				g_waitReadDialog->IsFinish = true;
 				add_msgtolist("Retrieving the Beidou2 almanac fails!");	
 			}
 			U08 buff[1024] = {0};
@@ -6879,15 +6946,15 @@ void CGPSDlg::GetBeidouAlmanac(CString m_almanac_filename, U08 sv, U08 continues
 
 			NumsOfEphemeris = buff[8];
 			sprintf_s(BINMSG, sizeof(BINMSG), "Retrieving the Beidou2 satellite ID #%d almanac.", NumsOfEphemeris);
-			WRL->msg.SetWindowText(BINMSG);
+			g_waitReadDialog->msg.SetWindowText(BINMSG);
 
 			if(NumsOfEphemeris==37)
 				break;
 		}	
 		Sleep(500);
-		WRL->msg.SetWindowText("Retrieving the Beidou2 almanac data complete.");
+		g_waitReadDialog->msg.SetWindowText("Retrieving the Beidou2 almanac data complete.");
 		Sleep(500);
-		WRL->IsFinish = true;
+		g_waitReadDialog->IsFinish = true;
 		add_msgtolist("Retrieving the Beidou2 almanac successfully.");	
 	}
 
@@ -7167,6 +7234,26 @@ void CGPSDlg::DoCommonConfigDirect(CCommonConfigDlg* dlg, int type)
 	}
 }
 
+bool CGPSDlg::DoCConfigRegisterDirect(U32 addr, U32 value)
+{
+	CWaitCursor wait;
+	BinaryData cmd(9);
+	*cmd.GetBuffer(0) = 0x72;
+	*cmd.GetBuffer(1) = addr >> 24 & 0xFF;;
+	*cmd.GetBuffer(2) = addr >> 16 & 0xFF;;
+	*cmd.GetBuffer(3) = addr >>  8 & 0xFF;;
+	*cmd.GetBuffer(4) = addr >>  0 & 0xFF;;
+
+	*cmd.GetBuffer(5) = value >> 24 & 0xFF;;
+	*cmd.GetBuffer(6) = value >> 16 & 0xFF;;
+	*cmd.GetBuffer(7) = value >>  8 & 0xFF;;
+	*cmd.GetBuffer(8) = value >>  0 & 0xFF;;
+  
+  BinaryCommand configCmd;
+	configCmd.SetData(cmd);
+	return ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "", 0);
+}
+
 void CGPSDlg::OnBinaryConfigureQZSS()
 {
 	CConfigQZSS dlg;
@@ -7292,13 +7379,13 @@ void CGPSDlg::OnConfigRtcmMeasurementDataOut()
 	ConfigRtcmMeasurementDataOutDlg dlg;
 	DoCommonConfig(&dlg);
 }
-/*
+
 void CGPSDlg::OnBinaryConfigurepowermode()
 {
 	CConfigPowerMode dlg;
 	DoCommonConfig(&dlg);
 }
-*/
+
 void CGPSDlg::OnSup800EraseData()
 {
 	CSUP800EraseUserDataDlg dlg;
@@ -7418,6 +7505,12 @@ void CGPSDlg::OnConfigRtkMode2()
 	DoCommonConfig(&dlg);
 }
 
+void CGPSDlg::OnConfigRtkSlaveBaud()
+{
+	CConfigRtkSlaveBaud dlg;
+	DoCommonConfig(&dlg);
+}
+
 void CGPSDlg::OnConfigBasePosition()
 {
 	CConfigRtkMode2 dlg;
@@ -7490,6 +7583,41 @@ void CGPSDlg::OnConfigPsti033()
 	DoCommonConfig(&dlg);
 }
 
+void CGPSDlg::OnConfigPsti063()
+{
+	CConfigPstiInterval dlg;
+  dlg.SetPsti(63);
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigPsti065()
+{
+	CConfigPstiInterval dlg;
+  dlg.SetPsti(65);
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigPsti067()
+{
+	CConfigPstiInterval dlg;
+  dlg.SetPsti(67);
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigPsti068()
+{
+	CConfigPstiInterval dlg;
+  dlg.SetPsti(68);
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigPsti070()
+{
+	CConfigPstiInterval dlg;
+  dlg.SetPsti(70);
+	DoCommonConfig(&dlg);
+}
+
 void CGPSDlg::OnConfigPsti004()
 {
 	CConfigPstiInterval dlg;
@@ -7528,6 +7656,18 @@ void CGPSDlg::OnRtkOnOffBeidouSv()
 void CGPSDlg::OnQueryRtkReferencePosition()
 {
 	CConfigRtkReferencePosition dlg;
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigDrRate()
+{
+	CDrUpdateRateDlg dlg;
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigDrRawRate()
+{
+	CDrRawRateDlg dlg;
 	DoCommonConfig(&dlg);
 }
 
@@ -7637,7 +7777,6 @@ CGPSDlg::CmdErrorCode CGPSDlg::ReCalcuteGlonassIfb(CmdExeMode nMode, void* outpu
 
 CGPSDlg::CmdErrorCode CGPSDlg::BinaryQueryClockOffset(CmdExeMode nMode, void* outputData)
 {
-
   U32 temp = m_regAddress;
   U32 runTimeClkOft = 0, sramClkOft = 0, flashClkOst = 0;
 
@@ -7859,7 +7998,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::EnterRtkDebugMode(CmdExeMode nMode, void* outputD
 	cmd.SetU08(4, 0x01);
 	cmd.SetU08(5, 0x00);
 
-	BinaryData ackCmd;
+	//BinaryData ackCmd;
  	CGPSDlg::gpsDlg->ExecuteConfigureCommand(cmd.GetBuffer(), cmd.Size(), "Enter RTK debug mode successfully", false);
 	return Ack;
 }
@@ -7873,7 +8012,164 @@ CGPSDlg::CmdErrorCode CGPSDlg::BackRtkDebugMode(CmdExeMode nMode, void* outputDa
 	cmd.SetU08(4, 0x00);
 	cmd.SetU08(5, 0x00);
 
-	BinaryData ackCmd;
+	//BinaryData ackCmd;
  	CGPSDlg::gpsDlg->ExecuteConfigureCommand(cmd.GetBuffer(), cmd.Size(), "Back from RTK debug mode successfully", false);
 	return Ack;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryDrRate(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryDrRateCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryDrRateCmd].cmdId);
+  cmd.SetU08(2, cmdTable[QueryDrRateCmd].cmdSubId);
+
+	BinaryData ackCmd;
+	CmdErrorCode err = ExcuteBinaryCommand(QueryDrRateCmd, &cmd, &ackCmd, (nMode == Display) ? 3000 : 1000);
+	if(err != Ack)
+	{
+    return err;
+  }
+
+	if(Return == nMode)
+	{
+    *((BinaryData*)outputData) = ackCmd;
+		return err;
+	}
+
+	add_msgtolist("Query DR predict update rate successfully");
+  CString strMsg;
+  strMsg.Format("DR predict update rate:%d", ackCmd[6]);
+  add_msgtolist(strMsg);
+
+	return err;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryDrRawRate(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[QueryDrRawRateCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryDrRawRateCmd].cmdId);
+  cmd.SetU08(2, cmdTable[QueryDrRawRateCmd].cmdSubId);
+
+	BinaryData ackCmd;
+	CmdErrorCode err = ExcuteBinaryCommand(QueryDrRawRateCmd, &cmd, &ackCmd, (nMode == Display) ? 3000 : 1000);
+	if(err != Ack)
+	{
+    return err;
+  }
+
+	if(Return == nMode)
+	{
+    *((BinaryData*)outputData) = ackCmd;
+		return err;
+	}
+
+	add_msgtolist("Query DR RAW sensor data output rate successfully");
+  CString strMsg;
+  strMsg.Format("RAW sensor data output rate:%d", ackCmd[6]);
+  add_msgtolist(strMsg);
+
+	return err;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::SendComCmdWithAck(HANDLE com, U08* cmd, int size, DWORD timeout)
+{
+	ScopeTimer t;
+	DWORD error = 0;
+	COMSTAT comStatus = {0};
+	ClearCommError(com, &error, &comStatus);
+
+  PurgeComm(com, PURGE_RXCLEAR);
+	FlushFileBuffers(com);
+  DWORD dwBytesRead = 0;
+  ::WriteFile(com, cmd, size, &dwBytesRead, 0);  
+
+  U08 cmdAck[128];
+	while(NULL != com)
+	{
+		if(CGPSDlg::gpsDlg->CheckTimeOut(t.GetDuration(), timeout, true))
+		{	//Time Out
+			return Timeout;
+		}
+
+    DWORD len = CSerial::GetComBinaryAck(com, cmdAck, 128, timeout - t.GetDuration());
+		if(!ReadOK(len))
+		{	
+			continue;
+		}
+
+		int cmdSize = MAKEWORD(cmdAck[3], cmdAck[2]);
+		if(cmdSize != len - 7)
+		{	//Packet Size Error
+			continue;
+		}
+		if(cmdAck[0] != 0xa0 || cmdAck[1] != 0xa1 ||
+			 cmdAck[len-2] != 0x0d || cmdAck[len-1] != 0x0a)
+		{	//Format Error
+			continue;
+		}
+		if(cmdAck[4] == 0x83 && cmdAck[5] == 0x0)
+		{	//ACK0
+			continue;
+		}
+		if(cmdAck[4] == 0x84)
+		{	//NACK
+			return NACK;
+		}
+		if(cmdAck[4] == 0x85)
+		{	//FormatError
+			return FormatError;
+		}
+		if(cmdAck[4] == 0x83)
+		{	//Get ACK
+			return Ack;
+		}
+	}
+	return Timeout;
+}
+
+void CGPSDlg::OnConfigure1PpsOutputMode()
+{
+	C1ppsOutputModeDlg dlg;
+	DoCommonConfig(&dlg);
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryPpsOutputMode(CmdExeMode nMode, void* outputData)
+{
+	BinaryCommand cmd(cmdTable[GetPpsOutputModeCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[GetPpsOutputModeCmd].cmdId);
+
+	BinaryData ackCmd;
+  CmdErrorCode err = ExcuteBinaryCommand(GetPpsOutputModeCmd, &cmd, &ackCmd, (nMode == Display) ? 3000 : 1000);
+	if(err != Ack)
+	{
+    return err;
+  }
+
+  if(Return == nMode)
+	{	
+    *((BinaryData*)outputData) = ackCmd;
+		return err;
+  }
+
+	CString strMsg = "Query 1PPS output mode successfully";
+	add_msgtolist(strMsg);
+
+
+	if(ackCmd[5] == 0)
+		CGPSDlg::gpsDlg->add_msgtolist("PPS No Output");
+	else if(ackCmd[5] == 1)
+		CGPSDlg::gpsDlg->add_msgtolist("PPS Output if GPS/UTC time is available");
+	else if(ackCmd[5] == 2)
+	{
+		CGPSDlg::gpsDlg->add_msgtolist("PPS Output always and align to GPS/UTC time");
+	}
+
+  if(ackCmd[6]==0)
+		CGPSDlg::gpsDlg->add_msgtolist("Align to GPS time");
+	else if(ackCmd[6] == 1)
+		CGPSDlg::gpsDlg->add_msgtolist("Align to UTC time");
+	else if(ackCmd[6] == 2)
+		CGPSDlg::gpsDlg->add_msgtolist("Align to NAVIC");
+
+  return Ack;
 }

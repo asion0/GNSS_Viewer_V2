@@ -35,5 +35,4 @@ protected:
 	
 	CEdit m_msg;
 	CEdit m_percent;
-//	CButton m_close;
 };

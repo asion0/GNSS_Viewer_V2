@@ -396,7 +396,7 @@ protected:
 };
 
 // CConfigPowerMode 
-/*
+
 class CConfigPowerMode : public CCommonConfigDlg
 {
 	DECLARE_DYNAMIC(CConfigPowerMode)
@@ -415,7 +415,6 @@ protected:
 	
 	DECLARE_MESSAGE_MAP()
 };
-*/
 
 // CConfigParamSearchEngineSleepCRiteria
 class CConfigParamSearchEngineSleepCriteria : public CCommonConfigDlg
@@ -1137,6 +1136,109 @@ protected:
   U08 m_fifoMode;
 
 	void UpdateStatus();
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CPositionUpdateRateDlg
+class CPositionUpdateRateDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CPositionUpdateRateDlg)
+public:
+ 	CPositionUpdateRateDlg(CWnd* pParent = NULL);   
+	virtual ~CPositionUpdateRateDlg() {};
+
+	virtual void DoCommand();
+	virtual BOOL OnInitDialog();
+
+	afx_msg void OnBnClickedOk();
+protected:
+  U08 m_rate;
+	U08 m_attribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CDrUpdateRateDlg
+class CDrUpdateRateDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CDrUpdateRateDlg)
+public:
+ 	CDrUpdateRateDlg(CWnd* pParent = NULL);   
+	virtual ~CDrUpdateRateDlg() {};
+
+	virtual void DoCommand();
+	virtual BOOL OnInitDialog();
+
+	afx_msg void OnBnClickedOk();
+protected:
+  U08 m_rate;
+	U08 m_attribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CDrRawRateDlg
+class CDrRawRateDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CDrRawRateDlg)
+public:
+ 	CDrRawRateDlg(CWnd* pParent = NULL);   
+	virtual ~CDrRawRateDlg() {};
+
+	virtual void DoCommand();
+	virtual BOOL OnInitDialog();
+
+	afx_msg void OnBnClickedOk();
+protected:
+  U08 m_rate;
+	U08 m_attribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigRtkSlaveBaud
+class CConfigRtkSlaveBaud : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigRtkSlaveBaud)
+public:
+	CConfigRtkSlaveBaud(CWnd* pParent = NULL);   
+	virtual ~CConfigRtkSlaveBaud() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+
+	virtual BOOL OnInitDialog();
+
+protected:
+	int m_rate;
+  int m_nAttribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// C1ppsOutputModeDlg
+class C1ppsOutputModeDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(C1ppsOutputModeDlg)
+public:
+ 	C1ppsOutputModeDlg(CWnd* pParent = NULL);   
+	virtual ~C1ppsOutputModeDlg() {};
+
+	virtual void DoCommand();
+	virtual BOOL OnInitDialog();
+
+	afx_msg void OnBnClickedNoOutput();
+	afx_msg void OnBnClickedOutputHaveGpsTime();
+	afx_msg void OnBnClickedOutputAlign();
+	afx_msg void OnBnClickedAlignToGps();
+	afx_msg void OnBnClickedAlignToUtc();
+	afx_msg void OnBnClickedAlignToNavic();
+	afx_msg void OnBnClickedOk();
+protected:
+  U08 m_mode;
+  U08 m_align;
+	U08 m_attribute;
 
 	DECLARE_MESSAGE_MAP()
 };

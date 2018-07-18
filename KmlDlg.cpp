@@ -219,6 +219,7 @@ void CKmlDlg::GetDataFiles(BOOL autoChecked)
     CString sFilterName = sPath + "*.*";
     int num = 0;
     BOOL bExist = finder.FindFile(sFilterName);
+    m_fileList.ResetContent();
     while (bExist) {
         bExist = finder.FindNextFile(); 
         if(finder.IsDirectory())
@@ -388,7 +389,8 @@ void CKmlDlg::convert_all_file()
 			int find = kml_filename.ReverseFind('.');
 			kml_filename = kml_filename.Mid(0,find);   
 
-			Convert(f);
+			//Convert(f);
+			Convert2(f);
 			f.Close();
 
 			temp.Format("%s OK", FileName[i]);
@@ -573,7 +575,7 @@ U08 CKmlDlg::NMEA_PROC(const char* buffer, int offset)
 		nmea.ShowGNSmsg(msg_gpgga, buffer, offset);
 		break; 
 	case MSG_GPGSA:
-		nmea.ShowGNGSAmsg(msg_gpgsa, msg_glgsa, msg_bdgsa, msg_gagsa, buffer, offset);
+		nmea.ShowGNGSAmsg(msg_gpgsa, msg_glgsa, msg_bdgsa, msg_gagsa, msg_gigsa, buffer, offset);
 		kml.msg_gpgsa = &msg_gpgsa;
 		break;
 	case MSG_GLGSA:
@@ -581,11 +583,12 @@ U08 CKmlDlg::NMEA_PROC(const char* buffer, int offset)
 		kml.msg_glgsa = &msg_glgsa;
 		break;
 	case MSG_GNGSA:
-		nmea.ShowGNGSAmsg(msg_gpgsa, msg_glgsa, msg_bdgsa, msg_gagsa, buffer, offset);
+		nmea.ShowGNGSAmsg(msg_gpgsa, msg_glgsa, msg_bdgsa, msg_gagsa, msg_gigsa, buffer, offset);
 		kml.msg_gpgsa = &msg_gpgsa;
 		kml.msg_glgsa = &msg_glgsa;
 		kml.msg_bdgsa = &msg_bdgsa;
 		kml.msg_gagsa = &msg_gagsa;
+		kml.msg_gigsa = &msg_gigsa;
 		break;
 	case MSG_BDGSA:
 		nmea.ShowBDGSAmsg(msg_bdgsa, buffer, offset);
@@ -596,17 +599,11 @@ U08 CKmlDlg::NMEA_PROC(const char* buffer, int offset)
 		kml.msg_gagsa = &msg_gagsa;
 		break;
 	case MSG_GIGSA:
-		nmea.ShowGIGSAmsg(msg_glgsa, buffer, offset);
-		kml.msg_glgsa = &msg_glgsa;
+		nmea.ShowGIGSAmsg(msg_gigsa, buffer, offset);
+		kml.msg_gigsa = &msg_gigsa;
 		break;
 	case MSG_GPGSV:
-		//nmea.ShowGPGSVmsg2(msg_gpgsv, msg_glgsv, msg_bdgsv, msg_gagsv, buffer, offset);
-//#if(SUPPORT_BDL2_GSV2)
-//		nmea.ShowGPGSVmsg2(msg_gpgsv, msg_gpgsv, msg_glgsv, msg_glgsv, msg_bdgsv, msg_bdgsv, msg_gagsv, buffer, offset);
-//#else
-		nmea.ShowGPGSVmsg2(msg_gpgsv, msg_glgsv, msg_bdgsv, msg_gagsv, buffer, offset);
-//#endif
-
+		nmea.ShowGPGSVmsg2(msg_gpgsv, msg_glgsv, msg_bdgsv, msg_gagsv, msg_gigsv, buffer, offset);
 		kml.msg_gpgsv = &msg_gpgsv;
 		kml.satellites_gp = &nmea.satellites_gp;
 		break;
@@ -626,9 +623,9 @@ U08 CKmlDlg::NMEA_PROC(const char* buffer, int offset)
 		kml.satellites_ga = &nmea.satellites_ga;
 		break;
 	case MSG_GIGSV:
-		nmea.ShowGLGSVmsg(msg_glgsv, buffer, offset);
-		kml.msg_glgsv = &msg_glgsv;
-		kml.satellites_gl = &nmea.satellites_gl;
+		nmea.ShowGIGSVmsg(msg_gigsv, buffer, offset);
+		kml.msg_gigsv = &msg_gigsv;
+		kml.satellites_gi = &nmea.satellites_gi;
 		break;
 	case MSG_GNGSV:
 		//nmea.ShowGAGSVmsg(msg_gagsv, buffer, offset);
@@ -667,7 +664,7 @@ void CKmlDlg::Convert(CFile& f)
 	while(dwBytesRemaining)
 	{	
 		CString tmp_file;
-		tmp_file.Format("%s%d%s", kml_filename,file_tail,".kml");
+		tmp_file.Format("%s%d%s", kml_filename,file_tail, ".kml");
 		
 		kml.Init(tmp_file, color, (b3d==1), (bPointList==1), (bNoPointText==1), (bDetailInfo==1));
 		while(dwBytesRemaining)
@@ -679,11 +676,11 @@ void CKmlDlg::Convert(CFile& f)
 				CKmlDlg::kmlDlg->PostMessage(UWM_PROGRESS, 1, lastProgress);	//Show progress
 			}
 
-			memset(nmea,0,200);		
+			memset(nmea, 0, 200);		
 			nBytesRead = GET_NMEA_SENTENCE(f, nmea);						
 			nmeaType = NMEA_PROC((const char*)nmea, nBytesRead - 1);			    	
 			dwBytesRemaining-=nBytesRead;	
-			if ((nmeaType==MSG_GGA || nmeaType==MSG_RMC || nmeaType==MSG_GNS) && WriteToFile(nmeaType)) 
+			if((nmeaType == MSG_GGA || nmeaType == MSG_RMC || nmeaType == MSG_GNS) && WriteToFile(nmeaType)) 
 			{
 				write_count++;
 				if ( write_count > 65000)
@@ -695,6 +692,69 @@ void CKmlDlg::Convert(CFile& f)
 			}
 		}
 		kml.Finish();
+		CKmlDlg::kmlDlg->PostMessage(UWM_PROGRESS, 1, 1000);
+		lastProgress = 1000;
+
+	}	
+	if(!SetEvent(hReadEvent))	
+	{
+		DWORD error = GetLastError();
+	}
+}
+
+void CKmlDlg::Convert2(CFile& f)
+{
+	int nBytesRead;
+	UINT retCode = 0;	
+	U08 nmea[200];
+	CString temp;
+	ULONGLONG  dwBytesRemaining = f.GetLength();
+	U08 nmeaType;
+
+	int write_count = 0;
+	int file_tail = 0;
+	int b3d = ((CButton*)GetDlgItem(IDC_3DKML))->GetCheck();
+	int bPointList = ((CButton*)GetDlgItem(IDC_POINTLIST))->GetCheck();
+	int bNoPointText = ((CButton*)GetDlgItem(IDC_NO_TITLE))->GetCheck();
+	int bDetailInfo = ((CButton*)GetDlgItem(IDC_DETAIL_INFO))->GetCheck();
+	int color_index = m_color.GetCurSel(); 
+	//Red;Yellow;Blue;Green;
+	const U32 colors[] = {0x0000ff, 0x00FFFF, 0xff0000, 0x00ff00};
+	U32 color = colors[color_index];
+
+	ut = Unknown;
+	int lastProgress = 0;
+	while(dwBytesRemaining)
+	{	
+		CString tmp_file;
+		tmp_file.Format("%s%d%s", kml_filename,file_tail, ".kml");
+		
+		kml.Init(tmp_file, color, (b3d==1), (bPointList==1), (bNoPointText==1), (bDetailInfo==1));
+		while(dwBytesRemaining)
+		{
+			int progress = (int)(((double)(f.GetLength() - dwBytesRemaining) / f.GetLength()) * 1000);
+			if(progress != lastProgress)
+			{
+				lastProgress = progress;
+				CKmlDlg::kmlDlg->PostMessage(UWM_PROGRESS, 1, lastProgress);	//Show progress
+			}
+
+			memset(nmea, 0, 200);		
+			nBytesRead = GET_NMEA_SENTENCE(f, nmea);						
+			nmeaType = NMEA_PROC((const char*)nmea, nBytesRead - 1);			    	
+			dwBytesRemaining-=nBytesRead;	
+			if((nmeaType == MSG_GGA || nmeaType == MSG_RMC || nmeaType == MSG_GNS) && WriteToFile2(nmeaType)) 
+			{
+				write_count++;
+				if ( write_count > 65000)
+				{
+					write_count = 0;
+					file_tail++;
+					break;
+				}
+			}
+		}
+		kml.Finish2();
 		CKmlDlg::kmlDlg->PostMessage(UWM_PROGRESS, 1, 1000);
 		lastProgress = 1000;
 
@@ -740,8 +800,6 @@ bool CKmlDlg::WriteToFile(U08 type)
 		if(IsFixed(msg_gprmc.Status))
 			ut = UsingRMC;
 	}
-	//if(IsFixed(msg_gprmc.Status))
-	//	ut = UsingRMC;
 
 	if(ut == UsingGGA && last_hh == msg_gpgga.Hour && last_mm == msg_gpgga.Min && last_ss == msg_gpgga.Sec)
 	{
@@ -754,15 +812,13 @@ bool CKmlDlg::WriteToFile(U08 type)
 
 	if(ut == UsingGGA && (type==MSG_GGA || type==MSG_GNS) && IsFixed(msg_gpgga.GPSQualityIndicator))
 	{
-    if(msg_gpgga.Hour == 9 && msg_gpgga.Min == 53 && (int)(msg_gpgga.Sec) == 4)
-    {
-      int a = 0;
-    }
     CString timeStr;
 		timeStr.Format("%02d:%02d:%05.2f", msg_gpgga.Hour, msg_gpgga.Min, msg_gpgga.Sec);
 		kml.PushOnePoint(GetLon(msg_gpgga.Longitude, msg_gpgga.Longitude_E_W), 
-			GetLat(msg_gpgga.Latitude, msg_gpgga.Latitude_N_S), msg_gpgga.Altitude, timeStr, 
-      GetGnssQualityMode(msg_gpgga.GPSQualityIndicator, (U08)msg_gpgsa.Mode, (U08)msg_glgsa.Mode, (U08)msg_gagsa.Mode, (U08)msg_bdgsa.Mode));
+			GetLat(msg_gpgga.Latitude, msg_gpgga.Latitude_N_S), 
+      msg_gpgga.Altitude, 
+      timeStr, 
+      GetGnssQualityMode(msg_gpgga.GPSQualityIndicator, (U08)msg_gpgsa.Mode, (U08)msg_glgsa.Mode, (U08)msg_gagsa.Mode, (U08)msg_bdgsa.Mode, (U08)msg_gigsa.Mode));
 		last_hh = msg_gpgga.Hour;
 		last_mm = msg_gpgga.Min;
 		last_ss = msg_gpgga.Sec;
@@ -770,14 +826,13 @@ bool CKmlDlg::WriteToFile(U08 type)
 	}
 	else if (ut == UsingRMC && type==MSG_RMC && msg_gprmc.Status == 'A')
 	{
-    if(msg_gprmc.Hour == 10 && msg_gprmc.Min == 9 && (int)(msg_gprmc.Sec) == 57)
-    {
-      int a = 0;
-    }
 		CString timeStr;
 		timeStr.Format("%02d:%02d:%05.2f", msg_gprmc.Hour, msg_gprmc.Min, msg_gprmc.Sec);
 		kml.PushOnePoint(GetLon(msg_gprmc.Longitude, msg_gprmc.Longitude_E_W), 
-			GetLat(msg_gprmc.Latitude, msg_gprmc.Latitude_N_S), msg_gpgga.Altitude, timeStr, GetGnssQualityMode(msg_gprmc.ModeIndicator));
+			GetLat(msg_gprmc.Latitude, msg_gprmc.Latitude_N_S), 
+      msg_gpgga.Altitude, 
+      timeStr, 
+      GetGnssQualityMode(msg_gprmc.ModeIndicator));
 		last_hh = msg_gprmc.Hour;
 		last_mm = msg_gprmc.Min;
 		last_ss = msg_gprmc.Sec;
@@ -785,6 +840,66 @@ bool CKmlDlg::WriteToFile(U08 type)
 	}
 	return false;
 }
+
+
+bool CKmlDlg::WriteToFile2(U08 type)
+{	
+	static U16 last_hh = 0;
+	static U16 last_mm = 0;
+	static F32 last_ss = -1;
+
+	if(ut == Unknown)
+	{
+		if(IsFixed(msg_gpgga.GPSQualityIndicator))
+			ut = UsingGGA;
+		if(IsFixed(msg_gprmc.Status))
+			ut = UsingRMC;
+	}
+
+	//if(ut == UsingGGA && last_hh == msg_gpgga.Hour && last_mm == msg_gpgga.Min && last_ss == msg_gpgga.Sec)
+	//{
+	//	return false;
+	//}
+	//if(ut == UsingRMC && last_hh == msg_gprmc.Hour && last_mm == msg_gprmc.Min && last_ss == msg_gprmc.Sec)
+	//{
+	//	return false;
+	//}
+
+	if((type == MSG_GGA || type == MSG_GNS) && IsFixed(msg_gpgga.GPSQualityIndicator))
+	{
+    CString timeStr;
+		timeStr.Format("%02d:%02d:%05.2f", msg_gpgga.Hour, msg_gpgga.Min, msg_gpgga.Sec);
+		kml.PushOnePoint2(GetLon(msg_gpgga.Longitude, msg_gpgga.Longitude_E_W), 
+			GetLat(msg_gpgga.Latitude, msg_gpgga.Latitude_N_S), 
+      msg_gpgga.Altitude, 
+      NULL,
+      NULL,
+      timeStr, 
+      GetGnssQualityMode(msg_gpgga.GPSQualityIndicator, (U08)msg_gpgsa.Mode, (U08)msg_glgsa.Mode, (U08)msg_gagsa.Mode, (U08)msg_bdgsa.Mode, (U08)msg_gigsa.Mode));
+		last_hh = msg_gpgga.Hour;
+		last_mm = msg_gpgga.Min;
+		last_ss = msg_gpgga.Sec;
+		return true;
+	}
+	else if (type == MSG_RMC && msg_gprmc.Status == 'A')
+	{
+		CString timeStr;
+		timeStr.Format("%02d:%02d:%05.2f", msg_gprmc.Hour, msg_gprmc.Min, msg_gprmc.Sec);
+		kml.PushOnePoint2(GetLon(msg_gprmc.Longitude, msg_gprmc.Longitude_E_W), 
+			GetLat(msg_gprmc.Latitude, msg_gprmc.Latitude_N_S), 
+      msg_gpgga.Altitude, 
+      &msg_gprmc.SpeedKnots,
+      &msg_gprmc.TrueCourse,
+      timeStr,
+      GetGnssQualityMode(msg_gprmc.ModeIndicator));
+		last_hh = msg_gprmc.Hour;
+		last_mm = msg_gprmc.Min;
+		last_ss = msg_gprmc.Sec;
+		return true;
+	}
+	return false;
+}
+
 
 void CKmlDlg::OnLButtonDown(UINT nFlags, CPoint point)
 {

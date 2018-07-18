@@ -65,6 +65,9 @@ DWORD GetBinary(void *buffer, DWORD bufferSize, CFile& f)
 	U08* bufferIter = (U08*)buffer;
 	DWORD totalSize = 0;
 	DWORD failCount = 10;
+  bool hasHeader = false;
+  bool hasSize = false;
+  U16 headerSize = 0;
 	while(totalSize < bufferSize - 1)
 	{ 
 		DWORD dwBytesDoRead = 0;
@@ -77,12 +80,12 @@ DWORD GetBinary(void *buffer, DWORD bufferSize, CFile& f)
 			if(dwBytesDoRead <= 0)
 			{	//Read fail.
 				DWORD dwErr = ::GetLastError();
-				continue;
+				break;
 			}
 
 			if(totalSize > 0)
 			{	//not first char.
-				if(*bufferIter==0xa1 && *(bufferIter-1)==0xa0)
+				if(!hasHeader && *bufferIter == 0xa1 && *(bufferIter - 1) == 0xa0)
 				{
 					bufferIter -= totalSize;
 					*bufferIter = 0xa0; 
@@ -90,9 +93,11 @@ DWORD GetBinary(void *buffer, DWORD bufferSize, CFile& f)
 					*bufferIter = 0xa1; 
 					++bufferIter;
 					totalSize = 2;
+          hasHeader = true;
 					continue;
 				}
-				else if(*bufferIter==0x0a && *(bufferIter-1)==0x0d)
+				else if(hasHeader && hasSize & (totalSize > headerSize + 3U) && 
+          *bufferIter == 0x0a && *(bufferIter - 1) == 0x0d)
 				{
 					unsigned char *chk_ptr = bufferIter - totalSize;
 					
@@ -111,7 +116,16 @@ DWORD GetBinary(void *buffer, DWORD bufferSize, CFile& f)
 						return totalSize;
 					}
 				}
-			}
+        else if(totalSize == 2)
+        {
+          headerSize = *bufferIter << 8;
+        }
+        else if(totalSize == 3)
+        {
+          headerSize |= *bufferIter;
+          hasSize = true;
+        }
+			} //if(totalSize > 0)
 			++totalSize;
 			if (totalSize >=  bufferSize - 1)
 			{	//Check 
@@ -173,11 +187,11 @@ void BinaryProc(U08* buffer, int len, CFile& f)
 	case 0xE4:		// sub frame data
     //20160913 Don't show SBAS subframe data, request from Ryan and Andrew
 #if(IS_DEBUG)
-		ShowSubframe(buffer);
+		ShowSubframe(buffer, true, &strOutput);
 #endif
 		break;
 	case 0xE5:		// EXT_RAW_MEAS Extended Raw Measurement Data v.1 (0xE5) (Periodic)
-		ExtRawMeas(buffer);
+		ExtRawMeas(buffer, true, &strOutput);
 		break;
 	case BINMSG_ECEF_USER_PVT:
 		ShowBinaryOutput(buffer, true, &strOutput);
@@ -263,16 +277,24 @@ UINT UbloxBinaryOutputConvertThread(LPVOID pParam)
   mp.SetCancelTransmission(&cancelConvert);
   mp.SetReadOneCharCallback(ReadFileOneChar);
 
+  strOutput = "$UBX-TIM-TP,towMS,towSubMS,qErr,week\r\n";
+  strOutput += "$UBX-NAV-SOL,iTOW,fTOW,week,gpsFix,flags,ecefX,ecefY,ecefZ,pAcc,ecefVX,ecefVY,ecefVZ,sAcc,pDop,numSv\r\n";
+  strOutput += "$UBX-NAV-SVINFO,iTOW,numCh,globalFlags\r\n";
+  strOutput += "$UBX-NAV-STATUS,iTOW,gpsFix,flags,fixStat,flags2,ttff,msss\r\n";
+  strOutput += "$UBX-NAV-POSLLH,iTOW,lon,lat,height,hMSL,hAcc,vAcc\r\n";
+  strOutput += "$UBX-NAV-DOP,iTOW,gDOP,pDOP,tDOP,vDOP,hDOP,nDOP,eDOP\r\n";
+  strOutput += "$UBX-NAV-VELEND,iTOW,velN,velE,velD,speed,gSpeed,heading,sAcc,cAcc\r\n\r\n";
+  fo.Write((LPCTSTR)strOutput, strOutput.GetLength());
+
 	while(!cancelConvert)
 	{	
     MessageType type = mp.GetParsingData(buffer, sizeof(buffer) - 1, &length, 5000);
-		//length = GetBinary(buffer, sizeof(buffer), f);
 		if(progress != (WPARAM)(MaxProgress * (double)convertFile.GetPosition() / total))
 		{
 			progress = (WPARAM)(MaxProgress * (double)convertFile.GetPosition() / total);
 			pDlg->PostMessage(UWM_RAW_PROGRESS, progress);
 		}
-		//p->SetPos((int)f.GetPosition());
+
 		if(type == MtReadError)
 		{
 			break;

@@ -12,6 +12,8 @@ CString CSerial::debugWorking;
 bool CSerial::debugModeOn = false;
 CString CSerial::debugName("CSerial.log");
 DWORD CSerial::readCount = 0;
+bool CSerial::m_cancelTransmission = false;
+
 inline void CSerial::AddDebugString(const char* dbg)
 {
 	if(!debugModeOn)
@@ -80,12 +82,6 @@ bool CSerial::OpenByBaudrate(LPCSTR comPort, int baudrate)
 {
 	CString portName;
 	portName.Format("\\\\.\\%s", comPort);
-
-  //160726 Test
-  //if(SPECIAL_BAUD_RATE)
-  //{
-  //  baudrate = (int)(1.5 * baudrate);
-  //}
 
 	int tryCnt = 10;
 	Utility::Log(__FUNCTION__, CTime::GetCurrentTime().Format("%Y%m%d%H%M%S"), __LINE__);
@@ -846,6 +842,108 @@ DWORD CSerial::GetBinaryAck(void *buffer, DWORD bufferSize, DWORD timeout)
 				return READ_ERROR;
 			}
 			BOOL bb = ReadFile(m_comDeviceHandle, bufferIter, 1, &dwBytesDoRead, 0);
+			if(dwBytesDoRead == 0)
+			{	//Read fail.
+				DWORD dwErr = ::GetLastError();
+				continue;
+			}
+      readCount += dwBytesDoRead;
+
+			if(totalSize > 0)
+			{	//not first char.
+				if(!cmdHeaderCome && *bufferIter==0xa1 && *(bufferIter-1)==0xa0)
+				{
+					bufferIter -= totalSize;
+					*bufferIter = 0xa0; 
+					++bufferIter;
+					*bufferIter = 0xa1; 
+					++bufferIter;
+					totalSize = 2;
+          cmdHeaderCome = true;
+					continue;
+				}
+				else if(*bufferIter==0x0a && *(bufferIter-1)==0x0d)
+				{
+					unsigned char *chk_ptr = bufferIter - totalSize;
+					
+					if (*chk_ptr == 0xa0)
+					{
+						int tmp_len = *(chk_ptr + 2);
+						tmp_len = tmp_len << 8 | *(chk_ptr+3);
+						if (totalSize == tmp_len + 6) 
+						{
+							*(bufferIter+1) = 0;
+							return totalSize + 1;
+						}
+						cmdHeaderCome = false;
+					}
+					else
+					{
+						return totalSize + 1;
+					}
+				}
+			}
+			++totalSize;
+			if (totalSize >=  bufferSize - 1)
+			{	//Check 
+				*(bufferIter+1) = 0;
+				break;
+			}
+				
+			++bufferIter;
+			--bytesinbuff;
+		} //while(bytesinbuff)
+	} //while(total < size - 1)
+	return totalSize;
+}
+
+DWORD CSerial::GetComBinaryAck(HANDLE com, void *buffer, DWORD bufferSize, DWORD timeout)
+{	
+	U08* bufferIter = (U08*)buffer;
+	DWORD totalSize = 0;
+	ScopeTimer t;
+	bool cmdHeaderCome = false;
+	while(totalSize < bufferSize - 1)
+	{ 
+		if(t.GetDuration() > timeout)
+		{
+			return READ_ERROR;
+		}
+		if(m_cancelTransmission)
+		{
+			m_cancelTransmission = false;
+			return READ_ERROR;
+		}
+
+		DWORD dwBytesDoRead = 0;
+		DWORD dwErrorFlags = 0;
+		COMSTAT comStat;
+		BOOL b2 = ClearCommError(com, &dwErrorFlags, &comStat);
+		if(!b2)
+		{
+			DWORD err = ::GetLastError();
+			return -1;
+		}
+		if(comStat.cbInQue == 0) 
+		{
+			Sleep(2);
+			continue;
+		}
+
+		DWORD bytesinbuff = comStat.cbInQue;
+		while(bytesinbuff)
+		{
+			if(t.GetDuration() > timeout)
+			{
+				return READ_ERROR;
+			}
+			if(m_cancelTransmission)
+			{
+				m_cancelTransmission = false;
+				return READ_ERROR;
+			}
+
+			BOOL bb = ReadFile(com, bufferIter, 1, &dwBytesDoRead, 0);
 			if(dwBytesDoRead == 0)
 			{	//Read fail.
 				DWORD dwErr = ::GetLastError();

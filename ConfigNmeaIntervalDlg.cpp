@@ -24,7 +24,7 @@ static const char * InitialTable[] = {
 	"60", "53", "59",
 	"1", "49" };
 
-#elif (CUSTOMER_ID==Ericsson)	//Ericsson
+#elif (CUSTOMER_ID == Ericsson)	//Ericsson
 static UINT SliderTable[] = { 
 	IDC_SLIDER1, IDC_SLIDER2, IDC_SLIDER3,
 	IDC_SLIDER4, IDC_SLIDER5, IDC_SLIDER6, 
@@ -350,7 +350,7 @@ void CConfigNmeaIntervalDlg::OnBnClickedOk()
 	}
 	m_attrib = (U08)m_attr.GetCurSel();
 
-#if (CUSTOMER_ID==SWID)	//SWID customize
+#if (CUSTOMER_ID == SWID)	//SWID customize
 	AfxBeginThread(ConfigNmeaInterval2Thread, 0);
 #else
 	AfxBeginThread(ConfigNmeaIntervalThread, 0);

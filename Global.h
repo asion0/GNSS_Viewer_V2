@@ -25,16 +25,16 @@ class CSerial;
 struct GPGSA;
 typedef matrix<float> Matrix;
 
-#define LogDefaultName		"Response.log"
-#define DefaultTimeout		2000
+#define LogDefaultName		        "Response.log"
+#define DefaultTimeout		        2000
 
-#define MAX_WAIT_TIME		      INFINITE
+#define MAX_WAIT_TIME		          INFINITE
 #define TIME_OUT_MS               10000
 #define TIME_OUT_QUICK_MS         1000
 #define SCAN_TIME_OUT_MS          500
 #define DOWNLOAD_TIME_OUT_LOOP    10
 #define BUF_SIZE 4096
-#define BOOTLOADER_SIZE		0x10000
+#define BOOTLOADER_SIZE		        0x10000
 
 #define WGS84_RA    (6378137.0)                   // semi-major earth axis(ellipsoid equatorial radius)
 #define WGS84_INV_F (298.257223563)               // inverse flattening of WGS-84
@@ -44,9 +44,9 @@ typedef matrix<float> Matrix;
 #define WGS84_E2P   (WGS84_E2/(1.0-WGS84_E2))     // eccentricity squared: (RA*RA-RB*RB)/RB*RB
 
 #define COM_BUFFER_SIZE   (16 * 1024)              // 
-#define KNOTS2KMHR  1.852F
-#define MS2KMHR     3.6F
-#define VIEWER_REG_PATH "Software\\GNSSViewer\\GPS"
+#define KNOTS2KMHR        1.852F
+#define MS2KMHR           3.6F
+#define VIEWER_REG_PATH   "Software\\GNSSViewer\\GPS"
 
 // Bit constants
 #define BIT0        (0x01)
@@ -109,6 +109,7 @@ struct Setting
 			reg.WriteInt("setting_autoQueryVersion", autoQueryVersion);
 			reg.WriteInt("setting_boostEphemeris", boostEphemeris);
 			reg.WriteInt("setting_checkNmeaError", checkNmeaError);
+			reg.WriteInt("setting_checkTimeError", checkTimeError);
 			reg.WriteInt("setting_responseLog", responseLog);
 			reg.WriteString("setting_responseLogPath", responseLogPath);
 
@@ -147,6 +148,7 @@ struct Setting
 			autoQueryVersion = reg.ReadInt("setting_autoQueryVersion", TRUE);
 			boostEphemeris = reg.ReadInt("setting_boostEphemeris", FALSE);
 			checkNmeaError = reg.ReadInt("setting_checkNmeaError", SHOW_ERROR_NMEA_NOTIFY);
+			checkTimeError = reg.ReadInt("setting_checkTimeError", SHOW_ERROR_TIME_NOTIFY);
 			responseLog = reg.ReadInt("setting_responseLog", FALSE);
 			responseLogPath = reg.ReadString("setting_responseLogPath", LogDefaultName);
 			specifyCenter = reg.ReadInt("setting_specifyCenter", FALSE);
@@ -183,6 +185,7 @@ struct Setting
 
 			boostEphemeris = FALSE;
 			checkNmeaError = SHOW_ERROR_NMEA_NOTIFY;
+			checkTimeError = SHOW_ERROR_TIME_NOTIFY;
 			responseLog = FALSE;
 			responseLogPath = LogDefaultName;
 			specifyCenter = FALSE;
@@ -254,6 +257,7 @@ struct Setting
 	BOOL autoQueryVersion;
 	BOOL boostEphemeris;
 	BOOL checkNmeaError;
+	BOOL checkTimeError;
 	BOOL downloadTesting;
 	BOOL downloadRomInternal;
   BOOL downloadUseBinExternal;
@@ -356,7 +360,7 @@ extern const COLORREF g_panelBkColor;
 
 extern HANDLE g_connectEvent;
 extern HANDLE g_closeEvent;
-extern CWaitReadLog* WRL;
+extern CWaitReadLog* g_waitReadDialog;
 extern HANDLE	waitlog;
 extern const S16 DefaultLeapSeconds;
 
@@ -386,7 +390,7 @@ U08 Cal_Checksum(U08* pt);
 UINT16 CalCheckSum2(U08* pt);
 void UtcConvertGpsToUtcTime(S16 wn, D64 tow, UtcTime *utc_time_p);
 void UtcConvertUtcToGpsTime(const UtcTime *utc_time_p, S16 *wn_p, D64 *tow_p);
-QualityMode GetGnssQualityMode(U32 qualityIndicator, U08 gpMode = 0, U08 glMode = 0, U08 gaMode = 0, U08 bdMode = 0);
+QualityMode GetGnssQualityMode(U32 qualityIndicator, U08 gpMode = 0, U08 glMode = 0, U08 gaMode = 0, U08 bdMode = 0, U08 giMode = 0);
 //QualityMode GetGnssQualityMode(const U32 qualityIndicator, const U08 gpMode = 0, const U08 glMode = 0, const  gaMode = 0, const U08 bdMode = 0);
 D64 ConvertLeonDouble(const U08* ptr);
 F32 ConvertLeonFloat(const U08* ptr);

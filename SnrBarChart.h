@@ -131,16 +131,6 @@ protected:
   virtual void DrawSnr(CDC *dc, int& startId, UISetting* s, UISetting* sSub, 
         GPGSV* gsv, GPGSA* gsa, GPGGA* gga, Satellites* sate);
 
-//#if (FLOAT_SNR)
-//  F32 GetGsvSubSnr(Satellite* s, int id);
-//#else
-//  int GetGsvSubSnr(Satellite* s,int id);
-//#endif
-
-	//GPGSV* gsvDataSub;
-	//GPGSA* gsaDataSub;
-	//GPGGA* ggaDataSub;
-	//Satellite* sateStatusSub;
 	UISetting* uiSettingSub;
 
 	afx_msg void OnPaint();
@@ -166,7 +156,17 @@ public:
 	CSnrBarChartGalileo(void);
 	~CSnrBarChartGalileo(void);
 
+protected:
+	afx_msg void OnPaint();
 
+	DECLARE_MESSAGE_MAP()
+};
+
+class CSnrBarChartNavic : public CSnrBarChart
+{
+public:
+	CSnrBarChartNavic(void);
+	~CSnrBarChartNavic(void);
 
 protected:
 	afx_msg void OnPaint();
@@ -197,13 +197,8 @@ protected:
 protected:
 	virtual void ShowBoxChart(CDC *dc);\
   void Init();
-	//virtual void DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGSA* gsa, 
-	//			GPGGA* gga, Satellite* sate);
-#if (FLOAT_SNR)
+
   F32 GetGsv2SubSnr(int id);
-#else
-  int GetGsv2SubSnr(int id);
-#endif
 
 	afx_msg void OnPaint();
 

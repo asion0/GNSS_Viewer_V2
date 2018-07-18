@@ -49,7 +49,7 @@ CoorSwitchD             BITMAP        "res\\CoorSwitchD.bmp"
 
 //Static Bitmap
 IDB_FTP_BANNER          BITMAP        "res\\FtpBanner.bmp"
-IDB_AGPS				BITMAP                "res\\Agps.bmp"
+IDB_AGPS				        BITMAP        "res\\Agps.bmp"
 
 #if defined(_MORE_INFO_)
  IDB_TTFF				BITMAP                "res\\TTFF.bmp"
@@ -59,7 +59,7 @@ IDB_AGPS				BITMAP                "res\\Agps.bmp"
  IDB_TIME               BITMAP        "res\\Time_s.bmp"
  IDB_ALTITUDE           BITMAP        "res\\Altitude_S.bmp"
  IDB_ALTITUDE2          BITMAP        "res\\Altitude2_S.bmp"
- #ifdef SHOW_RTK_BASELINE
+ #if defined(_SHOW_RTK_BASELINE_)
   IDB_BOOT_STATUS       BITMAP        "res\\Baseline.bmp"
  #else
   IDB_BOOT_STATUS       BITMAP        "res\\BootStatus_s.bmp"
@@ -105,7 +105,7 @@ IDB_AGPS				BITMAP                "res\\Agps.bmp"
  IDB_TIME               BITMAP        "res\\Time.bmp"
  IDB_ALTITUDE           BITMAP        "res\\Altitude.bmp"
  IDB_ALTITUDE2          BITMAP        "res\\Altitude2.bmp"
- #ifdef _MODULE_SUP_800_
+ #ifdef MODULE_SUP_800
   IDB_BOOT_STATUS       BITMAP        "res\\Pitch.bmp"
   IDB_SW_VER            BITMAP        "res\\Roll.bmp"
   IDB_SW_REV            BITMAP        "res\\Yaw.bmp"
@@ -172,6 +172,7 @@ IDB_GPS_SNR_T           BITMAP        "res\\GpsSnrT.bmp"
 #endif
 IDB_BEIDOU_SNR_T        BITMAP        "res\\BeidouSnrT.bmp"
 IDB_GA_SNR_T			      BITMAP				"res\\GaSnrT.bmp"
+IDB_GI_SNR_T			      BITMAP				"res\\GiSnrT.bmp"
 
 IDB_INFORMATION_T       BITMAP        "res\\InformationT.bmp"
 IDB_INFORMATION_B       BITMAP        "res\\InformationB.bmp"
@@ -245,13 +246,16 @@ IDR_GPS_PRELOADER_115200 BIN					"res\\plprom_115200.bin"
 // Upgrade PROM
 //
 #if defined(UPGRADE_DOWNLOAD)
-IDR_UPGRADE_DOWNLOAD_PROM BIN					"res\\STI_02.00.74-01.07.27_V8_Glonass_GPS_Takuji_Hostlogger_T_CRC_b02c_9600_20150615.bin"
+//IDR_UPGRADE_DOWNLOAD_PROM BIN				"res\\STI_02.00.74-01.07.27_V8_Glonass_GPS_Takuji_Hostlogger_T_CRC_b02c_9600_20150615.bin"
+//IDR_UPGRADE_DOWNLOAD_PROM2 BIN				"res\\STI_02.02.04-01.07.28_V838_GPS_microsatellite_T_CRC_234f_9600_20180518.bin"
+IDR_UPGRADE_DOWNLOAD_PROM2 BIN				"res\\STI_02.02.04-01.07.28_V8_2525BD-RTK_Master_CRC_018a_115200_20170712.bin"
 #endif
 
 #if defined(UPGRADE_DOWNLOAD2)
 //IDR_UPGRADE_DOWNLOAD_PROM2 BIN			"res\\STI_02.02.02-01.07.27_V8_NSHP-5_RTK_Master_PRBL_T_CRC_2272_115200_20160614.bin"
 //IDR_UPGRADE_DOWNLOAD_PROM2 BIN		  "res\\STI_02.02.02-01.07.27_V8_2525BD-1_RTK_Master_T_CRC_c41b_115200_20160621.bin"
-IDR_UPGRADE_DOWNLOAD_PROM2 BIN				"res\\STI_02.02.04-01.07.27_V8_2525BD-RTK_Master_CRC_f52d_115200_20161117.bin"
+//IDR_UPGRADE_DOWNLOAD_PROM2 BIN			"res\\STI_02.02.04-01.07.27_V8_2525BD-RTK_Master_CRC_f52d_115200_20161117.bin"
+//IDR_UPGRADE_DOWNLOAD_PROM2 BIN				"res\\STI_02.02.04-01.07.28_V8_2525BD-RTK-5_Master_CRC_0027_115200_20170712.bin"
 #endif
 
 /////////////////////////////////////////////////////////////////////////////

@@ -12,6 +12,9 @@ const unsigned char GG12A_TAG[tagSize] = {0xf4,0x0e,0xe0,0xb8,0x16,0xa0,0x01,0xa
 const unsigned char TAG_ADDR[tagSize] = {0xf4,0x0e,0xe0,0xb8,0x16,0xa0,0x01,0xa1};
 const int BinSizeTimeout = 20*1000;
 
+static BOOL upgradeAddTag = UPGRADE_ADD_TAG; 
+static U16 upgradeTagValue = UPGRADE_TAG_VALUE;
+
 typedef struct 
 {
 	char inputFile[MyMaxPath];
@@ -293,7 +296,7 @@ UINT CGPSDlg::GetSrecFromResource(int buad)
 			srecTable = v8SrecTable;
 			break;
 		case InternalLoaderSpecial:
-			return _RESOURCE_LOADER_ID_;
+			return RESOURCE_LOADER_ID;
 		case RomExternalDownload:
 			srecTable = v8AddTagSrecTable;
 			break;
@@ -337,7 +340,7 @@ DownloadErrocCode ProcessWlfResult(WlfResult w)
 bool CGPSDlg::FirmwareUpdate(const CString& strFwPath)
 {
 	bool isSuccessful = false;
-	for(int i=0; i<3; i++)
+	for(int i = 0; i < 3; ++i)
 	{
 		U08 res = 0;
 		switch(m_DownloadMode)
@@ -410,6 +413,19 @@ U08 CalcCheckSum16(const U08* dataPtr, int sentbytes)
 	return HIBYTE(checkSum) + LOBYTE(checkSum);
 	//*/
 }
+
+U08 CalcCheckSum08(const U08* dataPtr, int size)
+{
+	U08 checkSum = 0;
+	int i = 0;
+
+	for(; i < size; ++i)
+	{
+		checkSum += dataPtr[i];
+	}
+	return checkSum;
+}
+
 int CGPSDlg::SendRomBufferCustomerUpgrade(const U08* sData, int sDataSize, BinaryData &data, 
 							int fbinSize, bool needSleep, CWnd* notifyWnd)
 {
@@ -424,7 +440,7 @@ int CGPSDlg::SendRomBufferCustomerUpgrade(const U08* sData, int sDataSize, Binar
 	bool bResend = false;
 	int lSize = 0;
 	int sentbytes = 0;
-	int TotalByte = 0;
+	int totalByte = 0;
 	int nBytesSent = 0;
 	U16 sequence = 0;
 
@@ -438,7 +454,7 @@ int CGPSDlg::SendRomBufferCustomerUpgrade(const U08* sData, int sDataSize, Binar
 			if(!bResend)
 			{
 				sentbytes = nFlashBytes;
-				TotalByte += sentbytes;	
+				totalByte += sentbytes;	
 
 				memset(buff, 0, buffSize);
 				if(sDataSize > nFlashBytes)
@@ -514,12 +530,12 @@ int CGPSDlg::SendRomBufferCustomerUpgrade(const U08* sData, int sDataSize, Binar
 	bResend = false;
 	lSize = (sData) ? fbinSize - BOOTLOADER_SIZE : fbinSize;
 
-	while(lSize>0)
+	while(lSize > 0)
 	{ 
 		if(!bResend)
 		{
-			sentbytes = (lSize >= nFlashBytes)?nFlashBytes :lSize;
-			TotalByte += sentbytes;	
+			sentbytes = (lSize >= nFlashBytes) ? nFlashBytes : lSize;
+			totalByte += sentbytes;	
 
 			memset(buff, 0, buffSize);
 			//int realRead = fread(&buff[headerSize], 1, sentbytes, f);
@@ -595,7 +611,7 @@ int CGPSDlg::SendRomBufferCustomerUpgrade(const U08* sData, int sDataSize, Binar
 	switch(wlf)
 	{
 	case wlf_end:
-		sprintf_s(messages, sizeof(messages), "The total bytes transferred = %d", TotalByte);
+		sprintf_s(messages, sizeof(messages), "The total bytes transferred = %d", totalByte);
 		add_msgtolist(messages);
 		//msgWnd->SetWindowText(messages);	
 		break;
@@ -612,9 +628,8 @@ int CGPSDlg::SendRomBufferCustomerUpgrade(const U08* sData, int sDataSize, Binar
 	return RETURN_NO_ERROR;		
 }
 
+U08 GetPromBinCheckSum(const U08* b, int size);
 
-//int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, FILE *f, 
-//							int fbinSize, bool needSleep, CWnd* notifyWnd)
 int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, BinaryData &binData, 
 							int fbinSize, bool needSleep, CWnd* notifyWnd)
 {
@@ -623,13 +638,12 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, BinaryData &binData
 	const int headerSize = 3;
 	const int buffSize = nFlashBytes + headerSize;
 	int realTotalSize = BOOTLOADER_SIZE + fbinSize;
-	//U08 buff[buffSize];
 	U08* buff = new U08[buffSize];
 	char messages[100] = {0};
 	bool bResend = false;
 	int lSize = 0;
 	int sentbytes = 0;
-	int TotalByte = 0;
+	int totalByte = 0;
 	int nBytesSent = 0;
 	U16 sequence = 0;
 
@@ -638,12 +652,12 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, BinaryData &binData
 		char* prom_ptr = (char*)sData;
 		lSize = BOOTLOADER_SIZE;
 
-		while(lSize>0)
+		while(lSize > 0)
 		{ 
 			if(!bResend)
 			{
 				sentbytes = nFlashBytes;
-				TotalByte += sentbytes;	
+				totalByte += sentbytes;	
 
 				memset(buff, 0, buffSize);
 				if(sDataSize > nFlashBytes)
@@ -713,18 +727,19 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, BinaryData &binData
 			{
 				Sleep(1);
 			}
+      
 		}	//End of while(lSize>0)
 	} //if(sData)
 //---------------------------
 	bResend = false;
 	lSize = (sData) ? fbinSize - BOOTLOADER_SIZE : fbinSize;
 
-	while(lSize>0)
+	while(lSize > 0)
 	{ 
 		if(!bResend)
 		{
-			sentbytes = (lSize >= nFlashBytes)?nFlashBytes :lSize;
-			TotalByte += sentbytes;	
+			sentbytes = (lSize >= nFlashBytes) ? nFlashBytes : lSize;
+			totalByte += sentbytes;	
 
 			memset(buff, 0, buffSize);
 			int realRead = binData.Read(&buff[headerSize], sentbytes);
@@ -733,63 +748,83 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, BinaryData &binData
 				binData.Seek(0);
 				realRead = (int)binData.Read(&buff[realRead + headerSize], sentbytes - realRead);
 			}
-			int checkSum = CalcCheckSum16(&(buff[headerSize]), sentbytes);
+			//int checkSum = CalcCheckSum16(&(buff[headerSize]), sentbytes);
+			int checkSum = CalcCheckSum08(&(buff[headerSize]), sentbytes);
+      U08 bck = GetPromBinCheckSum(&(buff[headerSize]), sentbytes);
 			//Fill packet
 			buff[0] = HIBYTE(sequence);
 			buff[1] = LOBYTE(sequence);
 			buff[2] = checkSum;
 		}
 
-		if( InternalLoaderV6Gps==m_DownloadMode ||
-			InternalLoaderV6Gnss==m_DownloadMode ||
-			InternalLoaderV6Gg12a==m_DownloadMode ||
-			InternalLoaderV6GpsAddTag==m_DownloadMode ||
-			InternalLoaderV6GpsDelTag==m_DownloadMode ||
-			InternalLoaderV6GnssAddTag==m_DownloadMode ||
-			InternalLoaderV6GnssDelTag==m_DownloadMode )
+		if( InternalLoaderV6Gps == m_DownloadMode ||
+			InternalLoaderV6Gnss == m_DownloadMode ||
+			InternalLoaderV6Gg12a == m_DownloadMode ||
+			InternalLoaderV6GpsAddTag == m_DownloadMode ||
+			InternalLoaderV6GpsDelTag == m_DownloadMode ||
+			InternalLoaderV6GnssAddTag == m_DownloadMode ||
+			InternalLoaderV6GnssDelTag == m_DownloadMode )
 		{
 			nBytesSent = SendToTargetNoAck((U08*)buff, sentbytes + headerSize);	 
 		}
 		else
 		{
 			nBytesSent = SendToTargetNoAck((U08*)buff + headerSize, sentbytes);	 
+			//nBytesSent = SendToTargetNoAck((U08*)buff, sentbytes + headerSize);	 
 		}
+    
+    int timeout = TIME_OUT_MS;
+#ifdef _DEBUG
+    timeout = 100000;
+#endif
+    if(1)
+    {
+      WlfResult wr = WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, timeout, &m_responseList);
+		  switch(wr)
+		  {
+		  case wlf_ok:
+			  sequence++;
+			  lSize -= sentbytes;
+			  bResend = false;
+			  break;
+		  case wlf_timeout:
+			  Utility::LogFatal(__FUNCTION__, "wlf_timeout", __LINE__);
+			  return RETURN_ERROR;
+			  break;
+		  case wlf_resend:
+			  Utility::Log(__FUNCTION__, "wlf_resend", __LINE__);
+			  bResend = true;
+			  break;
+		  case wlf_reset:
+			  Utility::Log(__FUNCTION__, "wlf_reset", __LINE__);
+			  return RETURN_RETRY;
+			  break;
+		  default:
+			  Utility::LogFatal(__FUNCTION__, messages, __LINE__);
+			  return RETURN_ERROR;
+			  break;
+		  }	
+  //* Alex wait
+		  if(!bResend)
+		  {
+			  downloadProgress += sentbytes;
+		  }
+		  m_psoftImgDlDlg->PostMessage(UWM_SETPROGRESS, downloadProgress, downloadTotalSize);
 
-		switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, TIME_OUT_MS, &m_responseList))
-		{
-		case wlf_ok:
+		  if(needSleep)
+		  {
+			  Sleep(1);
+		  }
+    
+    }
+    else
+    {
 			sequence++;
 			lSize -= sentbytes;
 			bResend = false;
-			break;
-		case wlf_timeout:
-			Utility::LogFatal(__FUNCTION__, "wlf_timeout", __LINE__);
-			return RETURN_ERROR;
-			break;
-		case wlf_resend:
-			Utility::Log(__FUNCTION__, "wlf_resend", __LINE__);
-			bResend = true;
-			break;
-		case wlf_reset:
-			Utility::Log(__FUNCTION__, "wlf_reset", __LINE__);
-			return RETURN_RETRY;
-			break;
-		default:
-			Utility::LogFatal(__FUNCTION__, messages, __LINE__);
-			return RETURN_ERROR;
-			break;
-		}	
-//* Alex wait
-		if(!bResend)
-		{
 			downloadProgress += sentbytes;
-		}
-		m_psoftImgDlDlg->PostMessage(UWM_SETPROGRESS, downloadProgress, downloadTotalSize);
-
-		if(needSleep)
-		{
-			Sleep(1);
-		}
+		  m_psoftImgDlDlg->PostMessage(UWM_SETPROGRESS, downloadProgress, downloadTotalSize);
+    }
 	}	//End of while(lSize>0)
 	delete [] buff;
 
@@ -797,7 +832,7 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, BinaryData &binData
 	switch(wlf)
 	{
 	case wlf_end:
-		sprintf_s(messages, sizeof(messages), "The total bytes transferred = %d", TotalByte);
+		sprintf_s(messages, sizeof(messages), "The total bytes transferred = %d", totalByte);
 		add_msgtolist(messages);
 		//msgWnd->SetWindowText(messages);	
 		break;
@@ -854,21 +889,13 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 	char messages[100] = {0};
 
 	BinaryData binFile(prom_path);
-	//CFile f;
-	//FILE *f = NULL;
-
 	if(binFile.Size() == 0)
-	//if(0 == f.Open(prom_path, CFile::modeRead))
-	//if(0 != fopen_s(&f, prom_path, "rb"))
 	{
 		return RETURN_ERROR;
 	}
-
 	binFile.Seek(0);
-	//fseek(f, 0, SEEK_END);
 
 	DWORD promLen = (DWORD)binFile.Size() - extraSize;
-	//long promLen = ftell(f) - extraSize;
 	if(promTag.tagAddress==0)
 	{
 		promTag.tagAddress = (promLen>=0x70000) ? 0x000f7ffc : 0x00077ffc;
@@ -888,21 +915,9 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 
 	const U08* sData = preLoader.Ptr();
 	U08 mycheck = GetPromBinCheckSum(sData, preLoader.Size());
-	//U08 mycheck = 0;
-	//for(int i=0; i<preLoader.Size(); ++i)
-	//{
-	//	mycheck += sData[i];
-	//}
 
 	binFile.Seek(BOOTLOADER_SIZE);
 	mycheck += GetPromBinCheckSum(binFile, promLen-BOOTLOADER_SIZE);
-	//fseek(f, BOOTLOADER_SIZE, SEEK_SET);
-	//char c;
-	//for(int i=0; i<promLen-BOOTLOADER_SIZE; ++i)
-	//{
-	//	fread(&c, 1, 1, f);
-	//	mycheck = mycheck + c;
-	//}
 
 	bool bResendbin = true;
 	while(bResendbin)
@@ -925,8 +940,6 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 		default:
 			ProcessWlfResult(wlf);
 			Utility::LogFatal(__FUNCTION__, messages, __LINE__);
-			//f.Close();
-			//fclose(f);
 			return RETURN_ERROR;		        
 			break;
 		}	//switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, TIME_OUT_MS, &m_responseList))	
@@ -942,21 +955,12 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 	{
 		binFile.Seek(BOOTLOADER_SIZE);
 		result = SendRomBuffer3(sData, bootLoaderSize, binFile, promLen, false, m_psoftImgDlDlg);
-		//fseek(f, BOOTLOADER_SIZE, SEEK_SET);
-		//result = SendRomBuffer3(sData, bootLoaderSize, f, promLen, false, m_psoftImgDlDlg);
 	} while(result == RETURN_RETRY && (retryCount--) > 0);
 
 //---------------------------------------------------------------
 	promLen = BOOTLOADER_SIZE;
-
 	binFile.Seek(0);
 	mycheck = GetPromBinCheckSum(binFile, BOOTLOADER_SIZE);
-	//fseek(f, 0, SEEK_SET);
-	//for(int i=0; i<BOOTLOADER_SIZE; ++i)
-	//{
-	//	fread(&c, 1, 1, f);
-	//	mycheck = mycheck + c;
-	//}
 
 	bResendbin = true;
 	while(bResendbin)
@@ -979,27 +983,21 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 		default:
 			ProcessWlfResult(wlf);
 			Utility::LogFatal(__FUNCTION__, messages, __LINE__);
-			//f.Close();
-			//fclose(f);
 			return RETURN_ERROR;		        
 			break;
 		}	//switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, TIME_OUT_MS, &m_responseList))	
 	}	//while(bResendbin)
 // Alex wait
 	m_psoftImgDlDlg->PostMessage(UWM_SETPROMPT_MSG, IDS_WAITROM_MSG);
-//	sprintf_s(messages, sizeof(messages), "Waiting for Rom Writing...");
-//	m_psoftImgDlDlg->m_msg.SetWindowText(messages);	
-	
+
 	result = RETURN_NO_ERROR;
 	retryCount = 3;
 	do
 	{
 		binFile.Seek(0);
-		//fseek(f, 0, SEEK_SET);
 		result = SendRomBuffer3(NULL, bootLoaderSize, binFile, promLen, false, m_psoftImgDlDlg);
 	} while(result == RETURN_RETRY && (retryCount--) > 0);
-	//f.Close();
-	//fclose(f);
+
 	BoostBaudrate(TRUE);
 	m_psoftImgDlDlg->PostMessage(UWM_SETPROMPT_MSG, IDS_ROMWRITINGOK_MSG);
 
@@ -1012,7 +1010,6 @@ U08 CGPSDlg::PlRomNoAllocV8(const CString& promPath)
 	int extraSize = ParserBinFile(promPath, &promTag);
 	char messages[100] = {0};
 
-	//CFile f;
 	BinaryData binFile(promPath);
 	if(binFile.Size() == 0)
 	{
@@ -1135,10 +1132,10 @@ U08 CGPSDlg::PlRomCustomerUpgrade(UINT rid)
 	{
 		U32 checkCode = 0;
 		CString strBinsizeCmd;
-		if(UPGRADE_ADD_TAG)
+		if(upgradeAddTag)
 		{
 			U32 tagAddress = 0xAAA56556;	//V8 tag address is 0xFCFFC ^ 0xAAAAAAAA
-			U32 tagValue = UPGRADE_TAG_VALUE ^ 0x55555555;	//Skytraq tag is 0x0A01 ^ 0x55555555
+			U32 tagValue = upgradeTagValue ^ 0x55555555;	//Skytraq tag is 0x0A01 ^ 0x55555555
 			checkCode = promLen + mycheck + m_nDownloadBaudIdx + tagAddress + tagValue;
 			strBinsizeCmd.Format("BINSIZ2 = %d %d %u %u %u %u ", promLen, mycheck, m_nDownloadBaudIdx,
 									tagAddress, tagValue, checkCode);
@@ -1185,14 +1182,12 @@ U08 CGPSDlg::PlRomCustomerUpgrade(UINT rid)
 	int retryCount = 1;
 	do
 	{
-		//fseek(f, 0, SEEK_SET);
 		Sleep(500);	//for GPSDO
 		result = SendRomBufferCustomerUpgrade(NULL, 0, prom, promLen, false, m_psoftImgDlDlg);
 	} while(result == RETURN_RETRY && (retryCount--) > 0);
 
-	//fclose(f);
 	m_psoftImgDlDlg->PostMessage(UWM_SETPROMPT_MSG, IDS_ROMWRITINGOK_MSG);
-	return result;		
+	return result;
 }
 
 void CGPSDlg::GetLoaderDownloadCmd(char* msg, int size)
@@ -1266,10 +1261,8 @@ bool CGPSDlg::DownloadLoader(DownloadMode mode)
 		}
 	}
 
-// Alex wait
+  // Alex wait
 	m_psoftImgDlDlg->PostMessage(UWM_SETPROMPT_MSG, IDS_FLASHWRITINGOK_MSG);
-//	sprintf_s(messages, sizeof(messages), "Waiting for Flash Loading...\r\n");
-//	m_psoftImgDlDlg->m_msg.SetWindowText(messages);	
 	
 	BinaryData srec;
 	CString externalSrecFile;
@@ -1304,7 +1297,7 @@ bool CGPSDlg::DownloadLoader(DownloadMode mode)
 	int totalByte = 0;
 	char buff[bufferSize] = {0};
 
-	while(leftSize>0)
+	while(leftSize > 0)
 	{
 		int ProgressPos = 0;
 		int packetSize = 0;
@@ -1322,8 +1315,26 @@ bool CGPSDlg::DownloadLoader(DownloadMode mode)
 		}
 		memcpy(buff, sData, packetSize - 1);
 		buff[packetSize - 2] = 0x0a;
-		SendToTargetNoAck((U08*)buff, packetSize);
-	
+    if(leftSize > packetSize)
+    {
+		  SendToTargetNoAck((U08*)buff, packetSize);
+    }
+    else
+    {
+		  SendToTargetNoAck((U08*)buff, packetSize);
+      //Test V9 RX/TX FIFO size changed
+      //SendToTarget((U08*)buff, packetSize, "", 20);
+      //char buffer[128] = {0};
+      //int retLen = m_serial->GetBinary(buffer, sizeof(buffer) - 1, 10);
+    }
+    //if(packetSize > 16)
+    //{
+    //  for(int cc = 0; cc < packetSize; cc += 16)
+    //  {
+    //    SendToTargetNoAck((U08*)(buff + cc), ((packetSize - cc) > 16) ? 16 : packetSize - cc);
+    //    Sleep(20);
+    //  }
+    //}
 		leftSize -= packetSize;
 		sData += packetSize;
 		totalByte += packetSize;//deduct by end of string character in sending
@@ -1347,12 +1358,6 @@ bool CGPSDlg::DownloadLoader(DownloadMode mode)
 		break;
 	}	
 	m_psoftImgDlDlg->PostMessage(UWM_SETPROGRESS, 100, 100);
-
-
-// Alex wait
-//	sprintf_s(messages, sizeof(messages), "The total bytes transferred = %d", totalByte);
-//	m_psoftImgDlDlg->m_msg.SetWindowText(messages);	
-//	m_psoftImgDlDlg->m_msg.SetWindowText("Flash loading is OK!");
 	m_psoftImgDlDlg->PostMessage(UWM_SETPROMPT_MSG, IDS_FLASHWRITINGOK_MSG);
 
 	switch(mode)
@@ -1397,6 +1402,17 @@ bool IsV8FirstRomVersion(const BinaryData& ackCmd)
 {
   if(ackCmd[7] == 2 && ackCmd[8] == 0 && ackCmd[9] == 2 &&
       ackCmd[15] == 13 && ackCmd[16] == 2 && ackCmd[17] == 21)
+  {
+    return true;
+  }
+  return false;
+}
+
+
+bool IsV8ChinaTowerOem(const BinaryData& ackCmd)
+{
+  if(ackCmd[7] == 2 && ackCmd[8] == 2 && ackCmd[9] == 0 &&
+      ackCmd[15] == 18 && ackCmd[16] == 4 && ackCmd[17] == 27)
   {
     return true;
   }
@@ -1519,7 +1535,7 @@ bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
 			{
 				isSuccessful = false;
 			}
-			if(restoreConnection)
+			if(restoreConnection && (m_nDownloadBaudIdx < 9))
 			{
 				CloseOpenUart();
 				m_serial->ResetPort(m_nDownloadBaudIdx);
@@ -1588,9 +1604,11 @@ bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
   {
 	  BoostBaudrate(TRUE);
   }
+
 	if(g_setting.downloadTesting)
 	{
 		Sleep(3000);
+	  return isSuccessful;
 	}
 
   if(restoreConnection)
@@ -1605,6 +1623,21 @@ bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
 
 bool CGPSDlg::Download()
 {
+  if(g_setting.GetBaudrateIndex() == 0) //4800 bps
+  {
+	  BinaryCommand cmd(3);
+	  cmd.SetU08(1, 0x09);
+	  cmd.SetU08(2, 0x00);
+	  cmd.SetU08(3, 0x00);
+
+	  ClearQue();
+	  SendToTarget(cmd.GetBuffer(), cmd.Size(), "", 10000);	
+  }
+  if(m_DownloadMode == ForceInternalLoaderV8)
+  {
+    m_DownloadMode = InternalLoaderV8;
+    return RealDownload();
+  }
 	if(m_DownloadMode == CustomerUpgrade)
 	{
 		return Download2();
@@ -1615,21 +1648,10 @@ bool CGPSDlg::Download()
 		return DownloadMasterSlave();
 	}
 
-	//Create Tag version need authenticate.
-  //20170524 Alex remove QueryPassword
-	//if(!QueryPassword())
-	//{	//Password authentication failed!
-	//	SetMode();
-	//	CreateGPSThread();
-	//	m_gpsdoInProgress = false;
-	//	return false;
-	//}
-
 	bool isSuccessful = true;
 	do 
 	{	//Download test loop
 		customerCrc = 0;
-		//U16 crcCode = 0;
     BinaryData ackVer;
 		BOOL hasAckVersion = FALSE;
 		m_nDefaultTimeout = 5000;
@@ -1685,6 +1707,10 @@ bool CGPSDlg::Download()
 				::AfxMessageBox("Device no response!");
         return false;
       }
+      else if(IsV8ChinaTowerOem(ackVer))
+      {
+        m_DownloadMode = InternalLoaderV8;
+      }
       else if(IsV8FirstRomVersion(ackVer) && !g_setting.downloadRomInternal)
       { //V8 ROM A's loader can't support new Winbond and EN25W80B
         m_DownloadMode = InternalLoaderV8AddTag;
@@ -1712,24 +1738,6 @@ bool CGPSDlg::Download()
 			Sleep(100);
 		}
 
-		//if(m_DownloadMode == GpsdoMasterSlave && SecondRun)
-		//{
-		//	if(IsV8FirstRomVersion(ackVer))
-		//	{
-		//		::AfxMessageBox("Please change BOOT_SEL to flash, and push reset.");
-		//	}
-		//	
-		//	CmdErrorCode err = GpsdoEnterDownload(Return, NULL);
-		//	m_nDownloadBaudIdx = 5;
-		//	SetBaudrate(m_nDownloadBaudIdx);		//115200 bps
-		//	Sleep(1000);
-
-		//	if(Ack != err)
-		//	{
-		//		::AfxMessageBox("Can't download GPSDO Slave!");
-		//		break;
-		//	}
-		//}
     isSuccessful = RealDownload();
 		if(!g_setting.downloadTesting)
 		{
@@ -1752,7 +1760,13 @@ bool CGPSDlg::CheckTagType()
 	CmdErrorCode ack = QueryRegister(Return, &data);
 	m_regAddress = t;
 
-	if( (data >> 16) == 0x901)
+	//if( (data >> 16) == 0x901) 
+  if(MICROSATELLITE_PATCH)
+  { //MICROSATELLITE doesn't have any tag in device, use FTP to protect.
+    return true;
+  }
+
+  if( (data >> 16) != 0xFFFF)
 	{
 		suc = true;
 	}
@@ -1771,6 +1785,87 @@ bool CGPSDlg::CheckTagType()
 	return suc;
 }
 
+#if (MICROSATELLITE_PATCH)
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+void ConvertTag(const CString& licString)
+{
+  if(upgradeAddTag)
+  {
+    U32 v = 0;
+    char tag[5] = { 0 };
+    tag[0] = licString[2];
+    tag[1] = licString[6];
+    tag[2] = licString[8];
+    tag[3] = licString[10];
+    v = ConvertCharToU32(tag);
+    if(v > 0xFF && v < 0xFFFF)
+    {
+      upgradeTagValue = (U16)v;
+    }
+    else
+    {
+      upgradeAddTag = FALSE;
+    }
+  }
+}
+
+bool CheckLicense()
+{
+  CString microsatelliteLicense = "Nrtygstronalite";
+  const int TempLength = 512;
+  CString tmpFolder;
+  CString sServerIP, sUser, sPassword;
+  CInternetSession *InternetSession;
+  CFtpConnection *m_pFtpConnection;
+
+  DWORD dwRes = GetTempPath(TempLength, tmpFolder.GetBuffer(TempLength));
+  tmpFolder.ReleaseBuffer();
+  if(dwRes == 0)
+  {
+    return false;
+  }
+
+  tmpFolder += "license.txt";
+  sServerIP=_T("60.250.205.31");
+  sUser=_T("skytraq");
+  sPassword=_T("skytraq");
+
+  InternetSession = new CInternetSession(_T("SkytraqFtpSession"));
+  if(InternetSession == NULL)
+  {
+    return false;
+  }
+
+  m_pFtpConnection = InternetSession->GetFtpConnection(sServerIP, sUser, sPassword, 21, TRUE);
+  BOOL bGetFile = m_pFtpConnection->GetFile(_T("Ephemeris//microsatellite.txt"), tmpFolder,
+    FALSE, FILE_ATTRIBUTE_NORMAL, FTP_TRANSFER_TYPE_BINARY | INTERNET_FLAG_RELOAD);
+
+  if(!bGetFile)
+  {
+    return false;
+  }
+
+  ifstream inFile;
+  inFile.open(tmpFolder);
+  if (!inFile) 
+  {
+    return false;
+  }
+  char x;
+  microsatelliteLicense.Empty();
+  while (inFile >> x) 
+  {
+      microsatelliteLicense += x;
+  }
+  inFile.close();
+  ::DeleteFile(tmpFolder);
+  ConvertTag(microsatelliteLicense);
+  return true;
+}
+#endif
+
 bool CGPSDlg::Download2()
 {
 	patchLog = "";
@@ -1787,6 +1882,15 @@ bool CGPSDlg::Download2()
 			return false;
 		}
 	}
+
+#if(MICROSATELLITE_PATCH)
+  if(!CheckLicense())
+  {
+	  patchStatus += 0x01;
+	  ::AfxMessageBox("This tool has expired!");
+	  return false;
+  }
+#endif
 	customerCrc = 0;
 
   if(UPGRADE_CRC != 0xFFFFFFFF)
@@ -1800,7 +1904,7 @@ bool CGPSDlg::Download2()
 	  }
 	  m_nDefaultTimeout = g_setting.defaultTimeout;
 
-	  if(UPGRADE_CRC!=0xFFFFFFFF && (!hasAckVersion || (crcCode!=UPGRADE_CRC && crcCode!=0xb02c) ) )
+	  if(UPGRADE_CRC != 0xFFFFFFFF && (!hasAckVersion || (crcCode != UPGRADE_CRC && crcCode != 0xb02c) ) )
 	  {
 		  ::AfxMessageBox("Can't support upgrade!");
 		  return false;
@@ -1823,7 +1927,7 @@ bool CGPSDlg::Download2()
 	}
 	Sleep(100);
 
-	if(NULL==m_psoftImgDlDlg)
+	if(NULL == m_psoftImgDlDlg)
 	{
 		m_psoftImgDlDlg = new CSoftImDwDlg;	
 		AfxBeginThread(ShowDownloadProgressThread, 0); 
@@ -1927,10 +2031,10 @@ bool CGPSDlg::Download2()
 	BoostBaudrate(TRUE);
 	if(g_setting.downloadTesting)
 	{
-		Sleep(3000);
+		Sleep(5000);
 	}
 
-	//if(m_gpsdoInProgress)
+	//if(m_gpsdoInProgre
 	//{
 	//	GpsdoLeaveDownload(Display, NULL);
 	//	SetBaudrate(5);
@@ -1938,7 +2042,11 @@ bool CGPSDlg::Download2()
 	//}
 	if(SHOW_PATCH_MENU)
 	{
+#if(MICROSATELLITE_PATCH)
+		patchLog.Format("Firmware upgrade successful.", patchData, patchStatus);
+#else
 		patchLog.Format("PatchResult: %08X%08X", patchData, patchStatus);
+#endif
 		add_msgtolist(patchLog);
 		AfxMessageBox(patchLog);
 	}
@@ -1948,117 +2056,6 @@ bool CGPSDlg::Download2()
 	CreateGPSThread();
 	return true;
 }
-
-bool CGPSDlg::Download3()
-{
-  /*
-	m_DownloadMode = InternalLoaderV8AddTag;
-	m_nDownloadBaudIdx = ((CComboBox*)GetDlgItem(IDC_DL_BAUDRATE))->GetCurSel();
-	//m_nDownloadBaudIdx += 5;	//Download Baudrate start in 115200
-	m_gpsdoInProgress = true;
-	bool isSuccessful = Download();
-
-	Sleep(1000);	//Wait for master firmware boot.
-	BinaryCommand configCmd;
-	BinaryData cmd(4);
-
-	//In : a0 a1 00 04 05 01 01 02 05 0d 0a ,Cfg COM1-9600 bps
-	*cmd.GetBuffer(0) = 0x05;
-	*cmd.GetBuffer(1) = 0x01;
-	*cmd.GetBuffer(2) = m_nSlaveSourceBaud;
-	*cmd.GetBuffer(3) = 0x02;
-	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Configure master COM1 successfully", false);
-	Sleep(500);	//Wait for master firmware boot.
-
-	//In : a0 a1 00 04 7a 08 01 01 72 0d 0a 
-	*cmd.GetBuffer(0) = 0x7a;
-	*cmd.GetBuffer(1) = 0x08;
-	*cmd.GetBuffer(2) = 0x01;
-	*cmd.GetBuffer(3) = 0x01;
-	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Enter UART passthrough successfully", false);
-	Sleep(500);	//Wait for master firmware boot.
-
-	//In : a0 a1 00 04 05 00 06 00 03 0d 0a 
-	*cmd.GetBuffer(0) = 0x05;
-	*cmd.GetBuffer(1) = 0x00;
-	*cmd.GetBuffer(2) = 0x06;		//Slave download baud rate is 230400 bps
-	*cmd.GetBuffer(3) = 0x02;
-	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Configure slave COM0 successfully", false);
-	Sleep(500);	//Wait for master firmware boot.
-
-	//In : a0 a1 00 04 7a 08 01 00 73 0d 0a 
-	*cmd.GetBuffer(0) = 0x7a;
-	*cmd.GetBuffer(1) = 0x08;
-	*cmd.GetBuffer(2) = 0x01;
-	*cmd.GetBuffer(3) = 0x00;
-	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Leave UART passthrough successfully", false);
-	Sleep(500);	//Wait for master firmware boot.
-
-	//In : a0 a1 00 04 05 01 06 00 02 0d 0a 
-	*cmd.GetBuffer(0) = 0x05;
-	*cmd.GetBuffer(1) = 0x01;
-	*cmd.GetBuffer(2) = 0x06;		//Slave download baud rate is 230400 bps
-	*cmd.GetBuffer(3) = 0x02;
-	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Configure master COM1 successfully", false);
-	Sleep(500);	//Wait for master firmware boot.
-
-	//In : a0 a1 00 04 05 00 06 00 02 0d 0a 
-	*cmd.GetBuffer(0) = 0x05;
-	*cmd.GetBuffer(1) = 0x00;
-	*cmd.GetBuffer(2) = 0x06;		//Slave download baud rate is 230400 bps
-	*cmd.GetBuffer(3) = 0x02;
-	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Configure master COM0 successfully", false);
-	Sleep(500);	//Wait for master firmware boot.
-
-	//In : a0 a1 00 04 7a 08 01 03 70 0d 0a 
-	*cmd.GetBuffer(0) = 0x7a;
-	*cmd.GetBuffer(1) = 0x08;
-	*cmd.GetBuffer(2) = 0x01;
-	*cmd.GetBuffer(3) = 0x03;
-	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Enter slave download successfully", false);
-	Sleep(500);	//Wait for master firmware boot.
-
-	//Download slave
-	m_DownloadMode = InternalLoaderV8;
-	m_nDownloadBaudIdx = 6;		//Slave download baud rate is 230400 bps
-	m_gpsdoInProgress = true;
-	isSuccessful = Download();
-
-	//In : a0 a1 00 04 7a 08 01 02 71 0d 0a 
-	*cmd.GetBuffer(0) = 0x7a;
-	*cmd.GetBuffer(1) = 0x08;
-	*cmd.GetBuffer(2) = 0x01;
-	*cmd.GetBuffer(3) = 0x02;
-	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Leave slave download successfully", false);
-	Sleep(500);	//Wait for master firmware boot.
-
-	//In : a0 a1 00 04 05 01 05 00 02 0d 0a 
-	*cmd.GetBuffer(0) = 0x05;
-	*cmd.GetBuffer(1) = 0x01;
-	*cmd.GetBuffer(2) = m_nSlaveTargetBaud;		//Slave target baud rate
-	*cmd.GetBuffer(3) = 0x00;
-	configCmd.SetData(cmd);
-	isSuccessful = CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Configure master COM1 successfully", false);
-	Sleep(500);	//Wait for master firmware boot.
-
-	BoostBaudrate(TRUE);
-
-	SetMode();
-	m_firstDataIn = false;
-	ClearInformation();
-	CreateGPSThread();
-  */
-	return true;
-}
-
 
 bool CGPSDlg::DownloadMasterSlave()
 {
@@ -2120,7 +2117,7 @@ bool CGPSDlg::DownloadMasterSlave()
       ::AfxMessageBox("Back from pass-through failed!");
       goto End;
   }
-  ::AfxMessageBox("Master / slave download success.");
+  ::AfxMessageBox("The Master / Slave Firmware Download was successful.");
 End:
   m_serial->ResetPort(m_masterFwBaudIdx);
   m_BaudRateCombo.SetCurSel(m_masterFwBaudIdx);

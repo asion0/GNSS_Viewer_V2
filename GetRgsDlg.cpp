@@ -47,13 +47,13 @@ BOOL CGetRgsDlg::OnInitDialog()
 
 void CGetRgsDlg::OnBnClickedOk()
 {
-	CString temp1;
-	CString& temp = temp1;
-	char buff[50];
+	CString strText;
+	//CString& temp = temp1;
+	//char buff[50];
 	
-	m_address.GetWindowText(temp);
-	sprintf_s(buff, sizeof(buff),"%s",temp);
-	address = ConvertCharToU32(buff);
+	m_address.GetWindowText(strText);
+	//sprintf_s(buff, sizeof(buff),"%s",temp);
+	address = ConvertCharToU32(strText);
 	lastAddress = address;
 	OnOK();
 }

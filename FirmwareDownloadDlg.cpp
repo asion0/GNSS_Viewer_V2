@@ -48,6 +48,7 @@ BOOL CFirmwareDownloadDlg::OnInitDialog()
 	icTypeCombo->AddString("V8 serial loader");
 	icTypeCombo->AddString("Using external loader in binCmd");
 	icTypeCombo->AddString("OLinkStar download");
+	icTypeCombo->AddString("V8 internal loader");
 
   if(CUSTOMER_CWQX_160815)
   {

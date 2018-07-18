@@ -65,11 +65,8 @@ BOOL CLogFilterDlg::OnInitDialog()
 	CDialog::OnInitDialog();
 	
 	m_logenable.SetCurSel(CGPSDlg::gpsDlg->m_logFlashInfo.datalog_enable);
-	if(_V8_SUPPORT)
-	{
-		m_fifomode.SetCurSel(CGPSDlg::gpsDlg->m_logFlashInfo.fifo_mode);
-		m_fifomode.ShowWindow(SW_SHOW);
-	}
+  m_fifomode.SetCurSel(CGPSDlg::gpsDlg->m_logFlashInfo.fifo_mode);
+	m_fifomode.ShowWindow(SW_SHOW);
 
 	m_mic.ShowWindow(0);
 	m_lbl_mic.ShowWindow(0);
@@ -90,10 +87,7 @@ void CLogFilterDlg::OnBnClickedOk()
 	}
 
 	CGPSDlg::gpsDlg->m_logFlashInfo.datalog_enable = m_logenable.GetCurSel();
-	if(_V8_SUPPORT)
-	{
-		CGPSDlg::gpsDlg->m_logFlashInfo.fifo_mode = m_fifomode.GetCurSel();
-	}
+	CGPSDlg::gpsDlg->m_logFlashInfo.fifo_mode = m_fifomode.GetCurSel();
 	OnOK();
 }
 

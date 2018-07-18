@@ -44,9 +44,23 @@ void CPic_Earth::InitCheck()
 	m_bdCheck.SetCheck(1);
 
 	chkRect.SetRect(244, 230, 306, 250);
+	m_giCheck.Create( "NAVIC", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_RIGHT,  
+                  chkRect, this, 1026);
+
+	chkRect.SetRect(244, 230, 306, 250);
 	m_gaCheck.Create( "Galileo", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_RIGHT,  
                   chkRect, this, 1026);  
+
+#ifdef _NAVIC_SUPPORT_
+	m_gaCheck.SetCheck(0);
+  m_gaCheck.ShowWindow(SW_HIDE);
+	m_giCheck.SetCheck(1);
+#else
 	m_gaCheck.SetCheck(1);
+	m_giCheck.SetCheck(0);
+  m_giCheck.ShowWindow(SW_HIDE);
+#endif
+
 }
 
 void CPic_Earth::OnPaint()
@@ -148,6 +162,11 @@ void CPic_Earth::Show_EarthChart(CDC *dc)
 	if(m_gaCheck.GetCheck())
 	{
 		DrawEarthSate(dc, &gaUI, &CGPSDlg::gpsDlg->sate_ga, &CGPSDlg::gpsDlg->m_gagsvMsg, &CGPSDlg::gpsDlg->m_gagsaMsg, &CGPSDlg::gpsDlg->m_gpggaMsg);
+	}
+
+	if(m_giCheck.GetCheck())
+	{
+		DrawEarthSate(dc, &giUI, &CGPSDlg::gpsDlg->sate_gi, &CGPSDlg::gpsDlg->m_gigsvMsg, &CGPSDlg::gpsDlg->m_gigsaMsg, &CGPSDlg::gpsDlg->m_gpggaMsg);
 	}
 }
 

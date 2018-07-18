@@ -88,10 +88,13 @@ void CExternalSrecDlg::OnBnClickedGo()
 		}
 	}
   m_isV6 = ((CButton*)GetDlgItem(IDC_V6))->GetCheck() != 0;
+  m_isV6 = ((CButton*)GetDlgItem(IDC_USE_BIN))->GetCheck() != 0;
+
+
 	CString externalSrecFile;
 	GetDlgItem(IDC_PATH)->GetWindowText(externalSrecFile);
 
-	if(!DownloadLoader(externalSrecFile))
+	if(!DownloadLoader(externalSrecFile, true))
 	{
 		return;
 	}
@@ -99,32 +102,55 @@ void CExternalSrecDlg::OnBnClickedGo()
 }
 
 WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd);
-bool CExternalSrecDlg::DownloadLoader(CString externalSrecFile)
+bool CExternalSrecDlg::DownloadLoader(CString externalSrecFile, BOOL useBinCmd)
 {
 	ScopeTimer t("DownloadLoader()");
+  char messages[100] = "$LOADER DOWNLOAD";
+
 	const int bufferSize = 256;
-	char messages[100] = "$LOADER DOWNLOAD";
-
-	const int retryCount = 3;
-	for (int i=1; i<retryCount; i++)
-	{
-		CGPSDlg::gpsDlg->SendToTargetNoAck((U08*)messages, (U16)strlen(messages) + 1);
-		Sleep(300);
-
-		switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, 5000, NULL))
+  if(useBinCmd)
+  {
+	  BinaryCommand cmd(7);
+	  cmd.SetU08(1, 0x64);    //Command Id
+	  cmd.SetU08(2, 0x1B);    //Port number 0 or 1
+	  cmd.SetU08(3, g_setting.GetBaudrateIndex()); //Baud rate index
+	  cmd.SetU08(4, 0);       //Mode : 0 - SRAM, 1 - Flash, 2 - Temp
+    cmd.SetU08(5, 0);
+    cmd.SetU08(6, 0);
+    cmd.SetU08(7, 0);
+ 
+    CString strMsg("Send upload loader successfully");
+    bool r = CGPSDlg::gpsDlg->SendToTarget(cmd.GetBuffer(), cmd.Size(), strMsg, true);	
+		if(!r)
 		{
-		case wlf_timeout:
-			AfxMessageBox("Target doesn't reply, please power cycle the target!");				
 			return false;
-			break;
-		case wlf_ok:
-			i = retryCount;
-			break;
-		default:
-			//Utility::LogFatal(__FUNCTION__, messages, __LINE__);
-			break;
-		}	
-	}
+		}
+  }
+  else
+  {
+	  //char messages[100] = "$LOADER DOWNLOAD";
+
+	  const int retryCount = 3;
+	  for (int i=1; i<retryCount; i++)
+	  {
+		  CGPSDlg::gpsDlg->SendToTargetNoAck((U08*)messages, (U16)strlen(messages) + 1);
+		  Sleep(300);
+
+		  switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, 5000, NULL))
+		  {
+		  case wlf_timeout:
+			  AfxMessageBox("Target doesn't reply, please power cycle the target!");				
+			  return false;
+			  break;
+		  case wlf_ok:
+			  i = retryCount;
+			  break;
+		  default:
+			  //Utility::LogFatal(__FUNCTION__, messages, __LINE__);
+			  break;
+		  }	
+	  }
+  }
 	
 	BinaryData srec;
 	srec.ReadFromFile(externalSrecFile);

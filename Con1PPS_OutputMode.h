@@ -14,7 +14,7 @@ public:
 	CButton m_no_output,m_output_always,m_output_gps_time,m_output_align;
 	CButton m_align_to_GPS,m_align_to_UTC;
 
-	enum { IDD = IDD_CON_1PPS_OUTPUT_MODE };
+	enum { IDD = IDD_CONFIG_1PPS_OUTPUT_MODE };
 	int mode;
 	int attr;
 	int align_to;
@@ -33,4 +33,5 @@ public:
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedRadioPpsAlignToGps();
 	afx_msg void OnBnClickedRadioPpsAlignToUtc();
+  afx_msg void OnBnClickedNoOutput();
 };

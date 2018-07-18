@@ -1031,7 +1031,7 @@ void CConfigQZSS::DoCommand()
 IMPLEMENT_DYNAMIC(CConfigInterferenceDetectControl, CCommonConfigDlg)
 
 CConfigInterferenceDetectControl::CConfigInterferenceDetectControl(CWnd* pParent /*=NULL*/)
-	: CCommonConfigDlg(IDD_CONFIG_INF_DTE_CTRL, pParent)
+	: CCommonConfigDlg(IDD_CFG_INF_DTE_CTRL, pParent)
 {
 	m_nMode = 0;
 	m_nAttribute = 0;
@@ -1077,7 +1077,7 @@ void CConfigInterferenceDetectControl::DoCommand()
 IMPLEMENT_DYNAMIC(CConfigNMEABinaryOutputDestination, CCommonConfigDlg)
 
 CConfigNMEABinaryOutputDestination::CConfigNMEABinaryOutputDestination(CWnd* pParent /*=NULL*/)
-	: CCommonConfigDlg(IDD_CONFIG_NMBI_OUT_DES, pParent)
+	: CCommonConfigDlg(IDD_CFG_NMBI_OUT_DES, pParent)
 {
 	m_nMode = 0;
 	m_nAttribute = 0;
@@ -1199,7 +1199,7 @@ void CConfigParameterSearchEngineNumber::DoCommand()
 IMPLEMENT_DYNAMIC(CConfigPositionFixNavigationMask, CCommonConfigDlg)
 
 CConfigPositionFixNavigationMask::CConfigPositionFixNavigationMask(CWnd* pParent /*=NULL*/)
-	: CCommonConfigDlg(IDD_CONFIG_POS_FIX_NAV_MASK, pParent)
+	: CCommonConfigDlg(IDD_CFG_POS_FIX_NAV_MASK, pParent)
 {
 	m_nMask1 = 0;
 	m_nMask2 = 0;
@@ -1309,7 +1309,7 @@ void ConfigRefTimeToGpsTimeDlg::DoCommand()
 IMPLEMENT_DYNAMIC(ConfigGnssConstellationTypeDlg, CCommonConfigDlg)
 
 ConfigGnssConstellationTypeDlg::ConfigGnssConstellationTypeDlg(CWnd* pParent /*=NULL*/)
-	: CCommonConfigDlg(IDD_CONFIG_GNSS_CTLN_TPE, pParent)
+	: CCommonConfigDlg(IDD_CFG_GNSS_CTLN_TPE, pParent)
 {
 
 }
@@ -1374,7 +1374,7 @@ void ConfigGnssConstellationTypeDlg::DoCommand()
 IMPLEMENT_DYNAMIC(ConfigBinaryMeasurementDataOutDlg, CCommonConfigDlg)
 
 ConfigBinaryMeasurementDataOutDlg::ConfigBinaryMeasurementDataOutDlg(CWnd* pParent /*=NULL*/)
-	: CCommonConfigDlg(IDD_CONFIG_BIN_MEA_DAT_OUT, pParent)
+	: CCommonConfigDlg(IDD_CFG_BIN_MEA_DAT_OUT, pParent)
 {
   m_newCmd = TRUE;
 }
@@ -1552,7 +1552,7 @@ void ConfigBinaryMeasurementDataOutDlg::DoCommand()
 IMPLEMENT_DYNAMIC(CConfigLeapSeconds, CCommonConfigDlg)
 
 CConfigLeapSeconds::CConfigLeapSeconds(CWnd* pParent /*=NULL*/)
-: CCommonConfigDlg(IDD_CONFIG_LEAP_SECONDS, pParent)
+: CCommonConfigDlg(IDD_CFG_LEAP_SECONDS, pParent)
 {
 
 }
@@ -1600,7 +1600,7 @@ void CConfigLeapSeconds::DoCommand()
 }
 
 // CConfigPowerMode 
-/*
+
 IMPLEMENT_DYNAMIC(CConfigPowerMode, CCommonConfigDlg)
 
 CConfigPowerMode::CConfigPowerMode(CWnd* pParent)
@@ -1643,7 +1643,7 @@ void CConfigPowerMode::DoCommand()
 	configPrompt = "Configure PowerMode successfully";
   AfxBeginThread(ConfigThread, 0);
 }
-*/
+
 // CConfigParamSearchEngineSleepCriteria 
 IMPLEMENT_DYNAMIC(CConfigParamSearchEngineSleepCriteria, CCommonConfigDlg)
 
@@ -1657,7 +1657,7 @@ BEGIN_MESSAGE_MAP(CConfigParamSearchEngineSleepCriteria, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigParamSearchEngineSleepCriteria::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigParamSearchEngineSleepCRiteria 
+// CConfigParamSearchEngineSleepCriteria 
 BOOL CConfigParamSearchEngineSleepCriteria::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -1691,7 +1691,7 @@ void CConfigParamSearchEngineSleepCriteria::DoCommand()
 	*cmd.GetBuffer(3) = (U08)m_nAttribute;
 
 	configCmd.SetData(cmd);
-	configPrompt = "Configure ParamSearchEngineSleepCRiteria successfully";
+	configPrompt = "Configure ParamSearchEngineSleepCriteria successfully";
   AfxBeginThread(ConfigThread, 0);
 }
 
@@ -1699,7 +1699,7 @@ void CConfigParamSearchEngineSleepCriteria::DoCommand()
 IMPLEMENT_DYNAMIC(CConfigDatumIndex, CCommonConfigDlg)
 
 CConfigDatumIndex::CConfigDatumIndex(CWnd* pParent /*=NULL*/)
-: CCommonConfigDlg(IDD_CONFIG_DATUM_INDEX, pParent)
+: CCommonConfigDlg(IDD_CFG_DATUM_INDEX, pParent)
 {
 
 }
@@ -1708,7 +1708,7 @@ BEGIN_MESSAGE_MAP(CConfigDatumIndex, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigDatumIndex::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigParamSearchEngineSleepCRiteria
+// CConfigDatumIndex
 BOOL CConfigDatumIndex::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -3455,7 +3455,7 @@ BEGIN_MESSAGE_MAP(CConfigMessageOut, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CConfigMessageOut::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-// CConfigRtkReset 
+// CConfigMessageOut 
 BOOL CConfigMessageOut::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
@@ -4084,40 +4084,48 @@ BOOL CConfigPstiInterval::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
 
-  CString txt;
+  CString txt, txt1;
   txt.Format("Configure PSTI%03d Interval", m_nPstiId);
 	SetWindowText(txt);
 
   txt.Format("Set interval to 0 to disable PSTI%03d output.", m_nPstiId);
-	GetDlgItem(IDC_PROMPT)->SetWindowText(txt);
 
   CGPSDlg::CmdErrorCode ack = CGPSDlg::Timeout;
   U08 interval = 0;
   switch(m_nPstiId)
   {
   case 4:
-	  ack = CGPSDlg::gpsDlg->QueryPsti004(CGPSDlg::Return, &interval);
-    break;
   case 30:
-	  ack = CGPSDlg::gpsDlg->QueryPsti030(CGPSDlg::Return, &interval);
-    break;
   case 32:
-	  ack = CGPSDlg::gpsDlg->QueryPsti032(CGPSDlg::Return, &interval);
-    break;
   case 33:
-	  ack = CGPSDlg::gpsDlg->QueryPsti033(CGPSDlg::Return, &interval);
+    CGPSDlg::gpsDlg->m_nPstiNo = m_nPstiId;
+	  ack = CGPSDlg::gpsDlg->QueryPsti(CGPSDlg::Return, &interval);
+    break;
+  case 63:
+  case 65:
+  case 67:
+  case 68:
+  case 70:
+    CGPSDlg::gpsDlg->m_nPstiNo = m_nPstiId;
+	  ack = CGPSDlg::gpsDlg->QueryPsti(CGPSDlg::Return, &interval);
+    GetDlgItem(IDC_SLIDER1)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_LOWER)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_UPPER)->ShowWindow(SW_HIDE);
+    txt1.Format("\r\nPSTI%03d only supports interval 0 or 1.", m_nPstiId);
+    txt += txt1;
     break;
   default:
     ASSERT(FALSE);
     break;
   }
+	GetDlgItem(IDC_PROMPT)->SetWindowText(txt);
 
   if(ack != CGPSDlg::Ack)
 	{
-    txt.Format("Not supported Configure PSTI%03d Interval!", m_nPstiId);
-		AfxMessageBox(txt);
-    this->OnCancel();
-		return TRUE;
+   // txt.Format("Not supported Configure PSTI%03d Interval!", m_nPstiId);
+	 // AfxMessageBox(txt);
+   // this->OnCancel();
+	 // return TRUE;
 	}
   m_nPstiInterval = interval;
 
@@ -4814,5 +4822,430 @@ void CLogConfigureControlDlg::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = "Log Configure Data Logging Criteria successfully";
+  AfxBeginThread(ConfigThread, 0);
+}
+
+// CPositionUpdateRateDlg 
+IMPLEMENT_DYNAMIC(CPositionUpdateRateDlg, CCommonConfigDlg)
+
+CPositionUpdateRateDlg::CPositionUpdateRateDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CONFIG_UPDATE_RATE_DLG, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CPositionUpdateRateDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CPositionUpdateRateDlg::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CPositionUpdateRateDlg 
+BOOL CPositionUpdateRateDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+	GetDlgItem(IDC_WARNING)->SetWindowText("Warning :\r\nPlease disable SAEE before using multi-hz position update rate.");
+	((CComboBox*)GetDlgItem(IDC_UPDATE_RATE))->SetCurSel(0);
+	((CComboBox*)GetDlgItem(IDC_ATTRIBUTE))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CPositionUpdateRateDlg::OnBnClickedOk()
+{
+  CString txt;
+  CComboBox* pCmb = (CComboBox*)GetDlgItem(IDC_UPDATE_RATE);
+  pCmb->GetLBText(pCmb->GetCurSel(), txt);
+  m_rate = atoi(txt);
+
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTRIBUTE))->GetCurSel();
+
+	OnOK();
+}
+
+UINT AFX_CDECL ConfigUpdateRateThread(LPVOID param)
+{
+	int rate = *((U08*)param);
+	//CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), configPrompt, false);
+	CGPSDlg::gpsDlg->ClearQue();
+	if(CGPSDlg::gpsDlg->SendToTarget(configCmd.GetBuffer(), configCmd.Size(), configPrompt, true))
+	{
+#if(!NO_BOOST_UPDATE_RATE_CHANGE)
+		Sleep(200);
+#if(MODULE_SUP_800)
+    // 20160810, request from Andrew, SUP800 fw can't support baud rate more than 230400
+		if(rate > 20 && g_setting.GetBaudrate() < 230400)				//Boost to 230400 when update rate > 20Hz.
+		{
+			CGPSDlg::gpsDlg->ConfigBaudrate(6, rate);	
+		}
+#else
+    if(rate > 40 && g_setting.GetBaudrate() < 961600)				//Boost to 961600 when update rate > 40Hz.
+		{
+			CGPSDlg::gpsDlg->ConfigBaudrate(8, rate);	
+		}
+		else if(rate > 25 && g_setting.GetBaudrate() < 460800)				//Boost to 460800 when update rate > 25Hz.
+		{
+			CGPSDlg::gpsDlg->ConfigBaudrate(7, rate);	
+		}
+		else if(rate > 20 && g_setting.GetBaudrate() < 230400)				//Boost to 230400 when update rate > 20Hz.
+		{
+			CGPSDlg::gpsDlg->ConfigBaudrate(6, rate);	
+		}
+#endif
+		else if(rate > 10 && g_setting.GetBaudrate() < 115200)				//Boost to 115200 when update rate > 10Hz.
+		{
+			CGPSDlg::gpsDlg->ConfigBaudrate(5, rate);	
+		}
+		else if(rate > 2 && g_setting.GetBaudrate() < 38400)			//Boost to 38400 when update rate > 2Hz.
+		{
+			CGPSDlg::gpsDlg->ConfigBaudrate(3, rate);	
+		}
+		else if(rate > 1 && g_setting.GetBaudrate() < 9600)			//Boost to 9600 when update rate > 1Hz.
+		{
+			CGPSDlg::gpsDlg->ConfigBaudrate(1, rate);	
+		
+		//else
+		//{
+        //Andrew request 20160901, doesn't need restart in here
+		  	//CGPSDlg::gpsDlg->SendRestartCommand(1);
+		//}
+#endif
+	}
+	CGPSDlg::gpsDlg->SetMode();
+	CGPSDlg::gpsDlg->CreateGPSThread();
+	return 0;
+}
+
+void CPositionUpdateRateDlg::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(3);
+	*cmd.GetBuffer(0) = 0x0E;
+	*cmd.GetBuffer(1) = m_rate;
+	*cmd.GetBuffer(2) = m_attribute;
+
+	configCmd.SetData(cmd);
+	configPrompt = "Configure position update rate successfully";
+  AfxBeginThread(ConfigUpdateRateThread, &m_rate);
+}
+
+// CDrUpdateRateDlg 
+IMPLEMENT_DYNAMIC(CDrUpdateRateDlg, CCommonConfigDlg)
+
+CDrUpdateRateDlg::CDrUpdateRateDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CONFIG_DR_UPDATE_RATE_DLG, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CDrUpdateRateDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CDrUpdateRateDlg::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CPositionUpdateRateDlg 
+BOOL CDrUpdateRateDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+  CString title;
+  BinaryData ackCmd;
+  const int convertArray[] = { -1, 0, 1, -1, 2, 3, -1, -1, 4, -1, 5 };
+  //1;2;4;5;8;10;
+  this->GetWindowText(title);
+  if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryDrRate(CGPSDlg::Return, &ackCmd))
+  {
+    title += " (Query success)";
+    int rateIdx = (ackCmd[6] < Dim(convertArray)) ? convertArray[ackCmd[6]] : -1;
+	  ((CComboBox*)GetDlgItem(IDC_UPDATE_RATE))->SetCurSel(rateIdx);
+  }
+  else
+  {
+    title += " (Query failed)";
+	  ((CComboBox*)GetDlgItem(IDC_UPDATE_RATE))->SetCurSel(0);
+  }
+  this->SetWindowText(title);
+	((CComboBox*)GetDlgItem(IDC_ATTRIBUTE))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CDrUpdateRateDlg::OnBnClickedOk()
+{
+  CString txt;
+  CComboBox* pCmb = (CComboBox*)GetDlgItem(IDC_UPDATE_RATE);
+  pCmb->GetLBText(pCmb->GetCurSel(), txt);
+  m_rate = atoi(txt);
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTRIBUTE))->GetCurSel();
+
+	OnOK();
+}
+
+void CDrUpdateRateDlg::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(4);
+	*cmd.GetBuffer(0) = 0x6C;
+	*cmd.GetBuffer(1) = 0x02;
+	*cmd.GetBuffer(2) = m_rate;
+	*cmd.GetBuffer(3) = m_attribute;
+
+	configCmd.SetData(cmd);
+	configPrompt = "Configure DR predict update rate successfully";
+  AfxBeginThread(ConfigThread, 0);
+}
+
+// CDrRawRateDlg 
+IMPLEMENT_DYNAMIC(CDrRawRateDlg, CCommonConfigDlg)
+
+CDrRawRateDlg::CDrRawRateDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CONFIG_DR_RAW_RATE_DLG, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CDrRawRateDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CDrRawRateDlg::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CDrRawRateDlg 
+BOOL CDrRawRateDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+  CString title;
+  BinaryData ackCmd;
+  const int convertArray[] = { 0, 1, 2, -1, 3, 4, -1, -1, 5, -1, 6 };
+  //1;2;4;5;8;10;
+  this->GetWindowText(title);
+  if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryDrRawRate(CGPSDlg::Return, &ackCmd))
+  {
+    int rateIdx = 0;
+    if(ackCmd[6] <= 10)
+    {
+      rateIdx = (ackCmd[6] < Dim(convertArray)) ? convertArray[ackCmd[6]] : -1;
+    }
+
+    title += " (Query success)";
+	  ((CComboBox*)GetDlgItem(IDC_UPDATE_RATE))->SetCurSel(rateIdx);
+  }
+  else
+  {
+    title += " (Query failed)";
+	  ((CComboBox*)GetDlgItem(IDC_UPDATE_RATE))->SetCurSel(0);
+  }
+  this->SetWindowText(title);
+	((CComboBox*)GetDlgItem(IDC_ATTRIBUTE))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+
+void CDrRawRateDlg::OnBnClickedOk()
+{
+  CString txt;
+  CComboBox* pCmb = (CComboBox*)GetDlgItem(IDC_UPDATE_RATE);
+  pCmb->GetLBText(pCmb->GetCurSel(), txt);
+  m_rate = atoi(txt);
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTRIBUTE))->GetCurSel();
+
+	OnOK();
+}
+
+void CDrRawRateDlg::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(4);
+	*cmd.GetBuffer(0) = 0x6C;
+	*cmd.GetBuffer(1) = 0x04;
+	*cmd.GetBuffer(2) = m_rate;
+	*cmd.GetBuffer(3) = m_attribute;
+
+	configCmd.SetData(cmd);
+	configPrompt = "Configure DR RAW sensor data output rate successfully";
+  AfxBeginThread(ConfigThread, 0);
+}
+
+// CConfigRtkSlaveBaud 
+IMPLEMENT_DYNAMIC(CConfigRtkSlaveBaud, CCommonConfigDlg)
+
+CConfigRtkSlaveBaud::CConfigRtkSlaveBaud(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_RTK_SLAVE_BAUD, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigRtkSlaveBaud, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigRtkSlaveBaud::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigRtkSlaveBaud 
+BOOL CConfigRtkSlaveBaud::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+  CString title;
+  BinaryData ackCmd;
+
+  CComboBox* pBox = (CComboBox*)GetDlgItem(IDC_BAUD_RATE);
+  g_setting.InitBaudrateCombo(pBox);
+
+  this->GetWindowText(title);
+  CGPSDlg::CmdErrorCode ack = CGPSDlg::Timeout;
+  ack = CGPSDlg::gpsDlg->QueryRtkSlaveBaud(CGPSDlg::Return, &ackCmd);
+
+  if(CGPSDlg::Ack == ack)
+  {
+    title += " (Query success)";
+    pBox->SetCurSel(ackCmd[6]);
+  }
+  else
+  {
+    title += " (Query failed)";
+    pBox->SetCurSel(5);
+  }
+	this->SetWindowText(title);;
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigRtkSlaveBaud::OnBnClickedOk()
+{	
+	CString txt;
+	m_rate = ((CComboBox*)GetDlgItem(IDC_BAUD_RATE))->GetCurSel();
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+	OnOK();
+}
+
+void CConfigRtkSlaveBaud::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(4);
+	*cmd.GetBuffer(0) = 0x6A;
+	*cmd.GetBuffer(1) = 0x0C;
+	*cmd.GetBuffer(2) = m_rate;
+	*cmd.GetBuffer(3) = (U08)m_nAttribute;
+
+  configCmd.SetData(cmd);
+	configPrompt = "Configure RTK slave serial port baud rate successfully";
+  AfxBeginThread(ConfigThread, 0);
+}
+
+// C1ppsOutputModeDlg 
+IMPLEMENT_DYNAMIC(C1ppsOutputModeDlg, CCommonConfigDlg)
+
+C1ppsOutputModeDlg::C1ppsOutputModeDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CONFIG_1PPS_OUTPUT_MODE, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(C1ppsOutputModeDlg, CCommonConfigDlg)
+  ON_BN_CLICKED(IDC_NO_OUTPUT, &C1ppsOutputModeDlg::OnBnClickedNoOutput)
+  ON_BN_CLICKED(IDC_HAVE_GPS_TIME, &C1ppsOutputModeDlg::OnBnClickedOutputHaveGpsTime)
+	ON_BN_CLICKED(IDC_OUTPUT_ALIGN, &C1ppsOutputModeDlg::OnBnClickedOutputAlign)
+	
+	ON_BN_CLICKED(IDC_ALIGN_TO_GPS, &C1ppsOutputModeDlg::OnBnClickedAlignToGps)
+	ON_BN_CLICKED(IDC_ALIGN_TO_UTC, &C1ppsOutputModeDlg::OnBnClickedAlignToUtc)
+	ON_BN_CLICKED(IDC_ALIGN_TO_NAVIC, &C1ppsOutputModeDlg::OnBnClickedAlignToNavic)
+
+	ON_BN_CLICKED(IDOK, &C1ppsOutputModeDlg::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// C1ppsOutputModeDlg 
+BOOL C1ppsOutputModeDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+  ((CButton*)GetDlgItem(IDC_NO_OUTPUT))->SetCheck(TRUE);
+  ((CButton*)GetDlgItem(IDC_ALIGN_TO_GPS))->SetCheck(TRUE);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+  if(!PPS_MODE_SUPPORT_ALIGN_TO_NAVIC)
+  {
+    GetDlgItem(IDC_ALIGN_TO_NAVIC)->ShowWindow(SW_HIDE);
+  }
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void C1ppsOutputModeDlg::OnBnClickedNoOutput()
+{
+  ((CButton*)GetDlgItem(IDC_NO_OUTPUT))->SetCheck(TRUE);
+  ((CButton*)GetDlgItem(IDC_HAVE_GPS_TIME))->SetCheck(FALSE);
+  ((CButton*)GetDlgItem(IDC_OUTPUT_ALIGN))->SetCheck(FALSE);
+}
+
+void C1ppsOutputModeDlg::OnBnClickedOutputHaveGpsTime()
+{
+  ((CButton*)GetDlgItem(IDC_NO_OUTPUT))->SetCheck(FALSE);
+  ((CButton*)GetDlgItem(IDC_HAVE_GPS_TIME))->SetCheck(TRUE);
+  ((CButton*)GetDlgItem(IDC_OUTPUT_ALIGN))->SetCheck(FALSE);
+}
+
+void C1ppsOutputModeDlg::OnBnClickedOutputAlign()
+{
+  ((CButton*)GetDlgItem(IDC_NO_OUTPUT))->SetCheck(FALSE);
+  ((CButton*)GetDlgItem(IDC_HAVE_GPS_TIME))->SetCheck(FALSE);
+  ((CButton*)GetDlgItem(IDC_OUTPUT_ALIGN))->SetCheck(TRUE);
+}
+
+void C1ppsOutputModeDlg::OnBnClickedAlignToGps()
+{
+  ((CButton*)GetDlgItem(IDC_ALIGN_TO_GPS))->SetCheck(TRUE);
+  ((CButton*)GetDlgItem(IDC_ALIGN_TO_UTC))->SetCheck(FALSE);
+  ((CButton*)GetDlgItem(IDC_ALIGN_TO_NAVIC))->SetCheck(FALSE);
+}
+
+void C1ppsOutputModeDlg::OnBnClickedAlignToUtc()
+{
+  ((CButton*)GetDlgItem(IDC_ALIGN_TO_GPS))->SetCheck(FALSE);
+  ((CButton*)GetDlgItem(IDC_ALIGN_TO_UTC))->SetCheck(TRUE);
+  ((CButton*)GetDlgItem(IDC_ALIGN_TO_NAVIC))->SetCheck(FALSE);
+}
+
+void C1ppsOutputModeDlg::OnBnClickedAlignToNavic()
+{
+  ((CButton*)GetDlgItem(IDC_ALIGN_TO_GPS))->SetCheck(FALSE);
+  ((CButton*)GetDlgItem(IDC_ALIGN_TO_UTC))->SetCheck(FALSE);
+  ((CButton*)GetDlgItem(IDC_ALIGN_TO_NAVIC))->SetCheck(TRUE);
+}
+
+void C1ppsOutputModeDlg::OnBnClickedOk()
+{
+  if(((CButton*)GetDlgItem(IDC_NO_OUTPUT))->GetCheck())
+  {
+    m_mode = 0;
+  }
+  else if(((CButton*)GetDlgItem(IDC_HAVE_GPS_TIME))->GetCheck())
+  {
+    m_mode = 1;
+  }
+  else if(((CButton*)GetDlgItem(IDC_OUTPUT_ALIGN))->GetCheck())
+  {
+    m_mode = 2;
+  }  
+
+  if(((CButton*)GetDlgItem(IDC_ALIGN_TO_GPS))->GetCheck())
+  {
+    m_align = 0;
+  }
+  else if(((CButton*)GetDlgItem(IDC_ALIGN_TO_UTC))->GetCheck())
+  {
+    m_align = 1;
+  }
+  else if(((CButton*)GetDlgItem(IDC_ALIGN_TO_NAVIC))->GetCheck())
+  {
+    m_align = 2;
+  } 
+
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+	OnOK();
+}
+
+void C1ppsOutputModeDlg::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(4);
+	*cmd.GetBuffer(0) = 0x55;
+	*cmd.GetBuffer(1) = m_mode;
+	*cmd.GetBuffer(2) = m_align;
+	*cmd.GetBuffer(3) = m_attribute;
+
+	configCmd.SetData(cmd);
+	configPrompt = "Configure 1PPS output mode successfully";
   AfxBeginThread(ConfigThread, 0);
 }

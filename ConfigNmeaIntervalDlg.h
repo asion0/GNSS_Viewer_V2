@@ -13,7 +13,7 @@ public:
 	CConfigNmeaIntervalDlg(CWnd* pParent = NULL);   
 	virtual ~CConfigNmeaIntervalDlg();
 
-#if (CUSTOMER_ID==SWID)	//SWID customize
+#if (CUSTOMER_ID == SWID)	//SWID customize
 	enum { IDD = IDD_CONFIG_NMEA_INTERVAL2_V8 };
 #else
 	enum { IDD = IDD_CONFIG_NMEA_INTERVAL_V8 };

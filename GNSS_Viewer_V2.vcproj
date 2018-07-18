@@ -45,7 +45,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_GNSS_INTERNALUSE_NEW"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_GNSS_INTERNALUSE_NEW;NO_TIMEOUT"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG;_TAB_LAYOUT_;_NAVIC_CONVERT_"
+				PreprocessorDefinitions="_DEBUG;_TAB_LAYOUT_;_NAVIC_CONVERT_;UPGRADE_DOWNLOAD"
 				Culture="1033"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
@@ -70,7 +70,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="Exe\GNSS_ViewerD.exe"
+				OutputFile="Exe/GNSS_ViewerD.exe"
 				LinkIncremental="2"
 				GenerateManifest="false"
 				EnableUAC="false"
@@ -133,7 +133,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				WholeProgramOptimization="true"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_GNSS_LITEON_170531"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_NSHP_FIX_TOOL"
 				StringPooling="true"
 				MinimalRebuild="false"
 				RuntimeLibrary="0"
@@ -150,7 +150,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG;_TAB_LAYOUT_"
+				PreprocessorDefinitions="NDEBUG;_TAB_LAYOUT_;_NAVIC_CONVERT_;UPGRADE_DOWNLOAD"
 				Culture="1033"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
@@ -159,7 +159,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="Exe/GNSS_Viewer-CustomerReleaseL.exe"
+				OutputFile="Exe/PatchTool.exe"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				EnableUAC="false"
@@ -1608,7 +1608,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_GNSS_NMEAPLAYER_BDL2"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_GNSS_NMEAPLAYER_NEW"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -2259,10 +2259,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Con1PPS_OutputMode.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Con_NMEA_TalkerID.cpp"
 				>
 			</File>
@@ -2613,10 +2609,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Con1PPS_OutputMode.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Con_NMEA_TalkerID.h"
 				>
 			</File>
@@ -2702,6 +2694,10 @@
 			</File>
 			<File
 				RelativePath=".\HostBaseDownloadDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IoTester.h"
 				>
 			</File>
 			<File
@@ -2832,6 +2828,10 @@
 			</File>
 			<File
 				RelativePath=".\GPSDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IoTester.cpp"
 				>
 			</File>
 			<File
@@ -2967,14 +2967,6 @@
 				</File>
 				<File
 					RelativePath="CryptHash.inl"
-					>
-				</File>
-				<File
-					RelativePath=".\DrMultiHzDlg.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\DrMultiHzDlg.h"
 					>
 				</File>
 				<File

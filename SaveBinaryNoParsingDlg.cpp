@@ -36,6 +36,7 @@ SaveBinaryNoParsingDlg::SaveBinaryNoParsingDlg(CWnd* pParent /*=NULL*/)
   threadBufferWrite = NULL;
   threadComRead = NULL;
   noAckAlerm = 3;
+  type = Default;
 }
 
 SaveBinaryNoParsingDlg::~SaveBinaryNoParsingDlg()
@@ -92,10 +93,13 @@ void SaveBinaryNoParsingDlg::OnOK()
 	CDialog::OnOK();
 }
 
-BOOL ParsingHotStartAck(U08* buf, DWORD size)
+BOOL ParsingHotStartAck(U08* buf, DWORD size, SaveBinaryNoParsingDlg::Type type)
 {
   //Ack: a0 a1 00 02 83 01 82 0d 0a 
   const U08 hotStartAck[] = { 0xA0, 0xA1, 0x00, 0x02, 0x83, 0x01, 0x82, 0x0d, 0x0a };
+  const U08 telitHhotStartAck[] = { 0xA0, 0xA1, 0x00, 0x03, 0x83, 0x6C, 0x03, 0xEC, 0x0d, 0x0a };
+  const U08* pAck = (type == SaveBinaryNoParsingDlg::Default) ? hotStartAck : telitHhotStartAck;
+  const int ackSize = (type == SaveBinaryNoParsingDlg::Default) ? sizeof(hotStartAck) : sizeof(telitHhotStartAck);
   static int findIndex = 0;
 
   if(buf == NULL)
@@ -106,7 +110,7 @@ BOOL ParsingHotStartAck(U08* buf, DWORD size)
 
   for(DWORD i = 0; i < size; ++i)
   {
-    if(buf[i] == hotStartAck[findIndex])
+    if(buf[i] == pAck[findIndex])
     {
       ++findIndex;
     }
@@ -114,7 +118,7 @@ BOOL ParsingHotStartAck(U08* buf, DWORD size)
     {
       findIndex = 0;
     }
-    if(findIndex == sizeof(hotStartAck))
+    if(findIndex == ackSize)
     {
       return TRUE;
     }
@@ -125,6 +129,7 @@ BOOL ParsingHotStartAck(U08* buf, DWORD size)
 UINT SaveBinaryNoParsingDlg::ComRead()
 {
 	CString portName;
+	COMSTAT comStatus = { 0 };
 	portName.Format("\\\\.\\COM%d", comPort);
   HANDLE comHandle = ::CreateFile(portName, GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
   if(comHandle == INVALID_HANDLE_VALUE)
@@ -149,13 +154,47 @@ UINT SaveBinaryNoParsingDlg::ComRead()
   ct.ReadTotalTimeoutConstant = 0; 
   b = ::SetCommTimeouts(comHandle, &ct);
   SetupComm(comHandle, 128 * 1024, 1024);
-  //Send HotStart
-  BinaryData binData(15);
-  *(binData.GetBuffer(0)) = 1;
-  *(binData.GetBuffer(1)) = 1;
-  BinaryCommand binCmd(binData);
+
+  BinaryCommand* pStartCmd = NULL;
+  if(type == Default)
+  { 
+    BinaryData openBinData(3);
+    *(openBinData.GetBuffer(0)) = 0x64;
+    *(openBinData.GetBuffer(1)) = 0x7a;
+    *(openBinData.GetBuffer(2)) = 0x01;
+    pStartCmd = new BinaryCommand(openBinData);
+    CGPSDlg::CmdErrorCode ack = CGPSDlg::SendComCmdWithAck(comHandle, pStartCmd->GetBuffer(), pStartCmd->Size(), 1000);
+    SafelyDelPtr(pStartCmd);
+    if(ack != CGPSDlg::Ack)
+    {
+      ::AfxMessageBox("Unable to open HostLog!");
+      goto End;
+    }
+    //Send HotStart
+    BinaryData binData(15);
+    *(binData.GetBuffer(0)) = 1;
+    *(binData.GetBuffer(1)) = 1;
+    pStartCmd = new BinaryCommand(binData);
+  }
+  else if(type == Telit)
+  {
+    BinaryData binData(4);
+    *(binData.GetBuffer(0)) = 0x6C;
+    *(binData.GetBuffer(1)) = 0x03;
+    *(binData.GetBuffer(2)) = 0x01;
+    *(binData.GetBuffer(3)) = 0x05;
+    pStartCmd = new BinaryCommand(binData);
+  }
+
+  Sleep(1000);
   DWORD dwBytesRead = 0;
-  b = ::WriteFile(comHandle, binCmd.GetBuffer(), 22, &dwBytesRead, 0);  
+	ClearCommError(comHandle, &dwBytesRead, &comStatus);
+  PurgeComm(comHandle, PURGE_RXCLEAR);
+	FlushFileBuffers(comHandle);
+
+  b = ::WriteFile(comHandle, pStartCmd->GetBuffer(), pStartCmd->Size(), &dwBytesRead, 0);  
+  SafelyDelPtr(pStartCmd);
+
   bool hotStartAck = false;
   static U08 readBuffer[1024 * 16] = { 0 };
   while(!stopThreadComRead)
@@ -178,15 +217,43 @@ UINT SaveBinaryNoParsingDlg::ComRead()
     }
     if(!hotStartAck)
     {
-      if(ParsingHotStartAck(readBuffer, dwBytesRead))
+      if(ParsingHotStartAck(readBuffer, dwBytesRead, type))
       {
-        ParsingHotStartAck(NULL, 0);
+        ParsingHotStartAck(NULL, 0, type);
         hotStartAck = TRUE;
         buffer.alreadyAck = TRUE;
       }
     }
     buffer.WriteBlock(readBuffer, dwBytesRead);
   }
+
+  if(type == Telit)
+  {
+    BinaryData binData(4);
+    *(binData.GetBuffer(0)) = 0x6C;
+    *(binData.GetBuffer(1)) = 0x03;
+    *(binData.GetBuffer(2)) = 0x00;
+    *(binData.GetBuffer(3)) = 0x00;
+    pStartCmd = new BinaryCommand(binData);
+    dwBytesRead = 0;
+    b = ::WriteFile(comHandle, pStartCmd->GetBuffer(), pStartCmd->Size(), &dwBytesRead, 0);
+    FlushFileBuffers(comHandle);
+    SafelyDelPtr(pStartCmd);
+  }
+  else
+  {
+    BinaryData binData(3);
+    *(binData.GetBuffer(0)) = 0x64;
+    *(binData.GetBuffer(1)) = 0x7a;
+    *(binData.GetBuffer(2)) = 0x00;
+    pStartCmd = new BinaryCommand(binData);
+    dwBytesRead = 0;
+    b = ::WriteFile(comHandle, pStartCmd->GetBuffer(), pStartCmd->Size(), &dwBytesRead, 0);
+    FlushFileBuffers(comHandle);
+    SafelyDelPtr(pStartCmd);  
+  }
+  Sleep(1000);
+End:
 	CloseHandle(comHandle);
 	return 0;
 }
@@ -234,14 +301,14 @@ void SaveBinaryNoParsingDlg::OnDestroy()
   if(threadComRead != NULL)
   {
     stopThreadComRead = TRUE;
-    ::WaitForSingleObject(threadComRead, INFINITE);
+    ::WaitForSingleObject(threadComRead->m_hThread, INFINITE);
   }
   if(threadBufferWrite != NULL)
   {
     stopThreadBufferWrite = TRUE;
-    ::WaitForSingleObject(threadBufferWrite, INFINITE);
+    ::WaitForSingleObject(threadBufferWrite->m_hThread, INFINITE);
   }
-
+  return;
 }
 
 void SaveBinaryNoParsingDlg::ShowSize(ULONGLONG size, UINT id)

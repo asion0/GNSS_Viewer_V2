@@ -74,6 +74,12 @@ class SaveBinaryNoParsingDlg : public CDialog
 	DECLARE_DYNAMIC(SaveBinaryNoParsingDlg)
 
 public:
+  enum Type
+  {
+    Default,
+    Telit,
+  };
+
 	SaveBinaryNoParsingDlg(CWnd* pParent = NULL);   // 
 	virtual ~SaveBinaryNoParsingDlg();
 
@@ -81,9 +87,10 @@ public:
   void SetFilePath(LPCSTR s) { filePath = s; };
   void SetComPort(int c) { comPort = c; };
   void SetBaudRate(int b) { baudrate = b; };
-
+  void SetType(Type t) { type = t; }
 protected:
   BufferBlock buffer;
+  Type type;
 
   CString filePath;
   int comPort;

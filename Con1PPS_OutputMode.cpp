@@ -45,6 +45,7 @@ BEGIN_MESSAGE_MAP(CCon1PPS_OutputMode, CDialog)
 	ON_BN_CLICKED(IDOK, OnBnClickedOk)
 	ON_BN_CLICKED(IDC_RADIO_PPS_ALIGN_TO_GPS, &CCon1PPS_OutputMode::OnBnClickedRadioPpsAlignToGps)
 	ON_BN_CLICKED(IDC_RADIO_PPS_ALIGN_TO_UTC, &CCon1PPS_OutputMode::OnBnClickedRadioPpsAlignToUtc)
+  //ON_BN_CLICKED(IDC_NO_OUTPUT, &CCon1PPS_OutputMode::OnBnClickedNoOutput)
 END_MESSAGE_MAP()
 
 
@@ -64,7 +65,6 @@ BOOL CCon1PPS_OutputMode::OnInitDialog()
 }
 
 // CCon1PPS_OutputMode 
-
 void CCon1PPS_OutputMode::OnBnClickedRadioPpsNoOutput()
 {
 	m_no_output.SetCheck(1);

@@ -3,16 +3,18 @@
 class UISetting
 {
 public:
-#if FLOAT_SNR
-  UISetting(COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, 
-		COLORREF, COLORREF, COLORREF, COLORREF, UINT, UINT, 
-    int idFontSize = 17, int barFontSize = 12);
-#else
+//#if FLOAT_SNR
+//  UISetting(COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, 
+//		COLORREF, COLORREF, COLORREF, COLORREF, UINT, UINT, 
+//    int idFontSize = 17, int barFontSize = 12);
+//#else
+//  UISetting(COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, 
+//		COLORREF, COLORREF, COLORREF, COLORREF, UINT, UINT, 
+//    int idFontSize = 17, int barFontSize = 16);
+//#endif
   UISetting(COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, 
 		COLORREF, COLORREF, COLORREF, COLORREF, UINT, UINT, 
     int idFontSize = 17, int barFontSize = 16);
-#endif
-	//UISetting(void);
 	~UISetting(void);
 
 public:
@@ -43,6 +45,7 @@ extern UISetting gpUI;
 extern UISetting glUI;
 extern UISetting bdUI;
 extern UISetting gaUI;
+extern UISetting giUI;
 extern UISetting bdl1UI;
 extern UISetting bdl2UI;
 extern UISetting gpl1UI;

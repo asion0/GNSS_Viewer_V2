@@ -9,7 +9,7 @@ CSkyTraqKml::CSkyTraqKml(void)
 	iniWriteKml = false;
     msg_gpgsa = msg_glgsa = msg_bdgsa = msg_gagsa = NULL;
     msg_gpgsv = msg_glgsv = msg_bdgsv = msg_gagsv = NULL;
-	satellites_gp = satellites_gl = satellites_bd = satellites_ga = NULL;
+	satellites_gp = satellites_gl = satellites_bd = satellites_ga = satellites_gi = NULL;
 }
 
 CSkyTraqKml::~CSkyTraqKml(void)
@@ -29,7 +29,7 @@ void CSkyTraqKml::Init(const char *name, int color, bool kml3d, bool bPointList,
 
     msg_gpgsa = msg_glgsa = msg_bdgsa = msg_gagsa = NULL;
     msg_gpgsv = msg_glgsv = msg_bdgsv = msg_gagsv = NULL;
-	satellites_gp = satellites_gl = satellites_bd = satellites_ga = NULL;
+	satellites_gp = satellites_gl = satellites_bd = satellites_ga = satellites_gi = NULL;
 
 	if(pointList)
 	{
@@ -72,6 +72,76 @@ void CSkyTraqKml::PushOnePoint(double lon, double lat, double alt, const CString
 	last_point.lat = lat;
 	last_point.lon = lon;
 	last_point.alt = alt;
+}
+
+void CSkyTraqKml::RealPushOnePoint2(double lon, double lat, double alt, const F32* speed, const F32* degree, const CString& ts, QualityMode q)
+{
+	if(iniWriteKml)
+	{
+		start_point.lon = lon;
+		start_point.lat = lat;
+		start_point.alt = alt;
+		WriteKMLini(kmlFile);
+		iniWriteKml = false;
+	}
+	WriteKMLPath2(kmlFile, lon, lat, alt, speed, degree, ts, q);
+
+	last_point.lat = lat;
+	last_point.lon = lon;
+	last_point.alt = alt;
+}
+
+static CString sTs = "";
+static double sLon = 0;
+static double sLat = 0;
+static double sAlt = 0;
+static F32 sSpeed = 0;
+static F32 sDegree = 0;
+static QualityMode sQm = Uninitial;
+void EmptyPoint()
+{
+  sLon = sLat = sAlt = 0;
+  sQm = Uninitial;
+  sSpeed = sDegree = 0;
+  sTs.Empty();
+}
+
+void SetPoint(double lon, double lat, double alt, const F32* speed, const F32* degree, const CString& ts, QualityMode q)
+{
+  sLon = lon;
+  sLat = lat;
+  sAlt = alt;
+  if(speed)
+  {
+    sSpeed = *speed;
+  }
+  if(degree)
+  {
+    sDegree = *degree;
+  }
+  sQm = q;
+  sTs = ts;
+}
+
+void CSkyTraqKml::PushOnePoint2(double lon, double lat, double alt, const F32* speed, const F32* degree, const CString& ts, QualityMode q)
+{
+  if(sTs.IsEmpty())
+  { //The first point
+    SetPoint(lon, lat, alt, speed, degree, ts, q);
+    return;
+  }
+
+  if(ts.IsEmpty())
+  { //The last point
+    RealPushOnePoint2(sLon, sLat, sAlt, &sSpeed, &sDegree, sTs, sQm);
+    return;
+  }
+
+  if(sTs != ts)
+  {
+    RealPushOnePoint2(sLon, sLat, sAlt, &sSpeed , &sDegree, sTs, sQm);
+  }
+  SetPoint(lon, lat, alt, speed, degree, ts, q);
 }
 
 void CSkyTraqKml::PushOnePoi(double lon, double lat, double alt)
@@ -158,6 +228,13 @@ void CSkyTraqKml::Finish()
 	kmlFile.Close();
 }
 
+void CSkyTraqKml::Finish2()
+{
+  PushOnePoint2(0, 0, 0, NULL, NULL, "", Uninitial);
+  EmptyPoint();
+  Finish();
+}
+
 void CSkyTraqKml::WriteKMLini(CFile& f)
 {
 	/*<?xml version="1.0" encoding="UTF-8"?>
@@ -184,7 +261,9 @@ void CSkyTraqKml::WriteKMLini(CFile& f)
 bool CompareByPRN(Satellite const& lhs, Satellite const& rhs)
 {
 	if(lhs.SatelliteID != 0)
+  {
 		return lhs.SatelliteID < rhs.SatelliteID;
+  }
 
 	return false;
 }
@@ -205,15 +284,11 @@ CString CSkyTraqKml::GenerateSatelliteTable(Satellites* s, GPGSA *gsa)
 	//"<tr><td>5</td><td>128</td><td>45</td><td>41</td><td>O</td></tr>" \
 	//"<tr><td>6</td><td>315</td><td>89</td><td>40</td><td>X</td></tr>" \
 	//"</table>";
-	CString str = "<table class=\"tg\"><tr><th>PRN</th><th>Azimuth</th><th>Elevation</th><th>SNR</th><th>Used</th></tr>";
-	Satellites* p = s;
-	for(int i = 0; i < p->GetSateCount(); ++i, ++p)
+	CString str = "<table class=\"tg\"><tr><th>PRN</th><th>AZI</th><th>ELE</th><th>SNR</th><th>Used</th></tr>";
+	//Satellites* p = s;
+	for(int i = 0; i < s->GetSateCount(); ++i)
 	{
-		//if(p->SatelliteID == 0)
-		//{
-		//	break;
-		//}
-    const Satellite* sate = p->GetSateIndex(i);
+    const Satellite* sate = s->GetSateIndex(i);
 		CString ss;
 		if(sate->snr[0] == INVALIDATE_SNR)
 		{
@@ -278,6 +353,16 @@ CString CSkyTraqKml::GetSatelliteInfo()
 			str += GenerateSatelliteTable(satellites_ga, msg_gagsa);
 		}
 	}
+	if(satellites_gi && msg_gigsa)
+	{
+		//std::sort(satellites_gi, (satellites_gi + MAX_SATELLITE), CompareByPRN);
+		if(satellites_gi->GetSateCount() > 0)
+		{
+      satellites_gi->Sort();
+			str += "Navic Satellites :<br>";
+			str += GenerateSatelliteTable(satellites_gi, msg_gigsa);
+		}
+	}
 	return str;
 }
 
@@ -330,6 +415,100 @@ void CSkyTraqKml::WriteKMLPath(CFile& f, double lon, double lat, double alt, con
 			strPointList += "<Placemark><name>" + ts + "</name><description><![CDATA[";
 		}
 		str.Format("lontitude: %012.9lf <br>latitude: %012.9lf<br>altitude: %07.3lf<br>Time: %s<br>Fix Mode: %s<br>", lon, lat, alt, ts, qMode);
+		strPointList += str;
+
+		if(detailInfo)
+		{
+			strPointList += GetSatelliteInfo();
+			//"<table class=\"tg\"><tr><th>PRN</th><th>Azimuth</th><th>Elevation</th><th>SNR</th><th>Used</th></tr><tr><td>5</td><td>128</td><td>45</td><td>41</td><td>O</td></tr><tr><td>6</td><td>315</td><td>89</td><td>40</td><td>X</td></tr></table>";
+		}
+		if(q==FixRTK)
+		{
+			strPointList += "]]></description><styleUrl>#PointStyle2</styleUrl><Point>";
+		}
+		else if(q==FloatRTK)
+		{
+			strPointList += "]]></description><styleUrl>#PointStyle3</styleUrl><Point>";
+		}		
+		else if(q==EstimatedMode)
+		{
+			strPointList += "]]></description><styleUrl>#PointStyle4</styleUrl><Point>";
+		}		
+		else
+		{
+			strPointList += "]]></description><styleUrl>#PointStyle</styleUrl><Point>";
+		}
+		if(convert3d)
+		{
+			strPointList += "<extrude>1</extrude><altitudeMode>absolute</altitudeMode>";
+		}
+		else
+		{
+			strPointList += "<altitudeMode>clampToGround</altitudeMode>";
+		}
+		str.Format("<coordinates>%012.9lf,%012.9lf,%07.3lf</coordinates>", lon, lat, alt);
+		strPointList += str;
+		strPointList += "</Point></Placemark>\r\n";
+	
+		if(strPointList.GetLength() > 4096)
+		{
+			pls.AddTail(strPointList);
+			strPointList.Empty();
+		}
+
+	}
+}
+
+void CSkyTraqKml::WriteKMLPath2(CFile& f, double lon, double lat, double alt, const F32* speed, const F32* degree, const CString& ts, QualityMode q)
+{
+	CString str;
+	str = "      ";
+	f.Write(str, str.GetLength());
+	str.Format("%012.9lf,%012.9lf,%07.3lf\r\n", lon, lat, (convert3d) ? alt : 2.0);
+	f.Write(str, str.GetLength());
+
+	if(pointList)
+	{
+		CString str, qMode;
+		if(q==FixRTK)
+		{
+			qMode = "Fix RTK";
+		}
+		else if(q==FloatRTK)
+		{
+			qMode = "Float RTK";
+		}		
+		else if(q==EstimatedMode)
+		{
+			qMode.Format("Estimated Mode");
+		}
+		else if(q==PositionFix2d)
+		{
+			qMode.Format("Position Fix 2D");
+		}
+		else if(q==PositionFix3d)
+		{
+			qMode.Format("Position Fix 3D");
+		}
+		else if(q==DgpsMode)
+		{
+			qMode.Format("DGPS");
+		}
+		else
+		{
+			qMode.Format("%d", q);
+		}
+
+		if(noPointText)
+		{
+			strPointList += "<Placemark><name></name><description><![CDATA[";
+		}
+		else
+		{
+			strPointList += "<Placemark><name>" + ts + "</name><description><![CDATA[";
+		}
+    str.Format("LON: %012.9lf <br>LAT: %012.9lf<br>ALT: %07.3lf<br>Speed: %.2f <br>Direction:%.2f <br>Time: %s<br>Fix Mode: %s<br>", 
+      lon, lat, alt, (speed) ? *speed * KNOTS2KMHR : 0, (degree) ? *degree : 0, ts, qMode);
 		strPointList += str;
 
 		if(detailInfo)

@@ -58,9 +58,9 @@ public:
 	U08 NMEA_PROC(const char*,int);
 
 	//GPGLL msg_gpgll;
-    GPGSA msg_gpgsa, msg_glgsa, msg_bdgsa, msg_gagsa;
+    GPGSA msg_gpgsa, msg_glgsa, msg_bdgsa, msg_gagsa, msg_gigsa;
     GPGGA msg_gpgga;
-    GPGSV msg_gpgsv, msg_glgsv, msg_bdgsv, msg_gagsv;
+    GPGSV msg_gpgsv, msg_glgsv, msg_bdgsv, msg_gagsv, msg_gigsv;
     //GPZDA msg_gpzda;
     GPRMC msg_gprmc;
     //GPVTG msg_gpvtg;
@@ -72,6 +72,8 @@ public:
 	double lon, lat;
 	bool WriteToFile(U08 type);
 	void Convert(CFile& f);
+	void Convert2(CFile& f);    //For new Convert to KML function
+	bool WriteToFile2(U08 type); //For new Convert to KML function
 
 	int GET_NMEA_SENTENCE(CFile&, U08*);
 	CComboBox m_color;

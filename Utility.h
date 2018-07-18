@@ -9,12 +9,14 @@
 //Delete pointer that creating by operator new []
 #define SafelyDelArray(x)  { delete [] (x); x = NULL; }
 
- //Delete pointer that create by CreateWindow()
+//Delete pointer that create by CreateWindow()
 #define SafelyDelWnd(x)  if(x) { (x)->DestroyWindow(); delete x; x = NULL; }
 
 //Calculate the number of elements in the array, x must be an array not pointer
 #define Dim(x) ( sizeof(x) / sizeof(x[0]) )
 
+//To determine whether it is a floating point
+#define IsFloat(x) ( ((x) - ((int)(x))) != 0 )
 
 class BinaryData;
 namespace Utility
@@ -111,6 +113,36 @@ protected:
 		logText.Format(_T("%s spent %lu ms."), logSubject, GetDuration());
 		::OutputDebugString(logText);
 	}
+};
+
+class MyTimer
+{
+public:
+	MyTimer() { isStarted = false; }
+
+	~MyTimer() { }
+
+  void Start() { startTickCount = GetTickCount(); isStarted = true; }
+  void Stop() { endTickCount = GetTickCount(); isStarted = false; };
+  bool IsStarted() { return isStarted; }
+  DWORD Restart() 
+  { 
+    DWORD d = (isStarted) ? GetDuration() : 0; 
+    Start();
+    return d;
+  }
+	
+  DWORD GetDuration()
+	{
+		endTickCount = ::GetTickCount();
+		return endTickCount - startTickCount;
+	}
+
+protected:
+  bool isStarted;
+	DWORD startTickCount;
+	DWORD endTickCount;
+
 };
 
 class BinaryData

@@ -120,6 +120,7 @@ void CSetupDialog::OnBnClickedOk()
 	setting->autoQueryVersion = ((CButton*)GetDlgItem(IDC_AUTO_QUERY_VERSION))->GetCheck();
 	setting->boostEphemeris = ((CButton*)GetDlgItem(IDC_BOOST_EPHEMERIS))->GetCheck();
 	setting->checkNmeaError = ((CButton*)GetDlgItem(IDC_CHECK_NMEA_ERR))->GetCheck();
+	setting->checkTimeError = ((CButton*)GetDlgItem(IDC_CHECK_TIME_ERR))->GetCheck();
 	setting->downloadTesting = ((CButton*)GetDlgItem(IDC_DOWNLOAD_TEST))->GetCheck();
 	setting->downloadRomInternal = ((CButton*)GetDlgItem(IDC_ROM_INTERNAL))->GetCheck();
 	setting->downloadUseBinExternal = ((CButton*)GetDlgItem(IDC_BIN_EXTERNAL))->GetCheck();
@@ -183,6 +184,155 @@ BOOL CSetupDialog::OnInitDialog()
 	((CButton*)GetDlgItem(IDC_AUTO_QUERY_VERSION))->SetCheck(setting->autoQueryVersion);
 	((CButton*)GetDlgItem(IDC_BOOST_EPHEMERIS))->SetCheck(setting->boostEphemeris);
 	((CButton*)GetDlgItem(IDC_CHECK_NMEA_ERR))->SetCheck(setting->checkNmeaError);
+	((CButton*)GetDlgItem(IDC_CHECK_TIME_ERR))->SetCheck(setting->checkTimeError);
+	((CButton*)GetDlgItem(IDC_DOWNLOAD_TEST))->SetCheck(setting->downloadTesting);
+	((CButton*)GetDlgItem(IDC_ROM_INTERNAL))->SetCheck(setting->downloadRomInternal);
+	((CButton*)GetDlgItem(IDC_BIN_EXTERNAL))->SetCheck(setting->downloadUseBinExternal);
+	((CButton*)GetDlgItem(IDC_ENABLE_LOG))->SetCheck(setting->responseLog);
+	((CEdit*)GetDlgItem(IDC_LOG_PATH))->SetWindowText(setting->responseLogPath);
+	((CButton*)GetDlgItem(IDC_SPY_CENTER))->SetCheck(setting->specifyCenter);
+	((CButton*)GetDlgItem(IDC_SPY_ALT))->SetCheck(setting->specifyCenterAlt);
+
+	s.Format("%12.9lf", setting->scatterCenterLon);
+	GetDlgItem(IDC_LON)->SetWindowText(s);
+	s.Format("%12.9lf", setting->scatterCenterLat);
+	GetDlgItem(IDC_LAT)->SetWindowText(s);
+	s.Format("%7.2lf", setting->scatterCenterAlt);
+	GetDlgItem(IDC_ALT)->SetWindowText(s);
+	s.Format("%d", setting->defaultTimeout);
+	GetDlgItem(IDC_TIMEOUT)->SetWindowText(s);
+	s.Format("%d", setting->scatterCount);
+	GetDlgItem(IDC_SCATTER_COUNT)->SetWindowText(s);
+
+	if(setting->recentScatterCenter.GetCount())
+	{
+		CComboBox *lonlat = (CComboBox *)GetDlgItem(IDC_LONLAT);
+		for(int i = setting->recentScatterCenter.GetCount() - 1; i >= 0 ; --i)
+		{
+			lonlat->AddString(setting->recentScatterCenter[i]);
+		}
+		lonlat->SetWindowText(setting->recentScatterCenter[setting->recentScatterCenter.GetCount() - 1]);
+	}
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+// CSetupDialog2
+IMPLEMENT_DYNAMIC(CSetupDialog2, CDialog)
+
+CSetupDialog2::CSetupDialog2(CWnd* pParent /*=NULL*/)
+	: CDialog(IDD_SETUP2, pParent)
+{
+	setting = NULL;
+}
+
+CSetupDialog2::~CSetupDialog2()
+{
+}
+
+void CSetupDialog2::DoDataExchange(CDataExchange* pDX)
+{
+	CDialog::DoDataExchange(pDX);
+}
+
+BEGIN_MESSAGE_MAP(CSetupDialog2, CDialog)
+	ON_BN_CLICKED(IDOK, &CSetupDialog2::OnBnClickedOk)
+	ON_BN_CLICKED(IDC_BROWSE, &CSetupDialog2::OnBnClickedBrowse)
+END_MESSAGE_MAP()
+
+void CSetupDialog2::OnBnClickedOk()
+{
+	if(((CButton*)GetDlgItem(IDC_SPY_CENTER))->GetCheck())
+	{
+		CStringW w;
+		::GetWindowTextW(GetDlgItem(IDC_LONLAT)->GetSafeHwnd(), w.GetBuffer(128), 128);
+		w.ReleaseBuffer();
+		D64 lat, lon;
+		if(!ParsingLatLon(w, lon, lat))
+		{
+			::AfxMessageBox("The scatter center point format error!", MB_OK);
+			return;
+		}
+		setting->scatterCenterLon = lon;
+		setting->scatterCenterLat = lat;
+		setting->AddRecentScatterCenter(CString(w));
+
+	}
+
+	CString s;
+	GetDlgItem(IDC_BINSIZE_DELAY)->GetWindowText(s);
+	setting->delayBeforeBinsize = (s.IsEmpty()) ? 0 : atoi(s);
+
+	int boostBaudIdx = ((CComboBox*)GetDlgItem(IDC_BOOST_BAUDRATE))->GetCurSel() + BOOST_BAUDIDX_BASE;
+	setting->boostBaudIndex = boostBaudIdx;
+
+	setting->autoQueryVersion = ((CButton*)GetDlgItem(IDC_AUTO_QUERY_VERSION))->GetCheck();
+	setting->boostEphemeris = ((CButton*)GetDlgItem(IDC_BOOST_EPHEMERIS))->GetCheck();
+	setting->checkNmeaError = ((CButton*)GetDlgItem(IDC_CHECK_NMEA_ERR))->GetCheck();
+	setting->checkTimeError = ((CButton*)GetDlgItem(IDC_CHECK_TIME_ERR))->GetCheck();
+	setting->downloadTesting = ((CButton*)GetDlgItem(IDC_DOWNLOAD_TEST))->GetCheck();
+	setting->downloadRomInternal = ((CButton*)GetDlgItem(IDC_ROM_INTERNAL))->GetCheck();
+	setting->downloadUseBinExternal = ((CButton*)GetDlgItem(IDC_BIN_EXTERNAL))->GetCheck();
+
+	setting->responseLog = ((CButton*)GetDlgItem(IDC_ENABLE_LOG))->GetCheck();
+	((CEdit*)GetDlgItem(IDC_LOG_PATH))->GetWindowText(setting->responseLogPath);
+	setting->specifyCenter = ((CButton*)GetDlgItem(IDC_SPY_CENTER))->GetCheck();
+	setting->specifyCenterAlt = ((CButton*)GetDlgItem(IDC_SPY_ALT))->GetCheck();
+
+
+	GetDlgItem(IDC_ALT)->GetWindowText(s);
+	setting->scatterCenterAlt = atof(s);
+	GetDlgItem(IDC_TIMEOUT)->GetWindowText(s);
+	setting->defaultTimeout = (s.IsEmpty()) ? DefaultTimeout : atoi(s);
+
+	GetDlgItem(IDC_SCATTER_COUNT)->GetWindowText(s);
+	int tmp = atoi(s);
+	if(!s.IsEmpty() && tmp > 0 && setting->scatterCount != tmp)
+	{
+		int r = ::AfxMessageBox("Modify Scatter Count will clear all data in Scatter View, are you sure?", MB_YESNO);
+		if(r == IDYES)
+		{
+			setting->scatterCount = tmp;
+			g_scatterData.Clear();
+		}
+	}	
+	
+	OnOK();
+}
+
+void CSetupDialog2::OnBnClickedBrowse()
+{
+	CString fileName(setting->responseLogPath);	
+	CFileDialog dlgFile(FALSE, _T("log"), fileName, OFN_HIDEREADONLY, _T("ALL Files (*.*)|*.*||"), this);
+	INT_PTR nResult = dlgFile.DoModal();
+	if(nResult == IDOK)
+	{  				
+		fileName = dlgFile.GetPathName();
+		setting->responseLogPath = fileName;
+		((CEdit*)GetDlgItem(IDC_LOG_PATH))->SetWindowText(fileName);
+	}		
+}
+
+BOOL CSetupDialog2::OnInitDialog()
+{
+	CDialog::OnInitDialog();
+
+	if(setting==NULL)
+	{
+		return TRUE;
+	}
+
+	CString s;
+	s.Format("%d", setting->delayBeforeBinsize);
+	GetDlgItem(IDC_BINSIZE_DELAY)->SetWindowText(s);
+	
+	if(setting->boostBaudIndex >= BOOST_BAUDIDX_BASE)
+	{
+		((CComboBox*)GetDlgItem(IDC_BOOST_BAUDRATE))->SetCurSel(setting->boostBaudIndex - BOOST_BAUDIDX_BASE);
+	}
+	((CButton*)GetDlgItem(IDC_AUTO_QUERY_VERSION))->SetCheck(setting->autoQueryVersion);
+	((CButton*)GetDlgItem(IDC_BOOST_EPHEMERIS))->SetCheck(setting->boostEphemeris);
+	((CButton*)GetDlgItem(IDC_CHECK_NMEA_ERR))->SetCheck(setting->checkNmeaError);
+	((CButton*)GetDlgItem(IDC_CHECK_TIME_ERR))->SetCheck(setting->checkTimeError);
 	((CButton*)GetDlgItem(IDC_DOWNLOAD_TEST))->SetCheck(setting->downloadTesting);
 	((CButton*)GetDlgItem(IDC_ROM_INTERNAL))->SetCheck(setting->downloadRomInternal);
 	((CButton*)GetDlgItem(IDC_BIN_EXTERNAL))->SetCheck(setting->downloadUseBinExternal);

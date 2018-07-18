@@ -103,11 +103,7 @@ struct Satellite
   U16     SatelliteID;
   U16     Elevation;
   U16     Azimuth;
-#if (FLOAT_SNR)
   F32     snr[2];
-#else
-  U16     snr[2];
-#endif
 };
 
 class Satellites
@@ -117,11 +113,8 @@ public:
   virtual ~Satellites(void) {}
 
   void Clear() { Init(); }
-#if (FLOAT_SNR)
+
   void SetSate(int prn, int ele, int azi, F32 snr0, F32 snr1 = -1)
-#else
-  void SetSate(int prn, int ele, int azi, int snr0, int snr1 = 0)
-#endif
   {
     int idx = GetPrnIndex(prn);
     if(idx == -1)
@@ -490,6 +483,32 @@ private:
 	CCriticalSection GnssDataCs;
 };
 
+class IntervalDetector
+{
+public:
+  IntervalDetector() { }
+  virtual ~IntervalDetector() {}
+
+  void Arrived() 
+  {
+    if(timer.IsStarted())
+      intervalRecord[recordIter++] = timer.Restart();
+    else
+      timer.Start();
+  }
+
+protected:
+  enum { RecordCount = 5 };
+
+protected:
+  void Init() { memset(intervalRecord, 0, sizeof(intervalRecord)); recordIter = 0; }
+
+protected:
+  MyTimer  timer;
+  DWORD intervalRecord[RecordCount];
+  int recordIter;
+};
+
 class NMEA
 {
 public:
@@ -500,6 +519,7 @@ public:
 		Glonass,
 		Beidou,
 		Galileo,
+		Navic,
 	};
 
 	enum NMEA_Type
@@ -513,6 +533,7 @@ public:
 protected:
 	static int LSB(char lsb);
 	static int MSB(char msb);
+  static float ParamFloatOrInt(LPCSTR p, int first, int second, float defaultValue);
 	static int ParamInt(LPCSTR p, int first, int second, int defaultValue);
 	static char ParamChar(LPCSTR p, int first, int second, char defaultValue);
 	static float ParamFloat(LPCSTR p, int first, int second, float defaultValue);
@@ -553,6 +574,19 @@ public:
 	Satellites satellites_gl;
 	Satellites satellites_bd;
 	Satellites satellites_ga;
+	Satellites satellites_gi;
+
+  MyTimer  gpgsvTimer;
+  MyTimer  glgsvTimer;
+  MyTimer  bdgsvTimer;
+  MyTimer  gagsvTimer;
+  MyTimer  gigsvTimer;
+
+  DWORD  gpgsvInterval;
+  DWORD  glgsvInterval;
+  DWORD  bdgsvInterval;
+  DWORD  gagsvInterval;
+  DWORD  gigsvInterval;
 
 #if(SUPPORT_BDL2_GSV2)
 	Satellite satellites2_gp[MAX_SATELLITE];
@@ -574,18 +608,18 @@ public:
 //#if(SUPPORT_BDL2_GSV2)
 //  void ShowGPGSVmsg2(GPGSV& rgpgsv, GPGSV& rgpgsv2, GPGSV& rglgsv, GPGSV& rglgsv2, GPGSV& rbdgsv, GPGSV& rbdgsv2, GPGSV& rgagsv, LPCSTR pt, int len);
 //#else
-  void ShowGPGSVmsg2(GPGSV& rgpgsv, GPGSV& rglgsv, GPGSV& rbdgsv, GPGSV& rgagsv, LPCSTR pt, int len);
+  void ShowGPGSVmsg2(GPGSV& rgpgsv, GPGSV& rglgsv, GPGSV& rbdgsv, GPGSV& rgagsv, GPGSV& rgigsv, LPCSTR pt, int len);
 //#endif
 	void ShowGLGSVmsg(GPGSV&, const char*, int);
 	void ShowGIGSVmsg(GPGSV&, const char*, int);
 	void ShowGAGSVmsg(GPGSV&, const char*, int);
-	void ShowGNGSVmsg(GPGSV&, GPGSV&, GPGSV&, GPGSV&, const char*, int);
+	void ShowGNGSVmsg(GPGSV&, GPGSV&, GPGSV&, GPGSV&, GPGSV&, const char*, int);
 	void ShowBDGSVmsg(GPGSV&, const char*, int);
 	void ShowGLGSAmsg(GPGSA& msg_glgsa,const char* pt,int offset);
-	void ShowGIGSAmsg(GPGSA& msg_glgsa,const char* pt,int offset);
+	void ShowGIGSAmsg(GPGSA& msg_gigsa,const char* pt,int offset);
 	void ShowGPGSAmsg(GPGSA& msg_gpgsa,const char* pt,int offset);
 	//void ShowGPGSAmsg(GPGSA& msg_gpgsa, GPGSA& msg_glgsa, GPGSA& msg_bdgsa, const char* pt, int offset);
-	void ShowGNGSAmsg(GPGSA& msg_gpgsa, GPGSA& msg_glgsa, GPGSA& msg_bdgsa, GPGSA& msg_gagsa, const char* pt, int offset);
+	void ShowGNGSAmsg(GPGSA& msg_gpgsa, GPGSA& msg_glgsa, GPGSA& msg_bdgsa, GPGSA& msg_gagsa, GPGSA& msg_gigsa, const char* pt, int offset);
 	void ShowBDGSAmsg(GPGSA& msg_bdgsa, const char* pt, int offset);
 	void ShowGAGSAmsg(GPGSA& msg_gagsa, const char* pt, int offset);
 	void ClearSatellites();

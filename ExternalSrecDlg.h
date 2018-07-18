@@ -17,7 +17,7 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV
-	bool DownloadLoader(CString externalSrecFile);
+	bool DownloadLoader(CString externalSrecFile, BOOL useBinCmd = false);
 
 	DECLARE_MESSAGE_MAP()
 public:

@@ -176,6 +176,10 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
 	ptr = decode_1bytes(ptr, &reserve);
 	ptr = decode_1bytes(ptr, &nmeas);
 
+  if(tow == 366333100)
+  {
+    int a = 0;
+  }
   //SetListCtrlRedraw(FALSE);
   strBuffer.Format("$EXT_RAW_MEAS(0xE5),V%d,IOD=%d,WN=%d,TOW=%d,MeasPeriod=%d,MeasIndicator=0x%02X,NMEAS=%d",
     ver, iod, weeks, tow, measPeriod, measIndFlag, nmeas);
@@ -351,15 +355,19 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
   strBuffer.Format(" ----+----+-----+----+---+---+----+-----+");
   DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	int fixed_gps_c = 0, fixed_glonass_c = 0, fixed_beidou_c = 0, fixed_galileo_c = 0;
-	int gps_c = 0, glonass_c = 0, beidou_c = 0, galileo_c = 0;
+	int fixed_gps_c = 0, fixed_glonass_c = 0, fixed_beidou_c = 0, fixed_galileo_c = 0, fixed_navic_c = 0;
+	int gps_c = 0, glonass_c = 0, beidou_c = 0, galileo_c = 0, navic_c = 0;
 	SV_CH_DATA sv;
 	if(!convertOnly)
 	{
-		memset(CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID));
-		memset(CGPSDlg::gpsDlg->m_bdgsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_bdgsaMsgCopy.SatelliteID));
-		memset(CGPSDlg::gpsDlg->m_glgsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_glgsaMsgCopy.SatelliteID));
-		memset(CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID));
+		memset(CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID, 0, 
+      sizeof(CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID));
+		memset(CGPSDlg::gpsDlg->m_bdgsaMsgCopy.SatelliteID, 0, 
+      sizeof(CGPSDlg::gpsDlg->m_bdgsaMsgCopy.SatelliteID));
+		memset(CGPSDlg::gpsDlg->m_glgsaMsgCopy.SatelliteID, 0, 
+      sizeof(CGPSDlg::gpsDlg->m_glgsaMsgCopy.SatelliteID));
+		memset(CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID, 0, 
+      sizeof(CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID));
 	}
 
 	for (int i=0; i<nsvs; ++i)
@@ -389,7 +397,6 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 		{
 			if(glonass_c==0)
 			{
-				//memset(CGPSDlg::gpsDlg->nmea.satellites_gl, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_gl));
         CGPSDlg::gpsDlg->nmea.satellites_gl.Clear();
 			}
 			if (sv.channel_status & 0x30)
@@ -398,18 +405,13 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 				++fixed_glonass_c;
 			}
 
-      CGPSDlg::gpsDlg->nmea.satellites_gl.SetSate( sv.prn, sv.elevation, sv.azimuth, sv.cn0);
-			//CGPSDlg::gpsDlg->nmea.satellites_gl[glonass_c].SatelliteID = sv.prn;
-			//CGPSDlg::gpsDlg->nmea.satellites_gl[glonass_c].SNR = sv.cn0;
-			//CGPSDlg::gpsDlg->nmea.satellites_gl[glonass_c].Elevation = sv.elevation;
-			//CGPSDlg::gpsDlg->nmea.satellites_gl[glonass_c].Azimuth = sv.azimuth;
+      CGPSDlg::gpsDlg->nmea.satellites_gl.SetSate(sv.prn, sv.elevation, sv.azimuth, sv.cn0);
 			glonass_c++;
 		}
 		else if(NMEA::Gps == NMEA::GetGNSSSystem(sv.prn))
 		{
 			if(gps_c==0)
 			{
-				//memset(CGPSDlg::gpsDlg->nmea.satellites_gp, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_gp));
         CGPSDlg::gpsDlg->nmea.satellites_gp.Clear();
 			}
 			if (sv.channel_status & 0x30)
@@ -418,18 +420,13 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 				fixed_gps_c++;
 			}
 
-      CGPSDlg::gpsDlg->nmea.satellites_gp.SetSate( sv.prn, sv.elevation, sv.azimuth, sv.cn0);
-			//CGPSDlg::gpsDlg->nmea.satellites_gp[gps_c].SatelliteID = sv.prn;
-			//CGPSDlg::gpsDlg->nmea.satellites_gp[gps_c].SNR = sv.cn0;
-			//CGPSDlg::gpsDlg->nmea.satellites_gp[gps_c].Elevation = sv.elevation;
-			//CGPSDlg::gpsDlg->nmea.satellites_gp[gps_c].Azimuth = sv.azimuth;
+      CGPSDlg::gpsDlg->nmea.satellites_gp.SetSate(sv.prn, sv.elevation, sv.azimuth, sv.cn0);
 			gps_c++;
 		}
 		else if(NMEA::Beidou == NMEA::GetGNSSSystem(sv.prn))
 		{
 			if(beidou_c==0)
 			{
-				//memset(CGPSDlg::gpsDlg->nmea.satellites_bd, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_bd));
         CGPSDlg::gpsDlg->nmea.satellites_bd.Clear();
 			}
 			if (sv.channel_status & 0x30)
@@ -438,18 +435,13 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 				fixed_beidou_c++;
 			}
 
-      CGPSDlg::gpsDlg->nmea.satellites_bd.SetSate( sv.prn, sv.elevation, sv.azimuth, sv.cn0);
-			//CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].SatelliteID = sv.prn;
-			//CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].SNR = sv.cn0;
-			//CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].Elevation = sv.elevation;
-			//CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].Azimuth = sv.azimuth;
+      CGPSDlg::gpsDlg->nmea.satellites_bd.SetSate(sv.prn, sv.elevation, sv.azimuth, sv.cn0);
 			beidou_c++;
 		}
 		else if(NMEA::Galileo == NMEA::GetGNSSSystem(sv.prn))
 		{
 			if(galileo_c==0)
 			{
-				//memset(CGPSDlg::gpsDlg->nmea.satellites_ga, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_ga));
         CGPSDlg::gpsDlg->nmea.satellites_ga.Clear();
 			}
 			if (sv.channel_status & 0x30)
@@ -458,12 +450,23 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 				fixed_galileo_c++;
 			}
 
-      CGPSDlg::gpsDlg->nmea.satellites_ga.SetSate( sv.prn, sv.elevation, sv.azimuth, sv.cn0);
-			//CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].SatelliteID = sv.prn;
-			//CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].SNR = sv.cn0;
-			//CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].Elevation = sv.elevation;
-			//CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].Azimuth = sv.azimuth;
+      CGPSDlg::gpsDlg->nmea.satellites_ga.SetSate(sv.prn, sv.elevation, sv.azimuth, sv.cn0);
 			galileo_c++;
+		}
+		else if(NMEA::Navic == NMEA::GetGNSSSystem(sv.prn))
+		{
+			if(navic_c==0)
+			{
+        CGPSDlg::gpsDlg->nmea.satellites_gi.Clear();
+			}
+			if (sv.channel_status & 0x30)
+			{
+				CGPSDlg::gpsDlg->m_gigsaMsgCopy.SatelliteID[fixed_navic_c] = sv.prn - 240;
+				fixed_navic_c++;
+			}
+
+      CGPSDlg::gpsDlg->nmea.satellites_gi.SetSate(sv.prn - 240, sv.elevation, sv.azimuth, sv.cn0);
+			navic_c++;
 		}
 	}
 	
@@ -479,6 +482,10 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 	CGPSDlg::gpsDlg->m_bdgsvMsgCopy.NumOfSate = beidou_c;
 	CGPSDlg::gpsDlg->m_bdgsvMsgCopy.NumOfMessage = (beidou_c + 3) / 4;
 	CGPSDlg::gpsDlg->m_bdgsvMsgCopy.SequenceNum = (beidou_c + 3) / 4;
+
+	CGPSDlg::gpsDlg->m_gigsvMsgCopy.NumOfSate = navic_c;
+	CGPSDlg::gpsDlg->m_gigsvMsgCopy.NumOfMessage = (navic_c + 3) / 4;
+	CGPSDlg::gpsDlg->m_gigsvMsgCopy.SequenceNum = (navic_c + 3) / 4;
 }
 
 void ShowReceiverNav(U08 *src, bool convertOnly, CString* pStr)
@@ -1288,7 +1295,7 @@ void ShowRtcm1077(U08* src, bool convertOnly, CString* pStr)
 	{
     int bitOrder = GetNoneZeroBitPosition((U08*)(&msm_header.sat_mask), sizeof(msm_header.sat_mask), i);
 
-    CGPSDlg::gpsDlg->nmea.satellites_gp.SetSate(1 + bitOrder, 0, 0, sigData[i].snr_ext_resol / 16);
+    CGPSDlg::gpsDlg->nmea.satellites_gp.SetSate(1 + bitOrder, 0, 0, (F32)(sigData[i].snr_ext_resol / 16));
 	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].SatelliteID = 1 + bitOrder;
 	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].SNR = sigData[i].snr_ext_resol / 16;
 	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].Elevation = 0;
@@ -1315,7 +1322,7 @@ void ShowRtcm1107(U08* src, bool convertOnly, CString* pStr)
 	{
     int bitOrder = GetNoneZeroBitPosition((U08*)(&msm_header.sat_mask), sizeof(msm_header.sat_mask), i);
 
-    CGPSDlg::gpsDlg->nmea.satellites_gp.SetSate(33 + bitOrder, 0, 0, sigData[i].snr_ext_resol / 16);
+    CGPSDlg::gpsDlg->nmea.satellites_gp.SetSate(33 + bitOrder, 0, 0, (F32)(sigData[i].snr_ext_resol / 16));
 	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].SatelliteID = 33 + bitOrder;
 	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].SNR = sigData[i].snr_ext_resol / 16;
 	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].Elevation = 0;
@@ -1342,7 +1349,7 @@ void ShowRtcm1117(U08* src, bool convertOnly, CString* pStr)
 	{
     int bitOrder = GetNoneZeroBitPosition((U08*)(&msm_header.sat_mask), sizeof(msm_header.sat_mask), i);
 
-    CGPSDlg::gpsDlg->nmea.satellites_gp.SetSate(193 + bitOrder, 0, 0, sigData[i].snr_ext_resol / 16);
+    CGPSDlg::gpsDlg->nmea.satellites_gp.SetSate(193 + bitOrder, 0, 0, (F32)(sigData[i].snr_ext_resol / 16));
 	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].SatelliteID = 193 + bitOrder;
 	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].SNR = sigData[i].snr_ext_resol / 16;
 	  //CGPSDlg::gpsDlg->nmea.satellites_gp[pos + i].Elevation = 0;
@@ -1369,7 +1376,7 @@ void ShowRtcm1127(U08* src, bool convertOnly, CString* pStr)
 	{
     int bitOrder = GetNoneZeroBitPosition((U08*)(&msm_header.sat_mask), sizeof(msm_header.sat_mask), i);
 
-    CGPSDlg::gpsDlg->nmea.satellites_bd.SetSate(201 + bitOrder, 0, 0, sigData[i].snr_ext_resol / 16);
+    CGPSDlg::gpsDlg->nmea.satellites_bd.SetSate(201 + bitOrder, 0, 0, (F32)(sigData[i].snr_ext_resol / 16));
 	  //CGPSDlg::gpsDlg->nmea.satellites_bd[pos + i].SatelliteID = 201 + bitOrder;
 	  //CGPSDlg::gpsDlg->nmea.satellites_bd[pos + i].SNR = sigData[i].snr_ext_resol / 16;
 	  //CGPSDlg::gpsDlg->nmea.satellites_bd[pos + i].Elevation = 0;
@@ -1396,7 +1403,7 @@ void ShowRtcm1087(U08* src, bool convertOnly, CString* pStr)
 	{
     int bitOrder = GetNoneZeroBitPosition((U08*)(&msm_header.sat_mask), sizeof(msm_header.sat_mask), i);
 
-    CGPSDlg::gpsDlg->nmea.satellites_gl.SetSate(65 + bitOrder, 0, 0, sigData[i].snr_ext_resol / 16);
+    CGPSDlg::gpsDlg->nmea.satellites_gl.SetSate(65 + bitOrder, 0, 0, (F32)(sigData[i].snr_ext_resol / 16));
 	  //CGPSDlg::gpsDlg->nmea.satellites_gl[pos + i].SatelliteID = 65 + bitOrder;
 	  //CGPSDlg::gpsDlg->nmea.satellites_gl[pos + i].SNR = sigData[i].snr_ext_resol / 16;
 	  //CGPSDlg::gpsDlg->nmea.satellites_gl[pos + i].Elevation = 0;
@@ -1420,8 +1427,16 @@ void ShowUbxTimTp(U08* src, bool convertOnly, CString* pStr)
   GetByteDataFromLE(&src[6], 8, 4, (U08*)(&qErr), sizeof(qErr));
   GetByteDataFromLE(&src[6], 12, 2, (U08*)(&week), sizeof(week));
 
-  strBuffer.Format("$UBX-TIM-TP(0x0D,0x01),towMS=%d,towSubMS=%d,qErr=%d,week=%d",
-    towMs, towSubMs, qErr, week);
+  if(convertOnly)
+  {
+    strBuffer.Format("$UBX-TIM-TP,%d,%d,%d,%d",
+      towMs, towSubMs, qErr, week);
+  }
+  else
+  {
+    strBuffer.Format("$UBX-TIM-TP(0x0D,0x01),towMS=%d,towSubMS=%d,qErr=%d,week=%d",
+      towMs, towSubMs, qErr, week);
+  }
   DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
   if(convertOnly)
@@ -1472,13 +1487,33 @@ void ShowUbxNavSol(U08* src, bool convertOnly, CString* pStr)
 
   U16 pDop = 0;
   U08 numSv = 0;
+  U08 rev1 = 0, rev2 = 0;
   GetByteDataFromLE(&src[6], 44, 2, (U08*)(&pDop), sizeof(pDop));
+  GetByteDataFromLE(&src[6], 46, 1, (U08*)(&rev1), sizeof(rev1));
   GetByteDataFromLE(&src[6], 47, 1, (U08*)(&numSv), sizeof(numSv));
+  GetByteDataFromLE(&src[6], 48, 1, (U08*)(&rev2), sizeof(rev2));
 
-  strBuffer.Format("$UBX-NAV-SOL(0x01,0x06),iTOW=%d,fTOW=%d,week=%d,gpsFix=%d,flags=0x%08X," \
-    "ecefX=%d,ecefY=%d,ecefZ=%d,pAcc=%d,ecefVX=%d,ecefVY=%d,ecefVZ=%d,sAcc=%d,pDop=%d,numSv=%d",
-    towMs, towNs, week, fixMode, flags,
-    ecefX, ecefY, ecefZ, pAcc, ecefVX, ecefVY, ecefVZ, sAcc, pDop, numSv);
+  if(convertOnly)
+  {
+    strBuffer.Format("$UBX-NAV-SOL,%d,%d,%d,%d,%08Xh," \
+      "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+      towMs, towNs, week, fixMode, flags,
+      ecefX, ecefY, ecefZ, pAcc, ecefVX, ecefVY, ecefVZ, sAcc, pDop, numSv);
+  }
+  else
+  {
+    /*
+    strBuffer.Format("$UBX-NAV-SOL(0x01,0x06),iTOW=%d,fTOW=%d,week=%d,gpsFix=%d,flags=0x%08X," \
+      "ecefX=%d,ecefY=%d,ecefZ=%d,pAcc=%d,ecefVX=%d,ecefVY=%d,ecefVZ=%d,sAcc=%d,pDop=%d,numSv=%d",
+      towMs, towNs, week, fixMode, flags,
+      ecefX, ecefY, ecefZ, pAcc, ecefVX, ecefVY, ecefVZ, sAcc, pDop, numSv);
+    */
+    strBuffer.Format("$UBX-NAV-SOL(0x01,0x06),rev1=%d,rev2=%d,iTOW=%d,fTOW=%d,week=%d,gpsFix=%d,flags=0x%08X," \
+      "ecefX=%d,ecefY=%d,ecefZ=%d,pAcc=%d,ecefVX=%d,ecefVY=%d,ecefVZ=%d,sAcc=%d,pDop=%d,numSv=%d",
+      rev1,rev2,towMs, towNs, week, fixMode, flags,
+      ecefX, ecefY, ecefZ, pAcc, ecefVX, ecefVY, ecefVZ, sAcc, pDop, numSv);
+  }
+
   DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
   if(convertOnly)
@@ -1493,23 +1528,41 @@ void ShowUbxNavSol(U08* src, bool convertOnly, CString* pStr)
 		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'V';
     //return;
   }
-	else if(fixMode == 2)
+	else if(fixMode == 2 || fixMode == 3)
 	{
 		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
-		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 2;
+		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = fixMode;
 		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
 	}
-	else if(fixMode == 3 || fixMode == 4)
+	else if(fixMode == 4 || fixMode == 5)
+	{
+		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
+		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
+	}
+	else if(fixMode == 6)
 	{
 		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '2';
-		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 2;
-		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
+		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'D';
 	}
-	CGPSDlg::gpsDlg->m_gpggaMsgCopy.NumsOfSatellites = numSv;
+	else if(fixMode == 7)
+	{
+		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '5';
+		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'F';
+	}
+	else if(fixMode == 8)
+	{
+		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '4';
+		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'R';
+	}
+  CGPSDlg::gpsDlg->m_gpggaMsgCopy.NumsOfSatellites = numSv;
 
 	UtcTime utc;
 	UtcConvertGpsToUtcTime(week, (towMs / 1000.0), &utc);
-
+ 
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Hour = utc.hour;
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Min = utc.minute;
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Sec = utc.sec;
@@ -1560,15 +1613,24 @@ void ShowUbxNavSvInfo(U08* src, bool convertOnly, CString* pStr)
   U32 towMs = 0;
   U08 numCh = 0;
   U08 globalFlags = 0;
-
+  U16 rev = 0;
   GetByteDataFromLE(&src[6], 0, 4, (U08*)(&towMs), sizeof(towMs));
   GetByteDataFromLE(&src[6], 4, 1, (U08*)(&numCh), sizeof(numCh));
   GetByteDataFromLE(&src[6], 5, 1, (U08*)(&globalFlags), sizeof(globalFlags));
+  GetByteDataFromLE(&src[6], 6, 2, (U08*)(&rev), sizeof(rev));
 
-  strBuffer.Format("$UBX-NAV-SVINFO(0x01,0x30),iTOW=%d,numCh=%d,globalFlags=0x%02X", towMs, numCh, globalFlags);
+  if(convertOnly)
+  {
+    strBuffer.Format("$UBX-NAV-SVINFO,%d,%d,%02Xh", towMs, numCh, globalFlags);
+  }
+  else
+  {
+    //strBuffer.Format("$UBX-NAV-SVINFO(0x01,0x30),iTOW=%d,numCh=%d,globalFlags=0x%02X", towMs, numCh, globalFlags);
+    strBuffer.Format("$UBX-NAV-SVINFO(0x01,0x30),rev=%d,iTOW=%d,numCh=%d,globalFlags=0x%02X", rev, towMs, numCh, globalFlags);
+  }
   DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
   
-  if(numCh == 0)
+  if(numCh == 0 || convertOnly)
   {
     return;
   }
@@ -1579,11 +1641,12 @@ void ShowUbxNavSvInfo(U08* src, bool convertOnly, CString* pStr)
   strBuffer.Format(" ----+----+-----+----+---+---+----+-----+");
   DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-	int fixed_gps_c = 0, fixed_glonass_c = 0, fixed_beidou_c = 0, fixed_galileo_c = 0;
-	int gps_c = 0, glonass_c = 0, beidou_c = 0, galileo_c = 0;
+	int fixed_gps_c = 0, fixed_glonass_c = 0, fixed_beidou_c = 0, fixed_galileo_c = 0, fixed_navic_c = 0;
+	int gps_c = 0, glonass_c = 0, beidou_c = 0, galileo_c = 0, navic_c = 0;
 	SV_CH_DATA sv;
 	if(!convertOnly)
 	{
+		memset(CGPSDlg::gpsDlg->m_gigsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_gigsaMsgCopy.SatelliteID));
 		memset(CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID));
 		memset(CGPSDlg::gpsDlg->m_bdgsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_bdgsaMsgCopy.SatelliteID));
 		memset(CGPSDlg::gpsDlg->m_glgsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_glgsaMsgCopy.SatelliteID));
@@ -1619,82 +1682,79 @@ void ShowUbxNavSvInfo(U08* src, bool convertOnly, CString* pStr)
 		{
 			if(gps_c == 0)
 			{
-				//memset(CGPSDlg::gpsDlg->nmea.satellites_gp, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_gp));
         CGPSDlg::gpsDlg->nmea.satellites_gp.Clear();
 			}
-			if (sv.SV_status & 0x01)
+			if(sv.SV_status & 0x01)
 			{
 				CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID[fixed_gps_c] = sv.prn;
 				fixed_gps_c++;
 			}
 
       CGPSDlg::gpsDlg->nmea.satellites_gp.SetSate(sv.prn, elev, sv.azimuth, sv.cn0);
-			//CGPSDlg::gpsDlg->nmea.satellites_gp[gps_c].SatelliteID = sv.prn;
-			//CGPSDlg::gpsDlg->nmea.satellites_gp[gps_c].SNR = sv.cn0;
-			//CGPSDlg::gpsDlg->nmea.satellites_gp[gps_c].Elevation = elev;
-			//CGPSDlg::gpsDlg->nmea.satellites_gp[gps_c].Azimuth = sv.azimuth;
 			gps_c++;
 		}
 		else if(NMEA::Glonass == gs)
 		{
 			if(glonass_c==0)
 			{
-				//memset(CGPSDlg::gpsDlg->nmea.satellites_gl, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_gl));
         CGPSDlg::gpsDlg->nmea.satellites_gl.Clear();
 			}
-			if (sv.SV_status & 0x01)
+			if(sv.SV_status & 0x01)
 			{
 				CGPSDlg::gpsDlg->m_glgsaMsgCopy.SatelliteID[fixed_glonass_c] = sv.prn;
 				fixed_glonass_c++;
 			}
 
       CGPSDlg::gpsDlg->nmea.satellites_gl.SetSate(sv.prn, elev, sv.azimuth, sv.cn0);
-			//CGPSDlg::gpsDlg->nmea.satellites_gl[glonass_c].SatelliteID = sv.prn;
-			//CGPSDlg::gpsDlg->nmea.satellites_gl[glonass_c].SNR = sv.cn0;
-			//CGPSDlg::gpsDlg->nmea.satellites_gl[glonass_c].Elevation = elev;
-			//CGPSDlg::gpsDlg->nmea.satellites_gl[glonass_c].Azimuth = sv.azimuth;
 			glonass_c++;
     }
 		else if(NMEA::Beidou == gs)
 		{
 			if(beidou_c==0)
 			{
-				//memset(CGPSDlg::gpsDlg->nmea.satellites_bd, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_bd));
         CGPSDlg::gpsDlg->nmea.satellites_bd.Clear();
 			}
-			if (sv.SV_status & 0x01)
+			if(sv.SV_status & 0x01)
 			{
 				CGPSDlg::gpsDlg->m_bdgsaMsgCopy.SatelliteID[fixed_beidou_c] = sv.prn;
 				fixed_beidou_c++;
 			}
 
       CGPSDlg::gpsDlg->nmea.satellites_bd.SetSate(sv.prn, elev, sv.azimuth, sv.cn0);
-			//CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].SatelliteID = sv.prn;
-			//CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].SNR = sv.cn0;
-			//CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].Elevation = elev;
-			//CGPSDlg::gpsDlg->nmea.satellites_bd[beidou_c].Azimuth = sv.azimuth;
 			beidou_c++;
     }
 		else if(NMEA::Galileo == gs)
 		{
 			if(galileo_c==0)
 			{
-//				memset(CGPSDlg::gpsDlg->nmea.satellites_ga, 0, sizeof(CGPSDlg::gpsDlg->nmea.satellites_ga));
         CGPSDlg::gpsDlg->nmea.satellites_ga.Clear();
 			}
-			if (sv.SV_status & 0x01)
+			if(sv.SV_status & 0x01)
 			{
 				CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID[fixed_galileo_c] = sv.prn;
 				fixed_galileo_c++;
 			}
 
       CGPSDlg::gpsDlg->nmea.satellites_ga.SetSate(sv.prn, elev, sv.azimuth, sv.cn0);
-   //   CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].SatelliteID = sv.prn;
-			//CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].SNR = sv.cn0;
-			//CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].Elevation = elev;
-			//CGPSDlg::gpsDlg->nmea.satellites_ga[galileo_c].Azimuth = sv.azimuth;
 			galileo_c++;
     }
+		else if(NMEA::Navic == gs)
+		{
+			if(navic_c==0)
+			{
+        CGPSDlg::gpsDlg->nmea.satellites_gi.Clear();
+			}
+			if(sv.SV_status & 0x01)
+			{
+				CGPSDlg::gpsDlg->m_gigsaMsgCopy.SatelliteID[fixed_navic_c] = sv.prn;
+				fixed_navic_c++;
+			}
+
+      CGPSDlg::gpsDlg->nmea.satellites_gi.SetSate(sv.prn, elev, sv.azimuth, sv.cn0);
+			navic_c++;
+    }
+
+
 	  CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfSate = gps_c;
 	  CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfMessage = (gps_c + 3) / 4;
 	  CGPSDlg::gpsDlg->m_gpgsvMsgCopy.SequenceNum = (gps_c + 3) / 4;
@@ -1729,8 +1789,16 @@ void ShowUbxNavSvStatus(U08* src, bool convertOnly, CString* pStr)
   GetByteDataFromLE(&src[6], 8, 4, (U08*)(&ttff), sizeof(ttff));
   GetByteDataFromLE(&src[6], 12, 4, (U08*)(&msss), sizeof(msss));
 
-  strBuffer.Format("$UBX-NAV-STATUS(0x01,0x03),iTOW=%d,gpsFix=%d,flags=0x%02X,fixStat=0x%02X," \
-    "flags2=%d,ttff=%d,msss=%d", towMs, gpsFix, flags, fixStat, flags2, ttff, msss);
+  if(convertOnly)
+  {
+    strBuffer.Format("$UBX-NAV-STATUS,%d,%d,%02Xh,%02Xh," \
+      "%d,%d,%d", towMs, gpsFix, flags, fixStat, flags2, ttff, msss);
+  }
+  else
+  {
+    strBuffer.Format("$UBX-NAV-STATUS(0x01,0x03),iTOW=%d,gpsFix=%d,flags=0x%02X,fixStat=0x%02X," \
+      "flags2=%d,ttff=%d,msss=%d", towMs, gpsFix, flags, fixStat, flags2, ttff, msss);
+  }
   DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
   //if(convertOnly)
@@ -1757,8 +1825,16 @@ void ShowUbxNavPosllh(U08* src, bool convertOnly, CString* pStr)
   GetByteDataFromLE(&src[6], 20, 4, (U08*)(&hAcc), sizeof(hAcc));
   GetByteDataFromLE(&src[6], 24, 4, (U08*)(&vAcc), sizeof(vAcc));
 
-  strBuffer.Format("$UBX-NAV-POSLLH(0x01,0x02),iTOW=%d,lon=%d,lat=%d,height=%d," \
-    "hMSL=%d,hAcc=%d,vAcc=%d", iTOW, lon, lat, height, hMSL, hAcc, vAcc);
+  if(convertOnly)
+  {
+    strBuffer.Format("$UBX-NAV-POSLLH,%d,%d,%d,%d," \
+      "%d,%d,%d", iTOW, lon, lat, height, hMSL, hAcc, vAcc);
+  }
+  else
+  {
+    strBuffer.Format("$UBX-NAV-POSLLH(0x01,0x02),iTOW=%d,lon=%d,lat=%d,height=%d," \
+      "hMSL=%d,hAcc=%d,vAcc=%d", iTOW, lon, lat, height, hMSL, hAcc, vAcc);
+  }
   DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
   if(convertOnly)
@@ -1789,8 +1865,17 @@ void ShowUbxNavDop(U08* src, bool convertOnly, CString* pStr)
   GetByteDataFromLE(&src[6], 14, 2, (U08*)(&nDOP), sizeof(nDOP));
   GetByteDataFromLE(&src[6], 16, 2, (U08*)(&eDOP), sizeof(eDOP));
 
-  strBuffer.Format("$UBX-NAV-DOP(0x01,0x04),iTOW=%d,gDOP=%d,pDOP=%d,tDOP=%d," \
-    "vDOP=%d,hDOP=%d,nDOP=%d,eDOP=%d", iTOW, gDOP, pDOP, tDOP, vDOP, hDOP, nDOP, eDOP);
+  if(convertOnly)
+  {
+    strBuffer.Format("$UBX-NAV-DOP,%d,%d,%d,%d," \
+      "%d,%d,%d,%d", iTOW, gDOP, pDOP, tDOP, vDOP, hDOP, nDOP, eDOP);
+  }
+  else
+  {
+    strBuffer.Format("$UBX-NAV-DOP(0x01,0x04),iTOW=%d,gDOP=%d,pDOP=%d,tDOP=%d," \
+      "vDOP=%d,hDOP=%d,nDOP=%d,eDOP=%d", iTOW, gDOP, pDOP, tDOP, vDOP, hDOP, nDOP, eDOP);
+  }
+
   DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
   if(convertOnly)
@@ -1825,9 +1910,18 @@ void ShowUbxNavVelned(U08* src, bool convertOnly, CString* pStr)
   GetByteDataFromLE(&src[6], 28, 4, (U08*)(&sAcc), sizeof(sAcc));
   GetByteDataFromLE(&src[6], 32, 4, (U08*)(&cAcc), sizeof(cAcc));
 
-  strBuffer.Format("$UBX-NAV-VELEND(0x01,0x12),iTOW=%d,velN=%d,velE=%d,velD=%d," \
-    "speed=%d,gSpeed=%d,heading=%d,sAcc=%d,cAcc=%d", 
-    iTOW, velN, velE, velD, speed, gSpeed, heading, sAcc, cAcc);
+  if(convertOnly)
+  {
+    strBuffer.Format("$UBX-NAV-VELEND,%d,%d,%d,%d,%d,%d,%d,%d,%d", 
+      iTOW, velN, velE, velD, speed, gSpeed, heading, sAcc, cAcc);
+  }
+  else
+  {
+    strBuffer.Format("$UBX-NAV-VELEND(0x01,0x12),iTOW=%d,velN=%d,velE=%d,velD=%d," \
+      "speed=%d,gSpeed=%d,heading=%d,sAcc=%d,cAcc=%d", 
+      iTOW, velN, velE, velD, speed, gSpeed, heading, sAcc, cAcc);
+  }
+
   DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
   if(convertOnly)

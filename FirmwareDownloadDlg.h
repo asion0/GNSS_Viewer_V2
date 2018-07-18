@@ -23,6 +23,7 @@ public:
 		V8SerialLoader,
 		UsingExternalLoaderInBinCmd,
 		OLinkStarDownload,
+		V8InternalLoader,
 	};
 
 	LoaderType GetLoaderType() { return m_nLoaderType; };

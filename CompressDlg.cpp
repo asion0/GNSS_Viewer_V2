@@ -42,21 +42,20 @@ bool CCompressDlg::NMEA_PROC(const char* buffer,int offset)
 		nmea.ShowGPGLLmsg(msg_gpgll,buffer,offset);
 		break;
 	case MSG_GPGSA:
-        //nmea.ShowGPGSAmsg(msg_gpgsa,buffer,offset);	
-		nmea.ShowGNGSAmsg(msg_gpgsa, msg_glgsa, msg_bdgsa, msg_gagsa, buffer, offset);	
-        break;
+		nmea.ShowGNGSAmsg(msg_gpgsa, msg_glgsa, msg_bdgsa, msg_gagsa, msg_gigsa, buffer, offset);	
+    break;
 	case MSG_GLGSA:
 		nmea.ShowGLGSAmsg(msg_glgsa,buffer,offset);	
 		break;
 	case MSG_GNGSA:
-		nmea.ShowGNGSAmsg(msg_gpgsa, msg_glgsa, msg_bdgsa, msg_gagsa, buffer, offset);	
+		nmea.ShowGNGSAmsg(msg_gpgsa, msg_glgsa, msg_bdgsa, msg_gagsa, msg_gigsa, buffer, offset);	
 		break;
 	case MSG_GGA:
 		nmea.ShowGPGGAmsg(msg_gpgga,buffer,offset);		
-        break;
+    break;
 	case MSG_ZDA:
-        nmea.ShowGPZDAmsg(msg_gpzda,buffer,offset);			
-        break;
+    nmea.ShowGPZDAmsg(msg_gpzda,buffer,offset);			
+    break;
 	case MSG_GPGSV:
 		//nmea.ShowGPGSVmsg(msg_gpgsv,buffer,offset);
 		break;
@@ -67,7 +66,7 @@ bool CCompressDlg::NMEA_PROC(const char* buffer,int offset)
 		nmea.ShowGPRMCmsg(msg_gprmc,buffer,offset);
 		break;
 	case MSG_VTG:
-        nmea.ShowGPVTGmsg(msg_gpvtg,buffer,offset);
+    nmea.ShowGPVTGmsg(msg_gpvtg,buffer,offset);
 		break;
 	default :
 		break;

@@ -176,14 +176,14 @@
 // .176 20151126 Modify Scatter Count default value for slow computer. Request from Andrew
 // .177 20151127 KML converter support GSA / GSV. Request from Michael
 // .177 20151130 Add RTK field and modify 2DRMS & CEP50% display.
-// .177 20151130 Add MORE_INFO define and new profile [GNSS_General_RTK][GNSS_NMEAPLAYER_RTK].
+// .177 20151130 Add _MORE_INFO_ define and new profile [GNSS_General_RTK][GNSS_NMEAPLAYER_RTK].
 // .178 20151204 Fixed baud rate not restore after download.
 // .179 20151208 Fixed KML converter GSA issue.
 // .180 20151209 Fixed KML converter Beidou issue.
 // .181 20151217 Remove Geo-fecing in General version. request from Oliver.
 // .181 20151221 Fixed degree symbol display in English issue, report from fourm user.
 // .182 20151224 Add [Query Binary Measurement Data Out] in binary menu. Request form Andrew and Ryan.
-// .184 20151230 Modify _ALWAYS_USE_EXTERNAL_SREC_ to 1, using 115200 dl srec. Request form Leo by 錦輪  
+// .184 20151230 Modify ALWAYS_USE_EXTERNAL_SREC to 1, using 115200 dl srec. Request form Leo by 錦輪  
 // .185 20160105 SAINTMAX customer version QWP002001-1050104. Request form Leo
 // .186 20160112 SAINTMAX customer version QWP002001-1050104. Request form Leo
 // .187 20160120 Player fixed set origin error(In west earth) and timing control issue, Request form Oliver and Andrew.
@@ -315,17 +315,55 @@
 // .290 20170815 define NEW_SBAS2 for SBAS Advance commands changed, request from Kevin
 // .291 20170821 Support NMEA 4.1 L2 Beidou and GLONASS, request from Eric
 // .292 20170823 Fix new SBAS2 bugs, request from Kevin
+// .293 20170824 Change Ublox converter format, request from Roger
+// .294 20170912 Turn off message output before download at 4800 bps, request from Patrick
+// .295 20170922 Fix issues in Navic NMEA GSA / GSV, request from Terrance
+// .296 20171002 Convert KML support speed and direction, request from Andrew
+// .297 20171006 Add Query / Configure DR Predict Rate, request from Jason
+// .298 20171006 Fix KML converter issue one addional point when continuious convertion, request from Andrew
+// .299 20171024 Ignored illegal NACK message when back from INSDR pass-through, request from Andrew
+// .299 20171024 Disable SHOW_COM_SELECT, request from Oliver
+// .300 20171102 Fixed NMEA Player play faster after reboot, report from Oliver
+// .300 20171107 Support COM port number > 100, request from Oliver
+// .301 20171127 Add RTK Slave Baud Rate and Clear RTK Slave Backup Data, request from Andrew and Neil
+// .302 20171128 Fix [Configure RTK Slave Baud Rate] bug, report by Ken
+// .303 20171130 Show DR Information, request from Andrew
+// .304 20171215 Show Time in double format.
+// .305 20180120 Fixed download bug, report by Terrence
+// .306 20180207 Add Telit Host Log, request from Jason
+// .307 20180212 Add _NAVIC_SUPPORT, request from Oliver and Terrance
+// .307 20180213 Add PSTI 063, 065, 067, 068, 070 and DR RAW Sensor data output rate, request from Jason
+// .308 20180213 Add 0 Hz to DR RAW Sensor data output rate, request from Jason
+// .309 20180221 No boost rate change after configure update rate, request from Jason
+// .310 20180222 Modify query DR RAW Sensor data output rate return command, request from Jason
+// .311 20180223 Fix issue : pure NAVIC show 3D when gsa is 3D, report from Terrance
+// .312 20180314 Support NAVIC base, auto send HostLog on command when using Save HostLog, request from Terrance
+// .312 20180314 Add Setup to Customer Release version, support DR Rate 4 and 8, request from Terrance and Jason
+// .313 20180322 RAW Converter support 0xE5, request from Andrew
+// .314 20180327 Add Configure / Query Noise Power Control to Customer Release, request from Leo
+// .315 20180416 Add Configure PPS_MODE_SUPPORT_ALIGN_TO_NAVIC, request from Terrance / Oliver
+// .316 20180416 Add Query [Query 1PPS Outout Mode], request from Terrance / Oliver
+// .317 20180423 Update IQ_Plot to 1.0.0.3 for NAVIC support, request from Terrance
+// .318 20180502 Fix specify center can't use in Customer Release version, report by Terrance
+// .319 20180507 Add "Navic" to IQ Plot type combo box item, request from Terrance
+// .320 20180516 Add "IO Tester", request from Alex
+// .321 20180523 Add "IO Tester", request from Alex
+// .322 20180528 Delay upload SREC for new V9 FPGA RX size 64, request from Kevin
+// .323 20180605 Check an OEM fw (ChinaTower) for force internal loader download, request from Leo
+// .324 20180607 Upgrade tool for "CRC_018a_115200_20170712", request from forum customer
+// .325 20180613 Fixed "Query Cable Delay" shows negative issue , report by Terrance
+// .326 20180621 Fixed "Detect NMEA sentence error" and "Download Test" bugs.
 
 #define SW_FUN_DATALOG		        0x0001
 #define SW_FUN_AGPS				        0x0002
-#define SW_FUN_DR				          0x0004                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+#define SW_FUN_DR				          0x0004
 
 #define SOFTWARE_FUNCTION		      (SW_FUN_DATALOG | SW_FUN_AGPS)
 #define IS_DEBUG				          0
 //title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 #define APP_CAPTION				        "GNSS Viewer"
-#define APP_VERSION				        "2.0.292"
-#define APP_TITLE				          ""
+#define APP_TITLE				          ""              //Internal Use, Customer Release, NMEA Player...
+#define APP_VERSION				        "2.0.326"
 #define APP_MODULE				        "Venus 8"
 
 #define	Sktyraq					          0x0000
@@ -351,13 +389,13 @@
 #define ACTIVATE_MINIHOMER		    0
 #define NMEA_INPUT				        0
 #define GSA_MAX_SATELLITE		      12
-#define _SHOW_BINARY_DATA_		    1   //Display [Show Binary Data] in menu
-#define _ALWAYS_USE_EXTERNAL_SREC_	0 //Using external SREC file directly, no prompt.
+#define SHOW_BINARY_DATA		      1   //Display [Show Binary Data] in menu
+#define ALWAYS_USE_EXTERNAL_SREC	0   //Using external SREC file directly, no prompt.
 #define ECOMPASS_CALIBRATION	    0   //Show eCompass calibration UI in Viewer
 #define TIMING_MODE				        1   //20170531, Alex modified from 0 to 1.
 #define _TAB_LAYOUT_			        0   //Information has multiple pages
 #define OPEN_PINNING_RESERVE	    1   //Show [Disable] in position pining UI
-#define _V8_SUPPORT				        1
+//#define _V8_SUPPORT				        1
 #define GG12A					            0
 #define SHOW_CLOCK_OFFSET		      0
 #define SHOW_NOISE				        0
@@ -374,14 +412,15 @@
 
 #define TIMING_MONITORING		      1
 #define TIMING_OUTPUT_ALIGN		    1
-#define	SHOW_ERROR_NMEA_NOTIFY	  0
+#define	SHOW_ERROR_NMEA_NOTIFY	  1
+#define	SHOW_ERROR_TIME_NOTIFY	  0
 #define	MORE_ENU_SCALE			      1
-#define	GPS_183_188				        1
-#define	_MODULE_SUP_800_		      0
-#define	_RESOURCE_LOADER_ID_	    0		//specify a special download loader for customer.
+#define	GPS_183_188				        1   //PRN 183 ~ 188 for QZSS system
+#define	MODULE_SUP_800		        0
+#define	RESOURCE_LOADER_ID	      0		//specify a special download loader for customer.
 #define CHECK_SAEE_MULTIHZ_ON	    0		//Check SAEE and Multi-Hz can't both on.
 #define INVERT_LON_LAT			      1		//Final spec for GeoFecing spec.
-#define MORE_INFO				          0		//More information field for RTK
+#define _MORE_INFO_				        0		//More information field for RTK
 #define RAW_MENU				          1		//Show RAW menu 20161201 request from Ryan
 #define RTK_MENU				          1		//Show RTK menu
 #define INS_DR_MENU				        1	  //Show INS_DR menu
@@ -391,28 +430,95 @@
 #define DOWNLOAD_IMMEDIATELY	    0		//start download immediately when nmea come in.
 #define SPECIAL_TEST			        0		//Test ETEN case 20160202
 #define GEO_FENCING_CMD			      1		//0 - old geo-fencing cmd, 1 - new geo-fencing cmd
-#define SHOW_RTK_BASELINE		      0
+#define _SHOW_RTK_BASELINE_		    0
 #define SHOW_PATCH_MENU			      0		//Use for user patch.
 #define DOFUN_UNIQUE_ID			      0		//Show DOFUN UNIQUE ID menu
-#define _DEVELOPER_			          0		//Developer version.
+#define DEVELOPER_VERSION         0		//Developer version.
 #define SPECIAL_BAUD_RATE			    0		//For RTK GLONASS EVK, baud rate * 1.5
 #define CUSTOMER_CWQX_160815  		0   //上海長望氣象, Add 1200, 2400 bps, maximum 115200 bps
 #define FIX_DOWNLOAD_115200   		0   //Download can only use 115200 bps
 #define CUSTOMER_ZENLANE_160808  	0   //善領科技, Add customized commands
 #define SUPPORT_BDL2_GSV2         0   //Support BDL2 information in GSV2 token.
 #define RTCM_NEW_PARSER         	1   //Use RTCM new parser.
-#define SHOW_COM_SELECT           1   //Show COM port select in [Configure Serial Port]
+#define SHOW_COM_SELECT           0   //Show COM port select in [Configure Serial Port]
 #define SMALL_UI                  0   //Small UI, No Earth View, Scatter and menu
 #define KML_USE_CHECKLISTBOX      1   //Use CCheckListBox in CKmlDlg
 #define LITEON_CUSTOMIZE          0   //Use LITEON special version
-#define FLOAT_SNR                 0   //Use FLOAT SNR in GSV token
+//#define FLOAT_SNR                 0   //Use FLOAT SNR in GSV token
 #define NAV_MOWING_MODE           0   //Add mowing machine mode in Navigation Mode
 #define USE_EXTERNAL_DN_BIN_CMD   1   //Download external loader use binary command
 #define NEW_SBAS2                 1   //Remove user define submask field in SBAS2 commands.
+#define _NAVIC_SUPPORT_           1   //Show NAVIC satellites in Galileo position
+#define NO_BOOST_UPDATE_RATE_CHANGE 1 //Doesn't change baudrate after update rate change
+#define PPS_MODE_SUPPORT_ALIGN_TO_NAVIC 1 //Show ALIGN_TO_NAVIC in Configure 1PPS Output Mode
+#define MICROSATELLITE_PATCH      0   //For Microsatellite upgrade
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-#if defined(SWCFG_VENDOR_NAVIC_INTERNALUSE) //20170608 for Oliver demo
+#if defined(SWCFG_VENDOR_GENERAL_DR_NEW)
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef SHOW_ERROR_NMEA_NOTIFY
+ #undef MAX_SCATTER_COUNT
+ #undef _MORE_INFO_
+ #undef _TAB_LAYOUT_
+ #undef SOFTWARE_FUNCTION
+
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Internal Use DR"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            1
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define SHOW_ERROR_NMEA_NOTIFY     1
+ #define MAX_SCATTER_COUNT		      1000
+ #define _MORE_INFO_			          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define SOFTWARE_FUNCTION		      (SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
+
+#elif defined(SWCFG_VENDOR_MICROSATTELLITE_UPGRADE)   //20180518 Request from Oliver
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef MAX_SCATTER_COUNT
+ #undef CLIENT_WIDTH
+ #undef CLIENT_HEIGHT
+ #undef SHOW_PATCH_MENU
+ #undef SHOW_PATCH_MENU		
+ #undef UPGRADE_DOWNLOAD		
+ #undef UPGRADE_CRC			
+ #undef UPGRADE_DUEDATE_Y		
+ #undef UPGRADE_DUEDATE_M	
+ #undef UPGRADE_DUEDATE_D	
+ #undef UPGRADE_ADD_TAG	
+ #undef UPGRADE_TAG_VALUE	
+ #undef MICROSATELLITE_PATCH
+
+ #define APP_CAPTION			          "Microsatellite Upgrade Tool"
+ #define APP_TITLE				          ""
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        6
+ #define MAX_SCATTER_COUNT		      100
+ #define CLIENT_WIDTH			          292		//Viewer window client width
+ #define CLIENT_HEIGHT			        398		//Viewer window client height
+ #define SHOW_PATCH_MENU		        1
+ #define UPGRADE_DOWNLOAD		        0
+ #define UPGRADE_CRC			          0xFFFFFFFF
+ #define UPGRADE_DUEDATE_Y		      0
+ #define UPGRADE_DUEDATE_M		      0
+ #define UPGRADE_DUEDATE_D		      0
+ #define UPGRADE_ADD_TAG		        1
+ #define UPGRADE_TAG_VALUE		      0xA001
+ #define MICROSATELLITE_PATCH       1
+
+#elif defined(SWCFG_VENDOR_NAVIC_INTERNALUSE) //20170608 for Oliver demo
  #undef APP_CAPTION
  #undef APP_TITLE
  #undef GNSS_VIEWER
@@ -422,15 +528,15 @@
  #undef MAX_SCATTER_COUNT
  #undef _TAB_LAYOUT_
 
- #define APP_CAPTION			        "GNSS Viewer(NAVIC)"
- #define APP_TITLE				        "Internal Use"
- #define GNSS_VIEWER			        1
- #define IS_DEBUG				          1
- #define BAUDRATE_DEFAULT		      7
- #define SHOW_ERROR_NMEA_NOTIFY   1
- #define MAX_SCATTER_COUNT		    1000
- #define _TAB_LAYOUT_			        1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
- #define _NAVIC_CONVERT_			    1	  //Please add _NAVIC_CONVERT_ in resource prheader
+ #define APP_CAPTION			          "GNSS Viewer(NAVIC)"
+ #define APP_TITLE				          "Internal Use"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            1
+ #define BAUDRATE_DEFAULT		        7
+ #define SHOW_ERROR_NMEA_NOTIFY     1
+ #define MAX_SCATTER_COUNT		      1000
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define _NAVIC_CONVERT_			      1	  //Please add _NAVIC_CONVERT_ in resource prheader
 
 #elif defined(SWCFG_VENDOR_NAVIC_GENERAL)
  #undef APP_CAPTION
@@ -440,13 +546,13 @@
  #undef BAUDRATE_DEFAULT
  #undef _TAB_LAYOUT_
 
- #define APP_CAPTION			        "GNSS Viewer(NAVIC)"
- #define APP_TITLE				        "Customer Release"
- #define GNSS_VIEWER			        1
- #define IS_DEBUG				          0
- #define BAUDRATE_DEFAULT		      7
- #define _TAB_LAYOUT_			        1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
- #define _NAVIC_CONVERT_			    1	  //Please add _NAVIC_CONVERT_ in resource prheader
+ #define APP_CAPTION			          "GNSS Viewer(NAVIC)"
+ #define APP_TITLE				          "Customer Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define _NAVIC_CONVERT_			      1	  //Please add _NAVIC_CONVERT_ in resource prheader
 
 #elif defined(SWCFG_VENDOR_GNSS_LITEON_170531) //20170531 for LITEON
  #undef APP_CAPTION
@@ -471,7 +577,7 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef MORE_INFO
+ #undef _MORE_INFO_
  #undef _TAB_LAYOUT_
  #undef SMALL_UI
  #undef CLIENT_WIDTH
@@ -484,11 +590,11 @@
  #define IS_DEBUG				            0
  #define BAUDRATE_DEFAULT		        7
  #define TIMING_MODE			          1
- #define MORE_INFO				          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _MORE_INFO_			          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
  #define _TAB_LAYOUT_			          0		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
  #define SMALL_UI			              1
- #define CLIENT_WIDTH			    577
- #define CLIENT_HEIGHT			  341
+ #define CLIENT_WIDTH			          577
+ #define CLIENT_HEIGHT			        341
  #define XN120_TESTER
  #define XN120_TESTER_BEIDOU
 
@@ -500,7 +606,7 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef MORE_INFO
+ #undef _MORE_INFO_
  #undef _TAB_LAYOUT_
  #undef SMALL_UI
  #undef CLIENT_WIDTH
@@ -513,11 +619,11 @@
  #define IS_DEBUG				            0
  #define BAUDRATE_DEFAULT		        7
  #define TIMING_MODE			          1
- #define MORE_INFO				          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _MORE_INFO_			          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
  #define _TAB_LAYOUT_			          0		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
  #define SMALL_UI			              1
- #define CLIENT_WIDTH			    577
- #define CLIENT_HEIGHT			  341
+ #define CLIENT_WIDTH			          577
+ #define CLIENT_HEIGHT			        341
  #define XN120_TESTER
 
 #elif defined(SWCFG_VENDOR_GNSS_CUSTOMER_PRODUCTION_OLIVER20161128) //20161128 for Oliver
@@ -528,19 +634,19 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef MORE_INFO
+ #undef _MORE_INFO_
  #undef _TAB_LAYOUT_
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"Customer Release"
- #define APP_VERSION			"2.1.245"
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Customer Release"
+ #define APP_VERSION			          "2.1.245"
 
- #define GNSS_VIEWER			1
- #define IS_DEBUG				  0
- #define BAUDRATE_DEFAULT	7
- #define TIMING_MODE			1
- #define MORE_INFO				0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
- #define _TAB_LAYOUT_			1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT	          7
+ #define TIMING_MODE			          1
+ #define _MORE_INFO_			          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
  #define PRODUCTION_OLIVER20161128
  #define CUSTOMIZE_COSDSTART_BUTTON
 
@@ -555,22 +661,22 @@
  #undef SHOW_ERROR_NMEA_NOTIFY
  #undef CLIENT_WIDTH
  #undef CLIENT_HEIGHT
- #undef MORE_INFO
+ #undef _MORE_INFO_
  #undef _TAB_LAYOUT_
  #undef SUPPORT_BDL2_GSV2
 
- #define APP_CAPTION			        "GNSS Viewer"
- #define APP_TITLE				        "NMEA Player"
- #define GNSS_VIEWER			        1
- #define IS_DEBUG				          0
- #define BAUDRATE_DEFAULT		      7
- #define TIMING_MODE			        1
- #define NMEA_INPUT				        1
- #define SHOW_ERROR_NMEA_NOTIFY   1
- #define CLIENT_WIDTH			        1008	
- #define CLIENT_HEIGHT			      614
- #define MORE_INFO				        0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
- #define _TAB_LAYOUT_			        1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "NMEA Player"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define NMEA_INPUT				          1
+ #define SHOW_ERROR_NMEA_NOTIFY     1
+ #define CLIENT_WIDTH			          1008	
+ #define CLIENT_HEIGHT			        614
+ #define _MORE_INFO_  		          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
  #define SUPPORT_BDL2_GSV2          1
 
 #elif defined(SWCFG_VENDOR_GNSS_BDL2_NMEA)  //20161018 For Patrick and Evan
@@ -581,19 +687,19 @@
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
  #undef SHOW_ERROR_NMEA_NOTIFY
- #undef MORE_INFO
+ #undef _MORE_INFO_
  #undef _TAB_LAYOUT_
  #undef SUPPORT_BDL2_GSV2
 
- #define APP_CAPTION			        "GNSS Viewer"
- #define APP_TITLE				        "Internal Use L2"
- #define GNSS_VIEWER			        1
- #define IS_DEBUG				          1
- #define BAUDRATE_DEFAULT		      7
- #define TIMING_MODE			        1
- #define SHOW_ERROR_NMEA_NOTIFY   1
- #define MORE_INFO				        0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
- #define _TAB_LAYOUT_			        1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Internal Use L2"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            1
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define SHOW_ERROR_NMEA_NOTIFY     1
+ #define _MORE_INFO_			          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
  #define SUPPORT_BDL2_GSV2          1
 
 #elif defined(SWCFG_VENDOR_GNSS_GENERAL_ZENLANE_160808)  //For 善領科技, 20160808, Request from Leo
@@ -603,19 +709,19 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef MORE_INFO
+ #undef _MORE_INFO_
  #undef _TAB_LAYOUT_
  #undef CUSTOMER_ZENLANE_160808
 
- #define APP_CAPTION			        "GNSS Viewer"
- #define APP_TITLE				        "Zenlane Release"
- #define GNSS_VIEWER			        1
- #define IS_DEBUG				          0
- #define BAUDRATE_DEFAULT		      7
- #define TIMING_MODE			        1
- #define MORE_INFO				        0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
- #define _TAB_LAYOUT_			        1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
- #define CUSTOMER_ZENLANE_160808	1
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Zenlane Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define _MORE_INFO_				        0   //Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define CUSTOMER_ZENLANE_160808	  1
 
 #elif defined(SWCFG_VENDOR_GNSS_GENERAL_CWQX_160815)  //For 上海長望氣象, 20160815, Request from Leo, Andrew
  #undef APP_CAPTION
@@ -624,21 +730,21 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef MORE_INFO
+ #undef _MORE_INFO_
  #undef _TAB_LAYOUT_
  #undef CUSTOMER_CWQX_160815
  #undef FIX_DOWNLOAD_115200
 
- #define APP_CAPTION			        "GNSS Viewer"
- #define APP_TITLE				        "CWQX Release"
- #define GNSS_VIEWER			        1
- #define IS_DEBUG				          0
- #define BAUDRATE_DEFAULT		      7
- #define TIMING_MODE			        1
- #define MORE_INFO				        0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
- #define _TAB_LAYOUT_			        1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
- #define CUSTOMER_CWQX_160815			1
- #define FIX_DOWNLOAD_115200			1
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "CWQX Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define _MORE_INFO_			          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define CUSTOMER_CWQX_160815			  1
+ #define FIX_DOWNLOAD_115200			  1
 
 #elif defined(SWCFG_VENDOR_GNSS_SUP800_NMEAPLAYER)
  #undef APP_CAPTION
@@ -651,19 +757,19 @@
  #undef SHOW_ERROR_NMEA_NOTIFY
  #undef CLIENT_WIDTH
  #undef CLIENT_HEIGHT
- #undef _MODULE_SUP_800_
+ #undef MODULE_SUP_800
 
- #define APP_CAPTION			        "GNSS Viewer"
- #define APP_TITLE				        "SUP800 Player"
- #define GNSS_VIEWER			        1
- #define IS_DEBUG				          0
- #define BAUDRATE_DEFAULT		      7
- #define TIMING_MODE			        1
- #define NMEA_INPUT				        1
- #define SHOW_ERROR_NMEA_NOTIFY   1
- #define CLIENT_WIDTH			        1008	
- #define CLIENT_HEIGHT			      614
- #define _MODULE_SUP_800_         1
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "SUP800 Player"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define NMEA_INPUT				          1
+ #define SHOW_ERROR_NMEA_NOTIFY     1
+ #define CLIENT_WIDTH			          1008	
+ #define CLIENT_HEIGHT			        614
+ #define MODULE_SUP_800             1
 
 #elif defined(SWCFG_VENDOR_GNSS_SPECIAL_BAUDRATE)
  #undef APP_CAPTION
@@ -673,18 +779,18 @@
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
  #undef _TAB_LAYOUT_
- #undef _DEVELOPER_
+ #undef DEVELOPER_VERSION
  #undef SPECIAL_BAUD_RATE
 
- #define APP_CAPTION			  "GNSS Viewer"
- #define APP_TITLE				  "Special Baud Rate"
- #define GNSS_VIEWER			  1
- #define IS_DEBUG				    0
- #define BAUDRATE_DEFAULT		5
- #define TIMING_MODE			  1
- #define _TAB_LAYOUT_			  1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
- #define _DEVELOPER_	      1
- #define SPECIAL_BAUD_RATE	1
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Special Baud Rate"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        5
+ #define TIMING_MODE			          1
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define DEVELOPER_VERSION	              1
+ #define SPECIAL_BAUD_RATE	        1
 
 #elif defined(SWCFG_VENDOR_GNSS_DEVELOPER)
  #undef APP_CAPTION
@@ -694,16 +800,16 @@
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
  #undef _TAB_LAYOUT_
- #undef _DEVELOPER_
+ #undef DEVELOPER_VERSION
 
- #define APP_CAPTION			  "GNSS Viewer"
- #define APP_TITLE				  "Developer Release"
- #define GNSS_VIEWER			  1
- #define IS_DEBUG				    0
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			  1
- #define _TAB_LAYOUT_			  1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
- #define _DEVELOPER_	      1
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Developer Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define DEVELOPER_VERSION	              1
 
 #elif defined(SWCFG_VENDOR_GNSS_CUSTOMER_DOFUN_20160707)
  #undef APP_CAPTION
@@ -712,19 +818,19 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef MORE_INFO
+ #undef _MORE_INFO_
  #undef _TAB_LAYOUT_
  #undef DOFUN_UNIQUE_ID
 
- #define APP_CAPTION			  "GNSS Viewer"
- #define APP_TITLE				  "Unique ID Release"
- #define GNSS_VIEWER			  1
- #define IS_DEBUG				    0
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			  1
- #define MORE_INFO				  0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
- #define _TAB_LAYOUT_			  1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
- #define DOFUN_UNIQUE_ID		1		
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Unique ID Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define _MORE_INFO_			          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define DOFUN_UNIQUE_ID		        1		
 
 #elif defined(SWCFG_VENDOR_NSHP_FIX_TOOL)
  #undef APP_CAPTION
@@ -745,22 +851,22 @@
  #undef UPGRADE_ADD_TAG	
  #undef UPGRADE_TAG_VALUE	
 
- #define APP_CAPTION			    "RTK Patch Tool"
- #define APP_TITLE				    ""
- #define GNSS_VIEWER			    1
- #define IS_DEBUG				      0
- #define BAUDRATE_DEFAULT		  6
- #define MAX_SCATTER_COUNT		100
- #define CLIENT_WIDTH			    292		//Viewer window client width
- #define CLIENT_HEIGHT			  398		//Viewer window client height
- #define SHOW_PATCH_MENU		  1
- #define UPGRADE_DOWNLOAD		  0
- #define UPGRADE_CRC			    0xFFFFFFFF
- #define UPGRADE_DUEDATE_Y		2017
- #define UPGRADE_DUEDATE_M		1
- #define UPGRADE_DUEDATE_D		31
- #define UPGRADE_ADD_TAG		  1
- #define UPGRADE_TAG_VALUE		0xA012
+ #define APP_CAPTION			          "RTK Patch Tool"
+ #define APP_TITLE				          ""
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        6
+ #define MAX_SCATTER_COUNT		      100
+ #define CLIENT_WIDTH			          292		//Viewer window client width
+ #define CLIENT_HEIGHT			        398		//Viewer window client height
+ #define SHOW_PATCH_MENU		        1
+ #define UPGRADE_DOWNLOAD		        0
+ #define UPGRADE_CRC			          0x2FFE
+ #define UPGRADE_DUEDATE_Y		      2019
+ #define UPGRADE_DUEDATE_M		      6
+ #define UPGRADE_DUEDATE_D		      7
+ #define UPGRADE_ADD_TAG		        1
+ #define UPGRADE_TAG_VALUE		      0xA012
 
 #elif defined(SWCFG_VENDOR_GNSS_NMEAPLAYER_NEW)
  #undef APP_CAPTION
@@ -773,21 +879,21 @@
  #undef SHOW_ERROR_NMEA_NOTIFY
  #undef CLIENT_WIDTH
  #undef CLIENT_HEIGHT
- #undef MORE_INFO
+ #undef _MORE_INFO_
  #undef _TAB_LAYOUT_
 
- #define APP_CAPTION			      "GNSS Viewer"
- #define APP_TITLE				      "NMEA Player"
- #define GNSS_VIEWER			      1
- #define IS_DEBUG				        0
- #define BAUDRATE_DEFAULT		    7
- #define TIMING_MODE			      1
- #define NMEA_INPUT				      1
- #define SHOW_ERROR_NMEA_NOTIFY 1
- #define CLIENT_WIDTH			      1008	
- #define CLIENT_HEIGHT			    614
- #define MORE_INFO				      0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
- #define _TAB_LAYOUT_			      1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "NMEA Player"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define NMEA_INPUT				          1
+ #define SHOW_ERROR_NMEA_NOTIFY     1
+ #define CLIENT_WIDTH			          1008	
+ #define CLIENT_HEIGHT			        614
+ #define _MORE_INFO_			          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
 
 #elif defined(SWCFG_VENDOR_GNSS_GENERAL_NEW)
  #undef APP_CAPTION
@@ -796,17 +902,17 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef MORE_INFO
+ #undef _MORE_INFO_
  #undef _TAB_LAYOUT_
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"Customer Release"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			1
- #define MORE_INFO				0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
- #define _TAB_LAYOUT_			1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Customer Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define _MORE_INFO_			          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
 
 #elif defined(SWCFG_VENDOR_GNSS_INTERNALUSE_NEW)
  #undef APP_CAPTION
@@ -817,19 +923,19 @@
  #undef TIMING_MODE
  #undef SHOW_ERROR_NMEA_NOTIFY
  #undef MAX_SCATTER_COUNT
- #undef MORE_INFO
+ #undef _MORE_INFO_
  #undef _TAB_LAYOUT_
 
- #define APP_CAPTION			        "GNSS Viewer"
- #define APP_TITLE				        "Internal Use"
- #define GNSS_VIEWER			        1
- #define IS_DEBUG				          1
- #define BAUDRATE_DEFAULT		      7
- #define TIMING_MODE			        1
- #define SHOW_ERROR_NMEA_NOTIFY   1
- #define MAX_SCATTER_COUNT		    1000
- #define MORE_INFO				        0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
- #define _TAB_LAYOUT_			        1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Internal Use"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            1
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define SHOW_ERROR_NMEA_NOTIFY     1
+ #define MAX_SCATTER_COUNT		      1000
+ #define _MORE_INFO_			          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
 
 #elif defined(SWCFG_VENDOR_GNSS_ADDTAG)
  #undef APP_CAPTION
@@ -843,16 +949,16 @@
  #undef CLIENT_HEIGHT
  #undef AUTO_QUERY_VERSION
 
- #define APP_CAPTION			    "GNSS Viewer"
- #define APP_TITLE				    "SANITMAX Release"
- #define GNSS_VIEWER			    1
- #define IS_DEBUG				      0
- #define BAUDRATE_DEFAULT		  7
- #define TIMING_MODE			    1
- #define SMALL_UI			        1
- #define CLIENT_WIDTH			    577
- #define CLIENT_HEIGHT			  341
- #define AUTO_QUERY_VERSION		1
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "SANITMAX Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define SMALL_UI			              1
+ #define CLIENT_WIDTH			          577
+ #define CLIENT_HEIGHT			        341
+ #define AUTO_QUERY_VERSION		      1
 
 #elif defined(SWCFG_VENDOR_GNSS_ETEN20160330)	//Request from Leo
  #undef APP_CAPTION
@@ -862,22 +968,22 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef MORE_INFO
- #undef SHOW_RTK_BASELINE
+ #undef _MORE_INFO_
+ #undef _SHOW_RTK_BASELINE_
  #undef CUSTOMER_ID
  #undef RTK_MENU
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"Customer Release"
- #define APP_MODULE				"Venus 8"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			1
- #define MORE_INFO				0		//Please define _MORE_INFO_ for rc2 too.
- #define SHOW_RTK_BASELINE		0		//Please define SHOW_RTK_BASELINE for rc2 too.
- #define CUSTOMER_ID			Eten
- #define RTK_MENU				0
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Customer Release"
+ #define APP_MODULE				          "Venus 8"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define _MORE_INFO_			          0		//Please define _MORE_INFO_ for rc2 too.
+ #define _SHOW_RTK_BASELINE_	      0		//Please define SHOW_RTK_BASELINE for rc2 too.
+ #define CUSTOMER_ID			          Eten
+ #define RTK_MENU				            0
 
 #elif defined(SWCFG_VENDOR_GNSS_KALMAN)
  #undef APP_CAPTION
@@ -887,18 +993,18 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef MORE_INFO
- #undef SHOW_RTK_BASELINE
+ #undef _MORE_INFO_
+ #undef _SHOW_RTK_BASELINE_
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"Customer Release"
- #define APP_MODULE				"Venus 8 RTK"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			1
- #define MORE_INFO				1		//Please define _MORE_INFO_ for rc2 too.
- #define SHOW_RTK_BASELINE		1		//Please define SHOW_RTK_BASELINE for rc2 too.
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Customer Release"
+ #define APP_MODULE				          "Venus 8 RTK"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define _MORE_INFO_			          1		//Please define _MORE_INFO_ for rc2 too.
+ #define _SHOW_RTK_BASELINE_	      1		//Please define SHOW_RTK_BASELINE for rc2 too.
 
 #elif defined(SWCFG_VENDOR_GNSS_SAINTMAX)
  #undef APP_CAPTION
@@ -912,17 +1018,17 @@
  #undef CLIENT_HEIGHT
  #undef AUTO_QUERY_VERSION
 
- #define APP_CAPTION			    "GNSS Viewer"
- #define APP_TITLE				    "SANITMAX Release"
- #define GNSS_VIEWER			    1
- #define IS_DEBUG				      0
- #define BAUDRATE_DEFAULT		  7
- #define TIMING_MODE			    1
- #define SMALL_UI			        1
- #define CLIENT_WIDTH			    577
- #define CLIENT_HEIGHT			  341
- #define AUTO_QUERY_VERSION		1
- #define SAINTMAX_UI			    1
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "SANITMAX Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define SMALL_UI			              1
+ #define CLIENT_WIDTH			          577
+ #define CLIENT_HEIGHT			        341
+ #define AUTO_QUERY_VERSION		      1
+ #define SAINTMAX_UI			          1
 
 #elif defined(SWCFG_VENDOR_GNSS_NMEAPLAYER_RTK)	//20151130 request from Oliver
  #undef APP_CAPTION
@@ -934,22 +1040,22 @@
  #undef TIMING_MODE
  #undef NMEA_INPUT
  #undef SHOW_ERROR_NMEA_NOTIFY
- #undef MORE_INFO
+ #undef _MORE_INFO_
  #undef CLIENT_WIDTH
  #undef CLIENT_HEIGHT
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"NMEA Player"
- #define APP_MODULE				"Venus 8 RTK"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			1
- #define NMEA_INPUT				1
- #define SHOW_ERROR_NMEA_NOTIFY 1
- #define MORE_INFO				1		//Please define _MORE_INFO_ for rc2 too.
- #define CLIENT_WIDTH			1008
- #define CLIENT_HEIGHT			614
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "NMEA Player"
+ #define APP_MODULE				          "Venus 8 RTK"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define NMEA_INPUT				          1
+ #define SHOW_ERROR_NMEA_NOTIFY     1
+ #define _MORE_INFO_				        1		//Please define _MORE_INFO_ for rc2 too.
+ #define CLIENT_WIDTH			          1008
+ #define CLIENT_HEIGHT			        614
 
 #elif defined(SWCFG_VENDOR_GNSS_RTK)	//20151130 request from Oliver
  #undef APP_CAPTION
@@ -959,16 +1065,16 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef MORE_INFO
+ #undef _MORE_INFO_
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"Customer Release"
- #define APP_MODULE				"Venus 8 RTK"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			1
- #define MORE_INFO				1		//Please define _MORE_INFO_ for rc2 too.
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE			            "Customer Release"
+ #define APP_MODULE				          "Venus 8 RTK"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define _MORE_INFO_			          1		//Please define _MORE_INFO_ for rc2 too.
 
 #elif defined(SWCFG_VENDOR_GNSS_TAKUJI)
  #undef APP_CAPTION
@@ -985,19 +1091,19 @@
  #undef UPGRADE_ADD_TAG
  #undef UPGRADE_TAG_VALUE
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"Takuji Release"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			1
- #define UPGRADE_DOWNLOAD		1
- #define UPGRADE_CRC			0xce72
- #define UPGRADE_DUEDATE_Y		2015
- #define UPGRADE_DUEDATE_M		8
- #define UPGRADE_DUEDATE_D		31
- #define UPGRADE_ADD_TAG		1
- #define UPGRADE_TAG_VALUE		0x0A01
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Takuji Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define UPGRADE_DOWNLOAD		        1
+ #define UPGRADE_CRC			          0xce72
+ #define UPGRADE_DUEDATE_Y		      2015
+ #define UPGRADE_DUEDATE_M		      8
+ #define UPGRADE_DUEDATE_D		      31
+ #define UPGRADE_ADD_TAG		        1
+ #define UPGRADE_TAG_VALUE		      0x0A01
 
 #elif defined(SWCFG_VENDOR_GNSS_SWID_NEW_DOWNLOAD)
  #undef APP_CAPTION
@@ -1006,15 +1112,15 @@
  #undef IS_DEBUG
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
- #undef _RESOURCE_LOADER_ID_
+ #undef RESOURCE_LOADER_ID
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"Customer Release"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			1
- #define _RESOURCE_LOADER_ID_	1351
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Customer Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define RESOURCE_LOADER_ID	        1351
 
 #elif defined(SWCFG_VENDOR_GNSS_SUP800_GENERAL)
  #undef APP_CAPTION
@@ -1024,18 +1130,18 @@
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
  #undef SHOW_ERROR_NMEA_NOTIFY
- #undef _MODULE_SUP_800_
+ #undef MODULE_SUP_800
  #undef MAX_SCATTER_COUNT
 
- #define APP_CAPTION			        "GNSS Viewer"
- #define APP_TITLE				        "SUP800 Customer Release"
- #define GNSS_VIEWER			        1
- #define IS_DEBUG				          0
- #define BAUDRATE_DEFAULT		      7
- #define TIMING_MODE			        1
- #define SHOW_ERROR_NMEA_NOTIFY   1
- #define _MODULE_SUP_800_		      1     //Please also define _MODULE_SUP_800_ in resource header
- #define MAX_SCATTER_COUNT        100
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "SUP800 Customer Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define SHOW_ERROR_NMEA_NOTIFY     1
+ #define MODULE_SUP_800		          1     //Please also define _MODULE_SUP_800_ in resource header
+ #define MAX_SCATTER_COUNT          100
 
 #elif defined(SWCFG_VENDOR_GNSS_SUP800)
  #undef APP_CAPTION
@@ -1045,16 +1151,16 @@
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
  #undef SHOW_ERROR_NMEA_NOTIFY
- #undef _MODULE_SUP_800_
+ #undef MODULE_SUP_800
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"SUP800 Tester"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				1
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			1
- #define SHOW_ERROR_NMEA_NOTIFY 1
- #define _MODULE_SUP_800_		1
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "SUP800 Tester"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            1
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define SHOW_ERROR_NMEA_NOTIFY     1
+ #define MODULE_SUP_800		          1
 
 #elif defined(SWCFG_VENDOR_GNSS_GENERAL_OLINKSTAR_PROTECT)
  #undef APP_CAPTION
@@ -1066,14 +1172,14 @@
  #undef CUSTOMER_DOWNLOAD
  #undef DefaultCuteomer
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"OLinkStar Release"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		5
- #define TIMING_MODE			1
- #define CUSTOMER_DOWNLOAD		1
- #define DefaultCuteomer		OlinkStar
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "OLinkStar Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        5
+ #define TIMING_MODE			          1
+ #define CUSTOMER_DOWNLOAD		      1
+ #define DefaultCuteomer		        OlinkStar
 
 #elif defined(SWCFG_VENDOR_GNSS_GENERAL_ERICSSON)
 //ERICSSON from 重慶西南集成電路設計
@@ -1089,17 +1195,17 @@
  #undef TIMING_OUTPUT_ALIGN
  #undef NMEA_PRN_TYPE
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"Ericsson Release"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		5
- #define TIMING_MODE			1
- #define CUSTOMER_DOWNLOAD		0
- #define DefaultCuteomer		Ericsson
- #define TIMING_MONITORING		0
- #define TIMING_OUTPUT_ALIGN	0
- #define NMEA_PRN_TYPE			2
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Ericsson Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        5
+ #define TIMING_MODE			          1
+ #define CUSTOMER_DOWNLOAD		      0
+ #define DefaultCuteomer		        Ericsson
+ #define TIMING_MONITORING		      0
+ #define TIMING_OUTPUT_ALIGN	      0
+ #define NMEA_PRN_TYPE			        2
 
 #elif defined(SWCFG_VENDOR_GNSS_GENERAL_RDRNSS_PROTECT)
 //SWID 重慶西南集成電路設計
@@ -1114,16 +1220,16 @@
  #undef TIMING_MONITORING
  #undef TIMING_OUTPUT_ALIGN
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"RDRNSS Release"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		5
- #define TIMING_MODE			1
- #define CUSTOMER_DOWNLOAD		0
- #define DefaultCuteomer		SWID
- #define TIMING_MONITORING	0
- #define TIMING_OUTPUT_ALIGN	0
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "RDRNSS Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        5
+ #define TIMING_MODE			          1
+ #define CUSTOMER_DOWNLOAD		      0
+ #define DefaultCuteomer		        SWID
+ #define TIMING_MONITORING	        0
+ #define TIMING_OUTPUT_ALIGN	      0
 
 #elif defined(SWCFG_VENDOR_GNSS_GENERAL_SWID_PROTECT)
 //SWID 重慶西南集成電路設計
@@ -1138,16 +1244,16 @@
  #undef TIMING_MONITORING
  #undef TIMING_OUTPUT_ALIGN
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"SWID Release"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		5
- #define TIMING_MODE			1
- #define CUSTOMER_DOWNLOAD		0
- #define DefaultCuteomer			SWID
- #define TIMING_MONITORING	0
- #define TIMING_OUTPUT_ALIGN	0
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "SWID Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        5
+ #define TIMING_MODE			          1
+ #define CUSTOMER_DOWNLOAD		      0
+ #define DefaultCuteomer			      SWID
+ #define TIMING_MONITORING	        0
+ #define TIMING_OUTPUT_ALIGN	      0
 
 #elif defined(SWCFG_VENDOR_GNSS_INTERNALUSE_BDV8)
  #undef APP_CAPTION
@@ -1158,19 +1264,19 @@
  #undef TIMING_MODE
  #undef SHOW_ERROR_NMEA_NOTIFY
  #undef MAX_SCATTER_COUNT
- #undef MORE_INFO
+ #undef _MORE_INFO_
  #undef _TAB_LAYOUT_
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"Internal Use"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				1
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			1
- #define SHOW_ERROR_NMEA_NOTIFY 1
- #define MAX_SCATTER_COUNT		1000
- #define MORE_INFO				0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
- #define _TAB_LAYOUT_			1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Internal Use"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            1
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define SHOW_ERROR_NMEA_NOTIFY     1
+ #define MAX_SCATTER_COUNT		      1000
+ #define _MORE_INFO_			          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
 
 #elif defined(SWCFG_VENDOR_GNSS_INTERNALUSE_GPS_183)
  #undef APP_CAPTION
@@ -1182,14 +1288,14 @@
  #undef SHOW_ERROR_NMEA_NOTIFY
  #undef NMEA_PRN_TYPE
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"Internal Use GPS 183-188"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				1
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			1
- #define SHOW_ERROR_NMEA_NOTIFY 1
- #define NMEA_PRN_TYPE			3
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Internal Use GPS 183-188"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            1
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define SHOW_ERROR_NMEA_NOTIFY     1
+ #define NMEA_PRN_TYPE			        3
 
 #elif defined(SWCFG_VENDOR_GNSS_BDV8)
  #undef APP_CAPTION
@@ -1199,12 +1305,12 @@
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"Customer Release"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			1
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Customer Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
 
 #elif defined(SWCFG_VENDOR_GNSS_FKHL)
  #undef APP_CAPTION
@@ -1215,13 +1321,13 @@
  #undef TIMING_MODE
  #undef NMEA_PRN_TYPE
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"Customer Release FKHL"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			1
- #define NMEA_PRN_TYPE			1
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Customer Release FKHL"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define NMEA_PRN_TYPE			        1
 
 #elif defined(SWCFG_VENDOR_GNSS_FKHL_Test)
  #undef APP_CAPTION
@@ -1233,14 +1339,14 @@
  #undef NMEA_PRN_TYPE
  #undef NMEA_INPUT
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"Customer Release FKHL"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			1
- #define NMEA_PRN_TYPE			1
- #define NMEA_INPUT				1
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Customer Release FKHL"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define NMEA_PRN_TYPE			        1
+ #define NMEA_INPUT				          1
 
 #elif defined(SWCFG_VENDOR_GNSS_BDV8_NMEAPLAYER)
  #undef APP_CAPTION
@@ -1254,16 +1360,16 @@
  #undef CLIENT_WIDTH
  #undef CLIENT_HEIGHT
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"NMEA Player"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				0
- #define BAUDRATE_DEFAULT		7
- #define TIMING_MODE			1
- #define NMEA_INPUT				1
- #define SHOW_ERROR_NMEA_NOTIFY 1
- #define CLIENT_WIDTH			1008	
- #define CLIENT_HEIGHT			614
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "NMEA Player"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define NMEA_INPUT				          1
+ #define SHOW_ERROR_NMEA_NOTIFY     1
+ #define CLIENT_WIDTH			          1008	
+ #define CLIENT_HEIGHT			        614
 
 #elif defined(SWCFG_VENDOR_GNSS_V8)
  #undef APP_CAPTION
@@ -1273,12 +1379,12 @@
  #undef BAUDRATE_DEFAULT
  #undef TIMING_MODE
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"Internal Use"
- #define GNSS_VIEWER			1
- #define IS_DEBUG				1
- #define BAUDRATE_DEFAULT		6
- #define TIMING_MODE			1
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Internal Use"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            1
+ #define BAUDRATE_DEFAULT		        6
+ #define TIMING_MODE			          1
 
 #elif defined(SWCFG_VENDOR_CREATETAG)
  #undef APP_CAPTION
@@ -1289,22 +1395,22 @@
  #undef TIMING_MODE
  #undef _CREATE_LICENSE_TAG_
 
- #define APP_CAPTION			"GNSS Viewer"
- #define APP_TITLE				"Create Tag"
- #define GNSS_VIEWER				1
- #define IS_DEBUG					0
- #define BAUDRATE_DEFAULT			7
- #define TIMING_MODE				1
- #define _CREATE_LICENSE_TAG_		1
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Create Tag"
+ #define GNSS_VIEWER				        1
+ #define IS_DEBUG					          0
+ #define BAUDRATE_DEFAULT			      7
+ #define TIMING_MODE				        1
+ #define _CREATE_LICENSE_TAG_		    1
 
 #elif defined(SWCFG_VENDOR_GENERAL_DR)
  #undef APP_TITLE				
  #undef BAUDRATE_DEFAULT
  #undef SOFTWARE_FUNCTION
 
- #define APP_TITLE				    "Customer Release DR"
- #define BAUDRATE_DEFAULT		  5
- #define SOFTWARE_FUNCTION		(SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
+ #define APP_TITLE				          "Customer Release DR"
+ #define BAUDRATE_DEFAULT		        5
+ #define SOFTWARE_FUNCTION		      (SW_FUN_DATALOG | SW_FUN_AGPS | SW_FUN_DR)
 
 #else
  #error Unknow SWCFG_VENDER_TYPE!!!

@@ -12,7 +12,7 @@ Setting g_setting;
 
 HANDLE g_connectEvent = NULL;
 HANDLE g_closeEvent = NULL;
-CWaitReadLog* WRL = NULL;
+CWaitReadLog* g_waitReadDialog = NULL;
 HANDLE waitlog = NULL;
 
 double pos_lat, pos_lon;
@@ -108,17 +108,17 @@ U32 ConvertCharToU32(const char *src)
 
 UINT WaitLogRead(LPVOID pParam)
 {
-	if(WRL != NULL)
+	if(g_waitReadDialog != NULL)
 	{
-		WRL->DoModal();
+		g_waitReadDialog->DoModal();
 	}
 
 	if(!ResetEvent(waitlog))  
 	{
 		DWORD error = GetLastError();
 	}
-	delete WRL; 
-	WRL = NULL;
+	delete g_waitReadDialog; 
+	g_waitReadDialog = NULL;
 	return 0;
 }
 
@@ -630,53 +630,53 @@ void UtcConvertUtcToGpsTime(const UtcTime *utc_time_p, S16 *wn_p, D64 *tow_p )
 	total_int_sec = (passed_leap_years * SECS_PER_LEAP_YEAR);
 	total_int_sec += (passed_years - passed_leap_years) * SECS_PER_YEAR;
 	total_int_sec += (month_tbl_p[utc_time_p->month - 1] + utc_time_p->day - 1) * 86400;
-	total_int_sec += (utc_time_p->hour*3600);
-	total_int_sec += (utc_time_p->minute*60);
+	total_int_sec += (utc_time_p->hour * 3600);
+	total_int_sec += (utc_time_p->minute * 60);
 	total_int_sec += (int_tow);
 	total_int_sec += DefaultLeapSeconds; // because GPS-UTC = +14 seconds    
-	total_int_sec -= 86400*5;          // because from 1980.01.05/06 mid night
+	total_int_sec -= 86400 * 5;          // because from 1980.01.05/06 mid night
 	*wn_p = (S16)(total_int_sec / 604800L);
-	*tow_p = (D64)(total_int_sec - (*wn_p)*604800L + tow_frac);  
+	*tow_p = (D64)(total_int_sec - (*wn_p) * 604800L + tow_frac);  
 }
 
-QualityMode GetGnssQualityMode(U32 qualityIndicator, U08 gpMode, U08 glMode, U08 gaMode, U08 bdMode)
+QualityMode GetGnssQualityMode(U32 qualityIndicator, U08 gpMode, U08 glMode, U08 gaMode, U08 bdMode, U08 giMode)
 {
 /*
-GNS & RMC Mode indicator
-A(1) - Autonomous. Satellites system used in non-differential mode in position fix.
-D(2) - Differential.
-E(6) - Estimated (dead reckoning) Mode.
-F(5) - Float RTK.
-M(7) - Manual Input Mode.
-N(0) - No fix.
-P(?) - Precise. Satellites system used in precision mode. Precision mode is defined as: no delibrate.
-R(4) - Real Time Kinematic. Satellites system used in RTK mode with fixed integers.
-S(8) - Simulator mode.
+  GNS & RMC Mode indicator
+  A(1) - Autonomous. Satellites system used in non-differential mode in position fix.
+  D(2) - Differential.
+  E(6) - Estimated (dead reckoning) Mode.
+  F(5) - Float RTK.
+  M(7) - Manual Input Mode.
+  N(0) - No fix.
+  P(?) - Precise. Satellites system used in precision mode. Precision mode is defined as: no delibrate.
+  R(4) - Real Time Kinematic. Satellites system used in RTK mode with fixed integers.
+  S(8) - Simulator mode.
 
-In nmea_nostudio.c
-Nmea_qi[FIX_NMODE]={0, 1, 1, 1, 2, 5, 4};
-Nmea_mi[FIX_NMODE]={"N", "E", "A", "A", "D", "F", "R"};
+  In nmea_nostudio.c
+  Nmea_qi[FIX_NMODE]={0, 1, 1, 1, 2, 5, 4};
+  Nmea_mi[FIX_NMODE]={"N", "E", "A", "A", "D", "F", "R"};
 
-GGA Mode indicator
-0(N) - Fix not available or invalid. 
-1(A) - GPS SPS Mode, fix valid.
-2(D) - Differential GPS, SPS Mode, fix valid. 
-3(?) - GPS PPS Mode, fix valid.
-4(R) - Real Time Kinematic. Satellites system used in RTK mode with fixed integers.
-5(F) - Float RTK. Satellites system used in RTK mode, floating integers.
-6(E) - Estimated (dead recking) Mode.
-7(M) - Manual Input Mode.
-8(S) - Simulator Mode.
+  GGA Mode indicator
+  0(N) - Fix not available or invalid. 
+  1(A) - GPS SPS Mode, fix valid.
+  2(D) - Differential GPS, SPS Mode, fix valid. 
+  3(?) - GPS PPS Mode, fix valid.
+  4(R) - Real Time Kinematic. Satellites system used in RTK mode with fixed integers.
+  5(F) - Float RTK. Satellites system used in RTK mode, floating integers.
+  6(E) - Estimated (dead recking) Mode.
+  7(M) - Manual Input Mode.
+  8(S) - Simulator Mode.
 
-// Quality Indicator used by GGA
-static const S08 Nmea_quality_indicator[FIX_NMODE] = {
-              '0',   // FIX_NONE
-              '6',   // FIX_PREDICTION
-              '1',   // FIX_2D
-              '1',   // FIX_3D
-              '2',   // FIX_DIFF
-              '5',   // FIX_RTK_FLOAT
-              '4',   // FIX_RTK_FIX
+  // Quality Indicator used by GGA
+  static const S08 Nmea_quality_indicator[FIX_NMODE] = {
+                '0',   // FIX_NONE
+                '6',   // FIX_PREDICTION
+                '1',   // FIX_2D
+                '1',   // FIX_3D
+                '2',   // FIX_DIFF
+                '5',   // FIX_RTK_FLOAT
+                '4',   // FIX_RTK_FIX
 	Unlocated,
 	EstimatedMode,
 	DgpsMode,
@@ -763,19 +763,19 @@ static const S08 Nmea_quality_indicator[FIX_NMODE] = {
 	}
 	else if(gpInd == 'A' || glInd == 'A' || gaInd == 'A' || bdInd == 'A' || gpInd == '1')
 	{
-		if(gpMode==2 || glMode==2 || bdMode==2)
+		if(gpMode==2 || glMode==2 || bdMode==2|| giMode==2)
 		{
 			mode = PositionFix2d;
 		}
-		else if(gpMode==3 || glMode==3 || bdMode==3)
+		else if(gpMode==3 || glMode==3 || bdMode==3 || giMode==3)
 		{
 			mode = PositionFix3d;
 		}
-		else if(gpMode==4 || glMode==4 || bdMode==4)
+		else if(gpMode==4 || glMode==4 || bdMode==4 || giMode==4)
 		{
 			mode = SurveyIn;
 		}
-		else if(gpMode==5 || glMode==5 || bdMode==5)
+		else if(gpMode==5 || glMode==5 || bdMode==5 || giMode==5)
 		{
 			mode = StaticMode;
 		}
@@ -863,10 +863,10 @@ WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)
 		{ wlf_error1, "Error1", 6},
 		{ wlf_resendbin, "Resendbin", 9},
 		{ wlf_reset, "Reset", 5},
-		{ wlf_resend, "Resend", 6},
+		{ wlf_resend, "RESEND", 6},
 		{ wlf_end, "END", 3},
 		{ wlf_ok, "OK", 2},
-		{ wlf_None, "WAIT", 4},
+		{ wlf_None, "WAIT\n\r", 6},
 		//{ wlf_None, ""},
 	};
 
@@ -904,8 +904,9 @@ WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)
 			while(tableSize--)
 			{
 				//if(0 == strAckCmd.Compare(feedbackTable[tableSize].string)) 
-        int find = strAckCmd.Find(feedbackTable[tableSize].string);
-        if(find >= 0 && find == strAckCmd.GetLength() - feedbackTable[tableSize].len)
+        int find = strAckCmd.Compare(feedbackTable[tableSize].string);
+        if(find == 0 && find == strAckCmd.GetLength() - feedbackTable[tableSize].len)
+        //if(find == 0)
 				{
 					nReturn = feedbackTable[tableSize].result;
 					break;

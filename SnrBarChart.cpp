@@ -8,13 +8,9 @@
 
 static const int GpsIdStart = 1;
 static const int GpsIdEnd = 51;
-#if (_V8_SUPPORT)
- static const int GpsQZSSIdStart = 193;
- static const int GpsQZSSIdEnd = 197;
-#else
- static const int GpsQZSSIdStart = 52;
- static const int GpsQZSSIdEnd = 56;
-#endif
+
+static const int GpsQZSSIdStart = 193;
+static const int GpsQZSSIdEnd = 197;
 
 static const int GnssIdStart = 65;
 static const int GnssIdEnd = 88;
@@ -200,13 +196,8 @@ void CSnrBarChart::DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGS
 #else
 		DrawBarChartId(dc, s, isInUse, dx, dy, id); 
 #endif
-#if (FLOAT_SNR)
-		//F32 snrValue = sate[arrayIdx].SNR;
-		F32 snrValue = pSate->snr[0];
-#else
-		//U16 snrValue = sate[arrayIdx].SNR;
-		U16 snrValue = pSate->snr[0];
-#endif
+
+    F32 snrValue = pSate->snr[0];
 		if(snrValue == INVALIDATE_SNR)
 		{
 			continue;
@@ -234,11 +225,15 @@ void CSnrBarChart::DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGS
 		}
 		dc->SetTextColor(cr);
 		CString idText;
-#if FLOAT_SNR
-		idText.Format("%3.1f", snrValue);
-#else
-		idText.Format("%d", snrValue);
-#endif
+
+    if(IsFloat(snrValue))
+    {
+      idText.Format("%3.1f", snrValue);
+    }
+    else
+    {
+      idText.Format("%d", (int)snrValue);
+    }
 		barRect.SetRect(dx + (bm.bmWidth - SnrBar.cx) / 2, dy - 1 - SnrBar.cx,
 					dx + (bm.bmWidth + SnrBar.cx) / 2, dy - 1);
 		dc->SelectObject(&(s->barFont));	
@@ -384,23 +379,6 @@ void CSnrBarChartL2::OnPaint()
 	RefreshBarChart();
 }
 
-//#if (FLOAT_SNR)
-//F32 CSnrBarChartL2::GetGsvSubSnr(Satellite* s, int id) 
-//#else 
-//int CSnrBarChartL2::GetGsvSubSnr(Satellite* s, int id) 
-//#endif 
-//{
-//  if(s == NULL)
-//    return 0;
-//
-//  for(int i = 0; i < MAX_SATELLITE; ++i)
-//  {
-//    if(s[i].SatelliteID == id)
-//      return s[i].SNR;
-//  }
-//  return 0;
-//}
-
 void CSnrBarChartL2::ShowBoxChart(CDC *dc)
 {
 	int n = 0;
@@ -469,11 +447,7 @@ void CSnrBarChartL2::DrawSnr(CDC *dc, int& startId, UISetting* s, UISetting* sSu
 		bool isInUse = !CheckInUse(id, gsa);
     DrawBarChartId(dc, s, isInUse, dx + (SnrBarL2.cx * 2 - bm.bmWidth) / 2, dy, id); 
 
-#if (FLOAT_SNR)
-		F32 snrValue = 0, snrValue2 = 0;
-#else
-		U16 snrValue = 0, snrValue2 = 0;
-#endif
+    F32 snrValue = 0, snrValue2 = 0;
 		CString idText;
     CRect barRect;
     COLORREF cr;
@@ -502,11 +476,15 @@ void CSnrBarChartL2::DrawSnr(CDC *dc, int& startId, UISetting* s, UISetting* sSu
 			  cr = RGB(10, 10, 10);
 		  }
 		  dc->SetTextColor(cr);
-  #if (FLOAT_SNR)
-		  idText.Format("%3.1f", snrValue);
-  #else
-		  idText.Format("%d", snrValue);
-  #endif
+
+      if(IsFloat(snrValue))
+      {
+        idText.Format("%3.1f", snrValue);
+      }
+      else
+      {
+        idText.Format("%d", (int)snrValue);
+      }
 		  barRect.SetRect(dx, dy - 1 - SnrBarL2.cx, dx + SnrBarL2.cx + 1, dy - 1);
 		  dc->SelectObject(&(s->barFont));	
 		  dc->DrawText(idText, barRect, DT_VCENTER | DT_CENTER);
@@ -537,11 +515,15 @@ void CSnrBarChartL2::DrawSnr(CDC *dc, int& startId, UISetting* s, UISetting* sSu
 			  cr = RGB(10, 10, 10);
 		  }
 		  dc->SetTextColor(cr);
-  #if (FLOAT_SNR)
-		  idText.Format("%3.1f", snrValue2);
-  #else
-		  idText.Format("%d", snrValue2);
-  #endif
+
+      if(IsFloat(snrValue2))
+      {
+        idText.Format("%3.1f", snrValue2);
+      }
+      else
+      {
+        idText.Format("%d", (int)snrValue2);
+      }
 		  barRect.SetRect(dx + SnrBarL2.cx, dy - 1 - SnrBarL2.cx ,
 					  dx +  2 * SnrBarL2.cx, dy - 1);
 		  dc->SelectObject(&(sSub->barFont));	
@@ -603,6 +585,29 @@ void CSnrBarChartGalileo::OnPaint()
 {
 	RefreshBarChart();
 }
+//============================================================================
+CSnrBarChartNavic::CSnrBarChartNavic(void) 
+{
+	m_startBarChart = StartGnssBarChart;
+	m_minId = 1;
+	m_maxId = 31;
+	m_titleText = "NAVIC";
+	SetUISetting(&giUI);
+}
+
+CSnrBarChartNavic::~CSnrBarChartNavic(void) 
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CSnrBarChartNavic, CSnrBarChart)
+	ON_WM_PAINT()
+END_MESSAGE_MAP()
+
+void CSnrBarChartNavic::OnPaint()
+{
+	RefreshBarChart();
+}
 
 //============================================================================
 //static const CSize SnrBarL2(14, 50);
@@ -647,153 +652,3 @@ void CSnrBarChartDualL2::ShowBoxChart(CDC *dc)
 	DrawSnr(dc, n, uiSetting, uiSettingSub, gsvData, gsaData, ggaData, sateStatus);
 	DrawSnr(dc, n, uiSetting2, uiSetting2Sub, gsvData2, gsaData2, ggaData2, sateStatus2);
 }
-//#if FLOAT_SNR
-//F32 CSnrBarChartDualL2::GetGsv2SubSnr(int id)
-//#else
-//int CSnrBarChartDualL2::GetGsv2SubSnr(int id)
-//#endif
-//{
-//  if(sateStatus2Sub == NULL)
-//    return 0;
-//
-//  for(int i = 0; i < MAX_SATELLITE; ++i)
-//  {
-//    if(sateStatus2Sub[i].SatelliteID == id)
-//      return sateStatus2Sub[i].SNR;
-//  }
-//  return 0;
-//}
-/*
-void CSnrBarChartDualL2::DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGSA* gsa, GPGGA* gga, Satellite* sate)
-{
-
-  BITMAP bm = {0};
-	bm.bmWidth = bm.bmHeight = 20;
-	int cellOffset = BarChartIdGap / 2;
-
-	//Sort the satellite prn. 
-	int sateCount = GetNoneZeroCount(sate);
-	if(sateCount==0)
-	{
-		return;
-	}
-
-	vector< pair<int, int> > sateArray(sateCount);
-	for(int i=0; i<sateCount; ++i)
-	{
-		sateArray[i] = make_pair(i, sate[i].SatelliteID);
-	}
-	struct sort_pred {
-		bool operator()(const std::pair<int,int> &left, const std::pair<int,int> &right) 
-		{ return left.second < right.second; }
-	};
-	std::sort(sateArray.begin(), sateArray.end(), sort_pred());
-
-	CFont* oldFont = dc->SelectObject(&(s->idFont));	
-	CBrush* oldBrush = dc->SelectObject(&(s->noUseSnrBarBrush));	
-	CPen* oldPen = dc->SelectObject(&(s->noUseSnrBarPen));	
-
-	for(int i=0; i<sateCount; ++i)
-	{
-		int arrayIdx = sateArray[i].first;
-		int id = sate[arrayIdx].SatelliteID;
-		int dx = 0, dy = 0;
-		int index = startId + i;
-
-		if(index < MaxCountInRaw)
-		{	
-			dx = m_startBarChart.x + index * (BarChartIdGap + SnrBarL2.cx * 2);
-			dy = m_startBarChart.y;
-		}
-		else
-		{
-			ASSERT(FALSE);
-		}
-		dx += cellOffset;
-
-		bool isInUse = !CheckInUse(id, gsa);
-    DrawBarChartId(dc, s, isInUse, dx + (SnrBarL2.cx * 2 - bm.bmWidth) / 2, dy, id); 
-#if FLOAT_SNR
-		F32 snrValue = sate[arrayIdx].SNR;
-#else
-		U16 snrValue = sate[arrayIdx].SNR;
-#endif
-		if(snrValue == INVALIDATE_SNR)
-		{
-			continue;
-		}
-
-    //======Draw L1 SNR Chart
-		//Draw gray rectangle out line.
-		dc->SelectObject(&(s->inUseSnrBarPen));
-		dc->SelectObject(&(s->noUseSnrBarBrush));
-		CRect barRect(dx, dy - SnrBarL2.cy - 2,
-					dx + SnrBarL2.cx + 1, dy - 1);
-		dc->Rectangle(barRect);
-
-		//Draw snr bar.
-		dc->SelectObject((isInUse) ? &(s->inUseSnrBarBrush) : &(s->noUseSnrBarBrush));
-		dc->SelectObject((isInUse) ? &(s->inUseSnrBarPen) : &(s->noUseSnrBarPen));
-		barRect.SetRect(dx, dy - 1 - (int)(snrValue + .5),
-			dx + SnrBarL2.cx + 1, dy - 1);
-		dc->Rectangle(barRect);
-
-		//Draw snr value text.
-		COLORREF cr = (isInUse) ? s->inUseBarTextColor : s->noUseBarTextColor;
-		if(isInUse && snrValue < 15)
-		{
-			cr = RGB(10, 10, 10);
-		}
-		dc->SetTextColor(cr);
-		CString idText;
-#if FLOAT_SNR
-		idText.Format("%3.1f", snrValue);
-#else
-		idText.Format("%d", snrValue);
-#endif
-		//barRect.SetRect(dx + (bm.bmWidth - SnrBarL2.cx) / 2 + sgap, dy - 1 - SnrBarL2.cx,
-		//			dx + (bm.bmWidth + SnrBarL2.cx) / 2 + sgap, dy - 1);
-		barRect.SetRect(dx, dy - 1 - SnrBarL2.cx,
-					dx + SnrBarL2.cx + 1, dy - 1);
-		dc->SelectObject(&(s->barFont));	
-		dc->DrawText(idText, barRect, DT_VCENTER | DT_CENTER);
-
-    //======Draw L2 SNR Chart
-    snrValue = GetGsvSubSnr(id);
-		//Draw l2 gray rectangle out line.
-		dc->SelectObject(&(uiSettingSub->inUseSnrBarPen));
-		dc->SelectObject(&(uiSettingSub->noUseSnrBarBrush));
-		barRect.SetRect(dx + SnrBarL2.cx, dy - SnrBarL2.cy - 2,
-					dx + 2 * SnrBarL2.cx, dy - 1);
-		dc->Rectangle(barRect);
-    //Draw l2 snr bar.
-		dc->SelectObject((isInUse) ? &(uiSettingSub->inUseSnrBarPen) : &(uiSettingSub->noUseSnrBarPen));
-		dc->SelectObject((isInUse) ? &(uiSettingSub->inUseSnrBarBrush) : &(uiSettingSub->noUseSnrBarBrush));
-		barRect.SetRect(dx + SnrBarL2.cx, dy - 1 - (int)(snrValue + 0.5),
-			dx +  2 * SnrBarL2.cx, dy - 1);
-		dc->Rectangle(barRect);
-
-		//Draw l2 snr value text.
-		cr = (isInUse) ? uiSettingSub->inUseBarTextColor : uiSettingSub->noUseBarTextColor;
-		if(isInUse && snrValue < 15)
-		{
-			cr = RGB(10, 10, 10);
-		}
-		dc->SetTextColor(cr);
-#if FLOAT_SNR
-		idText.Format("%3.1f", snrValue);
-#else
-		idText.Format("%d", snrValue);
-#endif
-		barRect.SetRect(dx + SnrBarL2.cx, dy - 1 - SnrBarL2.cx ,
-					dx +  2 * SnrBarL2.cx, dy - 1);
-		dc->SelectObject(&(uiSettingSub->barFont));	
-		dc->DrawText(idText, barRect, DT_VCENTER | DT_CENTER);
-	} 
-	startId += sateCount;
-
-	dc->SelectObject(oldFont);	
-	dc->SelectObject(oldBrush);	
-	dc->SelectObject(oldPen);	
-}
-*/

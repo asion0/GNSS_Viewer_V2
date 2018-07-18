@@ -68,12 +68,14 @@ public:
 	GPGSA msg_glgsa;
 	GPGSA msg_bdgsa;
 	GPGSA msg_gagsa;
+	GPGSA msg_gigsa;
   GPGGA msg_gpgga;
 
   GPGSV msg_gpgsv;
 	GPGSV msg_glgsv;
   GPGSV msg_bdgsv;
 	GPGSV msg_gagsv;
+	GPGSV msg_gigsv;
 
   GPZDA msg_gpzda;
   GPRMC msg_gprmc;
