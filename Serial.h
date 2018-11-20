@@ -59,6 +59,7 @@ public:
 	// If once is false, it'll check com port empty again after read data.
 	DWORD ReadData(void* buffer, DWORD bufferSize, bool once = false);
 	DWORD GetString(void* buffer, DWORD bufferSize, DWORD timeOut);
+  DWORD CSerial::GetOneLine(void* buffer, DWORD bufferSize, DWORD timeOut);
   BOOL GetOneChar(U08 *c, DWORD* dwBytesDoRead, DWORD timeout);
 	DWORD GetBinary(void* buffer, DWORD bufferSize, DWORD timeout = 2000);
 	//DWORD GetParsingData(void* buffer, DWORD bufferSize, DWORD timeout = 2000);

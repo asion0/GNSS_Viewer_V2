@@ -1024,6 +1024,7 @@ void ShowRtcm1005(U08* src, bool convertOnly, CString* pStr)
   GetBitData(&src[3], 74, 38, (U08*)(&ecefy), sizeof(ecefy));
   ConvertInt38Sign(&ecefy);
   S64 ecefz = 0;
+
   GetBitData(&src[3], 114, 38, (U08*)(&ecefz), sizeof(ecefz));
   ConvertInt38Sign(&ecefz);
 

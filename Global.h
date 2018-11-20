@@ -100,6 +100,14 @@ struct Setting
 			reg.WriteInt("baudrate", baudrate);
 			reg.WriteString("firmware", mainFwPath);
 			reg.WriteInt("setting_earthBitmap", earthBitmap);
+			reg.WriteInt("configrfic_type", configRfIcType);
+
+      CString txt;
+      for(int i = 0; i < Setting::RFIC_REG_SIZE; ++i)
+      {
+        txt.Format("configrfic_reg%d", i);
+        reg.WriteInt(txt, configRfIcReg[i]);
+      }
 		}
 
 		if(IS_DEBUG && reg.SetKey(VIEWER_REG_PATH, false))
@@ -205,6 +213,14 @@ struct Setting
 			baudrate = reg.ReadInt("baudrate", 1);
 			mainFwPath = reg.ReadString("firmware", "");
 			earthBitmap = reg.ReadInt("setting_earthBitmap", 0);
+			configRfIcType = reg.ReadInt("configrfic_type", 0);
+
+      CString txt;
+      for(int i = 0; i < Setting::RFIC_REG_SIZE; ++i)
+      {
+        txt.Format("configrfic_reg%d", i);
+			  configRfIcReg[i] = reg.ReadInt(txt, 0);
+      }
 		}
 		else
 		{
@@ -212,6 +228,12 @@ struct Setting
 			baudrate = 1;
 			mainFwPath = "";
 			earthBitmap = 0;
+      configRfIcType = 0;
+      CString txt;
+      for(int i = 0; i < Setting::RFIC_REG_SIZE; ++i)
+      {
+			  configRfIcReg[i] = 0;
+      }
 		}
 		downloadTesting = FALSE;
 		if(scatterCount <= 0)
@@ -233,6 +255,7 @@ struct Setting
 			recentScatterCenter.RemoveAt(0);
 		recentScatterCenter.Add(r);
 	}
+  enum { RFIC_REG_SIZE = 18 };
 
 	int BaudrateIndex(int b);
 	int BaudrateValue(int i){ return BaudrateTable[i]; }
@@ -271,6 +294,8 @@ struct Setting
 	int defaultTimeout;
 	int scatterCount;
 	CStringArray recentScatterCenter;
+	U08 configRfIcType;
+	U32 configRfIcReg[RFIC_REG_SIZE];
 
 protected:
 	static int BaudrateTable[];

@@ -485,7 +485,7 @@ public:
 	void ClearQue();
 	void Copy_NMEA_Memery();
 	void CreateGPSThread();	
-	void DataLogDecompress(bool);
+	void DataLogDecompress(bool mode = true);
 	void DeleteNmeaMemery();
 	void GetLogStatus(U08*);
 	//void GetRegister(U08*);	
@@ -688,6 +688,7 @@ public:
 	int GetCustomerID()
 	{ return m_customerID; }
 	NMEA nmea;
+	bool DownloadLoader2(BOOL useBinCmd, BOOL needSleep, const BinaryData& srec, CWnd* notifyWnd = NULL);
 
 private:
 	BOOL m_bShowBinaryCmdData;
@@ -698,7 +699,6 @@ private:
 	MsgMode m_inputMode;
 	CString datalogFilename;
 	CFile dataLogFile;
-
 
 	enum DataLogType
 	{
@@ -745,6 +745,7 @@ public:
 	CmdErrorCode QueryRtkMode2(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryRtkSlaveBaud(CmdExeMode nMode, void* outputData);
 	CmdErrorCode ClearRtkSlaveData(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryRtkCpifBias(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryBasePosition(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPsti(CmdExeMode nMode, void* outputData);
 	//CmdErrorCode QueryPsti032(CmdExeMode nMode, void* outputData);
@@ -774,6 +775,9 @@ public:
 	CmdErrorCode QueryDrRate(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDrRawRate(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPpsOutputMode(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryGnssConstellationType(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryRfIc(CmdExeMode nMode, void* outputData, U08 type);
+	CmdErrorCode QueryNavicMessageInterval(CmdExeMode nMode, void* outputData);
 
   U08 m_nGeofecingNo;
 
@@ -825,6 +829,8 @@ protected:
 	CmdErrorCode QueryDatumIndex(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryVeryLowSpeed(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDofunUniqueId(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryCpuBoostMode(CmdExeMode nMode, void* outputData);
+
 	CmdErrorCode QueryUartPass(CmdExeMode nMode, void* outputData);
 	CmdErrorCode GpsdoResetSlave(CmdExeMode nMode, void* outputData);
 	CmdErrorCode GpsdoEnterRom(CmdExeMode nMode, void* outputData);
@@ -842,7 +848,6 @@ protected:
 	//CmdErrorCode QueryDrMultiHz(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGnssKnumberSlotCnr2(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGnssNmeaTalkId(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryGnssNavSol(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryCustomerID(CmdExeMode nMode, void* outputData);
 	CmdErrorCode Query1ppsFreqencyOutput(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySerialNumber(CmdExeMode nMode, void* outputData);
@@ -863,6 +868,9 @@ protected:
 	CmdErrorCode EnterRtkDebugMode(CmdExeMode nMode, void* outputData);
 	CmdErrorCode BackRtkDebugMode(CmdExeMode nMode, void* outputData);
 	CmdErrorCode Query1ppsPulseWidth(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryAlphaUniqueId(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryAlphaKey(CmdExeMode nMode, void* outputData);
+	CmdErrorCode TmpActiveLicense(CmdExeMode nMode, void* outputData);
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
@@ -903,7 +911,7 @@ protected:
 	afx_msg void OnBinarySystemRestart();
 	afx_msg void OnBinaryDumpData();
 	afx_msg void OnConfigureSerialPort();
-	afx_msg void OnSetFactoryDefaultNoReboot();
+	//afx_msg void OnSetFactoryDefaultNoReboot();
 	afx_msg void OnSetFactoryDefaultReboot();
 	//afx_msg void OnBinaryConfigurenmeaoutput();
 	afx_msg void OnConfigureNmeaIntervalV8();
@@ -1028,7 +1036,7 @@ protected:
 	afx_msg void OnBnClickedECompassCalibration();
 	afx_msg void OnConfigure1PpsPulseWidth();
 	//afx_msg void OnQuery1PpsPulseWidth();
-	afx_msg void OnConfigQueryGnssNavSol();
+	afx_msg void OnConfigGnssConstellationType();
 	afx_msg void OnConfigBinaryMeasurementDataOut();
 	afx_msg void OnConfigRtcmMeasurementDataOut();
 	afx_msg void OnConfig1ppsFrequencyOutput();
@@ -1045,6 +1053,7 @@ protected:
 	afx_msg void OnConfigParamSearchEngineSleepCriteria();
 	afx_msg void OnConfigDatumIndex();
 	afx_msg void OnConfigVeryLowSpeed();
+	afx_msg void OnConfigCpuBoostMode();
 	afx_msg void OnConfigDofunUniqueId();
 	afx_msg void OnEraseDofunUniqueId();
 	afx_msg void OnConfigureNoisePowerControl();
@@ -1066,10 +1075,15 @@ protected:
 	afx_msg void OnHostLog();
 	afx_msg void OnTestExternalSrec();
 	afx_msg void OnIqPlot();
+  afx_msg void OnTestAlphaIo();
+  //afx_msg void OnTmpActiveLicense();
 	afx_msg void OnReadMemToFile();
 	afx_msg void OnReadMemToFile2();
+	afx_msg void OnReadMemToFile3();
 	afx_msg void OnPatchRom20130221Ephemeris();
 	afx_msg void OnIoTester();
+	afx_msg void OnConfigRfIc();
+	afx_msg void OnConfigIir();
 	afx_msg void OnWriteMemToFile();
 	afx_msg void OnUpgradeDownload();
 	afx_msg void OnPatch();
@@ -1090,6 +1104,7 @@ protected:
 	afx_msg void OnConfigRtkSlaveBaud();
 	afx_msg void OnConfigBasePosition();
 	afx_msg void OnConfigRtkParameters();
+  afx_msg void OnConfigRtkCpifBias();
 	afx_msg void OnRtkReset();
 	afx_msg void OnConfigMessageOut();
 	afx_msg void OnConfigSubSecRegister();
@@ -1113,6 +1128,8 @@ protected:
 	afx_msg void OnConfigPsti068();
 	afx_msg void OnConfigPsti070();
 	afx_msg void OnConfigPsti004();
+	afx_msg void OnConfigNavicMessageInterval();
+
 	afx_msg void OnRtkOnOffGpsSv();
 	afx_msg void OnRtkOnOffSbasQzssSv();
 	afx_msg void OnRtkOnOffGlonassSv();
@@ -1123,6 +1140,10 @@ protected:
 	afx_msg void OnConfigWatchTrackback();
 	afx_msg void OnConfigDrRate();
 	afx_msg void OnConfigDrRawRate();
+
+	afx_msg void OnConfigAlphaKey();
+  afx_msg void OnDumpMemory();
+
 
 	afx_msg void OnQueryPositionRate()
 	{ GenericQuery(&CGPSDlg::QueryPositionRate); }
@@ -1218,6 +1239,10 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryVeryLowSpeed); }
 	afx_msg void OnQueryDofunUniqueId()
 	{ GenericQuery(&CGPSDlg::QueryDofunUniqueId); }
+	afx_msg void OnQueryCpuBoostMode()
+	{ GenericQuery(&CGPSDlg::QueryCpuBoostMode); }
+	afx_msg void OnQueryNavicMessageInterval()
+	{ GenericQuery(&CGPSDlg::QueryNavicMessageInterval); }
 
 	afx_msg void OnQueryUartPass()
 	{ GenericQuery(&CGPSDlg::QueryUartPass); }
@@ -1253,8 +1278,8 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryGnssKnumberSlotCnr2); }
 	afx_msg void OnQueryGnssNmeaTalkId()
 	{ GenericQuery(&CGPSDlg::QueryGnssNmeaTalkId); }
-	afx_msg void OnQueryGnssNavSol()
-	{ GenericQuery(&CGPSDlg::QueryGnssNavSol); }
+	afx_msg void OnQueryGnssConstellationType()
+	{ GenericQuery(&CGPSDlg::QueryGnssConstellationType); }
 	afx_msg void OnQueryCustomerID()
 	{ GenericQuery(&CGPSDlg::QueryCustomerID); }
 	afx_msg void OnQuery1ppsFreqencyOutput()
@@ -1301,6 +1326,8 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryRtkMode2); }
 	afx_msg void OnQueryRtkSlaveBaud()
 	{ GenericQuery(&CGPSDlg::QueryRtkSlaveBaud); }	
+	afx_msg void OnQueryRtkCpifBias()
+	{ GenericQuery(&CGPSDlg::QueryRtkCpifBias); }	
 	afx_msg void OnClearRtkSlaveData()
 	{ GenericQuery(&CGPSDlg::ClearRtkSlaveData); }	
   afx_msg void OnQueryBasePosition()
@@ -1353,6 +1380,12 @@ protected:
 	{ GenericQuery(&CGPSDlg::BackRtkDebugMode); }
 	afx_msg void OnQuery1ppsPulseWidth()
 	{ GenericQuery(&CGPSDlg::Query1ppsPulseWidth); }
+	afx_msg void OnQueryAlphaUniqueId()
+	{ GenericQuery(&CGPSDlg::QueryAlphaUniqueId); }
+	afx_msg void OnQueryAlphaKey()
+	{ GenericQuery(&CGPSDlg::QueryAlphaKey); }
+	afx_msg void OnTmpActiveLicense()
+	{ GenericQuery(&CGPSDlg::TmpActiveLicense); }
 
 	struct MenuItemEntry {
 		BOOL showOption;
@@ -1421,7 +1454,7 @@ protected:
 
 	//	void Config_silab_baudrate(HANDLE *m_DeviceHandle);
 	//	void Config_silab_baudrate_flash(HANDLE *m_DeviceHandle);
-	void DoCommonConfig(CCommonConfigDlg* dlg);
+	bool DoCommonConfig(CCommonConfigDlg* dlg);
 	void DoCommonConfigNoDisconnect(CCommonConfigDlg* dlg);
 	void DoCommonConfigDirect(CCommonConfigDlg* dlg, int type);
 
@@ -1475,10 +1508,8 @@ protected:
 
 	bool m_firstDataIn;
 	U32 m_customerID;
-	int m_dataLogDecompressMode;
 
 	DECLARE_MESSAGE_MAP()
-
 public:
   int m_nPstiNo;
 
@@ -1499,5 +1530,6 @@ protected:
 public:
   static CmdErrorCode SendComCmdWithAck(HANDLE com, U08* cmd, int size, DWORD timeOut);
   bool DoCConfigRegisterDirect(U32 addr, U32 value);
+  bool DoCConfigRfIcDirect(U08 type, U32* reg, int size);
 
 };

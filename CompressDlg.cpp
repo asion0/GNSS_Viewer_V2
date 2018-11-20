@@ -81,10 +81,8 @@ UINT ReadNMEA(LPVOID pParam)
 	U08    nmea[200];	
 	ULONGLONG  dwBytesRemaining = pComDlg->Fsource.GetLength();
 	
-	
 	int write_count = 0;
 	int file_tail = 0;
-
 
 	while(dwBytesRemaining)
 	{	
@@ -101,7 +99,7 @@ UINT ReadNMEA(LPVOID pParam)
 			pComDlg->PosFixAlgorithm();	
 
 			write_count++;
-			if ( write_count > 65000)
+			if (write_count > 65000)
 			{
 				write_count = 0;
 				file_tail++;
@@ -110,9 +108,6 @@ UINT ReadNMEA(LPVOID pParam)
 		}
 		pComDlg->kml.Finish();
 	}	
-	//char title[]="    </coordinates>\r\n  </LineString>\r\n</Placemark>\r\n</kml>";
-	//pComDlg->Fnmea.Write(title,sizeof(title)-1);
-
 
 	AfxMessageBox("Compress is completed!");
 	pComDlg->Fsource.Close();
@@ -121,7 +116,7 @@ UINT ReadNMEA(LPVOID pParam)
 	pComDlg->IsFlogOpen    = false;
 	pComDlg->IsFSourceOpen = false;
 	if(!CGPSDlg::gpsDlg->m_isPressCloseButton)
-         CGPSDlg::gpsDlg->CreateGPSThread();
+    CGPSDlg::gpsDlg->CreateGPSThread();
 //	AfxEndThread(0);	
 	return retCode;
 }

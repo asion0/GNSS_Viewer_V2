@@ -27,4 +27,5 @@ protected:
 public:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnEnUpdateRegAddr();
+  afx_msg void OnEnChangeRegAddr();
 };

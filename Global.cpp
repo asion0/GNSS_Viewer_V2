@@ -249,9 +249,12 @@ void  UtcConvertGpsToUtcTime(S16 wn, D64 tow, UtcTime* utc_p)
 
 	S32 tow_int = (U32)floor(tow);
 	D64 tow_frac = tow - (D64)tow_int;
-	S32 total_utc_sec = 604800L*wn + tow_int - DefaultLeapSeconds;
-	S32 total_utc_day = total_utc_sec / 86400L;
-	S32 sec_of_day = total_utc_sec - 86400L * total_utc_day;
+	S64 total_utc_sec = 604800L * wn + tow_int - DefaultLeapSeconds;
+	S32 total_utc_day = (S32)(total_utc_sec / 86400L);
+	S32 sec_of_day = (S32)(total_utc_sec - 86400L * total_utc_day);
+  //S32 total_utc_day = 7 * wn + tow_int / 86400L;
+  //S32 sec_of_day = tow_int -  86400L * (tow_int / 86400L);
+
 	S32 passed_leap_days = (total_utc_day + DAYS_PER_4_YEARS 
 			- day_of_leap_year_month_table[2] + 5) / DAYS_PER_4_YEARS;
 	S32 passed_utc_years = (total_utc_day + 5 - passed_leap_days) / 365;
@@ -284,67 +287,6 @@ void  UtcConvertGpsToUtcTime(S16 wn, D64 tow, UtcTime* utc_p)
 		+ (F32)tow_frac;
 }
 
-/*
-void UtcConvertGpsToUtcTime(S16 wn, D64 tow, UtcTime *utc_time_p)
-{
-//	const S16 DEFAULT_LEAP_SECS = 15;           // 2006.01.01 : GPS-UTC = +14 seconds  
-	const S16 INIT_UTC_YEAR = 1980;             // GPS Time start at 1980 Jan. 5/6 mid-night    
-	const S16 DAYS_PER_YEAR = 365;    
-	const S16 DAYS_PER_4_YEARS = ( DAYS_PER_YEAR*4 + 1 ); // plus one day for leap year
-	const S16 day_of_year_table[] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
-	const S16 day_of_leap_year_table[] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
-	const S16* month_tbl_p = day_of_year_table;           // default is not the leap year              
-
-	S16 i;
-	S32 passed_leap_days, passed_utc_years, day_of_utc_year, leap_days_of_passed_utc_years;  
-//	S32 ref_time;              // ICD-200C : p122 ~ p124, decide situation a. or b. or c.             
-	D64 tE = wn*604800 + tow;   // GPS time as estimated by the user.
-	D64 delta_t_UTC = 0;        // leap sec calculated from sub4-p18
-	D64 double_total_utc_sec;   
-	S32 int_total_utc_sec;
-	D64 tow_frac;
-	S32 total_utc_day;
-	S32 sec_of_day;  
-
-	// ( ICD-200C p123, situation b. ) DN + 3/4 ~ DN +5/4
-	// step 1 : decide leap sec, total_utc_day, sec of day 
-	double_total_utc_sec = tE - DefaultLeapSeconds;
-	int_total_utc_sec = (S32)double_total_utc_sec;
-	tow_frac = double_total_utc_sec - (D64)int_total_utc_sec;
-	total_utc_day = int_total_utc_sec / 86400L;
-	sec_of_day = int_total_utc_sec - 86400L*total_utc_day;          
-
-	// step 2 : calculate utc time    
-	passed_leap_days = 1 + ( (total_utc_day + 5 - day_of_leap_year_table[2] ) / DAYS_PER_4_YEARS );
-	passed_utc_years = (total_utc_day + 5 - passed_leap_days) / 365;
-	leap_days_of_passed_utc_years = (passed_utc_years + 3) / 4;
-
-	day_of_utc_year = total_utc_day + 5 - passed_utc_years*DAYS_PER_YEAR
-		- leap_days_of_passed_utc_years;
-	utc_time_p->day_of_year = (S16)day_of_utc_year + 1;                  
-	utc_time_p->year = INIT_UTC_YEAR + (S16)passed_utc_years;
-
-	if( (utc_time_p->year & 3) == 0 )        
-		month_tbl_p = day_of_leap_year_table; // this year is leap year
-
-	for( i = 1; i < 13; i++ )
-		if( day_of_utc_year < month_tbl_p[i] )
-			break;
-
-	utc_time_p->month = i;
-	utc_time_p->day   = (S16)day_of_utc_year - month_tbl_p[i-1] + 1; // + 1 : because of having sec_of_day
-
-	utc_time_p->hour = (S16)(sec_of_day / 3600);
-	if( utc_time_p->hour > 23 )
-		utc_time_p->hour = 23;   
-
-	utc_time_p->minute = (S16)((sec_of_day - utc_time_p->hour * 3600) / 60);
-	if( utc_time_p->minute > 59 )
-		utc_time_p->minute = 59;   
-
-	utc_time_p->sec = (F32)(sec_of_day - utc_time_p->hour*3600L - utc_time_p->minute*60L) + (F32)tow_frac;
-}
-*/
 const char* DatumList[] = {
 	"WGS-84, Global",
 	"Adindan, Burkina Faso",
@@ -839,6 +781,7 @@ S32 ConvertLeonS32(const U08* ptr)
 {
 	return (S32)MAKELONG(MAKEWORD(ptr[3], ptr[2]), MAKEWORD(ptr[1], ptr[0]));
 }
+
 WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)
 {
 	typedef struct _WlfEntry

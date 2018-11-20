@@ -45,7 +45,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_GNSS_INTERNALUSE_NEW;NO_TIMEOUT"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_NSHP_FIX_TOOL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG;_TAB_LAYOUT_;_NAVIC_CONVERT_;UPGRADE_DOWNLOAD"
+				PreprocessorDefinitions="_DEBUG;_TAB_LAYOUT_;_NAVIC_CONVERT_;UPGRADE_DOWNLOAD2"
 				Culture="1033"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
@@ -2697,10 +2697,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\IoTester.h"
-				>
-			</File>
-			<File
 				RelativePath=".\KmlDlg.h"
 				>
 			</File>
@@ -2811,6 +2807,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ConfigureIir.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ConfigureIir.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ConfigureRfIc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ConfigureRfIc.h"
+				>
+			</File>
+			<File
 				RelativePath="Download.cpp"
 				>
 			</File>
@@ -2832,6 +2844,10 @@
 			</File>
 			<File
 				RelativePath=".\IoTester.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\IoTester.h"
 				>
 			</File>
 			<File
@@ -2880,6 +2896,10 @@
 			</File>
 			<File
 				RelativePath="BinaryMSG.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Config1ppsFrequenceOutput.cpp"
 				>
 			</File>
 			<File
@@ -3100,10 +3120,6 @@
 			</File>
 			<File
 				RelativePath=".\ColorStatic.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Config1ppsFrequenceOutput.cpp"
 				>
 			</File>
 			<File

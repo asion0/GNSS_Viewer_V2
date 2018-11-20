@@ -44,7 +44,7 @@ void ScatterData::SetOrigin()
 
 	SetRotationMatrix();		
 	int_N = WGS84_RA / (sqrt(1 - WGS84_E2 * sin(m_lat) * sin(m_lat)));		
-    WGS84_X = (int_N + ini_h) * cos(m_lat) * cos(m_lon);
+  WGS84_X = (int_N + ini_h) * cos(m_lat) * cos(m_lon);
 	WGS84_Y = (int_N + ini_h) * cos(m_lat) * sin(m_lon);
 	WGS84_Z = (int_N * (1 - WGS84_E2) + ini_h) * sin(m_lat);	
 }

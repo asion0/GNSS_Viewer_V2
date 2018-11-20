@@ -94,13 +94,28 @@ void CExternalSrecDlg::OnBnClickedGo()
 	CString externalSrecFile;
 	GetDlgItem(IDC_PATH)->GetWindowText(externalSrecFile);
 
-	if(!DownloadLoader(externalSrecFile, true))
+  BinaryData srec;
+	srec.ReadFromFile(externalSrecFile);
+	//if(!DownloadLoader(externalSrecFile, true))
+//	if(!CGPSDlg::gpsDlg->DownloadLoader2(true, false, srec))
+	if(!CGPSDlg::gpsDlg->DownloadLoader2(false, false, srec))
 	{
 		return;
 	}
+
+  char buff[1024];
+	GetDlgItem(IDC_CMD)->GetWindowText(buff, sizeof(buff));
+	CGPSDlg::gpsDlg->m_serial->SendData((U08*)buff, (U16)strlen(buff) + 1);	
+
+	for(int i=0; i<100; ++i)
+	{
+		memset(buff, 0, sizeof(buff));
+		CGPSDlg::gpsDlg->m_serial->GetString(buff, sizeof(buff), 10*1000);
+	}
+
 	OnOK();
 }
-
+/*
 WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd);
 bool CExternalSrecDlg::DownloadLoader(CString externalSrecFile, BOOL useBinCmd)
 {
@@ -214,7 +229,7 @@ bool CExternalSrecDlg::DownloadLoader(CString externalSrecFile, BOOL useBinCmd)
 	}
 	return true;
 }
-
+*/
 //add message to response list
 void CExternalSrecDlg::AddMsgToList(LPCTSTR msg)
 {

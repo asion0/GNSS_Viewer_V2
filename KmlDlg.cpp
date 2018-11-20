@@ -228,6 +228,7 @@ void CKmlDlg::GetDataFiles(BOOL autoChecked)
         }
 
         CString ext = Utility::GetFileExt(finder.GetFileName());
+        ext.MakeLower();
         if(ext != "txt" && ext != "out")
         {
           continue;

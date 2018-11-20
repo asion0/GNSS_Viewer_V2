@@ -53,7 +53,8 @@
 #include "SaveBinaryNoParsingDlg.h"
 #include "MessageParser.h"
 #include "IoTester.h"
-
+#include "ConfigureRfIc.h"
+#include "ConfigureIir.h"
 #include <Dbt.h>
 
 #ifdef _DEBUG
@@ -174,7 +175,14 @@ void CGPSDlg::DeleteNmeaMemery()
 	memset(&satecopy_ga, 0, sizeof(satecopy_ga));
 	memset(&satecopy_gi, 0, sizeof(satecopy_gi));
 
-	csSatelliteStruct.Lock();
+	memset(&m_psti030, 0, sizeof(m_psti030));
+	memset(&m_psti031, 0, sizeof(m_psti031));
+	memset(&m_psti032, 0, sizeof(m_psti032));
+	memset(&m_psti033R, 0, sizeof(m_psti033R));
+	memset(&m_psti033B, 0, sizeof(m_psti033B));
+	memset(&m_psti030, 0, sizeof(m_psti030));
+
+  csSatelliteStruct.Lock();
 	sate_gp.Clear();
   sate_gl.Clear();
   sate_bd.Clear();
@@ -1399,9 +1407,8 @@ CGPSDlg::CGPSDlg(CWnd* pParent /*=NULL*/)
 	m_nmeaPlayPause = false;
 	m_nmeaPlayThread = NULL;
 	DeleteNmeaMemery();
-	m_dataLogDecompressMode = 1;
 	m_customerId = CUSTOMER_ID;
-	//m_gpsdoInProgress = false;
+
 	m_nDefaultTimeout = g_setting.defaultTimeout;
 	m_coorFormat = DegreeMinuteSecond;
 	m_copyLatLon = FALSE;
@@ -1599,6 +1606,12 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_HOSTLOG_NMEA, OnHosLogToNmea)
 	ON_COMMAND(ID_LOG_CONFIGURE, OnDatalogLogConfigureControl)
 	ON_COMMAND(ID_LOGW_CONFIGURE, OnDatalogWatchLogConfigureControl)
+	ON_COMMAND(ID_TEST_ALPHA_IO, OnTestAlphaIo)
+	ON_COMMAND(ID_TMP_ACT_LICENSE, OnTmpActiveLicense)
+	ON_COMMAND(ID_QUERY_ALPHA_UNIQUE_ID, OnQueryAlphaUniqueId)
+	ON_COMMAND(ID_QUERY_ALPHA_KEY, OnQueryAlphaKey)
+	ON_COMMAND(ID_CFG_ALPHA_KEY, OnConfigAlphaKey)
+
 	ON_COMMAND(ID_NMEA_CHECKSUM_CAL, OnNmeaChecksumCalculator)
 	ON_COMMAND(ID_BIN_CHECKSUM_CAL, OnBinaryChecksumCalculator)
 	ON_COMMAND(ID_HOSTLOG, OnHostLog)
@@ -1606,9 +1619,14 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_IQ_PLOT, OnIqPlot)
 	ON_COMMAND(ID_READ_MEM_TO_FILE, OnReadMemToFile)
 	ON_COMMAND(ID_READ_MEM_TO_FILE2, OnReadMemToFile2)
+	ON_COMMAND(ID_READ_MEM_TO_FILE3, OnReadMemToFile3)
 	ON_COMMAND(ID_PATCH_ROM_EPH, OnPatchRom20130221Ephemeris)
 	ON_COMMAND(ID_IO_TESTER, OnIoTester)
+	ON_COMMAND(ID_CFG_RFIC, OnConfigRfIc)
+	ON_COMMAND(ID_CFG_IIR, OnConfigIir)
+	ON_COMMAND(ID_DUMP_MEMORY, OnDumpMemory)
   
+
 	ON_COMMAND(ID_WRITE_MEM_TO_FILE, OnWriteMemToFile)
 	ON_COMMAND(ID_UPGRADE_DOWNLOAD, OnUpgradeDownload)
 	ON_COMMAND(ID_PATCH, OnPatch)
@@ -1647,7 +1665,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_CFG_NVGTN_MODE, OnMultimodeConfiguremode)
 	ON_COMMAND(ID_QUERY_CABLEDELAY, OnQueryCableDelay)
 
-	ON_COMMAND(ID_FCTRY_DFLT_NO_RBT, OnSetFactoryDefaultNoReboot)
+	//ON_COMMAND(ID_FCTRY_DFLT_NO_RBT, OnSetFactoryDefaultNoReboot)
 	ON_COMMAND(ID_FCTRY_DFLT_RBT, OnSetFactoryDefaultReboot)
 	//ON_COMMAND(ID_WAAS_WAAS, OnWaasWaas)
 
@@ -1674,6 +1692,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_CFG_PARAM_SRCH_ENG_SLP_CRT, OnConfigParamSearchEngineSleepCriteria)
 	ON_COMMAND(ID_CONFIG_DATUM_INDEX, OnConfigDatumIndex)
 	ON_COMMAND(ID_CONFIG_VERY_LOW, OnConfigVeryLowSpeed)
+	ON_COMMAND(ID_CFG_CPU_BOOST_MODE, OnConfigCpuBoostMode)
 	ON_COMMAND(ID_CONFIG_DF_UNIQUE_ID, OnConfigDofunUniqueId)
 	ON_COMMAND(ID_ERASE_DF_UNIQUE_ID, OnEraseDofunUniqueId)
 
@@ -1694,7 +1713,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_CONFIG_REF_TIME_TO_GPS, OnConfigRefTimeSyncToGpsTime)
 	ON_COMMAND(ID_CFG_1PPS_PULSE_WIDTH, OnConfigure1PpsPulseWidth)
 	ON_COMMAND(ID_QUERY_1PPS_PULSE_WIDTH, OnQuery1ppsPulseWidth)
-	ON_COMMAND(ID_CONFIG_GNSS_NAV_SOL, OnConfigQueryGnssNavSol)
+	ON_COMMAND(ID_CONFIG_GNSS_CSTLN_TYPE, OnConfigGnssConstellationType)
 	ON_COMMAND(ID_CONFIG_BIN_MEA_DAT_OUT, OnConfigBinaryMeasurementDataOut)
 	ON_COMMAND(ID_CONFIG_RTCM_MEA_DAT_OUT, OnConfigRtcmMeasurementDataOut)
 	ON_COMMAND(ID_QUERY_BIN_MEA_DAT_OUT, OnQueryBinaryMeasurementDataOut)
@@ -1748,13 +1767,15 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_QUERY_NAV_MODE_V8, OnQueryNavigationModeV8)
 	ON_COMMAND(ID_QUERY_BOOT_STATUS, OnQueryGnssBootStatus)
 	//ON_COMMAND(ID_QUERY_DR_MULTIHZ, OnQueryDrMultiHz)
-	ON_COMMAND(ID_QUERY_GNSS_NAV_SOL, OnQueryGnssNavSol)
+	ON_COMMAND(ID_QUERY_GNSS_CSTLN_TYPE, OnQueryGnssConstellationType)
 	ON_COMMAND(ID_QUERY_CUSTOMER_ID, OnQueryCustomerID)
 	ON_COMMAND(ID_QUERY_SERIAL_NUMBER, OnQuerySerialNumber)
 	ON_COMMAND(ID_CONFIG_SERIAL_NUMBER, OnConfigureSerialNumber)
 	ON_COMMAND(ID_QUERY_DATUM_INDEX, OnQueryDatumIndex)
 	ON_COMMAND(ID_QUERY_VERY_LOW, OnQueryVeryLowSpeed)
 	ON_COMMAND(ID_QUERY_DF_UNIQUE_ID, OnQueryDofunUniqueId)
+	ON_COMMAND(ID_QUERY_CPU_BOOST_MODE, OnQueryCpuBoostMode)
+	ON_COMMAND(ID_QUERY_NAVIC_MSG, OnQueryNavicMessageInterval)
 
 	ON_COMMAND(ID_QUERY_UARTPASS, OnQueryUartPass)
 	ON_COMMAND(ID_GPSDO_RESET_SLAVE, OnGpsdoResetSlave)
@@ -1804,6 +1825,8 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_QUERY_RTK_MODE2, OnQueryRtkMode2)
 	ON_COMMAND(ID_QUERY_RTK_SLAVE_BAUD, OnQueryRtkSlaveBaud)
 	ON_COMMAND(ID_CLEAR_RTK_SLAVE_DATA, OnClearRtkSlaveData)
+	ON_COMMAND(ID_QUERY_RTK_GL_CPIF_BIAS, OnQueryRtkCpifBias)
+	ON_COMMAND(ID_CFG_RTK_GL_CPIF_BIAS, OnConfigRtkCpifBias)
 
 	ON_COMMAND(ID_QUERY_BASE_POSITION, OnQueryBasePosition)
 	ON_COMMAND(ID_CONFIG_RTK_MODE, OnConfigRtkMode)
@@ -1874,6 +1897,8 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_CONFIG_PSTI004, OnConfigPsti004)
   //20160914 Added
 	ON_COMMAND(ID_RECALC_GLONASS_IFB, OnReCalcuteGlonassIfb)
+	//20180918 Added
+	ON_COMMAND(ID_CFG_NAVIC_MSG, OnConfigNavicMessageInterval)
 
 END_MESSAGE_MAP()
 
@@ -3836,8 +3861,6 @@ void CGPSDlg::DataLogDecompress(bool mode)
 	ULONGLONG dwBytesRemaining = m_convertFile.GetLength();
 	ULONGLONG startAddress = 0;
 	CFile fDecompress;
-	mode = (m_dataLogDecompressMode==1);
-
 	CSkyTraqKml kml;
 
   CString filename = Utility::GetFilePathName(m_convertFile.GetFilePath()) + ".csv";
@@ -4032,9 +4055,9 @@ void CGPSDlg::DataLogDecompress(bool mode)
 				LLA_T lla;
 				POS_T pos;
 
-				lat = FixedPointToSingle(temp_lat,20);
-				lon = FixedPointToSingle(temp_lon,20);
-				alt = FixedPointToSingle(temp_alt,7);
+				lat = FixedPointToSingle(temp_lat, 20);
+				lon = FixedPointToSingle(temp_lon, 20);
+				alt = FixedPointToSingle(temp_alt, 7);
 
 				lla.lat = lat / R2D;
 				lla.lon = lon / R2D;
@@ -4084,7 +4107,7 @@ void CGPSDlg::DataLogDecompress(bool mode)
 				TRACE("%.4f,%.4f\r\n",lat,lon);
 
 
-			UtcConvertGpsToUtcTime((S16) DataLog.WNO+1024,tow, &utc);
+			UtcConvertGpsToUtcTime((S16) DataLog.WNO+1024, tow, &utc);
 
 			LL kml_lla;
 			kml_lla.lat = lat;
@@ -4165,7 +4188,7 @@ void CGPSDlg::DataLogDecompress(bool mode)
 
 UINT DecompressThread(LPVOID pParam)
 {
-	CGPSDlg::gpsDlg->DataLogDecompress(0);
+	CGPSDlg::gpsDlg->DataLogDecompress();
 	return 0;
 }
 
@@ -5430,18 +5453,21 @@ void CGPSDlg::LoadMenu()
 	CreateSubMenu(hMenu, menuItemFile, "&File");
 
 	//Binary Menu
+  /*
 	static MenuItemEntry SetFactoryDefaultMenu[] =
 	{
 		{ 1, MF_STRING, ID_FCTRY_DFLT_NO_RBT, "No Reboot", NULL },
 		{ 1, MF_STRING, ID_FCTRY_DFLT_RBT, "Reboot after setting to factory defaults", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
-
+  */
 	static MenuItemEntry menuItemBinary[] =
 	{
 		{ 1, MF_STRING, ID_SYSTEM_RESTART, "System Restart", NULL },
 		{ SHOW_BINARY_DATA, MF_STRING, ID_BINARY_DUMP_DATA, "Show Binary Data", NULL },
-		{ 1, MF_POPUP, 0, "Set Factory Default", SetFactoryDefaultMenu },
+    //20180910, Alex remove "Factory Reset No Reboot", FW already reserved this function.
+		//{ 1, MF_POPUP, 0, "Set Factory Default", SetFactoryDefaultMenu },
+    { 1, MF_STRING, ID_FCTRY_DFLT_RBT, "Set Factory Default", NULL },
 		{ IS_DEBUG, MF_STRING, ID_FIRMWARE_DOWNLOAD, "Firmware Image Download", NULL },
     { 1, MF_STRING, ID_QUERY_CLOCK_OFFSET, "Query Clock Offset", NULL },
     { 1, MF_STRING, ID_SET_CLOCK_OFFSET, "Set Default Clock Offset", NULL },
@@ -5638,7 +5664,7 @@ void CGPSDlg::LoadMenu()
 		{ 1, MF_STRING, ID_QUERY_POS_FIX_NAV_MASK, "Query Position Fix Navigation Mask", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_REF_TIME_TO_GPS, "Query Ref Time Sync To GPS Time", NULL },
 		{ 1, MF_STRING, ID_QUERY_NAV_MODE_V8, "Query Navigation Mode", NULL },
-		{ 1, MF_STRING, ID_QUERY_GNSS_NAV_SOL, "Query GNSS Constellation Type", NULL },
+		{ 1, MF_STRING, ID_QUERY_GNSS_CSTLN_TYPE, "Query GNSS Constellation Type", NULL },
 		{ 1, MF_STRING, ID_QUERY_GPS_TIME, "Query GPS Time", NULL },
 		//20150520 Remove this command from Andrew's request
 		//{ IS_DEBUG, MF_STRING, ID_QUERY_V8_POWER_SV_PARAM_ROM, "Query Power Saving Parameters(Rom)", NULL },//
@@ -5646,6 +5672,10 @@ void CGPSDlg::LoadMenu()
 		{ 1, MF_STRING, ID_QUERY_DATUM_INDEX, "Query Datum Index", NULL },
 		{ 1, MF_STRING, ID_QUERY_VERY_LOW, "Query Kernel Very Low Speed", NULL },
 		{ 1, MF_POPUP, 0, "Query PSTI Interval", QueryPstiInterval },
+    //2018/08/29 Added, request from Eric
+    { IS_DEBUG, MF_STRING, ID_QUERY_CPU_BOOST_MODE, "Query ISR CPU Clock Boost Mode", NULL },
+    //2018/09/19 Added, request from Terrance
+    { 1, MF_STRING, ID_QUERY_NAVIC_MSG, "Query NAVIC Message Interval", NULL },
 
 		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 1, MF_STRING, ID_CFG_SBAS, "Configure SBAS", NULL },
@@ -5662,7 +5692,7 @@ void CGPSDlg::LoadMenu()
 		{ 1, MF_STRING, ID_CFG_POS_FIX_NAV_MASK, "Configure Position Fix Navigation Mask", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CONFIG_REF_TIME_TO_GPS, "Configure Ref Time Sync To GPS Time", NULL },
 		{ 1, MF_STRING, ID_CFG_NVGTN_MODE, "Configure Navigation Mode", NULL },
-		{ 1, MF_STRING, ID_CONFIG_GNSS_NAV_SOL, "Configure GNSS Constellation Type", NULL },
+		{ 1, MF_STRING, ID_CONFIG_GNSS_CSTLN_TYPE, "Configure GNSS Constellation Type", NULL },
 		{ 1, MF_STRING, ID_CONFIG_LEAP_SECONDS, "Configure GPS/UTC Leap Seconds", NULL },
 		//20150520 Remove this command from Andrew's request
 		//{ IS_DEBUG, MF_STRING, ID_CONFIG_V8_POWER_SV_PARAM_ROM, "Configure Power Saving Parameters(Rom)", NULL },
@@ -5670,6 +5700,10 @@ void CGPSDlg::LoadMenu()
 		{ 1, MF_STRING, ID_CONFIG_DATUM_INDEX, "Configure Datum Index", NULL },
 		{ 1, MF_STRING, ID_CONFIG_VERY_LOW, "Configure Kernel Very Low Speed", NULL },
 		{ 1, MF_POPUP, 0, "Configure PSTI Interval", ConfigPstiInterval },
+    //2018/08/29 Added, request from Eric
+    { IS_DEBUG, MF_STRING, ID_CFG_CPU_BOOST_MODE, "Configure ISR CPU Clock Boost Mode", NULL },
+    //2018/09/19 Added, request from Terrance
+		{ 1, MF_STRING, ID_CFG_NAVIC_MSG, "Configure NAVIC Message Interval", NULL },
 
 		{ IS_DEBUG, MF_SEPARATOR, 0, NULL, NULL },
 		{ IS_DEBUG, MF_STRING, ID_CONFIG_GPS_LEAP_IN_UTC, "Configure GPS/UTC Leap Seconds In UTC", NULL },
@@ -5741,12 +5775,14 @@ void CGPSDlg::LoadMenu()
 		{ 1, MF_STRING, ID_QUERY_RTK_MODE, "Query RTK Mode", NULL },
 		{ 1, MF_STRING, ID_QUERY_RTK_MODE2, "Query RTK Mode And Operational Function", NULL },
 		{ 1, MF_STRING, ID_QUERY_RTK_SLAVE_BAUD, "Query RTK Slave Serial Port Baud Rate", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_GL_CPIF_BIAS, "Query RTK GLONASS Carrier-Phase Inter-Frequency Bias", NULL },
 		//{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_PARAM, "Query RTK Parameters", NULL },
 		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 1, MF_STRING, ID_CONFIG_RTK_MODE, "Configure RTK Mode", NULL },
 		{ 1, MF_STRING, ID_CONFIG_RTK_MODE2, "Configure RTK Mode And Operational Function", NULL },
 		{ 1, MF_STRING, ID_CFG_RTK_SLAVE_BAUD, "Configure RTK Slave Serial Port Baud Rate", NULL },
 		//{ IS_DEBUG, MF_STRING, ID_CONFIG_RTK_PARAM, "Configure RTK Parameters", NULL },
+		{ IS_DEBUG, MF_STRING, ID_CFG_RTK_GL_CPIF_BIAS, "Configure RTK GLONASS Carrier-Phase Inter-Frequency Bias", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
 	if(!NMEA_INPUT && RTK_MENU && !SHOW_PATCH_MENU)
@@ -5911,6 +5947,7 @@ void CGPSDlg::LoadMenu()
 	}
 
   //Watch DataLog Menu
+  /*
 	static MenuItemEntry menuItemWatchDataLog[] =
 	{
 		{ 1, MF_STRING, ID_LOGW_STATUS, "Log Status", NULL },
@@ -5926,6 +5963,22 @@ void CGPSDlg::LoadMenu()
 	if(IS_DEBUG && !NMEA_INPUT && !SHOW_PATCH_MENU)
 	{
 		CreateSubMenu(hMenu, menuItemWatchDataLog, "&Watch DataLog");
+	}
+  */
+
+	static MenuItemEntry menuItemWatchDataLog[] =
+	{
+		{ IS_DEBUG, MF_STRING, ID_TEST_ALPHA_IO, "Test Alpha RTK GPIO", NULL },
+		{ IS_DEBUG, MF_STRING, ID_TMP_ACT_LICENSE, "Temporarily Activate License", NULL },
+    { IS_DEBUG, MF_SEPARATOR, 0, NULL, NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_ALPHA_UNIQUE_ID, "Query Alpha RTK Unique ID", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_ALPHA_KEY, "Query Alpha RTK License Key", NULL },
+		{ IS_DEBUG, MF_STRING, ID_CFG_ALPHA_KEY, "Set Alpha RTK License Key", NULL },
+		{ 0, 0, 0, NULL, NULL },
+	};
+	if(IS_DEBUG && !NMEA_INPUT && !SHOW_PATCH_MENU)
+	{
+		CreateSubMenu(hMenu, menuItemWatchDataLog, "&Alpha RTK");
 	}
 
 	//Converter Menu
@@ -5953,11 +6006,15 @@ void CGPSDlg::LoadMenu()
 		{ IS_DEBUG || DEVELOPER_VERSION, MF_STRING, ID_BIN_CHECKSUM_CAL, "Binary checksum calculator", NULL },
 		{ IS_DEBUG, MF_STRING, ID_TEST_EXTERNAL_SREC, "Test External SREC", NULL },
 		{ IS_DEBUG, MF_STRING, ID_IQ_PLOT, "IQ Plot", NULL },
-		{ IS_DEBUG, MF_STRING, ID_READ_MEM_TO_FILE, "Read 0x50000000 to a File (20KB)", NULL },
+		{ IS_DEBUG, MF_STRING, ID_DUMP_MEMORY, "Dump Memory to File", NULL },
+		{ IS_DEBUG, MF_STRING, ID_READ_MEM_TO_FILE3, "Read 0x40000000 to File (512KB)", NULL },
+		{ IS_DEBUG, MF_STRING, ID_READ_MEM_TO_FILE, "Read 0x50000000 to File (20KB)", NULL },
+		{ IS_DEBUG, MF_STRING, ID_READ_MEM_TO_FILE2, "Read 0x60000000 to File (1KB)", NULL },
 		{ IS_DEBUG, MF_STRING, ID_WRITE_MEM_TO_FILE, "Write a File to 0x50000000", NULL },
-		{ IS_DEBUG, MF_STRING, ID_READ_MEM_TO_FILE2, "Read 0x60000000 to a File (1KB)", NULL },
 		{ IS_DEBUG, MF_STRING, ID_PATCH_ROM_EPH, "Patch ROM 20130221 Ephemeris", NULL },
 		{ IS_DEBUG, MF_STRING, ID_IO_TESTER, "V9 IO Tester", NULL },
+		{ IS_DEBUG, MF_STRING, ID_CFG_RFIC, "V9 Configure RF IC", NULL },
+		{ IS_DEBUG, MF_STRING, ID_CFG_IIR, "V9 Configure IIR", NULL },
 
 		{ 0, 0, 0, NULL, NULL },
 	};
@@ -8709,11 +8766,79 @@ void CGPSDlg::OnTestExternalSrec()
 	CreateGPSThread();
 }
 
+void CGPSDlg::OnTestAlphaIo()
+{
+	if(!CheckConnect())
+	{
+		return;
+	}
+
+  BinaryData srec;
+  srec.ReadFromResource(IDR_V8_IO_TESTER, "SREC");
+	//if(!DownloadLoader(externalSrecFile, true))
+	if(!CGPSDlg::gpsDlg->DownloadLoader2(true, false, srec))
+	{
+    AfxMessageBox("The loader isn't responding, please check the device!");
+    SetMode();
+	  CreateGPSThread();
+    return;
+	}
+  add_msgtolist("Test IO SREC executed");
+  //TEST01 = Flag IoCount io1 io2 io3 io4 ......
+  //Flag - bit wise for test function : 0 - IO Test, 1 - GSN MAG Test, 2 - Rtc Test
+  //IoCount - Test IO pair count
+  //io1, io2... - High byte - gpio pin from, Low byte gpio pin to.
+  char buff[1024] = "TEST01 = 0001 0001 030A ";
+	CGPSDlg::gpsDlg->m_serial->SendData((U08*)buff, (U16)strlen(buff) + 1);	
+  WlfResult wlf = WaitingLoaderFeedback(m_serial, 1000, NULL);
+  if(wlf != wlf_ok)
+  {
+    AfxMessageBox("The test command did not respond and the test failed!");
+    SetMode();
+	  CreateGPSThread();
+    return;
+  }
+  add_msgtolist("Test command has responded");
+  int passCount = 0;
+	for(int i = 0; i < 5; ++i)
+	{
+		memset(buff, 0, sizeof(buff));
+		int len = CGPSDlg::gpsDlg->m_serial->GetOneLine(buff, sizeof(buff), 500);
+    if(len == 0)
+      continue;
+    add_msgtolist(buff);
+    char* ptr = strstr(buff, "PASS");
+    if(ptr != NULL)
+    {
+      ++passCount;
+    }
+
+    ptr = strstr(buff, "FINISH");
+    if(ptr != NULL)
+    {
+      ++passCount;
+    }
+
+    if(passCount == 2)
+    {
+      AfxMessageBox("Test PASS.");
+      SetMode();
+      CreateGPSThread();
+      return;
+    }
+	}
+  AfxMessageBox("============ Test failed! ============");
+
+	SetMode();
+	CreateGPSThread();
+}
+
 #define DumpFileName		"\\Dump0x50000000.bin"
 #define DumpFileName2		"\\Dump0x60000000.bin"
+#define DumpFileName3		"\\Dump0x40000000.bin"
 bool CGPSDlg::WriteAddressToFile(const CString& filename, const U32 start, const U32 size)
 {
-	CString path = theApp.GetCurrrentDir() + DumpFileName;
+	CString path = filename;
 	U32 addr = start;
 	U32 data = 0;
 	U08 dataW[4] = {0};
@@ -8858,9 +8983,9 @@ void CGPSDlg::OnReadMemToFile()
   bool suc = WriteAddressToFile(path, 0x50000000, 20 * 1024);
 
 	if(suc)
-		add_msgtolist("Read memory to a file successfully");
+		add_msgtolist("Read 0x50000000 to file successfully");
 	else
-		add_msgtolist("Read memory to a file failed");	
+		add_msgtolist("Read 0x50000000 to file failed");	
 
 	SetMode();
 	CreateGPSThread();
@@ -8876,10 +9001,76 @@ void CGPSDlg::OnReadMemToFile2()
   bool suc = WriteAddressToFile(path, 0x60000000, 1 * 1024);
 
 	if(suc)
-		add_msgtolist("Read memory to a file successfully");
+		add_msgtolist("Read 0x60000000 to file successfully");
 	else
-		add_msgtolist("Read memory to a file failed");	
+		add_msgtolist("Read 0x60000000 to file failed");	
 
+	SetMode();
+	CreateGPSThread();
+}
+
+void CGPSDlg::OnReadMemToFile3()
+{
+	if(!CheckConnect())
+	{
+		return;
+	}
+  CString path = theApp.GetCurrrentDir() + DumpFileName3;
+  bool suc = WriteAddressToFile(path, 0x40000000, 512 * 1024);
+
+	if(suc)
+		add_msgtolist("Read 0x40000000 to file successfully");
+	else
+		add_msgtolist("Read 0x40000000 to file failed");	
+
+	SetMode();
+	CreateGPSThread();
+}
+
+void CGPSDlg::OnDumpMemory()
+{
+  CWaitCursor cur;
+  ScopeTimer t;
+
+	if(!CheckConnect())
+	{
+		return;
+	}
+
+	CDumpMemoryDlg dlg;
+  INT_PTR r = dlg.DoModal();
+  if(r == IDOK)
+  { 
+   	//DoCommonConfigDirect(&dlg, 0);
+    BinaryCommand configCmd;
+    BinaryData cmd(3);
+	  *cmd.GetBuffer(0) = 0x09;
+	  *cmd.GetBuffer(1) = 0;
+	  *cmd.GetBuffer(2) = 0;
+	  configCmd.SetData(cmd);
+    CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Turn off message output", false);
+
+    CString path;
+    path.Format("%s\\Dump0x%08X.bin", theApp.GetCurrrentDir(), dlg.GetAddress());
+
+    bool suc = (dlg.GetSize()) ? WriteAddressToFile(path, dlg.GetAddress(), dlg.GetSize() * 1024) : false;
+
+	  if(suc)
+		  add_msgtolist("Dump momery to file successfully");
+	  else
+		  add_msgtolist("Dump memory to file failed");
+  
+    path.Format("Time spent : %d seconds.", t.GetDuration() / 1000);
+		add_msgtolist(path);
+
+	  *cmd.GetBuffer(0) = 0x09;
+	  *cmd.GetBuffer(1) = 1;
+	  *cmd.GetBuffer(2) = 0;
+	  configCmd.SetData(cmd);
+    CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), "Turn on message output", false);
+
+    //DoCommonConfigDirect(&dlg, 1);
+  }
 	SetMode();
 	CreateGPSThread();
 }
@@ -8909,6 +9100,34 @@ void CGPSDlg::OnIoTester()
 	}
 
 	CIoTester dlg;
+	INT_PTR ret = dlg.DoModal();
+
+	SetMode();
+	CreateGPSThread();
+}
+
+void CGPSDlg::OnConfigRfIc()
+{
+	if(!CheckConnect())
+	{
+		return;
+	}
+
+	CConfigureRfIc dlg;
+	INT_PTR ret = dlg.DoModal();
+
+	SetMode();
+	CreateGPSThread();
+}
+
+void CGPSDlg::OnConfigIir()
+{
+	if(!CheckConnect())
+	{
+		return;
+	}
+
+	CConfigureIir dlg;
 	INT_PTR ret = dlg.DoModal();
 
 	SetMode();

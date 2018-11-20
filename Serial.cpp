@@ -389,6 +389,39 @@ DWORD CSerial::GetString(void* buffer, DWORD bufferSize, DWORD timeOut)
 	return totalSize;
 }
 
+//Read until \r\n.
+DWORD CSerial::GetOneLine(void* buffer, DWORD bufferSize, DWORD timeOut)
+{
+	char* bufferIter = (char*)buffer;
+	DWORD totalSize = 0;
+	ScopeTimer t;
+	do
+	{ 
+		DWORD nBytesRead = ReadData(bufferIter, 1);
+		if(nBytesRead == 0)
+		{
+			if(t.GetDuration() > timeOut)
+			{
+				break;
+			}
+			else
+			{
+				Sleep(10);
+			}
+		}
+		totalSize += nBytesRead;
+		if(*bufferIter == 0x0A && *(bufferIter - 1) == 0x0D)
+		{
+      *(bufferIter + 1) = 0x00;
+		  break;
+		}
+
+		bufferIter += nBytesRead;
+
+	} while(totalSize < bufferSize - 1);
+	return totalSize;
+}
+
 BOOL CSerial::GetOneChar(U08 *c, DWORD* dwBytesDoRead, DWORD timeout)
 {	
   ScopeTimer s;

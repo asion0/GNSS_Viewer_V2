@@ -988,11 +988,17 @@ public:
 	afx_msg void OnBnClickedOk();
 	virtual BOOL OnInitDialog();
 
-  void SetPsti(int id) { m_nPstiId = id; }
+  enum MessageType
+  {
+    Psti,
+    Navic,
+  };
+  void SetPsti(int id, MessageType t = Psti) { m_nType = t; m_nPstiId = id; }
 
 protected:
   void AdjustValue(int nPos, CScrollBar* pScrollBar);
 
+  MessageType m_nType;
 	int m_nPstiId;
 	int m_nPstiInterval;
 	int m_nAttribute;
@@ -1239,6 +1245,124 @@ protected:
   U08 m_mode;
   U08 m_align;
 	U08 m_attribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigureRfIc 
+/*
+class CConfigureRfIc : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigureRfIc)
+public:
+	CConfigureRfIc(CWnd* pParent = NULL);
+	virtual ~CConfigureRfIc() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
+
+protected:
+	U08 m_type;
+	U32 m_reg[Setting::RFIC_REG_SIZE];
+  static UINT staticCtrlList[Setting::RFIC_REG_SIZE];
+  static UINT editCtrlList[Setting::RFIC_REG_SIZE];
+
+	afx_msg void OnCbnSelChangeRtkMode();
+
+	DECLARE_MESSAGE_MAP()
+};
+*/
+// CConfigRtkGlCpifBias
+class CConfigRtkGlCpifBias : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigRtkGlCpifBias)
+public:
+	CConfigRtkGlCpifBias(CWnd* pParent = NULL);   
+	virtual ~CConfigRtkGlCpifBias() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+	afx_msg void OnCbnSelchangeMode();
+  afx_msg void OnBnClickedMask();
+	virtual BOOL OnInitDialog();
+
+protected:
+	U08 m_mode;
+	U08 m_freqMask;
+	D64 m_l1Cifb;
+	D64 m_l2Cifb;
+	U08 m_rev01;
+	U32 m_rev02;
+  U08 m_attribute;
+	
+  void UpdateStatus();
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigCpuBoostMode 
+class CConfigCpuBoostMode : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigCpuBoostMode)
+public:
+	CConfigCpuBoostMode(CWnd* pParent = NULL);   
+	virtual ~CConfigCpuBoostMode() {};
+
+	virtual void DoCommand();
+
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
+
+protected:
+	int m_nEnable;
+	int m_nAttribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigureAlphaKeyDlg 
+class CConfigureAlphaKeyDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigureAlphaKeyDlg)
+public:
+	CConfigureAlphaKeyDlg(CWnd* pParent = NULL);   
+	virtual ~CConfigureAlphaKeyDlg() {};
+
+	virtual void DoCommand();
+
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
+
+  enum { KeyLength = 16 };
+
+protected:
+	afx_msg void OnEnChangeKey();
+
+	BinaryData m_keyData;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CDumpMemoryDlg 
+class CDumpMemoryDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CDumpMemoryDlg)
+public:
+	CDumpMemoryDlg(CWnd* pParent = NULL);   
+	virtual ~CDumpMemoryDlg() {};
+
+	virtual void DoCommand();
+
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
+
+  BOOL GetStatus() { return m_status; }
+  U32 GetAddress() { return m_startAddress; }
+  U32 GetSize() { return m_dumpSize; }
+protected:
+	U32 m_startAddress;
+  U32 m_dumpSize;
+  BOOL m_status;
 
 	DECLARE_MESSAGE_MAP()
 };

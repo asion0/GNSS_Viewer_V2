@@ -353,6 +353,24 @@
 // .324 20180607 Upgrade tool for "CRC_018a_115200_20170712", request from forum customer
 // .325 20180613 Fixed "Query Cable Delay" shows negative issue , report by Terrance
 // .326 20180621 Fixed "Detect NMEA sentence error" and "Download Test" bugs.
+// .327 20180723 Fixed "DataLog Configure" issue for Leo's customer.
+// .328 20180725 Add "UAV Binary" in [Configure Message Type], request from Austin.
+// .329 20180730 Add "Read 0x40000000 to File" in Utility menu, request from Patrick.
+// .330 20180730 Modify "Read 0x40000000 to File" to write 512 KB, request from Patrick.
+// .331 20180806 Add [V9 Configure RF IC] in Utility menu, request from Patrick and Terrance.
+// .332 20180806 Fixed issue in [V9 Configure RF IC], request from Patrick and Terrance.
+// .333 20180807 Modify [V9 Configure RF IC] to support XND2202, request from Patrick and Terrance.
+// .334 20180829 Add [Query/Configure ISR CPU Clock Boost Mode], request from Eric.
+// .334 20180829 Add [Query/Configure RTK GLONASS Carrier-Phase Inter-Frequency Bias], request from Neil.
+// .335 20180830 Add [Test Alpha RTK IO], request from Angus.
+// .336 20180830 Fix issue in [Query RTK GLONASS Carrier-Phase Inter-Frequency Bias], request from Ken.
+// .337 20180905 Add [Dump Memory To File], request from Patrick.
+// .338 20180906 Modify [Configure/Query GNSS Constellation Type] to add NAVIC, request from Terrance.
+// .339 20180910 Remove [Factory Default No Reboot], request from Roger and Andrew.
+// .340 20180914 Add [V9 Configure RF IC] and [V9 Configure IIR] in Utility menu, request from Patrick and Terrance.
+// .341 20180914 Modify [Query Alpha Unique ID] output string format.
+// .342 20180919 Add [Configure/Query NAVIC Message Interval] in Venus 8 menu,  request from Terrance.
+// .343 20181023 Add [Temporarily Activate License] in Alpha menu,  request from Angus.
 
 #define SW_FUN_DATALOG		        0x0001
 #define SW_FUN_AGPS				        0x0002
@@ -363,7 +381,7 @@
 //title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 #define APP_CAPTION				        "GNSS Viewer"
 #define APP_TITLE				          ""              //Internal Use, Customer Release, NMEA Player...
-#define APP_VERSION				        "2.0.326"
+#define APP_VERSION				        "2.0.343"
 #define APP_MODULE				        "Venus 8"
 
 #define	Sktyraq					          0x0000
@@ -867,6 +885,7 @@
  #define UPGRADE_DUEDATE_D		      7
  #define UPGRADE_ADD_TAG		        1
  #define UPGRADE_TAG_VALUE		      0xA012
+ #define ALPHA_UUID_PATCH           1
 
 #elif defined(SWCFG_VENDOR_GNSS_NMEAPLAYER_NEW)
  #undef APP_CAPTION

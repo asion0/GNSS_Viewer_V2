@@ -131,6 +131,9 @@ UINT CGPSDlg::GetBinFromResource(int baud)
 
 UINT CGPSDlg::GetSrecFromResource(int buad)
 {
+#ifdef ALPHA_UUID_PATCH
+  return IDR_ALPHA_UUID_ADD_TAG_SREC;
+#endif
 	UINT gpsAddTagSrecTable[] = {
 			NULL,
 			NULL,
@@ -1128,6 +1131,9 @@ U08 CGPSDlg::PlRomCustomerUpgrade(UINT rid)
 	//Old FW will return "END" itself after loader upload, but new FW will return "END" via loader. 
 	//Therefore, using the old FW with the new loader, it will receive "END" twice.
 	bool bResendbin = true;
+#ifdef ALPHA_UUID_PATCH
+  upgradeAddTag = false;
+#endif
 	while(bResendbin)
 	{
 		U32 checkCode = 0;
@@ -1389,6 +1395,140 @@ bool CGPSDlg::DownloadLoader(DownloadMode mode)
 	}
 	return true;
 }
+
+bool CGPSDlg::DownloadLoader2(BOOL useBinCmd, BOOL needSleep, const BinaryData& srec, CWnd* notifyWnd)
+{
+	ScopeTimer t("DownloadLoader()");
+	const int bufferSize = 256;
+	char messages[100] = {0};
+
+	if(!useBinCmd)
+	{
+		GetLoaderDownloadCmd(messages, sizeof(messages));
+		
+		const int retryCount = 3;
+		for (int i = 1; i < retryCount; ++i)
+		{
+			SendToTargetNoAck((U08*)messages, (U16)strlen(messages) + 1);
+			Sleep(300);
+
+			switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, TIME_OUT_MS, &m_responseList))
+			{
+			case wlf_timeout:
+				AfxMessageBox("Target doesn't reply, please power cycle the target!");				
+				return false;
+				break;
+			case wlf_ok:
+				i = retryCount;
+				break;
+			default:
+				Utility::LogFatal(__FUNCTION__, messages, __LINE__);
+				break;
+			}	
+		}
+	}
+	else
+	{
+		U08 msg[7] = {0};
+		msg[0] = 0x64;
+		msg[1] = 0x1B;
+		msg[2] = (U08)m_nDownloadBaudIdx;
+		msg[3] = (U08)0;
+		msg[4] = (U08)0;
+		msg[5] = (U08)0;
+		msg[6] = (U08)m_nDownloadBufferIdx;
+		int len = SetMessage(msg, sizeof(msg));
+
+		bool b = SendToTarget(m_inputMsg, len, "Send upload loader successfully", 6000);
+		if(!b)
+		{
+			return false;
+		}
+		else
+		{
+			CloseOpenUart();
+			m_serial->ResetPort(m_nDownloadBaudIdx);
+			m_BaudRateCombo.SetCurSel(m_nDownloadBaudIdx);
+			Sleep(200);
+		}
+	}
+
+  // Alex wait
+  if(notifyWnd)
+  {
+	  notifyWnd->PostMessage(UWM_SETPROMPT_MSG, IDS_FLASHWRITINGOK_MSG);
+  }
+
+	const U08* sData = srec.Ptr();
+	long leftSize = srec.Size();
+	int needdelay = 0;
+	int totalByte = 0;
+	char buff[bufferSize] = {0};
+
+	while(leftSize > 0)
+	{
+		int ProgressPos = 0;
+		int packetSize = 0;
+		const U08 *tmp = sData;
+
+		memset(buff, 0, sizeof(buff));
+		while(1)
+		{
+			++packetSize;
+			if(*tmp == '\n')
+			{
+				break;
+			}
+			++tmp;
+		}
+		memcpy(buff, sData, packetSize - 1);
+		buff[packetSize - 2] = 0x0a;
+    if(leftSize > packetSize)
+    {
+		  SendToTargetNoAck((U08*)buff, packetSize);
+    }
+    else
+    {
+		  SendToTargetNoAck((U08*)buff, packetSize);
+    }
+		leftSize -= packetSize;
+		sData += packetSize;
+		totalByte += packetSize;  //deduct by end of string character in sending
+//* Alex wait
+    if(notifyWnd)
+    {
+		  notifyWnd->PostMessage(UWM_SETPROGRESS, totalByte, srec.Size());
+    }
+	}			
+
+	memset(buff, 0, sizeof(buff));
+	switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, TIME_OUT_MS, &m_responseList))
+	{
+	case wlf_end:
+		sprintf_s(messages, sizeof(messages), "The total bytes transferred = %d", totalByte);
+		add_msgtolist(messages);	
+		break;
+	case wlf_timeout:
+		Utility::LogFatal(__FUNCTION__, "wlf_timeout", __LINE__);
+		return false;
+		break;
+	default:
+		Utility::LogFatal(__FUNCTION__, messages, __LINE__);
+		break;
+	}	
+  if(notifyWnd)
+  {
+	  notifyWnd->PostMessage(UWM_SETPROGRESS, 100, 100);
+	  notifyWnd->PostMessage(UWM_SETPROMPT_MSG, IDS_FLASHWRITINGOK_MSG);
+  }
+
+  if(needSleep)
+  {
+	  Sleep(1000);
+  }
+  return true;
+}
+
 
 UINT ShowDownloadProgressThread(LPVOID pParam)
 {
@@ -1656,7 +1796,6 @@ bool CGPSDlg::Download()
 		BOOL hasAckVersion = FALSE;
 		m_nDefaultTimeout = 5000;
     
-    //if((_CREATE_LICENSE_TAG_ && m_DownloadMode==InternalLoaderV8) || (m_DownloadMode == EnternalLoader))
 		if(m_DownloadMode == EnternalLoader)
 		{
 			m_DownloadMode = InternalLoaderV8AddTag;
@@ -1868,6 +2007,7 @@ bool CheckLicense()
 
 bool CGPSDlg::Download2()
 {
+#ifndef ALPHA_UUID_PATCH
 	patchLog = "";
 	patchData = 0;
 	patchStatus = 0;
@@ -1882,6 +2022,7 @@ bool CGPSDlg::Download2()
 			return false;
 		}
 	}
+#endif
 
 #if(MICROSATELLITE_PATCH)
   if(!CheckLicense())
@@ -1893,6 +2034,7 @@ bool CGPSDlg::Download2()
 #endif
 	customerCrc = 0;
 
+#ifndef ALPHA_UUID_PATCH
   if(UPGRADE_CRC != 0xFFFFFFFF)
   {
 	  U16 crcCode = 0;
@@ -1926,7 +2068,7 @@ bool CGPSDlg::Download2()
 		return false;
 	}
 	Sleep(100);
-
+#endif
 	if(NULL == m_psoftImgDlDlg)
 	{
 		m_psoftImgDlDlg = new CSoftImDwDlg;	

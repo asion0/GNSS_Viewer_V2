@@ -30,7 +30,7 @@ public:
 	bool  m_isGetMapPos;
 
 	int inimaplondeg, inimaplonmin, inimaplonsec, inimaplatdeg, inimaplatmin, inimaplatsec;
-	long double  inimaplon,    inimaplat,    initiallon,   initiallat;
+	long double  inimaplon, inimaplat, initiallon, initiallat;
 	bool IniPos;
 	double m_lon;
 	double m_lat;

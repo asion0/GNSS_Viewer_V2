@@ -207,6 +207,7 @@ IDR_GPS_CREATETAG_SREC_115200	SREC    "res\\loader_gp_handshake_createtag_115200
 IDR_GPS_REMOVETAG_SREC_115200	SREC    "res\\loader_gp_handshake_erasetag_115200.srec"
 IDR_PARALLEL_TYPE0_SREC_115200	SREC  "res\\loader_parallel_Type0_115200.srec"
 IDR_PARALLEL_TYPE1_SREC_115200	SREC  "res\\loader_parallel_Type1_115200.srec"
+IDR_ALPHA_UUID_ADD_TAG_SREC	    SREC  "res\\loader_alpha_uuid893209768A950076_add_tag.srec"
 
 IDR_V8_DL_SREC_115200 SREC						"res\\loader_v8_download_115200.srec"
 IDR_V8_DL_SREC_230400 SREC						"res\\loader_v8_download_230400.srec"
@@ -214,6 +215,7 @@ IDR_V8_DL_SREC_460800 SREC						"res\\loader_v8_download_460800.srec"
 
 IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag.srec"
 //IDR_INTERNAL_LOADER_SPECIAL     SREC  "res\\loader_v8_new.srec"
+IDR_V8_IO_TESTER      SREC						"res\\ioTest.srec"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -248,7 +250,7 @@ IDR_GPS_PRELOADER_115200 BIN					"res\\plprom_115200.bin"
 #if defined(UPGRADE_DOWNLOAD)
 //IDR_UPGRADE_DOWNLOAD_PROM BIN				"res\\STI_02.00.74-01.07.27_V8_Glonass_GPS_Takuji_Hostlogger_T_CRC_b02c_9600_20150615.bin"
 //IDR_UPGRADE_DOWNLOAD_PROM2 BIN				"res\\STI_02.02.04-01.07.28_V838_GPS_microsatellite_T_CRC_234f_9600_20180518.bin"
-IDR_UPGRADE_DOWNLOAD_PROM2 BIN				"res\\STI_02.02.04-01.07.28_V8_2525BD-RTK_Master_CRC_018a_115200_20170712.bin"
+//IDR_UPGRADE_DOWNLOAD_PROM2 BIN				"res\\STI_02.02.04-01.07.28_V8_2525BD-RTK_Master_CRC_018a_115200_20170712.bin"
 #endif
 
 #if defined(UPGRADE_DOWNLOAD2)
@@ -256,6 +258,7 @@ IDR_UPGRADE_DOWNLOAD_PROM2 BIN				"res\\STI_02.02.04-01.07.28_V8_2525BD-RTK_Mast
 //IDR_UPGRADE_DOWNLOAD_PROM2 BIN		  "res\\STI_02.02.02-01.07.27_V8_2525BD-1_RTK_Master_T_CRC_c41b_115200_20160621.bin"
 //IDR_UPGRADE_DOWNLOAD_PROM2 BIN			"res\\STI_02.02.04-01.07.27_V8_2525BD-RTK_Master_CRC_f52d_115200_20161117.bin"
 //IDR_UPGRADE_DOWNLOAD_PROM2 BIN				"res\\STI_02.02.04-01.07.28_V8_2525BD-RTK-5_Master_CRC_0027_115200_20170712.bin"
+IDR_UPGRADE_DOWNLOAD_PROM2 BIN				"res\\STI_02.02.05-10.07.28_V827_Alpha-RTK-GL-S_Master_KT_CRC_1fc8_115200_20181004.bin"
 #endif
 
 /////////////////////////////////////////////////////////////////////////////

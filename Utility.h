@@ -12,7 +12,7 @@
 //Delete pointer that create by CreateWindow()
 #define SafelyDelWnd(x)  if(x) { (x)->DestroyWindow(); delete x; x = NULL; }
 
-//Calculate the number of elements in the array, x must be an array not pointer
+//Calculate the number of elements in the array, x must be an array not a pointer
 #define Dim(x) ( sizeof(x) / sizeof(x[0]) )
 
 //To determine whether it is a floating point

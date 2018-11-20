@@ -566,10 +566,6 @@ public:
 	static bool GetFirstGsaIn() { return firstGsaIn; }
   
   int ClearSatellitesInRange(GNSS_System gs, int prnStart, int prnEnd);
-	//Satellite satellites_gp[MAX_SATELLITE];
-	//Satellite satellites_gl[MAX_SATELLITE];
-	//Satellite satellites_bd[MAX_SATELLITE];
-	//Satellite satellites_ga[MAX_SATELLITE];
 	Satellites satellites_gp;
 	Satellites satellites_gl;
 	Satellites satellites_bd;
