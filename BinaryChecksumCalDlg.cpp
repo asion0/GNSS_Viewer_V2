@@ -9,13 +9,12 @@
 
 
 // BinaryChecksumCalDlg 
-
 IMPLEMENT_DYNAMIC(BinaryChecksumCalDlg, CDialog)
 
 BinaryChecksumCalDlg::BinaryChecksumCalDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_BIN_CHECKSUM_CAL, pParent)
 {
-
+  m_mode = CalcCheckSum;
 }
 
 BinaryChecksumCalDlg::~BinaryChecksumCalDlg()
@@ -39,7 +38,16 @@ END_MESSAGE_MAP()
 BOOL BinaryChecksumCalDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-
+  if(m_mode == RawData)
+  {
+      GetDlgItem(IDC_STATIC1)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_STATIC2)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_STATIC3)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_STATIC4)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_STATIC5)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_CHECKSUM)->ShowWindow(SW_HIDE);
+      SetWindowText("Binary command Tester");
+  }
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
@@ -94,6 +102,15 @@ void BinaryChecksumCalDlg::OnBnClickedSend()
 		::AfxMessageBox("Invalidate Format!");
 		return;
 	}
+
+  if(m_mode == RawData)
+  {
+	  BinaryCommand cmd(binData);
+	  U08* pCmd = cmd.GetBuffer();
+	  int inSize = cmd.Size();
+	  CGPSDlg::gpsDlg->m_serial->SendData(binData.Ptr(), binData.Size());
+    return;
+  }
 
 	BinaryCommand cmd(binData);
 	U08* pCmd = cmd.GetBuffer();

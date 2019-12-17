@@ -150,14 +150,17 @@ IDB_UP                  BITMAP        "res\\Up.bmp"
 
 IDB_EARTH               BITMAP        "res\\EarthView.bmp"
 
-IDB_GP_ACT              PNG           "res\\GpsAct.png"
-IDB_GP_DIS              PNG           "res\\GpsDis.png"
-IDB_GL_ACT		          PNG           "res\\GlonassAct.png"
-IDB_GL_DIS	            PNG           "res\\GlonassDis.png"
-IDB_BD_ACT		          PNG           "res\\BdAct.png"
-IDB_BD_DIS	            PNG           "res\\BdDis.png"
+IDB_GP_ACT              PNG           "res\\GpAct.png"
+IDB_GP_DIS              PNG           "res\\GpDis.png"
+IDB_GL_ACT		          PNG           "res\\GlAct.png"
+IDB_GL_DIS	            PNG           "res\\GlDis.png"
+IDB_BD_ACT		          PNG           "res\\GbAct.png"
+IDB_BD_DIS	            PNG           "res\\GbDis.png"
 IDB_GA_ACT		          PNG           "res\\GaAct.png"
 IDB_GA_DIS	            PNG           "res\\GaDis.png"
+IDB_GI_ACT		          PNG           "res\\GiAct.png"
+IDB_GI_DIS	            PNG           "res\\GiDis.png"
+
 IDB_EARTH1              PNG						"res\\Earth_30_120.png"
 IDB_EARTH2              PNG						"res\\Earth_-30_120.png"
 IDB_EARTH3              PNG						"res\\Earth_38_22.png"
@@ -166,14 +169,15 @@ IDB_EARTH5              PNG						"res\\Earth_28_-98.png"
 IDB_EARTH6              PNG						"res\\Earth_-10_-60.png"
 
 #ifdef _NAVIC_CONVERT_
-IDB_GPS_SNR_T           BITMAP        "res\\NavicSnrT.bmp"
+IDB_GP_SNR_T            BITMAP        "res\\GpGiSnrT.bmp"
 #else
-IDB_GPS_SNR_T           BITMAP        "res\\GpsSnrT.bmp"
+IDB_GP_SNR_T            BITMAP        "res\\GpGlSnrT.bmp"
 #endif
-IDB_BEIDOU_SNR_T        BITMAP        "res\\BeidouSnrT.bmp"
+IDB_GP_SNR2_T            BITMAP       "res\\GpGlSnrT-2.bmp"
+IDB_BD_SNR_T            BITMAP        "res\\BdSnrT.bmp"
+IDB_BD_GA_GI_SNR_T      BITMAP        "res\\BdGaGiSnrT-2.bmp"
 IDB_GA_SNR_T			      BITMAP				"res\\GaSnrT.bmp"
 IDB_GI_SNR_T			      BITMAP				"res\\GiSnrT.bmp"
-
 IDB_INFORMATION_T       BITMAP        "res\\InformationT.bmp"
 IDB_INFORMATION_B       BITMAP        "res\\InformationB.bmp"
 IDB_RTK_INFO_T			    BITMAP        "res\\RtkInfoT.bmp"
@@ -181,6 +185,17 @@ IDB_RTK_INFO_B			    BITMAP        "res\\RtkInfoB.bmp"
 IDB_EARTH_T             BITMAP        "res\\EarthT.bmp"
 IDB_SCATTER_SNR_T       BITMAP        "res\\ScatterT.bmp"
 IDB_DOWNLOAD_T          BITMAP        "res\\DownloadT.bmp"
+
+IDB_GP_FREQ_I           BITMAP        "res\\GpFreqI1.bmp"
+IDB_GP_FREQ_I2          BITMAP        "res\\GpFreqI2.bmp"
+IDB_GL_FREQ_I           BITMAP        "res\\GlFreqI1.bmp"
+IDB_GL_FREQ_I2          BITMAP        "res\\GlFreqI2.bmp"
+IDB_BD_FREQ_I           BITMAP        "res\\BdFreqI1.bmp"
+IDB_BD_FREQ_I2          BITMAP        "res\\BdFreqI2.bmp"
+IDB_GA_FREQ_I           BITMAP        "res\\GaFreqI1.bmp"
+IDB_GA_FREQ_I2          BITMAP        "res\\GaFreqI2.bmp"
+IDB_GI_FREQ_I           BITMAP        "res\\GiFreqI1.bmp"
+IDB_GI_FREQ_I2          BITMAP        "res\\GiFreqI2.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -213,7 +228,10 @@ IDR_V8_DL_SREC_115200 SREC						"res\\loader_v8_download_115200.srec"
 IDR_V8_DL_SREC_230400 SREC						"res\\loader_v8_download_230400.srec"
 IDR_V8_DL_SREC_460800 SREC						"res\\loader_v8_download_460800.srec"
 
-IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag.srec"
+//IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag.srec"
+//IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag_2019011816343348.srec"
+//IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag_20191212113345.srec"
+IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag_20191217105058.srec"
 //IDR_INTERNAL_LOADER_SPECIAL     SREC  "res\\loader_v8_new.srec"
 IDR_V8_IO_TESTER      SREC						"res\\ioTest.srec"
 

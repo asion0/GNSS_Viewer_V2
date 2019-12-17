@@ -13,7 +13,7 @@ public:
 //    int idFontSize = 17, int barFontSize = 16);
 //#endif
   UISetting(COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, 
-		COLORREF, COLORREF, COLORREF, COLORREF, UINT, UINT, 
+		COLORREF, COLORREF, COLORREF, COLORREF, COLORREF, UINT, UINT, 
     int idFontSize = 17, int barFontSize = 16);
 	~UISetting(void);
 
@@ -28,6 +28,8 @@ public:
 	const COLORREF noUseBarTextColor;		//Green
 	const COLORREF inUseIcoTextColor;		//White
 	const COLORREF noUseIcoTextColor;		//Green
+	const COLORREF faultSnrBarPenColor;		//Red
+
 	const UINT inUseSateBmpId;
 	const UINT noUseSateBmpId;
 	CFont idFont;
@@ -39,6 +41,7 @@ public:
 	CBrush inUseSnrBarBrush;
 	CPen noUseSnrBarPen;
 	CBrush noUseSnrBarBrush;
+	CPen faultSnrBarPen;
 };
 
 extern UISetting gpUI;

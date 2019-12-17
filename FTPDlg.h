@@ -18,6 +18,9 @@ public:
 	void GetAgpsFile();
 	void SetMode(int m);
 
+  static bool DownloadFromFtpServer(CProgressCtrl* pProgress, CWnd* pTextWnd,
+    LPCSTR pszHost, LPCSTR pszUsername, LPCSTR pszPassword, int nPort,
+    LPCSTR fileName);
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
@@ -31,6 +34,7 @@ protected:
 	void DownloadFileFromFTP(CString& ,CFtpConnection* );
 	void GetAllDatFileSrec();
 	void DoRomAgps();
+	void DoPhoenixAgps();
 	bool UploadSrec();
 	bool UploadBin();
 	bool TransferFile(BinaryData& ephData);

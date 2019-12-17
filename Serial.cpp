@@ -90,7 +90,7 @@ bool CSerial::OpenByBaudrate(LPCSTR comPort, int baudrate)
 		m_comDeviceHandle = CreateFile(portName, GENERIC_READ | GENERIC_WRITE,
 				0, NULL, OPEN_EXISTING,  0, 0);
 
-		if(m_comDeviceHandle==INVALID_HANDLE_VALUE)
+		if(m_comDeviceHandle == INVALID_HANDLE_VALUE)
 		{
 			if(--tryCnt == 0)
 			{
@@ -107,6 +107,15 @@ bool CSerial::OpenByBaudrate(LPCSTR comPort, int baudrate)
 		break;
 	}
 	ComInitial();
+  COMMTIMEOUTS timeouts = 
+  { 
+      0, //interval timeout. 0 = not used
+      0, // read multiplier
+      10, // read constant (milliseconds)
+      0, // Write multiplier
+      0  // Write Constant 
+  };
+  SetCommTimeouts(m_comDeviceHandle, &timeouts);
 	if(!SetupComm(m_comDeviceHandle, InQueueSize, OutQueueSize))
 	{
 		return false;
@@ -316,9 +325,6 @@ bool CSerial::ResetPortNoDelay(int b)
 		return false;
 	}
 
-  //if(SPECIAL_BAUD_RATE)
-  //  b = (int)(b * 1.5);
-
 	dcb.BaudRate = b;
 	dcb.Parity   = NOPARITY;
 	dcb.ByteSize = 8;
@@ -425,27 +431,22 @@ DWORD CSerial::GetOneLine(void* buffer, DWORD bufferSize, DWORD timeOut)
 BOOL CSerial::GetOneChar(U08 *c, DWORD* dwBytesDoRead, DWORD timeout)
 {	
   ScopeTimer s;
-	DWORD dwErrorFlags = 0;
-  COMSTAT comStat = { 0 };
-  BOOL b = FALSE;
   while(s.GetDuration() < timeout)
   {
-    b = ::ClearCommError(m_comDeviceHandle, &dwErrorFlags, &comStat);
-		if(comStat.cbInQue == 0) 
-		{
-			Sleep(2);
-			continue;
-		}
-    b = ::ReadFile(m_comDeviceHandle, c, 1, dwBytesDoRead, NULL);
-    break;
+    if (::ReadFile(m_comDeviceHandle, c, 1, dwBytesDoRead, NULL))
+    {
+      return ((*dwBytesDoRead) == 1);
+    }
+    Sleep(10);
   }
-  return TRUE;
+  return FALSE;
 }
 
 DWORD CSerial::GetBinary(void *buffer, DWORD bufferSize, DWORD timeout)
 {	
 #ifdef _DEBUG
   const int dbgMode = 0;
+  timeout = 60000;
 #else
   const int dbgMode = 0;
 #endif

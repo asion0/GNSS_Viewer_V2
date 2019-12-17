@@ -512,17 +512,21 @@ const char* DatumList[] = {
 };
 const int DatumListSize = sizeof(DatumList) / sizeof(DatumList[0]);
 
+U08 GetCheckSum(const U08* pt, int len)
+{
+  U08 checkSum = 0;
+	for(int i = 0; i < len; ++i)
+	{
+		checkSum ^= pt[i];
+	}
+  return checkSum;
+}
+
 U08 Cal_Checksum(U08* pt)
 {
-	U08 checkSum = 0;
 	WORD len = MAKEWORD(pt[3], pt[2]);
 	U08 id = pt[4];
-
-	for(int i=0; i<len; ++i)
-	{
-		checkSum ^= pt[i + 4];
-	}
-
+	U08 checkSum = GetCheckSum(pt + 4, len);
 	if(checkSum == pt[len + 4])
 	{		
 		return id;
@@ -532,20 +536,13 @@ U08 Cal_Checksum(U08* pt)
 
 U16 CalCheckSum2(U08* pt)
 {
-	U08 checkSum = 0;
 	WORD len = MAKEWORD(pt[3], pt[2]);
 	WORD id = MAKEWORD(pt[4], pt[5]);
-
-	for(int i=0; i<len; ++i)
-	{
-		checkSum ^= pt[i+4];
-	}
-
+	U08 checkSum = GetCheckSum(pt + 4, len);
 	if(checkSum == pt[len + 4])
 	{		
 		return id;
 	}
-
 	return BINMSG_ERROR;
 }
 
@@ -666,58 +663,54 @@ QualityMode GetGnssQualityMode(U32 qualityIndicator, U08 gpMode, U08 glMode, U08
 		bdInd = 0;
 	}
 
-	if(gpInd==0 && glInd==0 && gaInd==0 && bdInd==0)
+	if(gpInd == 0 && glInd == 0 && gaInd == 0 && bdInd == 0)
 	{
 		return mode;
 	}
 
-	if(gpInd=='E' || glInd=='E'|| gaInd=='E'|| bdInd=='E')
+	if(gpInd == 'E' || glInd == 'E'|| gaInd == 'E'|| bdInd == 'E')
 	{
 		mode = EstimatedMode;
 	}
-	else if(gpInd=='D' || glInd=='D' || gaInd=='D' || bdInd=='D')
+	else if(gpInd == 'D' || glInd == 'D' || gaInd == 'D' || bdInd == 'D')
 	{
 		mode = DgpsMode;
 	}
-	//else if(gpInd=='1')
-	//{
-	//	return Unlocated;
-	//}
-	else if(gpInd=='2')
+	else if(gpInd == '2')
 	{
 		mode = DgpsMode;
 	}
-	else if(gpInd=='3')
+	else if(gpInd == '3')
 	{
 		mode = PpsMode;
 	}
-	else if(gpInd=='4')
+	else if(gpInd == '4')
 	{
 		mode = FixRTK;
 	}
-	else if(gpInd=='5')
+	else if(gpInd == '5')
 	{
 		mode = FloatRTK;
 	}
-	else if(gpInd=='6')
+	else if(gpInd == '6')
 	{
 		mode = EstimatedMode;
 	}
 	else if(gpInd == 'A' || glInd == 'A' || gaInd == 'A' || bdInd == 'A' || gpInd == '1')
 	{
-		if(gpMode==2 || glMode==2 || bdMode==2|| giMode==2)
+		if(gpMode == 2 || glMode == 2 || bdMode == 2|| giMode == 2)
 		{
 			mode = PositionFix2d;
 		}
-		else if(gpMode==3 || glMode==3 || bdMode==3 || giMode==3)
+		else if(gpMode == 3 || glMode == 3 || bdMode == 3 || giMode == 3)
 		{
 			mode = PositionFix3d;
 		}
-		else if(gpMode==4 || glMode==4 || bdMode==4 || giMode==4)
+		else if(gpMode == 4 || glMode == 4 || bdMode == 4 || giMode == 4)
 		{
 			mode = SurveyIn;
 		}
-		else if(gpMode==5 || glMode==5 || bdMode==5 || giMode==5)
+		else if(gpMode == 5 || glMode == 5 || bdMode == 5 || giMode == 5)
 		{
 			mode = StaticMode;
 		}
@@ -726,19 +719,18 @@ QualityMode GetGnssQualityMode(U32 qualityIndicator, U08 gpMode, U08 glMode, U08
 			mode = PositionFix2d;
     }
 	}
-	else if(gpInd=='N')
-	{
-		mode = DataNotValid;
-	}
-	else if(gpInd=='R')
+	else if(gpInd == 'R' || glInd == 'R' || gaInd == 'R' || bdInd == 'R')
 	{
 		mode = FixRTK;
 	}
-	else if(gpInd=='F')
+	else if(gpInd == 'F'|| glInd == 'F' || gaInd == 'F' || bdInd == 'F')
 	{
 		mode = FloatRTK;
 	}
-
+	else
+	{
+		mode = Unlocated;
+	}
 	return mode;
 }
 
@@ -767,6 +759,11 @@ U16 ConvertLeonU16(const U08* ptr)
 	return MAKEWORD(ptr[1], ptr[0]);
 }
 
+U16 ConvertLeU16(const U08* ptr)
+{
+	return MAKEWORD(ptr[0], ptr[1]);
+}
+
 S16 ConvertLeonS16(const U08* ptr)
 {
 	return (S16)MAKEWORD(ptr[1], ptr[0]);
@@ -777,9 +774,24 @@ U32 ConvertLeonU32(const U08* ptr)
 	return MAKELONG(MAKEWORD(ptr[3], ptr[2]), MAKEWORD(ptr[1], ptr[0]));
 }
 
+U32 ConvertLeU32(const U08* ptr)
+{
+	return MAKELONG(MAKEWORD(ptr[0], ptr[1]), MAKEWORD(ptr[2], ptr[3]));
+}
+
 S32 ConvertLeonS32(const U08* ptr)
 {
 	return (S32)MAKELONG(MAKEWORD(ptr[3], ptr[2]), MAKEWORD(ptr[1], ptr[0]));
+}
+
+S64 ConvertLeonU64(const U08* ptr)
+{
+  return (U32)MAKEU64(ConvertLeonU32(ptr + 4), ConvertLeonU32(ptr));
+}
+
+S64 ConvertLeonS64(const U08* ptr)
+{
+  return (S32)MAKEU64(ConvertLeonU32(ptr + 4), ConvertLeonU32(ptr));
 }
 
 WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)

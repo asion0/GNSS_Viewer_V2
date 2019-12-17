@@ -196,6 +196,9 @@ void BinaryProc(U08* buffer, int len, CFile& f)
 	case BINMSG_ECEF_USER_PVT:
 		ShowBinaryOutput(buffer, true, &strOutput);
 		break;
+	case 0xEF:		// Navigation data and status (0xEF)
+		ExtRawMeasEf(buffer, true, &strOutput);
+		break;
 	default:
 //		add_msgtolist("Unknown: " + theApp.GetHexString(buffer, len));	
 		break;

@@ -23,7 +23,16 @@ UINT GetEphmsThread(LPVOID pParam)
 	case CGetEphemerisDlg::BeidouEphemeris:
 		CGPSDlg::gpsDlg->GetBeidouEphms(g_SV, FALSE);	
 		break;
-	case CGetEphemerisDlg::GalileoEphemeris:
+	case CGetEphemerisDlg::NavicEphemeris:
+		CGPSDlg::gpsDlg->GetNavicEphms(g_SV, FALSE);	
+		break;
+	case CGetEphemerisDlg::GpsQzssEphemeris:
+		CGPSDlg::gpsDlg->GetGpsQzssEphms(g_SV, FALSE);	
+		break;	
+	case CGetEphemerisDlg::QzssEphemeris:
+		CGPSDlg::gpsDlg->GetQzssEphms(g_SV, FALSE);	
+		break;	
+  case CGetEphemerisDlg::GalileoEphemeris:
 		ASSERT(FALSE);
 		break;
 	default:
@@ -70,11 +79,11 @@ BOOL CGetEphemerisDlg::OnInitDialog()
 	CString temp;
 	m_ephems.ResetContent();
 	m_ephems.AddString("All SVs");
-	int MaxSV[] = {32, 24, 37, 24};
+	int MaxSV[] = {GPS_EPHEMERIS_CHANNEL, GLONASS_EPHEMERIS_CHANNEL, BEIDOU_EPHEMERIS_CHANNEL, GALILEO_EPHEMERIS_CHANNEL, NAVIC_EPHEMERIS_CHANNEL, GPS_QZSS_EPHEMERIS_CHANNEL, QZSS_EPHEMERIS_CHANNEL};
 	int maxSv = MaxSV[(int)ephType];
-	for(int i=0; i<maxSv; i++)
+	for(int i = 0; i < maxSv; ++i)
 	{
-		temp.Format("SV #%d", i+1);
+		temp.Format("SV #%d", i + 1);
 		m_ephems.AddString(temp);
 	}
 	m_ephems.SetCurSel(0);
@@ -83,7 +92,7 @@ BOOL CGetEphemerisDlg::OnInitDialog()
 	::SHGetSpecialFolderPath(NULL, desktopPath.GetBuffer(MyMaxPath), CSIDL_DESKTOP, FALSE);
 	desktopPath.ReleaseBuffer();
 	desktopPath += "\\";
-	m_fileName = desktopPath + GetEphemerisNmae();
+	m_fileName = desktopPath + GetEphemerisName();
 	m_file.SetWindowText(m_fileName);
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
@@ -125,29 +134,39 @@ void CGetEphemerisDlg::OnBnClickedOk()
 	OnOK();
 }
 
-CString CGetEphemerisDlg::GetEphemerisNmae()
+CString CGetEphemerisDlg::GetEphemerisName()
 {
 	CString f;
 	CTime t = CTime::GetCurrentTime();
-	f.Format("NMEA%02d-%02d-%02d_%02d%02d%02d.txt", t.GetYear(), t.GetMonth(), t.GetDay(),
-		t.GetHour(), t.GetMinute(), t.GetSecond());
 
-	switch(ephType)
+  switch(ephType)
 	{
 	case GpsEphemeris:
-		f.Format("GPS_Ephemeris%02d-%02d-%02d_%02d%02d%02d.log", t.GetYear(), t.GetMonth(), t.GetDay(),
+		f.Format("GPS_Ephemeris%02d-%02d-%02d_%02d%02d%02d.eph", t.GetYear(), t.GetMonth(), t.GetDay(),
 			t.GetHour(), t.GetMinute(), t.GetSecond());
 		break;
 	case GlonassEphemeris:
-		f.Format("Glonass_Ephemeris%02d-%02d-%02d_%02d%02d%02d.log", t.GetYear(), t.GetMonth(), t.GetDay(),
+		f.Format("GLONASS_Ephemeris%02d-%02d-%02d_%02d%02d%02d.eph", t.GetYear(), t.GetMonth(), t.GetDay(),
 			t.GetHour(), t.GetMinute(), t.GetSecond());
 		break;
 	case BeidouEphemeris:
-		f.Format("Beidou_Ephemeris%02d-%02d-%02d_%02d%02d%02d.log", t.GetYear(), t.GetMonth(), t.GetDay(),
+		f.Format("Beidou_Ephemeris%02d-%02d-%02d_%02d%02d%02d.eph", t.GetYear(), t.GetMonth(), t.GetDay(),
 			t.GetHour(), t.GetMinute(), t.GetSecond());
 		break;
 	case GalileoEphemeris:
-		f.Format("Galileo_Ephemeris%02d-%02d-%02d_%02d%02d%02d.log", t.GetYear(), t.GetMonth(), t.GetDay(),
+		f.Format("Galileo_Ephemeris%02d-%02d-%02d_%02d%02d%02d.eph", t.GetYear(), t.GetMonth(), t.GetDay(),
+			t.GetHour(), t.GetMinute(), t.GetSecond());
+		break;
+	case NavicEphemeris:
+		f.Format("NavIC_Ephemeris%02d-%02d-%02d_%02d%02d%02d.eph", t.GetYear(), t.GetMonth(), t.GetDay(),
+			t.GetHour(), t.GetMinute(), t.GetSecond());
+		break;
+	case GpsQzssEphemeris:
+		f.Format("GPS_QZSS_Ephemeris%02d-%02d-%02d_%02d%02d%02d.eph", t.GetYear(), t.GetMonth(), t.GetDay(),
+			t.GetHour(), t.GetMinute(), t.GetSecond());
+		break;
+	case QzssEphemeris:
+		f.Format("QZSS_Ephemeris%02d-%02d-%02d_%02d%02d%02d.eph", t.GetYear(), t.GetMonth(), t.GetDay(),
 			t.GetHour(), t.GetMinute(), t.GetSecond());
 		break;
 	default:

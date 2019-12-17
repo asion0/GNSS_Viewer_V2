@@ -160,7 +160,7 @@ UINT SaveBinaryNoParsingDlg::ComRead()
   { 
     BinaryData openBinData(3);
     *(openBinData.GetBuffer(0)) = 0x64;
-    *(openBinData.GetBuffer(1)) = 0x7a;
+    *(openBinData.GetBuffer(1)) = 0x7A;
     *(openBinData.GetBuffer(2)) = 0x01;
     pStartCmd = new BinaryCommand(openBinData);
     CGPSDlg::CmdErrorCode ack = CGPSDlg::SendComCmdWithAck(comHandle, pStartCmd->GetBuffer(), pStartCmd->Size(), 1000);
@@ -244,7 +244,7 @@ UINT SaveBinaryNoParsingDlg::ComRead()
   {
     BinaryData binData(3);
     *(binData.GetBuffer(0)) = 0x64;
-    *(binData.GetBuffer(1)) = 0x7a;
+    *(binData.GetBuffer(1)) = 0x7A;
     *(binData.GetBuffer(2)) = 0x00;
     pStartCmd = new BinaryCommand(binData);
     dwBytesRead = 0;
@@ -294,7 +294,6 @@ UINT SaveBinaryNoParsingDlg::BufferWrite()
   }
   return 0;
 }
-
 
 void SaveBinaryNoParsingDlg::OnDestroy()
 {

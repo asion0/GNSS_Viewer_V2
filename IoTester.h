@@ -35,6 +35,10 @@ public:
   afx_msg void OnBnClickedCheckM5(UINT nID);
   afx_msg void OnBnClickedCheckM6(UINT nID);
   afx_msg void OnBnClickedCheckM7(UINT nID);
+  afx_msg void OnBnClickedCheckM8(UINT nID);
+  afx_msg void OnBnClickedCheckM9(UINT nID);
+  afx_msg void OnBnClickedCheckM10(UINT nID);
+  afx_msg void OnBnClickedCheckM11(UINT nID);
   afx_msg void OnBnClickedCheckMC(UINT nID);
   afx_msg void OnBnClickedCheckMV(UINT nID);
   afx_msg void OnBnClickedConfigRegBtn();

@@ -698,17 +698,12 @@ void CPic_Scatter::Create_scatterplot(CDC *dc)
 void CPic_Scatter::DrawScatterInfo(CDC *dc)
 {
 	CString txt;
-	
 	dc->SetTextColor(RGB(30, 30, 30));
 	const int txt1X = 52, txt1Y = 2;
-	//const int txt2X = 150, txt2Y = 2;
 	const int txtW = 212, txtH = 13;
 
 	txt.Format("Point count : %d / %d", g_scatterData.GetLLAPoint().size(), g_setting.scatterCount);
 	dc->DrawText(txt, CRect(txt1X, txt1Y, txt1X + txtW, txt1Y + txtH), DT_TOP | DT_LEFT);
-	//txt.Format("CEP 50%% : %.4f", g_scatterData.CEP);
-	//dc->DrawText(txt, CRect(txt2X, txt2Y, txt2X + txtW, txt2Y + txtH), DT_TOP | DT_LEFT);
-
 }
 
 void CPic_Scatter::DrawScatterAltitude(CDC *dc, double initH , double h)

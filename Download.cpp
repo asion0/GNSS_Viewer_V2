@@ -1007,6 +1007,17 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 	return RETURN_NO_ERROR;		
 }
 
+bool EmptyPromUniqueTag(U08* buffer, int size, int tagPos)
+{
+    U08* p = buffer + tagPos;
+    for(int i = 0; i < 16; ++i)
+    {
+      *p = 0xFF;
+      ++p;
+    }
+    return true;
+}
+
 U08 CGPSDlg::PlRomNoAllocV8(const CString& promPath)
 {
   Param promTag = { 0 };
@@ -1021,6 +1032,10 @@ U08 CGPSDlg::PlRomNoAllocV8(const CString& promPath)
 	}
 
 	DWORD promLen = (DWORD)binFile.Size();
+  if(uniqueTag && !emptyTag)
+  {
+    EmptyPromUniqueTag(binFile.GetBuffer(), promLen, tagPos);
+  }
 
 	binFile.Seek(0);
 	U08 mycheck = GetPromBinCheckSum(binFile, promLen);
@@ -1037,34 +1052,38 @@ U08 CGPSDlg::PlRomNoAllocV8(const CString& promPath)
 		CString strBinsizeCmd;
 		if(m_DownloadMode == InternalLoaderV8AddTag || downloadAddTag)
 		{
-      //if(m_DownloadMode == InternalLoaderV8AddTag)
-      //{
-			//  tagAddress = 0xAAA56556;	//V8 tag address is 0xFCFFC ^ 0xAAAAAAAA
-			//  tagValue = 0x5555AAAA;	//default tag is 0xFFFF ^ 0x55555555 (No Tag)
-      //}
-			////U32 tagValue = 0x55555A54;	//Skytraq DR tag is 0x0F01 ^ 0x55555555
-			//if(m_customerId==OlinkStar)
-			//{
-			//	tagValue = 0x55555E54;	//OLinkStar tag is 0x0B01 ^ 0x55555555
-			//}
-			//else if(m_DownloadMode == InternalLoaderV8AddTag)
-			//{
-			//	tagValue = 0x55555F54;	//Skytraq tag is 0x0A01 ^ 0x55555555
-			//}
-			checkCode = promLen + mycheck + m_nDownloadBaudIdx + tagAddress + tagValue;
-			strBinsizeCmd.Format("BINSIZ2 = %d %d %u %u %u %u ", 
-        promLen, mycheck, m_nDownloadBaudIdx, tagAddress, tagValue, checkCode);
-      downloadAddTag = FALSE;
-      tagAddress = 0;
-      tagValue = 0;
+      if(uniqueTag)
+      {
+        int mode = 0;
+			  checkCode = promLen + mycheck + tagPos + mode;
+			  strBinsizeCmd.Format("BINSIZ3 = %d %d %u %u %u ", promLen, mycheck, tagPos, mode, checkCode);
+      }
+      else
+      {
+			  checkCode = promLen + mycheck + m_nDownloadBaudIdx + tagAddress + tagValue;
+			  strBinsizeCmd.Format("BINSIZ2 = %d %d %u %u %u %u ", 
+          promLen, mycheck, m_nDownloadBaudIdx, tagAddress, tagValue, checkCode);
+        downloadAddTag = FALSE;
+        tagAddress = 0;
+        tagValue = 0;
+      }
 		}
 		else
 		{
-			checkCode = promLen + mycheck;
-			strBinsizeCmd.Format("BINSIZE = %d Checksum = %d %u ", promLen, mycheck, checkCode);
+      if(uniqueTag)
+      {
+        int mode = 0;
+			  checkCode = promLen + mycheck + tagPos + mode;
+			  strBinsizeCmd.Format("BINSIZ3 = %d %d %u %u %u ", promLen, mycheck, tagPos, mode, checkCode);
+      }
+      else
+      {
+			  checkCode = promLen + mycheck;
+			  strBinsizeCmd.Format("BINSIZE = %d Checksum = %d %u ", promLen, mycheck, checkCode);
+      }
 		}
 
-		m_serial->SendData((LPCSTR)strBinsizeCmd, strBinsizeCmd.GetLength() + 1);	
+    m_serial->SendData((LPCSTR)strBinsizeCmd, strBinsizeCmd.GetLength() + 1);	
 		Utility::Log(__FUNCTION__, messages, __LINE__);
 		bool isEnd = false;
 		do 
@@ -1213,9 +1232,8 @@ bool CGPSDlg::DownloadLoader(DownloadMode mode)
 	ScopeTimer t("DownloadLoader()");
 	const int bufferSize = 256;
 	char messages[100] = {0};
-	//U08 dummy[9] = {0xa0, 0xa1, 0x00, 0x02, 0x00, 0x00, 0x01, 0x0d, 0x0a};
 
-	if(mode != EnternalLoaderInBinCmd && mode != FileLoaderInBinCmd)
+  if(mode != EnternalLoaderInBinCmd && mode != InternalLoaderV8AddTagInBinCmd &&mode != FileLoaderInBinCmd)
 	{
 		GetLoaderDownloadCmd(messages, sizeof(messages));
 		
@@ -1333,18 +1351,10 @@ bool CGPSDlg::DownloadLoader(DownloadMode mode)
       //char buffer[128] = {0};
       //int retLen = m_serial->GetBinary(buffer, sizeof(buffer) - 1, 10);
     }
-    //if(packetSize > 16)
-    //{
-    //  for(int cc = 0; cc < packetSize; cc += 16)
-    //  {
-    //    SendToTargetNoAck((U08*)(buff + cc), ((packetSize - cc) > 16) ? 16 : packetSize - cc);
-    //    Sleep(20);
-    //  }
-    //}
+
 		leftSize -= packetSize;
 		sData += packetSize;
 		totalByte += packetSize;//deduct by end of string character in sending
-//* Alex wait
 		m_psoftImgDlDlg->PostMessage(UWM_SETPROGRESS, totalByte, srec.Size());
 	}			
 
@@ -1568,6 +1578,15 @@ bool IsV8NewLoaderVersion(const BinaryData& ackCmd)
   return false;
 }
 
+bool IsV9FirmwareVersion(const BinaryData& ackCmd)
+{
+  if(ackCmd[7] > 2)
+  {
+    return true;
+  }
+  return false;
+}
+
 static const int SpiBaudIndex = 9;
 //static bool SecondRun = false;
 bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
@@ -1589,6 +1608,7 @@ bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
 		case ParallelDownloadType0:
 		case ParallelDownloadType1:
 		case InternalLoaderV8AddTag:
+    case InternalLoaderV8AddTagInBinCmd:
 		case RomExternalDownload:
 		case InternalLoaderSpecial:
 		case EnternalLoaderInBinCmd:
@@ -1761,10 +1781,79 @@ bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
 	return isSuccessful;
 }
 
+bool CheckPromUniqueTag(const CString& imgPath, int& tagPos, bool& emptyTag)
+{
+  CFile f(imgPath, CFile::modeRead);
+  tagPos = 0;
+  int imgSize = (int)f.GetLength();
+  if(imgSize <= 0)
+  {
+    f.Close();
+    return false;
+  }
+
+  U08* buff = new U08[imgSize];
+  UINT s = f.Read(buff, imgSize);
+  f.Close();
+
+  if(s != imgSize)
+  {
+    delete [] buff;
+    return false;
+  }
+
+  U08 checkPattern[] = { 0x21, 0x22, 0x23, 0x24, 0x26, 0x2A, 0x28, 0x29, 
+                         0x2F, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F, 0x40 };
+  int checkSize = sizeof(checkPattern);
+
+  U08 *p = buff;
+  while (true) 
+  {
+    U08* ptr = (U08*)memchr(p, checkPattern[0], s); 
+    if(ptr == NULL)
+    { //Not found
+      p = NULL;
+      break;
+    }
+    if(0 == memcmp(ptr, checkPattern, checkSize))
+    { //Pattern found
+      p = ptr;
+      break;
+    }
+    s -= (ptr - p) + 1;
+    if(s <= 0)
+    {
+      p = NULL;
+      break;
+    }
+    p = ptr + 1;
+  }
+
+  if(p)
+  {
+    tagPos = (int)(p - buff) - 16;
+
+    p = buff + tagPos;
+    emptyTag = true;
+    for(int i = 0; i < 16; ++i)
+    {
+      if(*p != 0xFF)
+      {
+        emptyTag = false;
+        //*p = 0xFF;
+      }
+    }
+    delete [] buff;
+    return true;
+  }
+  delete [] buff;
+  return false;
+}
+
 bool CGPSDlg::Download()
 {
   if(g_setting.GetBaudrateIndex() == 0) //4800 bps
-  {
+  { //Turn off message output
 	  BinaryCommand cmd(3);
 	  cmd.SetU08(1, 0x09);
 	  cmd.SetU08(2, 0x00);
@@ -1773,11 +1862,21 @@ bool CGPSDlg::Download()
 	  ClearQue();
 	  SendToTarget(cmd.GetBuffer(), cmd.Size(), "", 10000);	
   }
+
+  tagPos = 0;
+  emptyTag = false;
+  uniqueTag = CheckPromUniqueTag(m_strDownloadImage, tagPos, emptyTag);
+  if(uniqueTag && m_DownloadMode == InternalLoaderV8)
+  {
+    m_DownloadMode = EnternalLoaderInBinCmd;
+  }
+
   if(m_DownloadMode == ForceInternalLoaderV8)
   {
     m_DownloadMode = InternalLoaderV8;
     return RealDownload();
   }
+
 	if(m_DownloadMode == CustomerUpgrade)
 	{
 		return Download2();
@@ -1824,32 +1923,25 @@ bool CGPSDlg::Download()
 		{
 			hasAckVersion = TRUE;
 		}
+    else
+    {
+			::AfxMessageBox("Device no response!");
+      return false;
+    }
+
 		m_nDefaultTimeout = g_setting.defaultTimeout;
 
-    //Special case for OLinkStar to added tag.
-    /*
-		if(m_DownloadMode != EnternalLoader && CUSTOMER_DOWNLOAD && m_customerId==OlinkStar)
-		{
-			if(hasAckVersion && (crcCode==0xD3CF || crcCode==0x00A0  || crcCode==0x0724 || crcCode==0x6469))
-			{	//The firmware which released in 2013/10/24, 2013/11/11, 2013/11/08, 2013/11/07 
-				//for OLinkStar should be added tag.
-				m_DownloadMode = InternalLoaderV8AddTag;
-				customerCrc = crcCode;
-			}
-		}
-		else */
-    //if(m_DownloadMode == InternalLoaderV8 && (crcCode == 0xe463 /*|| crcCode == 0x74cf*/))
     if(m_DownloadMode == InternalLoaderV8)
     {
-      if(!hasAckVersion)
-      {
-				::AfxMessageBox("Device no response!");
-        return false;
+      //if(uniqueTag )
+      if(uniqueTag || IsV9FirmwareVersion(ackVer))
+      { //V9 use EnternalLoaderInBinCmd now
+        m_DownloadMode = EnternalLoaderInBinCmd;
       }
-      else if(IsV8ChinaTowerOem(ackVer))
-      {
-        m_DownloadMode = InternalLoaderV8;
-      }
+      //else if(IsV8ChinaTowerOem(ackVer))
+      //{
+      //  m_DownloadMode = InternalLoaderV8;
+      //}
       else if(IsV8FirstRomVersion(ackVer) && !g_setting.downloadRomInternal)
       { //V8 ROM A's loader can't support new Winbond and EN25W80B
         m_DownloadMode = InternalLoaderV8AddTag;
@@ -1862,6 +1954,7 @@ bool CGPSDlg::Download()
       { //Winbond flash
         m_DownloadMode = InternalLoaderV8;
       }
+
       else if(ackQueryReg == Timeout && hasAckVersion)
       { //RTK Slave fw
         m_DownloadMode = InternalLoaderV8;
@@ -1882,7 +1975,7 @@ bool CGPSDlg::Download()
 		{
 			break;
 		}
-	} while(1);
+	} while(1);   //do
 	return isSuccessful;
 }
 

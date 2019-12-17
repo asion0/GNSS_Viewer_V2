@@ -55,22 +55,21 @@ struct GNSS_T
 	U08 gnss_in_view;
 	GNSS_SATE_T sate[GNSS_CHANEL_LIMIT];
 };
-
-typedef struct {
-	U08 Timing_mode;
-	U32 Survey_Length;
-	U08 RT_Timing_mode;
-	U32 RT_Survey_Length;
-	D64 latitude;
-	D64 longitude;
-	F32 altitude;
-	D64 RT_latitude;
-	D64 RT_longitude;
-	F32 RT_altitude;
-	U08 attributes;
-	U32 Standard_deviation;
-
-} _1PPS_Timing_T;
+//
+//typedef struct {
+//	U08 Timing_mode;
+//	U32 Survey_Length;
+//	U08 RT_Timing_mode;
+//	U32 RT_Survey_Length;
+//	D64 latitude;
+//	D64 longitude;
+//	F32 altitude;
+//	D64 RT_latitude;
+//	D64 RT_longitude;
+//	F32 RT_altitude;
+//	U08 attributes;
+//	U32 Standard_deviation;
+//} _1PPS_Timing_T;
 
 struct LL2 {
 	double lat;
@@ -143,6 +142,7 @@ enum {
   ZENLANE_INIT_TIMER,
   ZENLANE_QUERY_TIMER,
   XN116_TESTER_TIMER,
+  AUTO_GET_CLOCK_OFFSET_TIMER,
 };
 
 enum { 
@@ -157,6 +157,7 @@ class CSerial;
 class CSnrBarChartGps;
 class CSnrBarChartGlonass;
 class CSnrBarChartDual;
+class CSnrBarChartMulti;
 class CSnrBarChartL2;
 class CSnrBarChartDualL2;
 class CSnrBarChartBeidou;
@@ -221,6 +222,7 @@ public:
 		InternalLoaderV6GnssAddTag,
 		InternalLoaderV6GnssDelTag,
 		InternalLoaderV8AddTag,
+    InternalLoaderV8AddTagInBinCmd,
 		CustomerDownload,
 		InternalLoaderSpecial,
     ForceInternalLoaderV8,
@@ -263,6 +265,10 @@ protected:
 	CString m_lastGpEphFile;
 	CString m_lastGlEphFile;
 	CString m_lastBdEphFile;
+	CString m_lastGiEphFile;
+	CString m_lastGpQzEphFile;
+	CString m_lastQzEphFile;
+	CString m_lastAgpsEphFile;
 
 	CColorStatic m_ttff;
 	CColorStatic m_date;
@@ -278,7 +284,7 @@ protected:
 	CColorStatic m_hdop;	
 	CColorStatic m_lbl_firmware_path;
 	CColorStatic m_rtkAge;	
-	CColorStatic m_rtkRatio;	
+	CColorStatic m_rtkRatio;
 
 	CBitmapButton m_CoorSwitch1Btn;
 	CBitmapButton m_CoorSwitch2Btn;
@@ -299,7 +305,6 @@ protected:
 	PSTI031_Data m_psti031;
 	PSTI032_Data m_psti032;
 	PSTI033_Data m_psti033R;
-	PSTI033_Data m_psti033B;
 
 	CComboBox m_ComPortCombo;
 	CComboBox m_BaudRateCombo;	
@@ -324,6 +329,9 @@ protected:
 	CBitmapButton m_PlayBtn;
 	CBitmapButton m_StopBtn;
 	CBitmapButton m_RecordBtn;
+	CColorStatic m_fwCrc1;
+	CColorStatic m_fwCrc2;
+	CColorStatic m_fwCheckSum;
 
 public:
 	CBitmapButton m_CloseBtn;
@@ -352,6 +360,7 @@ public:
 	Satellites sate_gi;	
 
   BOOL NeedUpdate();
+	PSTI033_Data m_psti033B;
 
 protected:
   DWORD m_mouseMouingTick;
@@ -378,6 +387,7 @@ protected:
 	int maplondeg, maplonmin, maplonsec, maplatdeg, maplatmin, maplatsec;
 	CCriticalSection _save_nmea_cs;
 
+  bool QuitIqPlot();
 	void UpdateCooridate();
 	void DisplayComportError(int com, DWORD errorCode);
 	bool NmeaInput();
@@ -396,6 +406,7 @@ public:
 
 	CMsgList m_nmeaList;
 	CFile m_ephmsFile;
+  CString m_sEphFileName;
 
 	CFile m_nmeaFile;
 	U32 m_nmeaFileSize;
@@ -455,10 +466,10 @@ public:
 	}
 
 	CmdErrorCode GetCommandReturnType(U08* buff, int tail, bool showMsg = true);
-	CmdErrorCode GetCommandReturnTypeWithoutMsg(U08* buff, int tail, bool showMsg = true);
+	//CmdErrorCode GetCommandReturnTypeWithoutMsg(U08* buff, int tail, bool showMsg = true);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 
-	bool IsEphmsEmpty(BYTE* buffer);
+	//bool IsEphmsEmpty(const BYTE* buffer, int size, int throughold);
 	bool CeheckOrigin(CString,int);	
 	bool CfgPortSendToTarget(U08*,U16,char*);
 	bool CheckConnect();
@@ -471,7 +482,7 @@ public:
 
 	bool SendMsg();
 	//bool SendToTarget(U08* ,U16 ,const char*, bool quick = false);
-  bool SendToTargetOld(U08* message, U16 length, const char* Msg, bool quick);
+  //bool SendToTargetOld(U08* message, U16 length, const char* Msg, bool quick);
   bool SendToTarget(U08* message, U16 length, const char* Msg, int timeout);
   bool SendToTargetAndCheckAck(U08* message, U16 length, const char* Msg, int timeout, int idLen);
 
@@ -483,14 +494,14 @@ public:
 	U08 BinaryProc(U08* buffer, int len, CFile* fo = NULL);
 	void CopyNmeaToUse();
 	void ClearQue();
-	void Copy_NMEA_Memery();
+	void Copy_NMEA_Memery(bool needUpdate = true);
 	void CreateGPSThread();	
 	void DataLogDecompress(bool mode = true);
 	void DeleteNmeaMemery();
 	void GetLogStatus(U08*);
 	//void GetRegister(U08*);	
 	//void LogConfigure();
-	void MSG_PROC();
+	//void MSG_PROC();
   void DoFlag();
   void ParsingMessage(BOOL isPlayer = FALSE);
 	void QueryMsg(unsigned char*);
@@ -499,7 +510,7 @@ public:
 	void ScanGPS1();
 	void ScanGPS2();
 	void ScatterPlot(CDC *dc);
-	void SetEphms(U08 continues);
+	//void SetEphms(U08 continues);
 	bool SetPort(U08, int mode);
   CmdErrorCode SetPort0Baud(U08 baudIdx, U08 mode);
 #if(MODULE_SUP_800)
@@ -565,6 +576,7 @@ private:
 	CButton m_btn_browse;
 
 public:
+  void SetFreqText(UINT id, int sig1, int sig2, int sig3, int sig4);
 	int SetMessage(U08* msg, int len);
 	int SetMessage2(U08* dst, U08* src, int srcLen);
 	int GetCoordinateSel() { return m_coordinate.GetCurSel(); }
@@ -633,8 +645,11 @@ public:
 	void GetBeidouAlmanac(CString m_almanac_filename,U08 sv,U08 continues);
 
 	void SetBeidouEphms(U08 continues);	
+  void SetNavicEphms(U08 continues);	
 	void SetGlonassEphms(U08 continues);
-	bool IsGlonassEphmsEmpty(BYTE* buffer);
+  void SetGpsQzssEphms(U08 continues);	
+  void SetAgpsEphms(LPCSTR pszFilename, bool restoreConnection, bool continuously = false);	
+	//bool IsGlonassEphmsEmpty(BYTE* buffer);
 
 	void GetTimeCorrection(CString m_filename);
 	void SetTimeCorrection(CString m_filename);
@@ -647,12 +662,23 @@ public:
 	UINT m_nDownloadResource;
 	CString m_strDownloadImage;
 	CString m_strDownloadImage2;
+
+  int tagPos;
+  bool emptyTag;
+  bool uniqueTag;
+
 	int m_nSlaveSourceBaud;
 	int m_masterFwBaudIdx;
   BOOL downloadAddTag;
   U32 tagAddress;
   U32 tagValue;
-
+  
+  enum DataLogCommandSet
+  {
+    DataLogCommandSet1,
+    DataLogCommandSet2
+  };
+  
 	bool CheckTagType();
 	bool RealDownload(bool restoreConnection = true, bool boostBaudRate = true);
 	bool Download();
@@ -677,10 +703,15 @@ public:
 	};
 	U08 GetRestartMode() { return m_restartMode; }
 	bool ExecuteConfigureCommand(U08 *cmd, int size, LPCSTR msg, bool restoreConnect = true);
-	void LogReadBatchControl();
+	void LogReadBatchControl(DataLogCommandSet cmdSet);
 	void GetEphms(U08 SV, U08 continues = FALSE);	
 	void GetGlonassEphms(U08 SV, U08 continues = FALSE);
 	void GetBeidouEphms(U08 SV, U08 continues = FALSE);
+	void GetNavicEphms(U08 SV, U08 continues = FALSE);
+	void GetGpsQzssEphms(U08 SV, U08 continues = FALSE);
+	void GetQzssEphms(U08 SV, U08 continues = FALSE);
+  void GetGenericEphemeris(U08 sv, U08 continues, LPCSTR pszType, CString& lastEphFile,
+    U08 cmdId, U08 cmdSubId, U08 revId, U08 revSubId, U08 setId, U08 setSubId);
 
 	bool SaveEphemeris(U08* buff,U08 id);
 	bool SaveEphemeris2(U08* buff, WORD id);
@@ -730,10 +761,10 @@ private:
 	//bool QueryPassword();
 	void GetLoaderDownloadCmd(char* msg, int size);
 	//Data Log functions
-	bool DatalogReadAll(int start_id,int offset, U08 *datalog,long size,long *receive_count );
+	bool DatalogReadAll(DataLogCommandSet cmdSet, int start_id,int offset, U08 *datalog,long size,long *receive_count );
 	bool VerifyDataLogBuffer(U08 *buff, U08 *datalog, U08 *ptr_last, int size, long *receive_count);
-	bool DataLogReadOffsetCtrl(int start_id, int total_sector, int offset, U08 *buff, long size , long *receive_count);
-	bool QueryDataLogBoundary(U16 *end, U16 *total);
+	bool DataLogReadOffsetCtrl(DataLogCommandSet cmdSet, int start_id, int total_sector, int offset, U08 *buff, long size , long *receive_count);
+	//bool QueryDataLogBoundary(U16 *end, U16 *total);
 	void VerifyDataLogFormat(U08 *datalog,long *size);
 	DataLogType GetDataLogType(U16 word);
 	//For Common Binary Clasases
@@ -756,11 +787,16 @@ public:
 	CmdErrorCode ReCalcuteGlonassIfb(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryBinaryMeasurementDataOut(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryRtcmMeasurementDataOut(CmdExeMode nMode, void* outputData);
+  CmdErrorCode QueryRegisterx(CmdExeMode nMode, U32 addr, void* outputData);
 	CmdErrorCode QueryRegister(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryRegister16x(CmdExeMode nMode, U32 addr, void* outputData);
 	CmdErrorCode QueryRegister16(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryConstellationCapability(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryTiming(CmdExeMode nMode, void* outputData);
 	CmdErrorCode BinaryQueryClockOffset(CmdExeMode nMode, void* outputData);
+#if(NAVSPARK_MINI_GPIO_QUERY)
+	CmdErrorCode QueryGpioData(CmdExeMode nMode, void* outputData);
+#endif
 	CmdErrorCode InsdrAccelerometerSelfTest(CmdExeMode nMode, void* outputData);
 	CmdErrorCode InsdrGyroscopeSelfTest(CmdExeMode nMode, void* outputData);
 	CmdErrorCode InsdrAccumulateAngleStart(CmdExeMode nMode, void* outputData);
@@ -768,16 +804,24 @@ public:
 	CmdErrorCode QuerySbasDefault(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySbas(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySbas2(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryDatalogWatchLogStatus(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryDatalogLogStatus(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryDataLogStatus(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryDataLogStatus2(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryDataLogStatusWatch(CmdExeMode nMode, void* outputData);
 	CmdErrorCode DatalogClear(CmdExeMode nMode, void* outputData);
+	CmdErrorCode DatalogClear2(CmdExeMode nMode, void* outputData);
 	CmdErrorCode DatalogWatchClear(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDrRate(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDrRawRate(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryDrMemsNoiseLevel(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryAdrOdometerScalingFactor(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPpsOutputMode(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGnssConstellationType(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryRfIc(CmdExeMode nMode, void* outputData, U08 type);
-	CmdErrorCode QueryNavicMessageInterval(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryOneRfRegister(CmdExeMode nMode, void* outputData, U08 id);
+  CmdErrorCode QueryNavicMessageInterval(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QuerySoftwareVersionSystemCode(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QuerySoftwareCrcSystemCode(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QuerySoftwareCrc32SystemCode(CmdExeMode nMode, void* outputData);
 
   U08 m_nGeofecingNo;
 
@@ -785,9 +829,13 @@ public:
 	int m_nDefaultTimeout;
 	BOOL m_bClearPsti032;
 protected:
+  void ConfigV9ClockToGpio0(bool on);
+  void ConfigV9ClockOut(bool on);
+
 	typedef CmdErrorCode (CGPSDlg::*QueryFunction)(CmdExeMode, void*);
 	void GenericQuery(QueryFunction pfn);
 
+	//CmdErrorCode AgepTest(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPositionRate(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDatum(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySha1String(CmdExeMode nMode, void* outputData);
@@ -795,8 +843,6 @@ protected:
 	CmdErrorCode SendZenlandInitCmd(CmdExeMode nMode, void* outputData);
 	CmdErrorCode SendZenlandQueryCmd(CmdExeMode nMode, void* outputData);
 
-	CmdErrorCode QuerySoftwareVersionSystemCode(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QuerySoftwareCrcSystemCode(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPositionPinning(CmdExeMode nMode, void* outputData);
 	CmdErrorCode Query1ppsMode(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPowerMode(CmdExeMode nMode, void* outputData);
@@ -807,7 +853,7 @@ protected:
 	CmdErrorCode QueryAntennaDetection(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryNoisePower(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryDrInfo(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryDrHwParameter(CmdExeMode nMode, void* outputData);
+	//CmdErrorCode QueryDrHwParameter(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGnssSelectionForNavigationSystem(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySagps(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryQzss(CmdExeMode nMode, void* outputData);
@@ -872,12 +918,27 @@ protected:
 	CmdErrorCode QueryAlphaKey(CmdExeMode nMode, void* outputData);
 	CmdErrorCode TmpActiveLicense(CmdExeMode nMode, void* outputData);
 
+	CmdErrorCode AlphaAgCalibrationUp(CmdExeMode nMode, void* outputData);
+	CmdErrorCode AlphaAgCalibrationDown(CmdExeMode nMode, void* outputData);
+	CmdErrorCode AlphaEcompassCalibration(CmdExeMode nMode, void* outputData);
+
+	CmdErrorCode QueryV9TagAddress(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryV9UniqueId(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryV9ExtendedId(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryV9Tag(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryV9PromAesTag(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryV9ExternalAesTag(CmdExeMode nMode, void* outputData);
+
 protected:
+  int m_nHotKeyID[2];
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 	virtual BOOL OnInitDialog();
   bool WriteAddressToFile(const CString& filename, const U32 start, const U32 size);
   bool PatchRomEphemeris();
-
+  void SetFwInfo(const CString& fwPath);
+	void DoDatalogLogReadBatch(DataLogCommandSet cmdSet);
+  
+  afx_msg LONG  OnHotKey( WPARAM  wParam, LPARAM  lParam);
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
@@ -923,8 +984,9 @@ protected:
 	afx_msg void OnCovDecopre();
 	afx_msg void OnConverterCompress();
 	//afx_msg void OnLoggerConvert();	
-	afx_msg void OnDatalogClearControl();
-	afx_msg void OnDatalogLogConfigureControl();	
+	//afx_msg void OnDatalogClearControl();
+	afx_msg void OnDatalogConfigure();
+	afx_msg void OnDatalogConfigure2();
 	afx_msg void OnDatalogWatchLogConfigureControl();	
 	afx_msg void OnSoftwareimagedownloadLoaderimage();
 	afx_msg void OnSoftwareimagedownloadImageonly();
@@ -956,8 +1018,8 @@ protected:
 	afx_msg void OnBnClickedScanBaudrate();
 	afx_msg void OnBinaryConfiguremessagetype();
 	afx_msg void OnEphemerisGetephemeris();
-	afx_msg void OnEphemerisSetephemeris();
-	afx_msg void OnAgpsConfig();
+	//afx_msg void OnEphemerisSetephemeris();
+	//afx_msg void OnAgpsConfig();
 	afx_msg void OnFileCleannema();
 	afx_msg void OnBnClickedBrowse();
 	afx_msg void OnWaasQuerywaasstatus();
@@ -970,6 +1032,7 @@ protected:
 	afx_msg void OnConfigurePositionUpdateRate();
 	afx_msg void OnBinaryConfigDrMultiHz();
 	afx_msg void OnDatalogLogReadBatch();
+	afx_msg void OnDatalogLogReadBatch2();
 	afx_msg void OnBinaryConfigurepositionpinning();
 	afx_msg void OnBinaryConfigurepinningparameters();
 	afx_msg void OnMultimodeConfiguremode();
@@ -982,7 +1045,7 @@ protected:
 	//afx_msg void OnWaasWaas();
 	afx_msg void OnShowGpsAlmanac();
 	afx_msg void OnShowBeidouAlmanac();
-	afx_msg void OnDecodeGpsAlmanac();
+	//afx_msg void OnDecodeGpsAlmanac();
 	afx_msg void OnGetGpsAlmanac();
 	afx_msg void OnBinaryQuerybinarymsginterval();
 	afx_msg void OnBinaryResetodometer();
@@ -993,6 +1056,7 @@ protected:
 	afx_msg void OnMonitoring1Pps();
 	afx_msg void OnConfigureProprietaryNmea();
 	afx_msg void OnSetGpsAlmanac();
+
 	//afx_msg void OnMinihomerActivate();
 	afx_msg LRESULT OnMyDeviceChange(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnKernelReboot(WPARAM wParam, LPARAM lParam);
@@ -1059,10 +1123,12 @@ protected:
 	afx_msg void OnConfigureNoisePowerControl();
 	afx_msg void OnConfigureInterferenceDetectControl();
 	afx_msg void OnConfigNMEABinaryOutputDestination();
-	afx_msg void OnConfigParameterSearchEngineNumber();
-	afx_msg void OnAgpsFtpSrec();
+  afx_msg void OnConfigParameterSearchEngineNumber();
+	//afx_msg void OnAgpsFtpSrec();
+	afx_msg void OnAgpsTest();
 	afx_msg void OnRomAgpsFtpSrec();
 	afx_msg void OnRomAgpsFtpNew();
+  afx_msg void OnPhoenixAgpsFtp();
 	afx_msg void OnClockOffsetPredict();
 	afx_msg void OnClockOffsetPredictOld();
 	afx_msg void OnHostBasedDownload();
@@ -1072,6 +1138,9 @@ protected:
 	afx_msg void OnConfigRefTimeSyncToGpsTime();
 	afx_msg void OnNmeaChecksumCalculator();
 	afx_msg void OnBinaryChecksumCalculator();
+	afx_msg void OnBinaryCommandTester();
+	afx_msg void OnPromIniGenerator();
+	afx_msg void OnPromIniGenerator2();
 	afx_msg void OnHostLog();
 	afx_msg void OnTestExternalSrec();
 	afx_msg void OnIqPlot();
@@ -1082,19 +1151,41 @@ protected:
 	afx_msg void OnReadMemToFile3();
 	afx_msg void OnPatchRom20130221Ephemeris();
 	afx_msg void OnIoTester();
+	afx_msg void OnConfigDcdc();
 	afx_msg void OnConfigRfIc();
+  afx_msg void OnConfigMultiRfIc();
 	afx_msg void OnConfigIir();
-	afx_msg void OnWriteMemToFile();
+	afx_msg void OnConfigV9PowerSaveByRtc30();
+	afx_msg void OnConfigV9PowerSaveByRtc60();
+	afx_msg void OnConfigV9PowerSaveByRtc90();
+	afx_msg void OnConfigV9PowerSaveByRtc120();
+	afx_msg void OnConfigV9ClockToGpio0On();
+	afx_msg void OnConfigV9ClockToGpio0Off();
+	afx_msg void OnConfigV9ClockOutOn();
+	afx_msg void OnConfigV9ClockOutOff();
+
+  afx_msg void OnWriteMemToFile();
 	afx_msg void OnUpgradeDownload();
 	afx_msg void OnPatch();
 	afx_msg void OnGetGlonassEphemeris();
-	afx_msg void OnSetGlonassEphemeris();
+	//afx_msg void OnSetGlonassEphemeris();
 	afx_msg void OnGetBeidouEphemeris();
-	afx_msg void OnSetBeidouEphemeris();
+	//afx_msg void OnSetBeidouEphemeris();
+	afx_msg void OnGetNavicEphemeris();
+	//afx_msg void OnSetNavicEphemeris();
+	afx_msg void OnGetGpsQzssEphemeris();
+	afx_msg void OnGetQzssEphemeris();
+	//afx_msg void OnSetGpsQzssEphemeris();
+	afx_msg void OnSetAgpsEphemerisFile();
+	afx_msg void OnSetAgpsEphemerisFileContinuously();
+
+  void OnGetGenericEphemeris(int t);
+
 	afx_msg void OnSup800EraseData();
 	afx_msg void OnSup800WriteData();
 	afx_msg void OnSup800ReadData();
 	afx_msg void OnConfigGeofence();
+	afx_msg void OnConfigIoRegister();
 	afx_msg void OnConfigGeofence1();
 	afx_msg void OnConfigGeofence2();
 	afx_msg void OnConfigGeofence3();
@@ -1113,9 +1204,7 @@ protected:
 	afx_msg void OnConfigureSignalDisturbanceStatus();
 	afx_msg void OnConfigureGpsUtcLeapSecondsInUtc();
 	afx_msg void OnGpsdoFirmwareDownload();
-	//afx_msg void OnStnClickedInformationT();
 	afx_msg void OnStnClickedInformationB();
-	//afx_msg void OnStnClickedRtkInfoT();
 	afx_msg void OnStnClickedRtkInfoB();
 	afx_msg void OnBnClickedCoorSwitch();
 	afx_msg void OnBnClickedAltitudeSwitch();
@@ -1140,11 +1229,17 @@ protected:
 	afx_msg void OnConfigWatchTrackback();
 	afx_msg void OnConfigDrRate();
 	afx_msg void OnConfigDrRawRate();
+	afx_msg void OnConfigDrMemsNoiseLevel();
+	afx_msg void OnConfigAdrOdometerScalingFactor();
 
 	afx_msg void OnConfigAlphaKey();
   afx_msg void OnDumpMemory();
 
+	afx_msg void OnConfigV9AesTag();
+  afx_msg void OnConfigQueryPstiInterval();
 
+	//afx_msg void OnAgepTest()
+	//{ GenericQuery(&CGPSDlg::AgepTest); }
 	afx_msg void OnQueryPositionRate()
 	{ GenericQuery(&CGPSDlg::QueryPositionRate); }
 	afx_msg void OnQueryDatum()
@@ -1159,6 +1254,8 @@ protected:
 	{ GenericQuery(&CGPSDlg::QuerySoftwareVersionSystemCode); }
 	afx_msg void OnQuerySoftwareCrcSystemCode()	
 	{ GenericQuery(&CGPSDlg::QuerySoftwareCrcSystemCode); }
+	afx_msg void OnQuerySoftwareCrc32SystemCode()	
+	{ GenericQuery(&CGPSDlg::QuerySoftwareCrc32SystemCode); }
 	afx_msg void OnQueryPositionPinning()
 	{ GenericQuery(&CGPSDlg::QueryPositionPinning); }
 	afx_msg void OnQuery1ppsMode()
@@ -1181,8 +1278,8 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryNoisePower); }
 	afx_msg void OnQueryDrInfo()
 	{ GenericQuery(&CGPSDlg::QueryDrInfo); }
-	afx_msg void OnQueryDrHwParameter()
-	{ GenericQuery(&CGPSDlg::QueryDrHwParameter); }
+	//afx_msg void OnQueryDrHwParameter()
+	//{ GenericQuery(&CGPSDlg::QueryDrHwParameter); }
 	afx_msg void OnQuerySbasDefault()
 	{ GenericQuery(&CGPSDlg::QuerySbasDefault); }
 	afx_msg void OnQuerySbas()
@@ -1201,24 +1298,31 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryNmeaBinaryOutputDestination); }
 	afx_msg void OnQueryParameterSearchEngineNumber()
 	{ GenericQuery(&CGPSDlg::QueryParameterSearchEngineNumber); }
-	afx_msg void OnQueryAgpsStatus()
-	{ GenericQuery(&CGPSDlg::QueryAgpsStatus); }
-	afx_msg void OnQueryDatalogLogStatus()
-	{ GenericQuery(&CGPSDlg::QueryDatalogLogStatus); }
-	afx_msg void OnQueryDatalogWatchLogStatus()
-	{ GenericQuery(&CGPSDlg::QueryDatalogWatchLogStatus); }
+	//afx_msg void OnQueryAgpsStatus()
+	//{ GenericQuery(&CGPSDlg::QueryAgpsStatus); }
+
+	afx_msg void OnQueryDataLogStatus()
+	{ GenericQuery(&CGPSDlg::QueryDataLogStatus); }
+	afx_msg void OnQueryDataLogStatus2()
+	{ GenericQuery(&CGPSDlg::QueryDataLogStatus2); }
+	afx_msg void OnQueryDataLogStatusWatch()
+	{ GenericQuery(&CGPSDlg::QueryDataLogStatusWatch); }
 	afx_msg void OnDatalogClear()
 	{ GenericQuery(&CGPSDlg::DatalogClear); }
+	afx_msg void OnDatalogClear2()
+	{ GenericQuery(&CGPSDlg::DatalogClear2); }
 	afx_msg void OnDatalogWatchClear()
 	{ GenericQuery(&CGPSDlg::DatalogWatchClear); }
 	afx_msg void OnQueryDrRate()
 	{ GenericQuery(&CGPSDlg::QueryDrRate); }
 	afx_msg void OnQueryDrRawRate()
 	{ GenericQuery(&CGPSDlg::QueryDrRawRate); }
+	afx_msg void OnQueryDrMemsNoiseLevel()
+	{ GenericQuery(&CGPSDlg::QueryDrMemsNoiseLevel); }
+	afx_msg void OnQueryAdrOdometerScalingFactor()
+	{ GenericQuery(&CGPSDlg::QueryAdrOdometerScalingFactor); }
 	afx_msg void OnQueryPpsOutputMode()
 	{ GenericQuery(&CGPSDlg::QueryPpsOutputMode); }
-
-
 	afx_msg void OnQueryPositionFixNavigationMask()
 	{ GenericQuery(&CGPSDlg::QueryPositionFixNavigationMask); }
 	afx_msg void OnQueryNmeaIntervalV8()
@@ -1355,7 +1459,6 @@ protected:
 	afx_msg void OnQueryPsti070()
 	{ m_nPstiNo = 70; GenericQuery(&CGPSDlg::QueryPsti); }
 
-
 	afx_msg void OnQueryPsti()
 	{ GenericQuery(&CGPSDlg::QueryPsti); }
   afx_msg void OnQueryPsti004()
@@ -1364,7 +1467,21 @@ protected:
 	{ GenericQuery(&CGPSDlg::ReCalcuteGlonassIfb); }
 	afx_msg void OnBinaryQueryClockOffset()
 	{ GenericQuery(&CGPSDlg::BinaryQueryClockOffset); }
-
+#if(NAVSPARK_MINI_GPIO_QUERY)
+  int m_gpio;
+	afx_msg void OnQueryGpio4Data()
+	{ m_gpio = 4; GenericQuery(&CGPSDlg::QueryGpioData); }
+	afx_msg void OnQueryGpio5Data()
+	{ m_gpio = 5; GenericQuery(&CGPSDlg::QueryGpioData); }
+	afx_msg void OnQueryGpio28Data()
+	{ m_gpio = 28; GenericQuery(&CGPSDlg::QueryGpioData); }
+	afx_msg void OnQueryGpio29Data()
+	{ m_gpio = 29; GenericQuery(&CGPSDlg::QueryGpioData); }
+	afx_msg void OnQueryGpio30Data()
+	{ m_gpio = 30; GenericQuery(&CGPSDlg::QueryGpioData); }
+	afx_msg void OnQueryGpio31Data()
+	{ m_gpio = 31; GenericQuery(&CGPSDlg::QueryGpioData); }
+#endif
 	afx_msg void OnInsdrAccelerometerSelfTest()
 	{ GenericQuery(&CGPSDlg::InsdrAccelerometerSelfTest); }
 	afx_msg void OnInsdrGyroscopeSelfTest()
@@ -1386,6 +1503,26 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryAlphaKey); }
 	afx_msg void OnTmpActiveLicense()
 	{ GenericQuery(&CGPSDlg::TmpActiveLicense); }
+
+	afx_msg void OnAlphaAgCalibrationUp()
+	{ GenericQuery(&CGPSDlg::AlphaAgCalibrationUp); }
+	afx_msg void OnAlphaAgCalibrationDown()
+	{ GenericQuery(&CGPSDlg::AlphaAgCalibrationDown); }
+	afx_msg void OnAlphaEcompassCalibration()
+	{ GenericQuery(&CGPSDlg::AlphaEcompassCalibration); }
+
+  afx_msg void OnQueryV9TagAddress()
+	{ GenericQuery(&CGPSDlg::QueryV9TagAddress); }
+  afx_msg void OnQueryV9UniqueId()
+	{ GenericQuery(&CGPSDlg::QueryV9UniqueId); }
+  afx_msg void OnQueryV9ExtendedId()
+	{ GenericQuery(&CGPSDlg::QueryV9ExtendedId); }
+  afx_msg void OnQueryV9Tag()
+	{ GenericQuery(&CGPSDlg::QueryV9Tag); }
+  afx_msg void OnQueryV9PromAesTag()
+	{ GenericQuery(&CGPSDlg::QueryV9PromAesTag); }
+  afx_msg void OnQueryV9ExternalAesTag()
+	{ GenericQuery(&CGPSDlg::QueryV9ExternalAesTag); }
 
 	struct MenuItemEntry {
 		BOOL showOption;
@@ -1460,7 +1597,7 @@ protected:
 
 	//Functions for combain GPS / GNSS Viewer UI Layout.
 	int CreateSubMenu(const HMENU hMenu, const MenuItemEntry* menuItemTable, LPCSTR pszSubMenuText);
-	PrnType GetPrnType(int id);
+	//PrnType GetPrnType(int id);
 	void RescaleDialog();
 	void SwitchToConnectedStatus(BOOL bSwitch);
 	void SetFactoryDefault(bool isReboot);
@@ -1482,15 +1619,20 @@ protected:
 
 	CLabel m_wgs84_x,m_wgs84_y,m_wgs84_z;
 	CLabel m_enu_e,m_enu_n,m_enu_u;
+#if(!MERGE_BD_GA_GI)
 	CSnrBarChartGalileo* gaSnrBar;
 	CSnrBarChartNavic* giSnrBar;
+#endif
 
 #if(SUPPORT_BDL2_GSV2)
   CSnrBarChartDualL2* gpsSnrBar;
 	CSnrBarChartL2* bdSnrBar;
-#else
+#elif(!MERGE_BD_GA_GI)
 	CSnrBarChartDual* gpsSnrBar;
 	CSnrBarChartBeidou* bdSnrBar;
+#else
+	CSnrBarChartMulti* gpsSnrBar;
+	CSnrBarChartMulti* bdSnrBar;
 #endif
 	CPic_Scatter* pic_scatter;
 	CPic_Earth* pic_earth;
@@ -1511,11 +1653,22 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
+  void OpenAndSetAgpsEphemerisFile(const CString& file, bool restoreConnection);
+  void AutoAgpsBackgroundDownload();
   int m_nPstiNo;
-
+  void AutoAgpsSilentModeOn() { m_autoAgpsSilentMode = TRUE; }
+  void AutoAgpsSilentModeOff() { m_autoAgpsSilentMode = FALSE; }
 protected:
-  int m_nDoFlag;
+  CTime m_autoGi3EphTime;
+  BinaryData m_autoGi3Eph;
+  BOOL m_autoAgpsSilentMode;
 
+  int m_nDoFlag;
+#if(!MERGE_BD_GA_GI)
+  CRect m_rcLeftSnr, m_rcRightSnr;
+  CRect m_rcLeftSnrT, m_rcRightSnrT;
+  CRect m_rcLeftFreqT, m_rcRightFreqT;
+#endif
 	bool ShowCommand(U08 *buffer, int length);
 	void ShowFormatError(U08* cmd, U08* ack);
 	void SwitchInfoTab();

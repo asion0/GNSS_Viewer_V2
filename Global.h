@@ -25,6 +25,7 @@ class CSerial;
 struct GPGSA;
 typedef matrix<float> Matrix;
 
+#define MAKEU64(hi, lo) ((ULONGLONG(DWORD(hi) & 0xFFFFFFFF) << 32) | ULONGLONG(DWORD(lo) & 0xFFFFFFFF))
 #define LogDefaultName		        "Response.log"
 #define DefaultTimeout		        2000
 
@@ -103,7 +104,7 @@ struct Setting
 			reg.WriteInt("configrfic_type", configRfIcType);
 
       CString txt;
-      for(int i = 0; i < Setting::RFIC_REG_SIZE; ++i)
+      for(int i = 0; i < Setting::RFIC_W_REG_SIZE; ++i)
       {
         txt.Format("configrfic_reg%d", i);
         reg.WriteInt(txt, configRfIcReg[i]);
@@ -130,7 +131,10 @@ struct Setting
 			reg.WriteInt("setting_scatterCount", scatterCount);
 			reg.WriteInt("setting_downloadRomInternal", downloadRomInternal);
 			reg.WriteInt("setting_downloadUseBinExternal", downloadUseBinExternal);
-
+			reg.WriteInt("setting_showAllUnknownBinary", showAllUnknownBinary);
+			reg.WriteInt("setting_autoAgpsAfterColdStart", autoAgpsAfterColdStart);
+			reg.WriteInt("setting_weekNumberCycle", weekNumberCycle);
+      
 			reg.WriteInt("recentScatterCenterCount", recentScatterCenter.GetCount());
 			for(int i = 0; i < recentScatterCenter.GetCount(); ++i)
 			{
@@ -168,6 +172,9 @@ struct Setting
 			scatterCount = reg.ReadInt("setting_scatterCount", MAX_SCATTER_COUNT);
 			downloadRomInternal = reg.ReadInt("setting_downloadRomInternal", FALSE);
 			downloadUseBinExternal = reg.ReadInt("setting_downloadUseBinExternal", FALSE);
+			showAllUnknownBinary = reg.ReadInt("setting_showAllUnknownBinary", FALSE);
+			autoAgpsAfterColdStart = reg.ReadInt("setting_autoAgpsAfterColdStart", FALSE);
+			weekNumberCycle = reg.ReadInt("setting_weekNumberCycle", 2);
 
 			int recentCount = reg.ReadInt("recentScatterCenterCount", 0);
 			for(int i = 0; i < recentCount; ++i)
@@ -205,6 +212,9 @@ struct Setting
 			scatterCount = MAX_SCATTER_COUNT;
       downloadRomInternal = FALSE;
       downloadUseBinExternal = FALSE;
+      showAllUnknownBinary = FALSE;
+      autoAgpsAfterColdStart = FALSE;
+			weekNumberCycle = 2;
 		}
 
 		if(reg.SetKey(VIEWER_REG_PATH, true))
@@ -213,10 +223,10 @@ struct Setting
 			baudrate = reg.ReadInt("baudrate", 1);
 			mainFwPath = reg.ReadString("firmware", "");
 			earthBitmap = reg.ReadInt("setting_earthBitmap", 0);
-			configRfIcType = reg.ReadInt("configrfic_type", 0);
+			configRfIcType = reg.ReadInt("configrfic_type", 2);
 
       CString txt;
-      for(int i = 0; i < Setting::RFIC_REG_SIZE; ++i)
+      for(int i = 0; i < Setting::RFIC_W_REG_SIZE; ++i)
       {
         txt.Format("configrfic_reg%d", i);
 			  configRfIcReg[i] = reg.ReadInt(txt, 0);
@@ -230,7 +240,7 @@ struct Setting
 			earthBitmap = 0;
       configRfIcType = 0;
       CString txt;
-      for(int i = 0; i < Setting::RFIC_REG_SIZE; ++i)
+      for(int i = 0; i < Setting::RFIC_W_REG_SIZE; ++i)
       {
 			  configRfIcReg[i] = 0;
       }
@@ -255,7 +265,8 @@ struct Setting
 			recentScatterCenter.RemoveAt(0);
 		recentScatterCenter.Add(r);
 	}
-  enum { RFIC_REG_SIZE = 18 };
+  enum { RFIC_W_REG_SIZE = 23 };
+  enum { RFIC_R_REG_SIZE = 3 };
 
 	int BaudrateIndex(int b);
 	int BaudrateValue(int i){ return BaudrateTable[i]; }
@@ -284,6 +295,10 @@ struct Setting
 	BOOL downloadTesting;
 	BOOL downloadRomInternal;
   BOOL downloadUseBinExternal;
+  BOOL showAllUnknownBinary;
+  BOOL autoAgpsAfterColdStart;
+	int weekNumberCycle;
+
 	BOOL responseLog;
 	CString responseLogPath;
 	BOOL specifyCenter;
@@ -295,7 +310,7 @@ struct Setting
 	int scatterCount;
 	CStringArray recentScatterCenter;
 	U08 configRfIcType;
-	U32 configRfIcReg[RFIC_REG_SIZE];
+	U32 configRfIcReg[RFIC_W_REG_SIZE];
 
 protected:
 	static int BaudrateTable[];
@@ -411,6 +426,7 @@ void COO_geodetic_to_cartesian( const LLA_T* lla_p, POS_T* xyz_p );
 extern const char* DatumList[];
 extern const int DatumListSize;
 
+U08 GetCheckSum(const U08* pt, int len);
 U08 Cal_Checksum(U08* pt);
 UINT16 CalCheckSum2(U08* pt);
 void UtcConvertGpsToUtcTime(S16 wn, D64 tow, UtcTime *utc_time_p);
@@ -420,9 +436,13 @@ QualityMode GetGnssQualityMode(U32 qualityIndicator, U08 gpMode = 0, U08 glMode 
 D64 ConvertLeonDouble(const U08* ptr);
 F32 ConvertLeonFloat(const U08* ptr);
 U16 ConvertLeonU16(const U08* ptr);
+U16 ConvertLeU16(const U08* ptr);
 S16 ConvertLeonS16(const U08* ptr);
 U32 ConvertLeonU32(const U08* ptr);
 S32 ConvertLeonS32(const U08* ptr);
+U32 ConvertLeU32(const U08* ptr);
+S64 ConvertLeonU64(const U08* ptr);
+S64 ConvertLeonS64(const U08* ptr);
 WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd);
 
 bool ReadOneLineInFile(CFile& f, char* buffer, int size);

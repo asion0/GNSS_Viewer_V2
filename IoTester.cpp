@@ -35,6 +35,12 @@ BEGIN_MESSAGE_MAP(CIoTester, CDialog)
   ON_CONTROL_RANGE(BN_CLICKED, IDC_CHECK_M5_00, IDC_CHECK_M5_31, OnBnClickedCheckM5)
   ON_CONTROL_RANGE(BN_CLICKED, IDC_CHECK_M6_00, IDC_CHECK_M6_31, OnBnClickedCheckM6)
   ON_CONTROL_RANGE(BN_CLICKED, IDC_CHECK_M7_00, IDC_CHECK_M7_31, OnBnClickedCheckM7)
+  ON_CONTROL_RANGE(BN_CLICKED, IDC_CHECK_M8_00, IDC_CHECK_M8_31, OnBnClickedCheckM8)
+  ON_CONTROL_RANGE(BN_CLICKED, IDC_CHECK_M9_00, IDC_CHECK_M9_31, OnBnClickedCheckM9)
+  ON_CONTROL_RANGE(BN_CLICKED, IDC_CHECK_M10_00, IDC_CHECK_M10_31, OnBnClickedCheckM10)
+  ON_CONTROL_RANGE(BN_CLICKED, IDC_CHECK_M11_00, IDC_CHECK_M11_31, OnBnClickedCheckM11)
+
+
   ON_CONTROL_RANGE(BN_CLICKED, IDC_CHECK_MC_00, IDC_CHECK_MC_31, OnBnClickedCheckMC)
   ON_CONTROL_RANGE(BN_CLICKED, IDC_CHECK_MV_00, IDC_CHECK_MV_31, OnBnClickedCheckMV)
   ON_BN_CLICKED(IDC_CONFIG_REG_BTN, &CIoTester::OnBnClickedConfigRegBtn)
@@ -84,6 +90,16 @@ BOOL CIoTester::GetAllRegister()
   if(!ret) return ret;
   ret = SetOneRegister(0x2000F034, IDC_STATIC_F034, IDC_CHECK_M7_00, IDC_EDIT_F034);
   if(!ret) return ret;
+
+  ret = SetOneRegister(0x2000F024, IDC_STATIC_F024, IDC_CHECK_M8_00, IDC_EDIT_F024);
+  if(!ret) return ret;
+  ret = SetOneRegister(0x2000F0F0, IDC_STATIC_F0F0, IDC_CHECK_M9_00, IDC_EDIT_F0F0);
+  if(!ret) return ret;
+  ret = SetOneRegister(0x2000F0F4, IDC_STATIC_F0F4, IDC_CHECK_M10_00, IDC_EDIT_F0F4);
+  if(!ret) return ret;
+  ret = SetOneRegister(0x2000F0F8, IDC_STATIC_F0F8, IDC_CHECK_M11_00, IDC_EDIT_F0F8);
+  if(!ret) return ret;
+
 
   ret = SetOneRegister(0x2000F090, IDC_STATIC_F090, 0, IDC_EDIT_F090);
   if(!ret) return ret;
@@ -176,6 +192,26 @@ void CIoTester::OnBnClickedCheckM7(UINT nID)
   UpdateOneRegister(IDC_CHECK_M7_00, IDC_EDIT_F034);
 }
 
+void CIoTester::OnBnClickedCheckM8(UINT nID)  
+{
+  UpdateOneRegister(IDC_CHECK_M8_00, IDC_EDIT_F024);
+}
+
+void CIoTester::OnBnClickedCheckM9(UINT nID)  
+{
+  UpdateOneRegister(IDC_CHECK_M8_00, IDC_EDIT_F0F0);
+}
+
+void CIoTester::OnBnClickedCheckM10(UINT nID)  
+{
+  UpdateOneRegister(IDC_CHECK_M10_00, IDC_EDIT_F0F4);
+}
+
+void CIoTester::OnBnClickedCheckM11(UINT nID)  
+{
+  UpdateOneRegister(IDC_CHECK_M11_00, IDC_EDIT_F0F8);
+}
+
 void CIoTester::OnBnClickedCheckMC(UINT nID)  
 {
   UpdateOneRegister(IDC_CHECK_MC_00, IDC_EDIT_100C);
@@ -207,6 +243,12 @@ void CIoTester::OnBnClickedConfigRegBtn()
   ConfigureOneRegister(0x2000F0BC, IDC_STATIC_F0BC, IDC_EDIT_F0BC, IDC_CHECK_M5_00);
   ConfigureOneRegister(0x2000F02C, IDC_STATIC_F02C, IDC_EDIT_F02C, IDC_CHECK_M6_00);
   ConfigureOneRegister(0x2000F034, IDC_STATIC_F034, IDC_EDIT_F034, IDC_CHECK_M7_00);
+
+  ConfigureOneRegister(0x2000F024, IDC_STATIC_F024, IDC_EDIT_F024, IDC_CHECK_M8_00);
+  ConfigureOneRegister(0x2000F0F0, IDC_STATIC_F0F0, IDC_EDIT_F0F0, IDC_CHECK_M9_00);
+  ConfigureOneRegister(0x2000F0F4, IDC_STATIC_F0F4, IDC_EDIT_F0F4, IDC_CHECK_M10_00);
+  ConfigureOneRegister(0x2000F0F8, IDC_STATIC_F0F8, IDC_EDIT_F0F8, IDC_CHECK_M11_00);
+
   ConfigureOneRegister(0x2000100C, IDC_STATIC_100C, IDC_EDIT_100C, IDC_CHECK_MC_00);
 
   ConfigureOneRegister(0x2000F090, IDC_STATIC_F090, IDC_EDIT_F090, 0);

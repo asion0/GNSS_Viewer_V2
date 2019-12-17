@@ -61,9 +61,14 @@ namespace Utility
 	CString GetSpecialFolder(INT iFolder);	//See define: CSIDL_APPDATA
 
   //Path utilities
+
+  // "C:\\Abc\\Def\\ghijk.mno" -> "C:\\Abc\\Def", "C:\\Abc\\ghijk.mno" -> "C:"
 	CString GetFilePath(LPCTSTR pszPathname);
-	CString GetFileName(LPCTSTR pszPathname);
+	// "C:\\Abc\\Def\\ghijk.mno" -> "ghijk.mno",
+  CString GetFileName(LPCTSTR pszPathname);
+  // "C:\\Abc\\Def\\ghijk.mno" -> "C:\\Abc\\Def\\ghijk"
   CString GetFilePathName(LPCTSTR pszPathname);
+  // "C:\\Abc\\Def\\ghijk.mno" -> "mno"
 	CString GetFileExt(LPCTSTR pszPathname);
 
   //Profile ini parser
@@ -147,10 +152,11 @@ protected:
 
 class BinaryData
 {
-private:
+protected:
 	U08* dataPtr;
 	int dataSize;
 	int iter;
+
 public:
 	BinaryData() 
 	{ 
@@ -177,13 +183,8 @@ public:
 	{ 
 		dataSize = 0; 
 		dataPtr = NULL;
-		iter = 0;
-
-		if(src.Ptr())
-		{
-			Alloc(src.Size());
-			memcpy(dataPtr, src.Ptr(), dataSize);
-		}
+    iter = 0;
+    Copy(src);
 	};
 
 	BinaryData(UINT id, LPCSTR type) 
@@ -191,7 +192,6 @@ public:
 		dataSize = 0; 
 		dataPtr = NULL;
 		iter = 0;
-
 		ReadFromResource(id, type);	
 	};
 
@@ -207,6 +207,23 @@ public:
 	{ 
 		Free(); 
 	};
+
+  void Copy(const BinaryData& src)
+	{
+		if(dataSize > 0 && dataPtr)
+		{
+			Free();
+		}
+		dataSize = 0; 
+		dataPtr = NULL;
+		iter = 0;
+
+		if(src.Ptr())
+		{
+			Alloc(src.Size());
+			memcpy(dataPtr, src.Ptr(), dataSize);
+		}
+	}
 
 	void Free()
 	{
@@ -237,11 +254,13 @@ public:
 		{
 			return 0;
 		}
-		dataSize = (int)f.GetLength();
+		
 		if(dataSize > 0 && dataPtr)
 		{
 			Free();
 		}
+
+    dataSize = (int)f.GetLength();
 		dataPtr = new U08[dataSize];
 		f.Read(dataPtr, dataSize);
 		f.Close();

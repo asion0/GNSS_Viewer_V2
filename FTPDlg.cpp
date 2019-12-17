@@ -73,7 +73,7 @@ BOOL CFTPDlg::OnInitDialog()
 	m_progress.SetRange(0, 100);
 	m_progress.SetPos(0);	
 	m_closeBtn.EnableWindow(TRUE);
-	if(!IS_DEBUG)
+	if(!IS_DEBUG && !DEVELOPER_VERSION)
 	{	//Customer Release doesn't show ftp information. 2013/11/11
 		GetDlgItem(IDC_HOST_T)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_NAME_T)->ShowWindow(SW_HIDE);
@@ -93,9 +93,17 @@ BOOL CFTPDlg::OnInitDialog()
 	case 2:
 		break;
 	case 3:
-		this->SetWindowText("ROM AGPS");
+		this->SetWindowText("ROM AGPS Download");
 		break;
 	case 4:
+		break;	
+	case 5:
+    this->SetWindowText("Phoenix AGPS Download");
+    GetDlgItem(IDC_FILE)->ShowWindow(SW_SHOW);
+    GetDlgItem(IDC_FILE_T)->ShowWindow(SW_SHOW);
+	  m_name.SetWindowText("phoenix");
+	  m_pwd.SetWindowText("phoenix");
+    GetDlgItem(IDC_FILE)->SetWindowText("");
 		break;	
 	default:
 		break;
@@ -122,13 +130,18 @@ void CFTPDlg::SetMode(int m)
 		break;
 	case 4:
 		m_ephFileName = EphOldFile;
-		break;	
+		break;
+	case 5:
+		m_ephFileName = "";
+		break;
 	default:
 		break;
 	}
 }
 
-bool CFTPDlg::GetFtpFile()
+bool CFTPDlg::DownloadFromFtpServer(CProgressCtrl* pProgress, CWnd* pTextWnd,
+  LPCSTR pszHost, LPCSTR pszUsername, LPCSTR pszPassword, int nPort,
+  LPCSTR fileName)
 {
 	CInternetSession sess(0, 0, INTERNET_OPEN_TYPE_DIRECT);
 	unsigned long timeOut = 300000;
@@ -145,32 +158,38 @@ bool CFTPDlg::GetFtpFile()
 
 	CString strMsg;
 	bool isFileExist = false;
-	m_progress.SetPos(0);
+	if(pProgress) pProgress->SetPos(0);
+  //m_progress.SetPos(0);
 	try
 	{      
-		CString sHost;
-		CString sUsername; 
-		CString sPassword; 
-		CString sPort; 
-		m_host.GetWindowText(sHost);
-		m_name.GetWindowText(sUsername);
-		m_pwd.GetWindowText(sPassword);
-		m_port.GetWindowText(sPort);
-		int nPort  = atoi(sPort); 
+		//CString sHost;
+		//CString sUsername; 
+		//CString sPassword; 
+		//CString sPort; 
+		//m_host.GetWindowText(sHost);
+		//m_name.GetWindowText(sUsername);
+		//m_pwd.GetWindowText(sPassword);
+		//m_port.GetWindowText(sPort);
+		//int nPort  = atoi(sPort); 
 #ifdef FTP_PASSIVE
-		CFtpConnection* pConnect = sess.GetFtpConnection(sHost, sUsername, sPassword, nPort, false);
+		CFtpConnection* pConnect = sess.GetFtpConnection(pszHost, pszUsername, pszPassword, nPort, false);
 #else
-		CFtpConnection* pConnect = sess.GetFtpConnection(sHost, sUsername, sPassword, nPort, true);
+		CFtpConnection* pConnect = sess.GetFtpConnection(pszHost, pszUsername, pszPassword, nPort, true);
 #endif
-		strMsg.Format("connect to %s successfully!", sHost);
-		m_text.SetWindowText(strMsg);
+    if(pTextWnd)
+    {
+		  strMsg.Format("connect to %s successfully!", pszHost);
+		  pTextWnd->SetWindowText(strMsg);
+    }
 
-		CString strLocalName, strRemotePath;
-		strLocalName = m_ephFileName;
+		CString strLocalName(fileName), strRemotePath;
+		//strLocalName = m_ephFileName;
 		strRemotePath.Format("ephemeris\\%s", strLocalName);
-
-		strMsg.Format("Downloading %s from %s", strLocalName, sHost);
-		m_text.SetWindowText(strMsg);
+    if(pTextWnd)
+    {
+		  strMsg.Format("Downloading %s from %s", strLocalName, pszHost);
+		  pTextWnd->SetWindowText(strMsg);
+    }
 		if(!pConnect->GetFile(strRemotePath, strLocalName, false))
 		{
 			DWORD err = GetLastError();
@@ -198,16 +217,113 @@ bool CFTPDlg::GetFtpFile()
 	}
 
 	return isFileExist;
+
+}
+
+bool CFTPDlg::GetFtpFile()
+{
+  CString sHost;
+  CString sUsername; 
+  CString sPassword; 
+  CString sPort; 
+  m_host.GetWindowText(sHost);
+  m_name.GetWindowText(sUsername);
+  m_pwd.GetWindowText(sPassword);
+  m_port.GetWindowText(sPort);
+  int nPort  = atoi(sPort); 
+
+  return DownloadFromFtpServer(&m_progress, &m_text, sHost, sUsername, sPassword, nPort, m_ephFileName);
+//	CInternetSession sess(0, 0, INTERNET_OPEN_TYPE_DIRECT);
+//	unsigned long timeOut = 300000;
+//	sess.SetOption(INTERNET_OPTION_CONNECT_TIMEOUT, timeOut);
+//	sess.SetOption(INTERNET_OPTION_CONTROL_RECEIVE_TIMEOUT, timeOut);    
+//	sess.SetOption(INTERNET_OPTION_CONTROL_SEND_TIMEOUT, timeOut);    
+//	sess.SetOption(INTERNET_OPTION_DATA_RECEIVE_TIMEOUT, timeOut * 10);    
+//	sess.SetOption(INTERNET_OPTION_DATA_SEND_TIMEOUT, timeOut * 10);    
+//	sess.SetOption(INTERNET_OPTION_SEND_TIMEOUT, timeOut);  
+//	sess.SetOption(INTERNET_OPTION_RECEIVE_TIMEOUT, timeOut * 10);  
+//	sess.SetOption(INTERNET_OPTION_DISCONNECTED_TIMEOUT, timeOut);  
+//	sess.SetOption(INTERNET_OPTION_FROM_CACHE_TIMEOUT, timeOut);  
+//	sess.SetOption(INTERNET_OPTION_LISTEN_TIMEOUT, timeOut);  
+//
+//	CString strMsg;
+//	bool isFileExist = false;
+  
+//	m_progress.SetPos(0);
+//	try
+//	{      
+//		CString sHost;
+//		CString sUsername; 
+//		CString sPassword; 
+//		CString sPort; 
+//		m_host.GetWindowText(sHost);
+//		m_name.GetWindowText(sUsername);
+//		m_pwd.GetWindowText(sPassword);
+//		m_port.GetWindowText(sPort);
+//		int nPort  = atoi(sPort); 
+//#ifdef FTP_PASSIVE
+//		CFtpConnection* pConnect = sess.GetFtpConnection(sHost, sUsername, sPassword, nPort, false);
+//#else
+//		CFtpConnection* pConnect = sess.GetFtpConnection(sHost, sUsername, sPassword, nPort, true);
+//#endif
+//		strMsg.Format("connect to %s successfully!", sHost);
+//		m_text.SetWindowText(strMsg);
+//
+//		CString strLocalName, strRemotePath;
+//		strLocalName = m_ephFileName;
+//		strRemotePath.Format("ephemeris\\%s", strLocalName);
+//
+//		strMsg.Format("Downloading %s from %s", strLocalName, sHost);
+//		m_text.SetWindowText(strMsg);
+//		if(!pConnect->GetFile(strRemotePath, strLocalName, false))
+//		{
+//			DWORD err = GetLastError();
+//			strMsg = Utility::ErrorString(err);
+//			AfxMessageBox(strMsg);
+//		}
+//		else
+//		{
+//			isFileExist = true;
+//		}
+//
+//		if(pConnect != NULL)
+//		{
+//			pConnect->Close();
+//		}
+//		delete pConnect;
+//	}
+//	catch (CInternetException* pEx)
+//	{
+//		TCHAR sz[1024];
+//		pEx->GetErrorMessage(sz, 1024);
+//		printf("ERROR!  %s\n", sz);
+//		pEx->Delete();
+//		AfxMessageBox(sz);
+//	}
+//
+//	return isFileExist;
 }
 
 void CFTPDlg::GetAgpsFile()
 {	
-	if(m_agpsMode==4 || GetFtpFile())
+  CGPSDlg::gpsDlg->SendRestartCommand(2);
+  bool ret = GetFtpFile();
+  if(!ret)
+  {
+    m_text.SetWindowText("Can't download ephemeris from FTP server!");
+    PostMessage(WM_CLOSE, 0, 0);
+    return;
+  }
+  m_progress.SetPos(100);
+	if(m_agpsMode == 4)
 	{
-		m_progress.SetPos(100);
 		m_text.SetWindowText("Start to set the predicted ephemeris to target!");
-		FindEphemerisFile();	
 	}
+	else if(m_agpsMode == 5)
+	{
+		m_text.SetWindowText("Start to set the ephemeris to target!");
+	}
+  FindEphemerisFile();	
 	PostMessage(WM_CLOSE, 0, 0);
 }
 
@@ -249,6 +365,10 @@ UINT DoFtpThread(LPVOID pParam)
 
 void CFTPDlg::OnBnClickedConnect()
 {	
+  if(m_agpsMode == 5)
+  {
+    GetDlgItem(IDC_FILE)->GetWindowText(m_ephFileName);
+  }
 	m_connectBtn.EnableWindow(FALSE);
 	m_closeBtn.EnableWindow(FALSE);
 	CGPSDlg::gpsDlg->m_nDownloadBaudIdx = g_setting.boostBaudIndex;
@@ -277,6 +397,10 @@ void CFTPDlg::FindEphemerisFile()
 	else if(m_agpsMode == 4)
 	{
 		GetAllDatFileSrec();
+	}	
+	else if(m_agpsMode == 5)
+	{
+		DoPhoenixAgps();
 	}	
 	remove(m_ephFileName);
 }
@@ -366,6 +490,12 @@ bool CFTPDlg::TransferFile(BinaryData& ephData)
 	return ret;
 }
 
+void CFTPDlg::DoPhoenixAgps()
+{
+  //CGPSDlg::gpsDlg->SendRestartCommand(2);
+  CGPSDlg::gpsDlg->OpenAndSetAgpsEphemerisFile(m_ephFileName, false);
+}
+
 void CFTPDlg::DoRomAgps()
 {
 	BinaryData eph4Data(m_ephFileName);
@@ -378,11 +508,11 @@ void CFTPDlg::DoRomAgps()
 		return;
 	}
 	m_text.SetWindowText("Warm start the target.");
-	if(2==m_agpsMode)
+	if(2 == m_agpsMode)
 	{
 		CGPSDlg::gpsDlg->SendRestartCommand(2);
 	}
-	else if(3==m_agpsMode)
+	else if(3 == m_agpsMode)
 	{
 		CGPSDlg::gpsDlg->SendRestartCommand(4);
 	}

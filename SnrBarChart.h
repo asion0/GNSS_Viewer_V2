@@ -82,7 +82,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-
 class CSnrBarChartDual : public CSnrBarChart
 {
 public:
@@ -103,9 +102,53 @@ protected:
 	UISetting* uiSetting2;
 
 	virtual void ShowBoxChart(CDC *dc);
-	//void DrawGpsSnr(CDC *dc, int& end);
-	//void DrawGlonassSnr(CDC *dc, int& start);
-	//bool CheckInUse2(int id);
+
+	afx_msg void OnPaint();
+
+	DECLARE_MESSAGE_MAP()
+};
+
+class CSnrBarChartMulti : public CSnrBarChart
+{
+public:
+	CSnrBarChartMulti();
+	~CSnrBarChartMulti(void);
+
+	void SetGsvData(int index, GPGSV* gsv) 
+  { 
+    gsvDataP[index] = gsv; 
+    if(index == 0) { CSnrBarChart::gsvData = gsv; }
+  };
+	void SetGsaData(int index, GPGSA* gsa) 
+  { 
+    gsaDataP[index] = gsa; 
+    if(index == 0) { CSnrBarChart::gsaData = gsa; }
+  };
+	void SetGgaData(int index, GPGGA* gga) 
+  { 
+    ggaDataP[index] = gga; 
+    if(index == 0) { CSnrBarChart::ggaData = gga; }
+  };
+	void SetSateStatus(int index, Satellites* sata) 
+  { 
+    sateStatusP[index] = sata; 
+     if(index == 0) { CSnrBarChart::sateStatus = sata; }
+ };
+	void SetUISetting(int index, UISetting* p) 
+  { 
+    uiSettingP[index] = p;
+    if(index == 0) { CSnrBarChart::SetUISetting(p); }
+  }
+
+protected:
+  enum { MaxSystemCount = 3 };
+	GPGSV* gsvDataP[MaxSystemCount];
+	GPGSA* gsaDataP[MaxSystemCount];
+	GPGGA* ggaDataP[MaxSystemCount];
+	Satellites* sateStatusP[MaxSystemCount];
+	UISetting* uiSettingP[MaxSystemCount];
+
+	virtual void ShowBoxChart(CDC *dc);
 
 	afx_msg void OnPaint();
 
@@ -119,10 +162,6 @@ public:
 	CSnrBarChartL2(int type);
 	~CSnrBarChartL2(void);
 
-	//void SetGsvDataSub(GPGSV* gsv) { gsvDataSub = gsv; };
-	//void SetGsaDataSub(GPGSA* gsa) { gsaDataSub = gsa; };
-	//void SetGgaDataSub(GPGGA* gga) { ggaDataSub = gga; };
-	//void SetSateStatusSub(Satellite* sata) { sateStatusSub = sata; };
 	void SetUISettingSub(UISetting* p) { uiSettingSub = p; }
 
 protected:

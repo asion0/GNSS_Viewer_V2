@@ -18,14 +18,17 @@ public:
 		GpsEphemeris = 0,
 		GlonassEphemeris,
 		BeidouEphemeris,
-		GalileoEphemeris
+		GalileoEphemeris,
+    NavicEphemeris,
+    GpsQzssEphemeris,
+    QzssEphemeris
 	};
 	EphemerisType GetEphemerisType() { return ephType; }
 	void SetEphemerisType(EphemerisType s) { ephType = s; };	
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
-	CString GetEphemerisNmae();
+	CString GetEphemerisName();
 
 	DECLARE_MESSAGE_MAP()
 public:

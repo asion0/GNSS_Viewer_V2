@@ -3,7 +3,6 @@
 
 // BinaryChecksumCalDlg
 class BinaryData;
-
 class BinaryChecksumCalDlg : public CDialog
 {
 	DECLARE_DYNAMIC(BinaryChecksumCalDlg)
@@ -12,6 +11,10 @@ public:
 	BinaryChecksumCalDlg(CWnd* pParent = NULL);   // 
 	virtual ~BinaryChecksumCalDlg();
 //	enum { IDD = IDD_BIN_CHECKSUM_CAL };
+  enum Mode {
+    CalcCheckSum,
+    RawData
+  };
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
@@ -19,10 +22,11 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	virtual BOOL OnInitDialog();
+  void SetMode(Mode m) { m_mode = m; }
 	afx_msg void OnEnChangeInput();
-protected:
-	virtual void OnOK();
-
-public:
 	afx_msg void OnBnClickedSend();
+
+protected:
+  Mode m_mode;
+	virtual void OnOK();
 };

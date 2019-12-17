@@ -373,7 +373,6 @@ bool Utility::IsNamedPipeUsing(LPCTSTR name)
 {
 	CString pipeName;
 	pipeName.Format("//./pipe/%s", name);
-	//HANDLE h = CreateFile("//./pipe/SkytraqIQPlotPipe", GENERIC_WRITE,
 	HANDLE h = CreateFile(pipeName, GENERIC_WRITE,
 		FILE_SHARE_READ | FILE_SHARE_WRITE , NULL, OPEN_EXISTING,
 		FILE_ATTRIBUTE_NORMAL, NULL);
@@ -381,7 +380,7 @@ bool Utility::IsNamedPipeUsing(LPCTSTR name)
 	{
 		::CloseHandle(h);
 	}
-    return (h != INVALID_HANDLE_VALUE);
+  return (h != INVALID_HANDLE_VALUE);
 }
 
 // delete directory
@@ -496,7 +495,7 @@ CString Utility::GetFilePath(LPCTSTR pszPathname)
 	{
 		return CString(_T(""));
 	}
-	else if(nSlash>0)	//Has slash, before slash is the path.
+	else if(nSlash > 0)	//Has slash, before slash is the path.
 	{
 		strRet = strRet.Left(nSlash);
 	}

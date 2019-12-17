@@ -22,38 +22,41 @@ void CPic_Earth::InitCheck()
 {
 	CRect chkRect;
 
-	chkRect.SetRect(262, 170, 306, 190);
+	chkRect.SetRect(262, 150, 306, 170);
 	m_gpCheck.Create( "GPS", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_RIGHT,  
                    chkRect, this, 1023);  
 	m_gpCheck.SetCheck(1);
 
 #ifdef _NAVIC_CONVERT_
-	chkRect.SetRect(250, 190, 306, 210);
-	m_glCheck.Create( "NAVIC", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_RIGHT,  
+	chkRect.SetRect(250, 170, 306, 190);
+	m_glCheck.Create( "NavIC", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_RIGHT,  
                    chkRect, this, 1024); 
 #else
-	chkRect.SetRect(236, 190, 306, 210);
+	chkRect.SetRect(236, 170, 306, 190);
 	m_glCheck.Create( "Glonass", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_RIGHT,  
                    chkRect, this, 1024); 
 #endif
 	m_glCheck.SetCheck(1);
 
-	chkRect.SetRect(244, 210, 306, 230);
+	chkRect.SetRect(244, 190, 306, 210);
 	m_bdCheck.Create( "Beidou", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_RIGHT,  
                    chkRect, this, 1025);  
 	m_bdCheck.SetCheck(1);
 
-	chkRect.SetRect(244, 230, 306, 250);
-	m_giCheck.Create( "NAVIC", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_RIGHT,  
-                  chkRect, this, 1026);
-
-	chkRect.SetRect(244, 230, 306, 250);
+	chkRect.SetRect(244, 210, 306, 230);
 	m_gaCheck.Create( "Galileo", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_RIGHT,  
                   chkRect, this, 1026);  
+	m_gaCheck.SetCheck(1);
+
+  chkRect.SetRect(244, 230, 306, 250);
+	m_giCheck.Create( "NavIC", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_RIGHT,  
+                  chkRect, this, 1026);
+	m_giCheck.SetCheck(1);
+
 
 #ifdef _NAVIC_SUPPORT_
-	m_gaCheck.SetCheck(0);
-  m_gaCheck.ShowWindow(SW_HIDE);
+	//m_gaCheck.SetCheck(0);
+ // m_gaCheck.ShowWindow(SW_HIDE);
 	m_giCheck.SetCheck(1);
 #else
 	m_gaCheck.SetCheck(1);
@@ -172,36 +175,30 @@ void CPic_Earth::Show_EarthChart(CDC *dc)
 
 void CPic_Earth::DrawEarthSate(CDC* dc, UISetting* s, Satellites* sate, GPGSV* gsv, GPGSA* gsa, GPGGA* gga)
 {
-	int centerX = 250 / 2;
-	int centerY = 250 / 2;
+	const int centerX = 250 / 2;
+	const int centerY = 250 / 2;
+  const double radius = 114;
 	int x = 0, y = 0;
-	double ele = 0.0;	       
 	int id = 0;
 
 	for(int i = 0; i < sate->GetSateCount(); ++i)
 	{
-		//id = sate[i].SatelliteID;
+		//id = sate[i].prn;
     const Satellite* pSate = sate->GetSateIndex(i);
-    id = pSate->SatelliteID;
-		if(id == 0)
+    id = pSate->GetPrn();
+		if(!pSate->IsInUsePrn())
 		{
 			continue;	
 		}
 		//Elevation 0~90 degrees
 		//Azimuth  0~359 degrees
-		//Elevation = 75*cos(satellites[i].Elevation*PI/180);	
-		U16 azimuth = pSate->Azimuth;
-		U16 elevation = pSate->Elevation;
-		U16 qtyInd = gga->GPSQualityIndicator;
+		//Elevation = 75 * cos(satellites[i].Elevation * PI / 180);	
+		U16 azi = pSate->GetAzi();
+		U16 ele = pSate->GetEle();
+		double e = radius - (radius * ele / 90.0);			
+		x = centerX + (int)(e * sin(azi * PI / 180.0));
+		y = centerY - (int)(e * cos(azi * PI / 180.0));
 
-		ele = 114.0 - ( 114.0 * elevation / 90.0);			
-		x = (int)(ele * sin(azimuth * PI / 180.0));
-		y = -(int)(ele * cos(azimuth * PI / 180.0));
-
-		x += centerX;
-		y += centerY;	
-
-		//bool isInUse = IsFixed(qtyInd) && !CheckInUse(id, gsa);
 		bool isInUse = !CheckInUse(id, gsa);
 
 #ifdef _NAVIC_CONVERT_

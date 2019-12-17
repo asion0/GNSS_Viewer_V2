@@ -4,7 +4,7 @@
 
 UISetting::UISetting(COLORREF bk, COLORREF line, COLORREF inPen, COLORREF noPen, 
 					 COLORREF inBru, COLORREF noBru, COLORREF inTxt, 
-					 COLORREF noTxt, COLORREF inIcoTxt, COLORREF noIcoTxt, 
+					 COLORREF noTxt, COLORREF inIcoTxt, COLORREF noIcoTxt, COLORREF faultPen,
 					 UINT inBmp, UINT noBmp, int idFontSize, int barFontSize) :
 	panelBkColor(bk),
 	panelLineColor(line),
@@ -16,6 +16,7 @@ UISetting::UISetting(COLORREF bk, COLORREF line, COLORREF inPen, COLORREF noPen,
 	noUseBarTextColor(noTxt),
 	inUseIcoTextColor(inIcoTxt),
 	noUseIcoTextColor(noIcoTxt),
+  faultSnrBarPenColor(faultPen),
 	panelBkBrush(bk),
 	panelLinePen(PS_SOLID, 1, line),
 	inUseSateBmpId(inBmp),
@@ -23,7 +24,8 @@ UISetting::UISetting(COLORREF bk, COLORREF line, COLORREF inPen, COLORREF noPen,
 	inUseSnrBarPen(PS_SOLID, 1, inPen),
 	inUseSnrBarBrush(inBru),
 	noUseSnrBarPen(PS_SOLID, 1, noPen),
-	noUseSnrBarBrush(noBru)
+	noUseSnrBarBrush(noBru),
+	faultSnrBarPen(PS_SOLID, 2, faultPen)
 {
 	idFont.CreateFont(
 		idFontSize, //   LONG      lfHeight;
@@ -76,42 +78,48 @@ UISetting gpUI(RGB(255, 255, 204), RGB(150, 150, 150),
 			   RGB(200, 200, 200), RGB( 26, 144, 255), 
 			   RGB( 26, 144, 255), RGB(255, 255, 255), 
 			   RGB(255, 255, 255), RGB(128, 128, 128), //inTxt, noTxt
-			   RGB(255, 255, 255), RGB( 61, 179, 255), //inIcoTxt, noIcoTxt, 
+			   RGB(255, 255, 255), RGB( 26, 144, 255), //inIcoTxt, noIcoTxt, 
+         RGB(254, 0, 0),  //fault color
 			   IDB_GP_ACT, IDB_GP_DIS);
 
-UISetting glUI(RGB(255, 255, 204), RGB(150, 150, 150), 
+UISetting giUI(RGB(255, 255, 204), RGB(150, 150, 150), 
 			   RGB(200, 200, 200), RGB(156, 102, 204), 
 			   RGB(156, 102, 204), RGB(255, 255, 255), 
 			   RGB(255, 255, 255), RGB(128, 128, 128),
-			   RGB(255, 255, 255), RGB(195, 128, 255), //inIcoTxt, noIcoTxt, 
-			   IDB_GL_ACT, IDB_GL_DIS);
+			   RGB(255, 255, 255), RGB(156, 102, 204), //inIcoTxt, noUseIcoTextColor, 
+         RGB(254, 0, 0),  //fault color
+			   IDB_GI_ACT, IDB_GI_DIS);
 
 UISetting bdUI(RGB(204, 255, 255), RGB(150, 150, 150), 
 			   RGB(200, 200, 200), RGB(255, 153,   0), 
 			   RGB(255, 153,   0), RGB(255, 255, 255), 
 			   RGB(255, 255, 255), RGB(128, 128, 128),
 			   RGB(255, 255, 255), RGB(255, 153,   0), 
+         RGB(254, 0, 0),  //fault color
 			   IDB_BD_ACT, IDB_BD_DIS);
 
 UISetting gaUI(RGB(255, 217, 217), RGB(150, 150, 150), 
-			   RGB(200, 200, 200), RGB( 90, 190, 45), 
-			   RGB( 90, 190, 45), RGB(255, 255, 255), 
+			   RGB(200, 200, 200), RGB(153, 204,  51), 
+			   RGB(153, 204,  51), RGB(255, 255, 255), 
 			   RGB(255, 255, 255), RGB(128, 128, 128),
-			   RGB(255, 255, 255), RGB( 90, 190, 45), 
+			   RGB(255, 255, 255), RGB(153, 204,  51), 
+         RGB(254, 0, 0),  //fault color
 			   IDB_GA_ACT, IDB_GA_DIS);
 
-UISetting giUI(RGB(255, 217, 217), RGB(150, 150, 150), 
-			   RGB(200, 200, 200), RGB( 90, 190, 45), 
-			   RGB( 90, 190, 45), RGB(255, 255, 255), 
+UISetting glUI(RGB(255, 217, 217), RGB(150, 150, 150), 
+			   RGB(200, 200, 200), RGB( 70, 193, 132), 
+			   RGB( 70, 193, 132), RGB(255, 255, 255), 
 			   RGB(255, 255, 255), RGB(128, 128, 128),
-			   RGB(255, 255, 255), RGB( 90, 190, 45), 
-			   IDB_GA_ACT, IDB_GA_DIS);
+			   RGB(255, 255, 255), RGB( 70, 193, 132), 
+         RGB(254, 0, 0),  //fault color
+			   IDB_GL_ACT, IDB_GL_DIS);
 
 UISetting bdl1UI(RGB(204, 255, 255), RGB(150, 150, 150), 
 			   RGB(200, 200, 200), RGB(255, 153,   0), 
 			   RGB(255, 153,   0), RGB(255, 255, 255), 
 			   RGB(255, 255, 255), RGB(128, 128, 128),
 			   RGB(255, 255, 255), RGB(255, 153,   0), 
+         RGB(254, 0, 0),  //fault color
 			   IDB_BD_ACT, IDB_BD_DIS, 17, 14);
 
 UISetting bdl2UI(RGB(255, 217, 217), RGB(150, 150, 150), 
@@ -119,6 +127,7 @@ UISetting bdl2UI(RGB(255, 217, 217), RGB(150, 150, 150),
 			   RGB(255, 199, 114), RGB(255, 255, 255), 
 			   RGB(255, 255, 255), RGB(128, 128, 128),
 			   RGB(255, 255, 255), RGB(255, 199, 114), 
+         RGB(254, 0, 0),  //fault color
 			   IDB_BD_ACT, IDB_BD_DIS, 17, 14);
 
 UISetting gpl1UI(RGB(255, 255, 204), RGB(150, 150, 150),
@@ -126,6 +135,7 @@ UISetting gpl1UI(RGB(255, 255, 204), RGB(150, 150, 150),
 			   RGB( 26, 144, 255), RGB(255, 255, 255), 
 			   RGB(255, 255, 255), RGB(128, 128, 128), //inTxt, noTxt
 			   RGB(255, 255, 255), RGB( 61, 179, 255), //inIcoTxt, noIcoTxt, 
+         RGB(254, 0, 0),  //fault color
 			   IDB_GP_ACT, IDB_GP_DIS, 17, 14);
 
 UISetting gpl2UI(RGB(255, 255, 204), RGB(150, 150, 150),
@@ -133,20 +143,21 @@ UISetting gpl2UI(RGB(255, 255, 204), RGB(150, 150, 150),
 			   RGB(128, 194, 255), RGB(255, 255, 255), 
 			   RGB(255, 255, 255), RGB(128, 128, 128), //inTxt, noTxt
 			   RGB(255, 255, 255), RGB(128, 194, 255), //inIcoTxt, noIcoTxt, 
+         RGB(254, 0, 0),  //fault color
 			   IDB_GP_ACT, IDB_GP_DIS, 17, 14);
-
 
 UISetting gll1UI(RGB(255, 255, 204), RGB(150, 150, 150), 
 			   RGB(200, 200, 200), RGB(156, 102, 204), 
 			   RGB(156, 102, 204), RGB(255, 255, 255), 
 			   RGB(255, 255, 255), RGB(128, 128, 128),
 			   RGB(255, 255, 255), RGB(195, 128, 255), //inIcoTxt, noIcoTxt, 
+         RGB(254, 0, 0),  //fault color
 			   IDB_GL_ACT, IDB_GL_DIS, 17, 14);
-
 
 UISetting gll2UI(RGB(255, 255, 204), RGB(150, 150, 150), 
 			   RGB(200, 200, 200), RGB(156, 102, 204), 
 			   RGB(192, 159, 223), RGB(255, 255, 255), 
 			   RGB(255, 255, 255), RGB(128, 128, 128),
 			   RGB(255, 255, 255), RGB(193, 159, 223), //inIcoTxt, noIcoTxt, 
+         RGB(254, 0, 0),  //fault color
 			   IDB_GL_ACT, IDB_GL_DIS, 17, 14);

@@ -295,7 +295,7 @@ void CKmlDlg::OnBnClickedOk()
 	m_directory.GetWindowText(fileName);
 	if(fileName.IsEmpty())
 	{
-	  AfxMessageBox("您尚未選擇任何檔案", MB_YESNOCANCEL | MB_ICONQUESTION);
+	  AfxMessageBox("Please select at least one file!", MB_YESNOCANCEL | MB_ICONQUESTION);
     return;
 	}
 
@@ -892,7 +892,7 @@ bool CKmlDlg::WriteToFile2(U08 type)
       &msg_gprmc.SpeedKnots,
       &msg_gprmc.TrueCourse,
       timeStr,
-      GetGnssQualityMode(msg_gprmc.ModeIndicator));
+      GetGnssQualityMode(msg_gprmc.ModeIndicator, (U08)msg_gpgsa.Mode, (U08)msg_glgsa.Mode, (U08)msg_gagsa.Mode, (U08)msg_bdgsa.Mode, (U08)msg_gigsa.Mode));
 		last_hh = msg_gprmc.Hour;
 		last_mm = msg_gprmc.Min;
 		last_ss = msg_gprmc.Sec;

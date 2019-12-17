@@ -139,7 +139,7 @@ void CSkyTraqKml::PushOnePoint2(double lon, double lat, double alt, const F32* s
 
   if(sTs != ts)
   {
-    RealPushOnePoint2(sLon, sLat, sAlt, &sSpeed , &sDegree, sTs, sQm);
+    RealPushOnePoint2(sLon, sLat, sAlt, &sSpeed, &sDegree, sTs, sQm);
   }
   SetPoint(lon, lat, alt, speed, degree, ts, q);
 }
@@ -260,11 +260,10 @@ void CSkyTraqKml::WriteKMLini(CFile& f)
 
 bool CompareByPRN(Satellite const& lhs, Satellite const& rhs)
 {
-	if(lhs.SatelliteID != 0)
+	if(lhs.IsInUsePrn())
   {
-		return lhs.SatelliteID < rhs.SatelliteID;
+		return lhs.GetPrn() < rhs.GetPrn();
   }
-
 	return false;
 }
 
@@ -290,15 +289,16 @@ CString CSkyTraqKml::GenerateSatelliteTable(Satellites* s, GPGSA *gsa)
 	{
     const Satellite* sate = s->GetSateIndex(i);
 		CString ss;
-		if(sate->snr[0] == INVALIDATE_SNR)
+    F32 sn = 0;
+		if(!IsValidateValue(s->GetSnrSigId(0)))
 		{
 			ss.Format("<tr><td>%d</td><td>%d</td><td>%d</td><td>--</td><td>%c</td></tr>", 
-				sate->SatelliteID, sate->Azimuth, sate->Elevation, CheckGsa(sate->SatelliteID, gsa));
+				sate->GetPrn(), sate->GetAzi(), sate->GetEle(), CheckGsa(sate->GetPrn(), gsa));
 		}
 		else
 		{
 			ss.Format("<tr><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%c</td></tr>", 
-				sate->SatelliteID, sate->Azimuth, sate->Elevation, sate->snr[0], CheckGsa(sate->SatelliteID, gsa));
+				sate->GetPrn(), sate->GetAzi(), sate->GetEle(), sn, CheckGsa(sate->GetPrn(), gsa));
 		}
 		str += ss;
 	}
@@ -325,7 +325,7 @@ CString CSkyTraqKml::GetSatelliteInfo()
 		if(satellites_gl->GetSateCount() > 0)
 		{
 #if(_NAVIC_CONVERT_)
-			str += "NAVIC Satellites :<br>";
+			str += "NavIC Satellites :<br>";
 #else
 			str += "GLONASS Satellites :<br>";
 #endif
@@ -549,7 +549,6 @@ void CSkyTraqKml::WriteKMLPath2(CFile& f, double lon, double lat, double alt, co
 			pls.AddTail(strPointList);
 			strPointList.Empty();
 		}
-
 	}
 }
 
@@ -564,9 +563,9 @@ void CSkyTraqKml::WritePOIPath(CFile& f, vector<LL1> *lst)
 		LL1 lla = *iter;
 		str.Format("<Placemark id=\"POI%d\"><styleUrl>#POI_STYLE</styleUrl><name>POI%d</name><LookAt>", id, id++);
 		f.Write(str, str.GetLength());
-		str.Format("<longitude>%012.9lf</longitude><latitude>%012.9lf</latitude></LookAt><Point>\r\n",lla.lon, lla.lat);
+		str.Format("<longitude>%012.9lf</longitude><latitude>%012.9lf</latitude></LookAt><Point>\r\n", lla.lon, lla.lat);
 		f.Write(str, str.GetLength());
-		str.Format("<coordinates>%012.9lf,%012.9lf</coordinates></Point></Placemark>",lla.lon, lla.lat);
+		str.Format("<coordinates>%012.9lf,%012.9lf</coordinates></Point></Placemark>", lla.lon, lla.lat);
 		f.Write(str, str.GetLength());
 	}
 	str = "</Folder>\r\n";

@@ -247,7 +247,7 @@
 // .227 20160919 Add [UART Pass through] to RTK menu, request from Andrew and Ryan.
 // .228 20160930 Add Ins DR menu, request from Andrew and Gin.
 // .229 20161004 Modify InsDR menu message, request from Andrew and Gin.
-// .230 20161007 Add RTK On/OFF SV channel functions, request from Ryan and Andrew.
+// .230 20161007 Add RTK Enable/Disable GPS SV mechanism functions, request from Ryan and Andrew.
 // .231 20161013 Modify ellipsoid altitude and sea level altitude from U32 to S32, request from Ken and Andrew.
 // .232 20161014 NMEA Player support only RMC no GGA, request from Andrew.
 // .233 20161018 Release L2 support and fix PSTI issue, request from Patrick and Ken.
@@ -370,7 +370,78 @@
 // .340 20180914 Add [V9 Configure RF IC] and [V9 Configure IIR] in Utility menu, request from Patrick and Terrance.
 // .341 20180914 Modify [Query Alpha Unique ID] output string format.
 // .342 20180919 Add [Configure/Query NAVIC Message Interval] in Venus 8 menu,  request from Terrance.
-// .343 20181023 Add [Temporarily Activate License] in Alpha menu,  request from Angus.
+// .343 20181023 Add [Temporarily Activate License] in Alpha menu, request from Angus.
+// .344 20181205 Modify QZSS upper prn from 197 to 200, request from Kevin.
+// .345 20181221 Support V9 AES Tag download, request from Andrew.
+// .345 20190109 Add 3 calibration functions in Alpha menu, request from Leo.
+// .345 20190116 NMEA PlaYER check time / date field length avoid crash, report from Leo.
+// .346 20190119 Update download loader for 0x64, 0x1b command.
+// .347 20190201 Support JAXA 0xEF binary message, request from Kevin.
+// .348 20190219 Add "Show all unknown binary command" in Setting for show command return, request from Andrew
+// .348 20190219 Configure / Query PSTI message interval, request from Jason
+// .349 20190225 Add "V9 Internal RF" type in [Utility/Configure RF IC], request from Patrick
+// .350 20190226 Modify "V9 Internal RF" type in [Utility/Configure RF IC], request from Eric
+// .351 20190226 Fixed [Query 1PPS Pulse Width] wrong command, request from Alex
+// .352 20190312 Add [V9 Configure Power Register], request from Patrick
+// .353 20190312 Add Attribute field in ConfigRefTimeToGpsTimeDlg, request from Ken, Andrew
+// .353 20190313 Add [Get / Set Multiple Registers] and remove 16-IO Register items, request from Patrick
+// .354 20190319 Add [Export to file] in [V9 Configure RF IC], request from Ming-Jen
+// .355 20190320 Modify [Get / Set RF IC Register] for SWID, request from Ming-Jen, Eric
+// .356 20190320 Modify [Get / Set Mutiple RF IC Registers] for SWID, request from Ming-Jen, Eric
+// .357 20190325 Add [V9 Power Save By RTC Timer] for SWID, request from Ming-Jen
+// .358 20190328 Fixed [V9 Power Save By RTC Timer] reconnect issue, report by Ming-Jen
+// .359 20190409 Fixed [Log Decompress] rollover issue, add new option in setup for assign rollover cycle, report from Andrew
+// .359 20190409 Add [Configure V9 RF Clock to GPIO0] for SWID, request from Ming-Jen
+// .360 20190416 Support GALILEO and multiple frequency, request from Andrew, Neil and Oliver
+// .360 20190416 Support GB token for BEIDOU, request from Andrew, Neil and Oliver
+// .361 20190416 NAVIC system ID from 4 to 5, report from Neil
+// .362 20190416 Fix GPS Chart issue, report from Andrew and Neil
+// .363 20190417 Fix Earth view issue, report from Eric
+// .364 20190418 Fix GSV parsing signal ID bugs, report from Eric
+// .365 20190418 Fix GNS parsing bugs, report from Eric
+// .366 20190426 Merge BD, GA and GI snr chart display, report from Oliver
+// .367 20190506 Fixed GA NMEA 4.11 issue, report from Eric
+// .368 20190506 Fixed parser memory issue, report from SWID
+// .369 20190509 Fixed multiple frequency parser memory issue, report from SWID
+// .369 20190509 Fixed IqPlot not close when Viewer closed issue, report from Eric
+// .369 20190509 Fixed DataLog menu functions, report from Andrew
+// .369 20190509 Add [DR MEMS Noise Level] function, rquest from Andrew / Roger.
+// .370 20190509 Move [DR MEMS Noise Level] to InternalUse only , rquest from Jason.
+// .371 20190513 Modify [DR MEMS Noise Level] in scientific notation , rquest from Jason, Roger.
+// .372 20190515 Add [Configure/Query ADR Odometer Scaling Factor] in INS DR menu, rquest from Roger, Andrew.
+// .373 20190605 Add [IQ Plot] to Devloper version], rquest from Oliver and Ming-Jen.
+// .374 20190618 Fixed RTCM display issue, report by Andrew.
+// .375 20190625 Customize for LockheedMartin(_LOCKHEED_MARTIN_), rquest from Oliver.  //released special version
+// .376 20190704 Add [PROM ini Generator] in Utility menu, rquest from Andrew.
+// .377 20190704 Modify GPS Ephemeris channel from 32 to 37 for QZSS, rquest from Andrew.
+// .378 20190704 Special version (AUTO_GET_CLOCK_OFFSET) for show clock offset every 3 seconds, rquest from Oliver and Ming-Jen.
+// .379 20190725 Modify pseudorange unit changed to 1 meter for LockheedMartin(_LOCKHEED_MARTIN_), rquest from Oliver.  //released special version
+// .380 20190806 Support Query Extened Id for new AES Tag, rquest from Andrew. 
+// .381 20190822 Remove [Signal Disturbance Test] from Venus 8 menu, rquest from Neil. 
+// .381 20190827 Support multi frequency raw 0xE5, rquest from Neil / Andrew / Ming-Jen. 
+// .382 20190906 Support NCGSA and NCGSV for Quectel LC79D, request from Oliver. 
+// .383 20190912 Merge Get/Set Ephemeris codes 
+// .384 20190912 Auto AGPS for NavIC General version, request from Oliver
+// .385 20190930 Show cycle slip from 0xE5 message, request from Oliver
+// .386 20191001 Fix issue when use NMEA mode show all channel is in cycle slip, report by Ken
+// .387 20191007 Fix attribute issue in Configure RTK Mode and Operational Function, report by Jim
+// .387 20191007 Add Binary Command Tester, request from Andrew
+// .387 20191007 New IQ Plot command and message
+// .388 20191008 Add [Set Ephemeris File Continuously], request from Andrew
+// .388 20191008 Fixed dual frequency raw earth and snr view bugs, report from Ken
+// .389 20191008 Fixed dual frequency raw earth and snr view bugs, report from Ken
+// .390 20191028 Add NAVSPARK_MINI_GPIO_QUERY for a NavSpark customer, report from Oliver
+// .391 20191104 V9 Prom ini generator, request from Andrew
+// .392 20191111 Fix a GGA parsing issue for ©Mªä¬P³q, request from Oliver, Andrew
+// .393 20191113 Modify Configure RF IC by SWIC new spec, request from Ming-Jen
+// .394 20191114 Modify Configure RF IC by SWIC new spec, request from Ming-Jen
+// .395 20191120 Add Test AGPS Server in AGPS menu, request from Andrew
+// .395 20191125 Automatic detect v9 aes tag prom binary file and use 0x64 0x1b command to download, request from Andrew
+// .396 20191129 Dual-freq RTCM support: 1077, 1087, 1107, 1117, 1127, request from Ken and Neil
+// .397 20191212 Update loader_v8_add_tag_20191212113345 for QFN40 V9 with EON16M/8M, Alex released
+// .397 20191212 Add Configure RF Clock Out, request from Ming-Jen
+// .398 20191217 Update loader_v8_add_tag_20191212113345 for V9 EVB W25Q80, report from Ken
+//* means not release
 
 #define SW_FUN_DATALOG		        0x0001
 #define SW_FUN_AGPS				        0x0002
@@ -381,7 +452,7 @@
 //title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 #define APP_CAPTION				        "GNSS Viewer"
 #define APP_TITLE				          ""              //Internal Use, Customer Release, NMEA Player...
-#define APP_VERSION				        "2.0.343"
+#define APP_VERSION				        "2.0.398"
 #define APP_MODULE				        "Venus 8"
 
 #define	Sktyraq					          0x0000
@@ -413,7 +484,17 @@
 #define TIMING_MODE				        1   //20170531, Alex modified from 0 to 1.
 #define _TAB_LAYOUT_			        0   //Information has multiple pages
 #define OPEN_PINNING_RESERVE	    1   //Show [Disable] in position pining UI
-//#define _V8_SUPPORT				        1
+//#define _V8_SUPPORT				      1
+#define MERGE_BD_GA_GI	          1   //Merge BD, GA and GI SNR chart in bottom chart
+#define GPS_EPHEMERIS_CHANNEL     32  //32 or 37, if 37, it's include QZSS
+#define GLONASS_EPHEMERIS_CHANNEL 24
+#define GALILEO_EPHEMERIS_CHANNEL 24
+#define BEIDOU_EPHEMERIS_CHANNEL  37  
+#define NAVIC_EPHEMERIS_CHANNEL   14  
+#define GPS_QZSS_EPHEMERIS_CHANNEL  37 
+#define QZSS_EPHEMERIS_CHANNEL    5
+#define AUTO_GET_CLOCK_OFFSET     0
+
 #define GG12A					            0
 #define SHOW_CLOCK_OFFSET		      0
 #define SHOW_NOISE				        0
@@ -422,10 +503,10 @@
 #define CUSTOMER_ID				        Sktyraq
 
 //NMEA PRN parsing type
-//Type 0 - GL: 65~96; GP: 1~64, 183~188, 193~197; BD: others
+//Type 0 - GL: 65~96; GP: 1~64, 183~188, 193~200; GI: 240 ~ 300; BD: others
 //Type 1 - GL: 201~300; GP: 101~200; BD: 1~100; GA: 301~400
 //Type 2 - GP: 1~85; BD: others
-//Type 3 - GL: 65~96; GP: 1~64, 183~188, 193~197; BD: others; Don't care GPS_183_188 flag.
+//Type 3 - GL: 65~96; GP: 1~64, 183~188, 193~200; BD: others; Don't care GPS_183_188 flag.
 #define NMEA_PRN_TYPE			        0
 
 #define TIMING_MONITORING		      1
@@ -470,10 +551,73 @@
 #define NO_BOOST_UPDATE_RATE_CHANGE 1 //Doesn't change baudrate after update rate change
 #define PPS_MODE_SUPPORT_ALIGN_TO_NAVIC 1 //Show ALIGN_TO_NAVIC in Configure 1PPS Output Mode
 #define MICROSATELLITE_PATCH      0   //For Microsatellite upgrade
-
+#define ENABLE_AUTO_AGPS          0   //Do autmatic AGPS when push cold start button
+#define NAVSPARK_MINI_GPIO_QUERY  0   //For a navspark-mini customer to query GPIO status
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-#if defined(SWCFG_VENDOR_GENERAL_DR_NEW)
+#if defined(SWCFG_VENDOR_GNSS_GENERAL_NAVSPARK_MINI_GPIO)  //20191028
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef _MORE_INFO_
+ #undef _TAB_LAYOUT_
+  #undef NAVSPARK_MINI_GPIO_QUERY
+
+ #define APP_CAPTION			          "GNSS Viewer Ns"
+ #define APP_TITLE				          "Customer Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define _MORE_INFO_			          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define NAVSPARK_MINI_GPIO_QUERY		1   //Request from Oliver to provide a query command for customer 20191028
+
+#elif defined(SWCFG_VENDOR_GNSS_GENERAL_NAVIC)  //20190918
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef _MORE_INFO_
+ #undef _TAB_LAYOUT_
+ #undef ENABLE_AUTO_AGPS
+
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "NavIC Customer Release"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define _MORE_INFO_			          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define ENABLE_AUTO_AGPS			      1
+
+#elif defined(SWCFG_VENDOR_LOCKHEED_MARTIN_GENERAL)
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef _MORE_INFO_
+ #undef _TAB_LAYOUT_
+
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Customer Lockheed Martin"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define _MORE_INFO_			          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define _LOCKHEED_MARTIN_          1
+
+#elif defined(SWCFG_VENDOR_GENERAL_DR_NEW)
  #undef APP_CAPTION
  #undef APP_TITLE
  #undef GNSS_VIEWER
@@ -546,7 +690,7 @@
  #undef MAX_SCATTER_COUNT
  #undef _TAB_LAYOUT_
 
- #define APP_CAPTION			          "GNSS Viewer(NAVIC)"
+ #define APP_CAPTION			          "GNSS Viewer(NavIC)"
  #define APP_TITLE				          "Internal Use"
  #define GNSS_VIEWER			          1
  #define IS_DEBUG				            1
@@ -564,7 +708,7 @@
  #undef BAUDRATE_DEFAULT
  #undef _TAB_LAYOUT_
 
- #define APP_CAPTION			          "GNSS Viewer(NAVIC)"
+ #define APP_CAPTION			          "GNSS Viewer(NavIC)"
  #define APP_TITLE				          "Customer Release"
  #define GNSS_VIEWER			          1
  #define IS_DEBUG				            0

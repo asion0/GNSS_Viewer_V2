@@ -1,4 +1,5 @@
 // Microsoft Visual C++ generated Help ID include file.
-// Used by GPS.rc
+// Used by NewGNSS_Viewer.rc
 //
-#define HIDOK                           0x80640001    // IDD_ABOUTBOX [英文 (美國)]
+#define HIDOK                           0x80640001    // IDD_ABOUTBOX [中性 (系統預設值)]
+#define HID_QUERY                       0x81fb0625    // IDD_CFG_QRY_PSTI_INTERVAL [中性 (系統預設值)]

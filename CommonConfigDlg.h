@@ -318,7 +318,7 @@ protected:
 	int m_nYear;
 	int m_nMonth;
 	int m_nDay;
-	int m_nAttribute;
+	int m_attribute;
 
 	DECLARE_MESSAGE_MAP()
 };
@@ -625,15 +625,20 @@ public:
 
 	virtual void DoCommand();
 	afx_msg void OnBnClickedOk();
-	afx_msg void OnBnClickedSend();
+	afx_msg void OnCbnSelChangeGnssType();
 
 	virtual BOOL OnInitDialog();
 
 protected:
 	static U08 m_gnssType;
+	static U08 m_gnssChannel;
 	static U16 m_nmeaSvid;
 	static U08 m_rate;
 	static BOOL m_bEnable;
+
+  afx_msg void GetGnssTypeAndChannelFromCombo();
+  afx_msg void CIqPlot::OnCbnSelChangeGnssChannel();
+  void SetComboFromGnssTypeAndChannel(bool setType, bool setChannel);
 
 	DECLARE_MESSAGE_MAP()
 };
@@ -964,7 +969,7 @@ public:
 	virtual BOOL OnInitDialog();
 	virtual INT_PTR DoDirect(int type);
 
-	enum {UniqueIdLength = 16 };
+	enum { UniqueIdLength = 16 };
 protected:
 	//U08 m_uniqueId[UniqueIdLength];
 	BinaryData binData;
@@ -1111,19 +1116,20 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CLogConfigureControlDlg
-class CLogConfigureControlDlg : public CCommonConfigDlg
+// CDataLogConfigureDlg
+class CDataLogConfigureDlg : public CCommonConfigDlg
 {
-	DECLARE_DYNAMIC(CLogConfigureControlDlg)
+	DECLARE_DYNAMIC(CDataLogConfigureDlg)
 public:
   enum CmdType
   {
     Cmd17h,
-    Cmd740Ch
+    Cmd6448h,
+    Cmd7A0C0Dh,
   };
 
-	CLogConfigureControlDlg(CWnd* pParent = NULL, CmdType cmd = Cmd17h);   
-	virtual ~CLogConfigureControlDlg() {};
+	CDataLogConfigureDlg(CWnd* pParent = NULL, CmdType cmd = Cmd17h);   
+	virtual ~CDataLogConfigureDlg() {};
 
 	virtual void DoCommand();
 	virtual BOOL OnInitDialog();
@@ -1199,6 +1205,43 @@ public:
 protected:
   U08 m_rate;
 	U08 m_attribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CDrMemsNoiseLevelDlg
+class CDrMemsNoiseLevelDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CDrMemsNoiseLevelDlg)
+public:
+ 	CDrMemsNoiseLevelDlg(CWnd* pParent = NULL);   
+	virtual ~CDrMemsNoiseLevelDlg() {};
+
+	virtual void DoCommand();
+	virtual BOOL OnInitDialog();
+
+	afx_msg void OnBnClickedOk();
+protected:
+  D64 m_accNoise;
+	D64 m_gyroNoise;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CAdrOdometerScalingFactorDlg
+class CAdrOdometerScalingFactorDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CAdrOdometerScalingFactorDlg)
+public:
+ 	CAdrOdometerScalingFactorDlg(CWnd* pParent = NULL);   
+	virtual ~CAdrOdometerScalingFactorDlg() {};
+
+	virtual void DoCommand();
+	virtual BOOL OnInitDialog();
+
+	afx_msg void OnBnClickedOk();
+protected:
+  F32 m_scalingFactor;
 
 	DECLARE_MESSAGE_MAP()
 };
@@ -1328,6 +1371,14 @@ public:
 	CConfigureAlphaKeyDlg(CWnd* pParent = NULL);   
 	virtual ~CConfigureAlphaKeyDlg() {};
 
+  enum CommandType
+  {
+    AlphaKey,
+    V9AesTag
+  };
+  
+  void SetCommandType(CommandType t) { m_cmdType = t; }
+
 	virtual void DoCommand();
 
 	afx_msg void OnBnClickedOk();
@@ -1336,6 +1387,7 @@ public:
   enum { KeyLength = 16 };
 
 protected:
+  CommandType m_cmdType;
 	afx_msg void OnEnChangeKey();
 
 	BinaryData m_keyData;
@@ -1363,6 +1415,104 @@ protected:
 	U32 m_startAddress;
   U32 m_dumpSize;
   BOOL m_status;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigQueryPstiIntervalDlg 
+class CConfigQueryPstiIntervalDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigQueryPstiIntervalDlg)
+public:
+	CConfigQueryPstiIntervalDlg(CWnd* pParent = NULL);   
+	virtual ~CConfigQueryPstiIntervalDlg() {};
+
+  virtual void DoCommand();
+	virtual BOOL OnInitDialog();
+
+  enum { KeyLength = 16 };
+
+protected:
+	afx_msg void OnBnClickedOk();
+  afx_msg void OnBnClickedQuery();
+
+  U08 m_msgId;
+  U08 m_interval;
+  U08 m_attribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigRegisterDlg
+class CConfigRegisterDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigRegisterDlg)
+public:
+	CConfigRegisterDlg(CWnd* pParent = NULL);   
+	virtual ~CConfigRegisterDlg() {};
+
+  enum CmdType
+  {
+    Register,
+    IoRegister,
+    RfIcRegister,
+  };
+
+  virtual void DoCommand();
+	virtual BOOL OnInitDialog();
+  virtual void OnCancel();
+	virtual void OnOk();
+
+	void SetCommandType(CmdType t) { m_type = t; }
+  static bool SetRegisters(CmdType type, vector< pair<U32, U32> >& regData);
+protected:
+  CmdType m_type;
+  vector< pair<U32, U32> > m_regData;
+  int GetRegistersData();
+  void RestoreRegistersData();
+  void UpdateUiSetting(bool isSave);
+
+	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
+  afx_msg void OnClose();
+	afx_msg void OnBnClickedGet();
+	afx_msg void OnBnClickedSet();
+
+	afx_msg void OnBnClickedGetAll();
+	afx_msg void OnBnClickedSetAll();
+  afx_msg void OnBnClickedClose();
+	//afx_msg void OnBnClickedCopyResult();
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigV9PowerSave 
+class CConfigV9PowerSave : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigV9PowerSave)
+public:
+	CConfigV9PowerSave(CWnd* pParent = NULL);   
+	virtual ~CConfigV9PowerSave() {};
+
+  enum DdType {
+    DD_RTC_Timer_30,
+    DD_RTC_Timer_60,
+    DD_RTC_Timer_90,
+    DD_RTC_Timer_120,
+  };
+  enum PsType {
+    PS_RTC_Timer,
+    PS_IO_Toggle,
+    PS_Power_Cycle,
+  };
+
+  virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
+	virtual INT_PTR DoDirect(int t);
+
+protected:
+	DdType m_ddType;
+	PsType m_psType;
+	int m_timeout;
 
 	DECLARE_MESSAGE_MAP()
 };

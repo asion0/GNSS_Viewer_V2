@@ -2,6 +2,7 @@
 #include "GPS.h"
 #include "GPSDlg.h"
 #include "CommonConfigDlg.h"
+#include "ConfigureRfIc.h"
 
 // CCommonConfigDlg 
 static BinaryCommand configCmd;
@@ -238,7 +239,7 @@ BOOL CConfigSBAS::OnInitDialog()
   this->GetWindowText(title);
 	if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QuerySbas(CGPSDlg::Return, &ackCmd))
 	{
-    title += " (Query success)";
+    title += " (Query successfully)";
     ((CButton*)GetDlgItem(IDC_ENABLE_SBAS))->SetCheck(ackCmd[6]);
 	  ((CComboBox*)GetDlgItem(IDC_ENABLE_NAV))->SetCurSel(ackCmd[7]);
     txt.Format("%d", ackCmd[8]);
@@ -427,7 +428,7 @@ BOOL CConfigSBAS2::OnInitDialog()
     }
 
     int idx = 5;
-    title += " (Query success)";
+    title += " (Query successfully)";
     ((CButton*)GetDlgItem(IDC_ENABLE_SBAS))->SetCheck(ackCmd[++idx]);
 	  ((CComboBox*)GetDlgItem(IDC_ENABLE_NAV))->SetCurSel(ackCmd[++idx]);
     txt.Format("%d", ackCmd[++idx]);
@@ -657,8 +658,7 @@ void CConfigSBAS2::OnBnClickedOk()
     m_bGaganSpec = ((CButton*)GetDlgItem(IDC_GAGAN_SPEC))->GetCheck();
   }
 
-  int n;
-  n = GetUserTaqble(m_u11, m_u12, m_u13, IDC_U11, IDC_U12, IDC_U13);
+  int n = GetUserTaqble(m_u11, m_u12, m_u13, IDC_U11, IDC_U12, IDC_U13);
   if(n == -1)
   {
 		AfxMessageBox("Invalid user subsystem mask!");
@@ -1271,6 +1271,8 @@ BOOL ConfigRefTimeToGpsTimeDlg::OnInitDialog()
 	monthCombo->SetCurSel(0);
 	dayCombo->SetCurSel(0);
 
+  ((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
@@ -1284,8 +1286,9 @@ void ConfigRefTimeToGpsTimeDlg::OnBnClickedOk()
 	m_nMonth = atoi(strValue);
 	GetDlgItem(IDC_DAY)->GetWindowText(strValue);
 	m_nDay = atoi(strValue);
-	m_nAttribute = 0;
-	
+
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
 	CCommonConfigDlg::OnOK();
 }
 
@@ -1299,6 +1302,7 @@ void ConfigRefTimeToGpsTimeDlg::DoCommand()
 	*cmd.GetBuffer(4) = (U08)LOBYTE(m_nYear);
 	*cmd.GetBuffer(5) = (U08)m_nMonth;
 	*cmd.GetBuffer(6) = (U08)m_nDay;
+	*cmd.GetBuffer(7) = (U08)m_attribute;
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure ref. time sync to GPS time successfully";
@@ -1329,7 +1333,7 @@ BOOL ConfigGnssConstellationTypeDlg::OnInitDialog()
   if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryGnssConstellationType(CGPSDlg::Return, &ackCmd))
   {
     U16 mode = MAKEWORD(ackCmd[7], ackCmd[6]);
-    title += " (Query success)";
+    title += " (Query successfully)";
     ((CButton*)GetDlgItem(IDC_GPS))->SetCheck((mode & 0x0001) ? 1 : 0);
 	  ((CButton*)GetDlgItem(IDC_GLONASS))->SetCheck((mode & 0x0002) ? 1 : 0);
 	  ((CButton*)GetDlgItem(IDC_GALILEO))->SetCheck((mode & 0x0004) ? 1 : 0);
@@ -1421,7 +1425,7 @@ BOOL ConfigBinaryMeasurementDataOutDlg::OnInitDialog()
   this->GetWindowText(title);
 	if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryBinaryMeasurementDataOut(CGPSDlg::Return, &ackCmd))
 	{
-    title += " (Query success)";
+    title += " (Query successfully)";
     cmdLen = ConvertLeonU16(ackCmd.Ptr(2));
     m_newCmd = (cmdLen == 7) ? FALSE : TRUE;
 	  ((CComboBox*)GetDlgItem(IDC_OUTPUT_RATE))->SetCurSel(ackCmd[5]);
@@ -2370,6 +2374,7 @@ void ConfigPowerSavingParametersRomDlg::DoCommand()
 IMPLEMENT_DYNAMIC(CIqPlot, CCommonConfigDlg)
 
 U08 CIqPlot::m_gnssType = 1;
+U08 CIqPlot::m_gnssChannel = 1;
 U16 CIqPlot::m_nmeaSvid = 1;
 U08 CIqPlot::m_rate = 100;
 BOOL CIqPlot::m_bEnable = TRUE;
@@ -2382,7 +2387,9 @@ CIqPlot::CIqPlot(CWnd* pParent /*=NULL*/)
 
 BEGIN_MESSAGE_MAP(CIqPlot, CCommonConfigDlg)
 	ON_BN_CLICKED(IDOK, &CIqPlot::OnBnClickedOk)
-	ON_BN_CLICKED(IDC_SEND, &CIqPlot::OnBnClickedSend)
+	//ON_BN_CLICKED(IDC_SEND, &CIqPlot::OnBnClickedSend)
+  ON_CBN_SELCHANGE(IDC_TYPE, &CIqPlot::OnCbnSelChangeGnssType)
+  ON_CBN_SELCHANGE(IDC_CHANNEL, &CIqPlot::OnCbnSelChangeGnssChannel)
 END_MESSAGE_MAP()
 
 // CIqPlot 
@@ -2391,8 +2398,9 @@ BOOL CIqPlot::OnInitDialog()
 	CCommonConfigDlg::OnInitDialog();
 
 	CString txt;
-	
-	((CComboBox*)GetDlgItem(IDC_TYPE))->SetCurSel(m_gnssType - 1);
+  SetComboFromGnssTypeAndChannel(true, false);
+	OnCbnSelChangeGnssType();
+
 	txt.Format("%d", m_nmeaSvid);
 	GetDlgItem(IDC_SVID)->SetWindowText(txt);
 	txt.Format("%d", m_rate);
@@ -2415,14 +2423,122 @@ BOOL CIqPlot::OnInitDialog()
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
-void CIqPlot::OnBnClickedSend()
-{	
+void CIqPlot::GetGnssTypeAndChannelFromCombo()
+{
+  int t = ((CComboBox*)GetDlgItem(IDC_TYPE))->GetCurSel();
+  int c = ((CComboBox*)GetDlgItem(IDC_CHANNEL))->GetCurSel();
+  int channelTable[][7]  = {
+    { 1, 2, 4, 5, -1, -1, -1 }, //GPS
+    { 1, 5, -1, -1, -1, -1, -1 }, //SBAS
+    { 1, 2, 3, -1, -1, -1, -1 }, //GLO
+    { 1, 3, 5, 6, -1, -1, -1 }, //GAL
+    { 1, 2, 4, 5, 6, -1, -1 }, //QZSS
+    { 1, 2, 3, 4, 5, -1, -1 }, //BD2
+    { 5, 7, -1, -1, -1, -1, -1 }, //NAVIC
+  };
+  m_gnssChannel = channelTable[t][c];
+  if(m_gnssChannel == -1)
+  {
+    c = 0;
+  }
+  m_gnssType = t + 1;
 }
-	
+
+void CIqPlot::SetComboFromGnssTypeAndChannel(bool setType, bool setChannel)
+{
+   int channelTable[][8]  = {
+    { -1,  0,  1, -1,  2,  3, -1, -1 }, //GPS
+    { -1,  0, -1, -1, -1,  1, -1, -1 }, //SBAS
+    { -1,  0,  1,  2, -1, -1, -1, -1 }, //GLO
+    { -1,  0, -1,  1, -1,  2,  3, -1 }, //GAL
+    { -1,  0,  1, -1,  2,  3,  4, -1 }, //QZSS
+    { -1,  0,  1,  2,  3,  4, -1, -1 }, //BD2
+    { -1, -1, -1, -1, -1,  0, -1,  1 }, //NAVIC
+  };
+  int t = m_gnssType - 1;
+  int c = channelTable[t][m_gnssChannel];
+  if(c == -1)
+  {
+    c = 0;
+  }
+  if(setType)
+  {
+    ((CComboBox*)GetDlgItem(IDC_TYPE))->SetCurSel(t);
+  }
+  if(setChannel)
+  {
+    ((CComboBox*)GetDlgItem(IDC_CHANNEL))->SetCurSel(c);
+  }
+ 
+}
+
+void CIqPlot::OnCbnSelChangeGnssType()
+{
+  CComboBox* type = (CComboBox*)GetDlgItem(IDC_TYPE);
+  CComboBox* channel = (CComboBox*)GetDlgItem(IDC_CHANNEL);
+
+	int t = type->GetCurSel() + 1;
+  channel->ResetContent();
+  switch(t)
+  {
+  case 1: //GPS
+    channel->AddString("GPS-L1");
+    channel->AddString("GPS-L2C");
+    channel->AddString("GPS-L1C");
+    channel->AddString("GPS-L5");
+    break;
+  case 2: //SBAS
+    channel->AddString("SBAS-L1");
+    channel->AddString("SBAS-L5");
+    break;  
+  case 3: //GLONASS
+    channel->AddString("GLONASS-L1");
+    channel->AddString("GLONASS-L2");
+    channel->AddString("GLONASS-L3OC");
+    break; 
+  case 4: //GALILEO
+    channel->AddString("GAL-E1");
+    channel->AddString("GAL-E5b");
+    channel->AddString("GAL-E5a");
+    channel->AddString("GAL-E6");
+    break;
+  case 5: //QZSS
+    channel->AddString("QZSS-L1");
+    channel->AddString("QZSS-L2C");
+    channel->AddString("QZSS-L1C");
+    channel->AddString("QZSS-L5");
+    channel->AddString("QZSS-L6-LEX");
+    break;
+  case 6: //BEIDOU
+    channel->AddString("BEIDOU-B1I");
+    channel->AddString("BEIDOU-B2I");
+    channel->AddString("BEIDOU-B3I");
+    channel->AddString("BEIDOU-B1C");
+    channel->AddString("BEIDOU-B2a");
+    break;
+  case 7: //NAVIC
+    channel->AddString("NAVIC-L5");
+    channel->AddString("NAVIC-S");
+    //if(m_gnssChannel != 5 || m_gnssChannel != 7)
+    //{
+    //  m_gnssChannel = 5;
+    //}
+    break;
+  }
+  m_gnssType = t;
+  SetComboFromGnssTypeAndChannel(false, true);
+}
+
+void CIqPlot::OnCbnSelChangeGnssChannel()
+{
+  GetGnssTypeAndChannelFromCombo();
+}	
+
 void CIqPlot::OnBnClickedOk()
 {	
 	CString txt;
-	m_gnssType = ((CComboBox*)GetDlgItem(IDC_TYPE))->GetCurSel() + 1;
+
+  GetGnssTypeAndChannelFromCombo();
 	GetDlgItem(IDC_SVID)->GetWindowText(txt);
 	m_nmeaSvid = atoi(txt);
 	GetDlgItem(IDC_RATE)->GetWindowText(txt);
@@ -2435,14 +2551,15 @@ void CIqPlot::OnBnClickedOk()
 void CIqPlot::DoCommand()
 {
 	CWaitCursor wait;
-	BinaryData cmd(7);
+	BinaryData cmd(8);
 	*cmd.GetBuffer(0) = 0x64;
 	*cmd.GetBuffer(1) = 0x7C;
 	*cmd.GetBuffer(2) = m_gnssType;
-	*cmd.GetBuffer(3) = (U08)HIBYTE(m_nmeaSvid);
-	*cmd.GetBuffer(4) = (U08)LOBYTE(m_nmeaSvid);
-	*cmd.GetBuffer(5) = m_rate;
-	*cmd.GetBuffer(6) = m_bEnable;
+	*cmd.GetBuffer(3) = m_gnssChannel;
+	*cmd.GetBuffer(4) = (U08)HIBYTE(m_nmeaSvid);
+	*cmd.GetBuffer(5) = (U08)LOBYTE(m_nmeaSvid);
+	*cmd.GetBuffer(6) = m_rate;
+	*cmd.GetBuffer(7) = m_bEnable;
 
 
 	configCmd.SetData(cmd);
@@ -2736,15 +2853,18 @@ void CConfigRtkMode::OnBnClickedOk()
 
 UINT AFX_CDECL ConfigRtkThread(LPVOID param)
 {
-	bool restoreConnect = (((int)(param))==0);
+	bool restoreConnect = true;
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), configPrompt, false);
 	
+  U08 attribute = (U08)(param);
 	//RTK base mode should be in 1 Hz update rate.
 	Sleep(1000);
 	BinaryData cmd(3);
 	*cmd.GetBuffer(0) = 0x0E;
 	*cmd.GetBuffer(1) = (U08)1;
-	*cmd.GetBuffer(2) = (U08)configCmd.GetData()[7];
+  //20191007 report from Jim
+	//*cmd.GetBuffer(2) = (U08)configCmd.GetData()[7];
+  *cmd.GetBuffer(2) = (U08)attribute;
 	configCmd.SetData(cmd);
 	configPrompt = "Configure 1Hz update rate successfully";
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), configPrompt, restoreConnect);
@@ -2765,7 +2885,7 @@ void CConfigRtkMode::DoCommand()
 	configPrompt = "Configure RTK mode successfully";
 	if(m_mode == 1)	//Base mode
 	{	//Base mode should set to 1 Hz.
-		AfxBeginThread(ConfigRtkThread, 0);
+		AfxBeginThread(ConfigRtkThread, (LPVOID)m_attribute);
 	}
 	else
 	{
@@ -2964,7 +3084,7 @@ BOOL CConfigRtkMode2::OnInitDialog()
     CGPSDlg::CmdErrorCode err = CGPSDlg::gpsDlg->QueryRtkMode2(CGPSDlg::Return, &ackCmd);
 	  if(CGPSDlg::Ack == err)
 	  { //Load from device
-      title += " (Query success)";
+      title += " (Query successfully)";
       U16 cmdLen = ConvertLeonU16(ackCmd.Ptr(2));
 		  cmdMode = (cmdLen == 37) ? CfgRtkOprtFctnOld : CfgRtkOprtFctn;
 
@@ -3033,7 +3153,7 @@ BOOL CConfigRtkMode2::OnInitDialog()
 
 	  if(CGPSDlg::Ack == err)
 	  { //Load from device
-      title += " (Query success)";
+      title += " (Query successfully)";
       ((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(1);
 	    ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->SetCurSel(ackCmd[5]);
       
@@ -3235,7 +3355,7 @@ void CConfigRtkMode2::DoCommand()
 	  configPrompt = "Configure RTK mode and operational function successfully";
 	  if(m_rtkMode == 1)	//Base mode
 	  {
-		  AfxBeginThread(ConfigRtkThread, 0);
+		  AfxBeginThread(ConfigRtkThread, (LPVOID)m_attribute);
 	  }
 	  else
 	  {
@@ -4176,7 +4296,7 @@ BOOL CConfigPstiInterval::OnInitDialog()
 	}
   else
   {
-    title += " (Query success)";
+    title += " (Query successfully)";
   }
   m_nPstiInterval = interval;
   ((CSpinButtonCtrl*)GetDlgItem(IDC_SPIN1))->SetRange(0, 255);
@@ -4222,12 +4342,12 @@ void CConfigPstiInterval::AdjustValue(int nPos, CScrollBar* pScrollBar)
 
 void CConfigPstiInterval::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {   
-	if(NULL==pScrollBar)
+	if(NULL == pScrollBar)
 	{
 		CCommonConfigDlg::OnHScroll(nSBCode, nPos, pScrollBar);
 		return;
 	}
-	if(SB_ENDSCROLL!=nSBCode)
+	if(SB_ENDSCROLL != nSBCode)
 	{
 		AdjustValue(-1, pScrollBar);
 	}
@@ -4236,12 +4356,12 @@ void CConfigPstiInterval::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScroll
 
 void CConfigPstiInterval::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
-	if(NULL==pScrollBar)
+	if(NULL == pScrollBar)
 	{
 		CCommonConfigDlg::OnVScroll(nSBCode, nPos, pScrollBar);
 		return;
 	}
-	if(SB_ENDSCROLL!=nSBCode)
+	if(SB_ENDSCROLL != nSBCode)
 	{
 		AdjustValue(nPos, pScrollBar);
 	}
@@ -4578,7 +4698,7 @@ BOOL ConfigRtcmMeasurementDataOutDlg::OnInitDialog()
 
   if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryRtcmMeasurementDataOut(CGPSDlg::Return, &ackCmd))
   {
-    title += " (Query success)";
+    title += " (Query successfully)";
     ((CButton*)GetDlgItem(IDC_FIELD2))->SetCheck(ackCmd[5]);
     ((CComboBox*)GetDlgItem(IDC_FIELD3))->SetCurSel(ackCmd[6]);
     ((CButton*)GetDlgItem(IDC_FIELD4))->SetCheck(ackCmd[7]);
@@ -4732,23 +4852,23 @@ void CConfigWatchTrackback::DoCommand()
 }
 
 
-// CLogConfigureControlDlg 
-IMPLEMENT_DYNAMIC(CLogConfigureControlDlg, CCommonConfigDlg)
+// CDataLogConfigureDlg 
+IMPLEMENT_DYNAMIC(CDataLogConfigureDlg, CCommonConfigDlg)
 
-CLogConfigureControlDlg::CLogConfigureControlDlg(CWnd* pParent /*=NULL*/, CmdType cmd)
+CDataLogConfigureDlg::CDataLogConfigureDlg(CWnd* pParent /*=NULL*/, CmdType cmd)
 	: CCommonConfigDlg(IDD_LOG_FILTER_DLG, pParent)
 {
   m_cmd = cmd;
 }
 
-BEGIN_MESSAGE_MAP(CLogConfigureControlDlg, CCommonConfigDlg)
-	ON_BN_CLICKED(IDOK, &CLogConfigureControlDlg::OnBnClickedOk)
-  ON_BN_CLICKED(IDC_ENABLE, &CLogConfigureControlDlg::OnBnClickedEnable)
+BEGIN_MESSAGE_MAP(CDataLogConfigureDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CDataLogConfigureDlg::OnBnClickedOk)
+  ON_BN_CLICKED(IDC_ENABLE, &CDataLogConfigureDlg::OnBnClickedEnable)
 
 END_MESSAGE_MAP()
 
-// ConfigRtcmMeasurementDataOutDlg
-BOOL CLogConfigureControlDlg::OnInitDialog()
+// CDataLogConfigureDlg
+BOOL CDataLogConfigureDlg::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
   CString title;
@@ -4759,18 +4879,23 @@ BOOL CLogConfigureControlDlg::OnInitDialog()
   int startI = 0;
   if(m_cmd == Cmd17h)
   {
-    ack = CGPSDlg::gpsDlg->QueryDatalogLogStatus(CGPSDlg::Return, &ackCmd);
+    ack = CGPSDlg::gpsDlg->QueryDataLogStatus(CGPSDlg::Return, &ackCmd);
     startI = 13;
   }
-  else if(m_cmd == Cmd740Ch)
+  else if(m_cmd == Cmd6448h)
   {
-    ack = CGPSDlg::gpsDlg->QueryDatalogWatchLogStatus(CGPSDlg::Return, &ackCmd);
+    ack = CGPSDlg::gpsDlg->QueryDataLogStatus2(CGPSDlg::Return, &ackCmd);
+    startI = 14;
+  }
+  else if(m_cmd == Cmd7A0C0Dh)
+  {
+    ack = CGPSDlg::gpsDlg->QueryDataLogStatusWatch(CGPSDlg::Return, &ackCmd);
     startI = 15;
   }
 
   if(CGPSDlg::Ack == ack)
   {
-    title += " (Query success)";
+    title += " (Query successfully)";
     int dataBase = startI;
     DisplayStatic(this, IDC_EMAXT, "%d", MAKELONG(MAKEWORD(ackCmd[dataBase], ackCmd[dataBase + 1]), MAKEWORD(ackCmd[dataBase + 2], ackCmd[dataBase + 3])));
     DisplayStatic(this, IDC_EMINT, "%d", MAKELONG(MAKEWORD(ackCmd[dataBase + 4], ackCmd[dataBase + 5]), MAKEWORD(ackCmd[dataBase + 6], ackCmd[dataBase + 7])));
@@ -4797,7 +4922,7 @@ BOOL CLogConfigureControlDlg::OnInitDialog()
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
-void CLogConfigureControlDlg::OnBnClickedOk()
+void CDataLogConfigureDlg::OnBnClickedOk()
 {
   CString txt;
 
@@ -4819,7 +4944,7 @@ void CLogConfigureControlDlg::OnBnClickedOk()
   OnOK();
 }
 
-void CLogConfigureControlDlg::UpdateStatus()
+void CDataLogConfigureDlg::UpdateStatus()
 {
   BOOL enable = ((CButton*)GetDlgItem(IDC_ENABLE))->GetCheck();
 
@@ -4832,12 +4957,12 @@ void CLogConfigureControlDlg::UpdateStatus()
 	GetDlgItem(IDC_FIFOMODE)->EnableWindow(enable);
 }
 
-void CLogConfigureControlDlg::OnBnClickedEnable()
+void CDataLogConfigureDlg::OnBnClickedEnable()
 {
 	UpdateStatus();
 }
 
-void CLogConfigureControlDlg::DoCommand()
+void CDataLogConfigureDlg::DoCommand()
 {
 	BinaryData cmd;
   int i = 0;
@@ -4846,7 +4971,13 @@ void CLogConfigureControlDlg::DoCommand()
     cmd.Alloc(27);
 	  *cmd.GetBuffer(i++) = 0x18;
   }
-  else if(m_cmd == Cmd740Ch)
+  else if(m_cmd == Cmd6448h)
+  {
+     cmd.Alloc(28);
+    *cmd.GetBuffer(i++) = 0x64;
+    *cmd.GetBuffer(i++) = 0x48;
+  }
+  else if(m_cmd == Cmd7A0C0Dh)
   {
      cmd.Alloc(29);
     *cmd.GetBuffer(i++) = 0x7A;
@@ -4887,7 +5018,7 @@ void CLogConfigureControlDlg::DoCommand()
   *cmd.GetBuffer(i++) = m_fifoMode;
 
 	configCmd.SetData(cmd);
-	configPrompt = "Log Configure Data Logging Criteria successfully";
+	configPrompt = "DataLog Configure successfully";
   AfxBeginThread(ConfigThread, 0);
 }
 
@@ -5017,7 +5148,7 @@ BOOL CDrUpdateRateDlg::OnInitDialog()
   this->GetWindowText(title);
   if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryDrRate(CGPSDlg::Return, &ackCmd))
   {
-    title += " (Query success)";
+    title += " (Query successfully)";
     int rateIdx = (ackCmd[6] < Dim(convertArray)) ? convertArray[ackCmd[6]] : -1;
 	  ((CComboBox*)GetDlgItem(IDC_UPDATE_RATE))->SetCurSel(rateIdx);
   }
@@ -5087,7 +5218,7 @@ BOOL CDrRawRateDlg::OnInitDialog()
       rateIdx = (ackCmd[6] < Dim(convertArray)) ? convertArray[ackCmd[6]] : -1;
     }
 
-    title += " (Query success)";
+    title += " (Query successfully)";
 	  ((CComboBox*)GetDlgItem(IDC_UPDATE_RATE))->SetCurSel(rateIdx);
   }
   else
@@ -5127,6 +5258,164 @@ void CDrRawRateDlg::DoCommand()
   AfxBeginThread(ConfigThread, 0);
 }
 
+// CDrMemsNoiseLevelDlg 
+IMPLEMENT_DYNAMIC(CDrMemsNoiseLevelDlg, CCommonConfigDlg)
+
+CDrMemsNoiseLevelDlg::CDrMemsNoiseLevelDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CFG_DR_MEMS_NOISE_LV, pParent)
+{
+}
+
+BEGIN_MESSAGE_MAP(CDrMemsNoiseLevelDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CDrMemsNoiseLevelDlg::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CDrMemsNoiseLevelDlg 
+BOOL CDrMemsNoiseLevelDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+  CString title;
+  BinaryData ackCmd;
+  this->GetWindowText(title);
+  if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryDrMemsNoiseLevel(CGPSDlg::Return, &ackCmd))
+  {
+    CString txt;
+    int pos = 0;
+    double accNoise = ConvertLeonDouble(ackCmd.Ptr(6));
+    double gyroNoise = ConvertLeonDouble(ackCmd.Ptr(14));
+    txt.Format("%E", accNoise);
+    CString first = txt.Tokenize(_T("E e"), pos);
+    CString second = txt.Tokenize(_T("E e"), pos);
+    GetDlgItem(IDC_ACC_NOISE)->SetWindowText(first);
+    GetDlgItem(IDC_ACC_NOISE_EXP)->SetWindowText(second);
+
+    txt.Format("%E", gyroNoise);
+    pos = 0;
+    first = txt.Tokenize(_T("E e"), pos);
+    second = txt.Tokenize(_T("E e"), pos);
+    GetDlgItem(IDC_GYRO_NOISE)->SetWindowText(first);
+    GetDlgItem(IDC_GYRO_NOISE_EXP)->SetWindowText(second);
+    title += " (Query successfully)";
+  }
+  else
+  {
+    title += " (Query failed)";
+    GetDlgItem(IDC_ACC_NOISE)->SetWindowText("0");
+    GetDlgItem(IDC_ACC_NOISE_EXP)->SetWindowText("0");
+    GetDlgItem(IDC_GYRO_NOISE)->SetWindowText("0");
+    GetDlgItem(IDC_GYRO_NOISE_EXP)->SetWindowText("0");
+  }
+  this->SetWindowText(title);
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CDrMemsNoiseLevelDlg::OnBnClickedOk()
+{
+  CString txt, txtExp;
+  GetDlgItem(IDC_ACC_NOISE)->GetWindowText(txt);
+  GetDlgItem(IDC_ACC_NOISE_EXP)->GetWindowText(txtExp);
+	m_accNoise = atof(txt + "E" + txtExp);
+  
+  GetDlgItem(IDC_GYRO_NOISE)->GetWindowText(txt);
+  GetDlgItem(IDC_GYRO_NOISE_EXP)->GetWindowText(txtExp);
+	m_gyroNoise = atof(txt + "E" + txtExp);
+
+	OnOK();
+}
+
+void CDrMemsNoiseLevelDlg::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(18);
+	*cmd.GetBuffer(0) = 0x6C;
+	*cmd.GetBuffer(1) = 0x7F;
+  //D64 Accelemeter noise
+  *cmd.GetBuffer(2) = *(((U08*)(&m_accNoise)) + 7);
+  *cmd.GetBuffer(3) = *(((U08*)(&m_accNoise)) + 6);
+  *cmd.GetBuffer(4) = *(((U08*)(&m_accNoise)) + 5);
+  *cmd.GetBuffer(5) = *(((U08*)(&m_accNoise)) + 4);
+  *cmd.GetBuffer(6) = *(((U08*)(&m_accNoise)) + 3);
+  *cmd.GetBuffer(7) = *(((U08*)(&m_accNoise)) + 2);
+  *cmd.GetBuffer(8) = *(((U08*)(&m_accNoise)) + 1);
+  *cmd.GetBuffer(9) = *(((U08*)(&m_accNoise)) + 0);
+  //D64 Gyro noise
+  *cmd.GetBuffer(10) = *(((U08*)(&m_gyroNoise)) + 7);
+  *cmd.GetBuffer(11) = *(((U08*)(&m_gyroNoise)) + 6);
+  *cmd.GetBuffer(12) = *(((U08*)(&m_gyroNoise)) + 5);
+  *cmd.GetBuffer(13) = *(((U08*)(&m_gyroNoise)) + 4);
+  *cmd.GetBuffer(14) = *(((U08*)(&m_gyroNoise)) + 3);
+  *cmd.GetBuffer(15) = *(((U08*)(&m_gyroNoise)) + 2);
+  *cmd.GetBuffer(16) = *(((U08*)(&m_gyroNoise)) + 1);
+  *cmd.GetBuffer(17) = *(((U08*)(&m_gyroNoise)) + 0);
+
+	configCmd.SetData(cmd);
+	configPrompt = "Configure DR MEMS noise level successfully";
+  AfxBeginThread(ConfigThread, 0);
+}
+
+// CAdrOdometerScalingFactorDlg 
+IMPLEMENT_DYNAMIC(CAdrOdometerScalingFactorDlg, CCommonConfigDlg)
+
+CAdrOdometerScalingFactorDlg::CAdrOdometerScalingFactorDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CFG_ADR_ODO_SCL_FACT, pParent)
+{
+}
+
+BEGIN_MESSAGE_MAP(CAdrOdometerScalingFactorDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CAdrOdometerScalingFactorDlg::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CAdrOdometerScalingFactorDlg 
+BOOL CAdrOdometerScalingFactorDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+  CString title;
+  BinaryData ackCmd;
+  this->GetWindowText(title);
+  if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryAdrOdometerScalingFactor(CGPSDlg::Return, &ackCmd))
+  {
+    CString txt;
+    int pos = 0;
+    F32 scalingFactor = ConvertLeonFloat(ackCmd.Ptr(6));
+    txt.Format("%6.2f", scalingFactor);
+    GetDlgItem(IDC_VALUE)->SetWindowText(txt);
+    title += " (Query successfully)";
+  }
+  else
+  {
+    title += " (Query failed)";
+    GetDlgItem(IDC_VALUE)->SetWindowText("100.00");
+  }
+  this->SetWindowText(title);
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CAdrOdometerScalingFactorDlg::OnBnClickedOk()
+{
+  CString txt;
+	((CEdit*)GetDlgItem(IDC_VALUE))->GetWindowText(txt);
+	m_scalingFactor = (float)atof(txt);
+
+	OnOK();
+}
+
+void CAdrOdometerScalingFactorDlg::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(6);
+	*cmd.GetBuffer(0) = 0x6C;
+	*cmd.GetBuffer(1) = 0x7D;
+  //F32 Scaling factor
+  *cmd.GetBuffer(2) = *(((U08*)(&m_scalingFactor)) + 3);
+  *cmd.GetBuffer(3) = *(((U08*)(&m_scalingFactor)) + 2);
+  *cmd.GetBuffer(4) = *(((U08*)(&m_scalingFactor)) + 1);
+  *cmd.GetBuffer(5) = *(((U08*)(&m_scalingFactor)) + 0);
+
+	configCmd.SetData(cmd);
+	configPrompt = "Configure ADR ODO scaling factor successfully";
+  AfxBeginThread(ConfigThread, 0);
+}
+
 // CConfigRtkSlaveBaud 
 IMPLEMENT_DYNAMIC(CConfigRtkSlaveBaud, CCommonConfigDlg)
 
@@ -5156,7 +5445,7 @@ BOOL CConfigRtkSlaveBaud::OnInitDialog()
 
   if(CGPSDlg::Ack == ack)
   {
-    title += " (Query success)";
+    title += " (Query successfully)";
     pBox->SetCurSel(ackCmd[6]);
   }
   else
@@ -5457,7 +5746,7 @@ BOOL CConfigRtkGlCpifBias::OnInitDialog()
   this->GetWindowText(title);
 	if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryRtkCpifBias(CGPSDlg::Return, &ackCmd))
 	{
-    title += " (Query success)";
+    title += " (Query successfully)";
 	  ((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(ackCmd[6]);
     ((CButton*)GetDlgItem(IDC_MASK_L1))->SetCheck((ackCmd[7] & 0x01) ? TRUE : FALSE);
     ((CButton*)GetDlgItem(IDC_MASK_L2))->SetCheck((ackCmd[7] & 0x02) ? TRUE : FALSE);
@@ -5646,7 +5935,7 @@ IMPLEMENT_DYNAMIC(CConfigureAlphaKeyDlg, CCommonConfigDlg)
 CConfigureAlphaKeyDlg::CConfigureAlphaKeyDlg(CWnd* pParent /*=NULL*/)
 : CCommonConfigDlg(IDD_CONFIG_ALPHA_KEY, pParent)
 {
-
+  m_cmdType = AlphaKey;
 }
 
 BEGIN_MESSAGE_MAP(CConfigureAlphaKeyDlg, CCommonConfigDlg)
@@ -5658,7 +5947,11 @@ END_MESSAGE_MAP()
 BOOL CConfigureAlphaKeyDlg::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
-
+  if(m_cmdType == V9AesTag)
+  {
+    this->SetWindowText("Configure V9 AES Tag");
+    GetDlgItem(IDC_TITLE)->SetWindowText("V9 AES Tag (16 byte hexadecimal numbers)");
+  }
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
@@ -5695,18 +5988,27 @@ void CConfigureAlphaKeyDlg::OnEnChangeKey()
 void CConfigureAlphaKeyDlg::DoCommand()
 {
 	CWaitCursor wait;
-	BinaryData cmd(19);
+  BinaryData cmd((m_cmdType == AlphaKey) ? 19 : 18);
   int idx = 0;
-	*cmd.GetBuffer(idx++) = 0x7A;
-	*cmd.GetBuffer(idx++) = 0x08;
-	*cmd.GetBuffer(idx++) = 0x7D;
+  if(m_cmdType == AlphaKey)
+  {
+	  *cmd.GetBuffer(idx++) = 0x7A;
+	  *cmd.GetBuffer(idx++) = 0x08;
+	  *cmd.GetBuffer(idx++) = 0x7D;
+  }
+  else
+  {
+	  *cmd.GetBuffer(idx++) = 0x64;
+	  *cmd.GetBuffer(idx++) = 0x73;
+  }
   for(int i = 0; i < KeyLength; ++i)
   {
 	  *cmd.GetBuffer(idx++) = m_keyData[i];
   }
 
 	configCmd.SetData(cmd);
-	configPrompt = "Configure Alpha RTK Key successfully";
+	configPrompt = (m_cmdType == AlphaKey) ?
+    "Configure Alpha RTK Key successfully" : "Configure V9 AES Tag successfully";
   AfxBeginThread(ConfigThread, 0);
 }
 
@@ -5789,4 +6091,597 @@ void CDumpMemoryDlg::OnBnClickedOk()
 void CDumpMemoryDlg::DoCommand()
 {
 
+}
+
+// CConfigQueryPstiIntervalDlg 
+IMPLEMENT_DYNAMIC(CConfigQueryPstiIntervalDlg, CCommonConfigDlg)
+
+CConfigQueryPstiIntervalDlg::CConfigQueryPstiIntervalDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CFG_QRY_PSTI_INTERVAL, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigQueryPstiIntervalDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigQueryPstiIntervalDlg::OnBnClickedOk)
+	ON_BN_CLICKED(ID_QUERY, &CConfigQueryPstiIntervalDlg::OnBnClickedQuery)
+END_MESSAGE_MAP()
+
+// CConfigQueryPstiIntervalDlg 
+BOOL CConfigQueryPstiIntervalDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+  CString txt;
+  CRegistry reg;
+	reg.SetRootKey(HKEY_CURRENT_USER);
+
+  int msgId = 1;
+  int interval = 1;
+	if(reg.SetKey(VIEWER_REG_PATH, false))
+	{
+		msgId = reg.ReadInt("dlg_psti_id", 1);
+		interval = reg.ReadInt("dlg_psti_interval", 1);
+  }
+  txt.Format("%d", msgId);
+  GetDlgItem(IDC_MSG_ID)->SetWindowText(txt);
+  txt.Format("%d", interval);
+  GetDlgItem(IDC_INTERVAL)->SetWindowText(txt);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigQueryPstiIntervalDlg::OnBnClickedOk()
+{
+	CString txt;
+	GetDlgItem(IDC_MSG_ID)->GetWindowText(txt);
+	m_msgId = atoi(txt);
+
+	GetDlgItem(IDC_INTERVAL)->GetWindowText(txt);
+	m_interval = atoi(txt);
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	CRegistry reg;
+	reg.SetRootKey(HKEY_CURRENT_USER);
+	if(reg.SetKey(VIEWER_REG_PATH, false))
+	{
+		reg.WriteInt("dlg_psti_id", m_msgId);
+		reg.WriteInt("dlg_psti_interval", m_interval);
+  }
+
+	OnOK();
+}
+
+void CConfigQueryPstiIntervalDlg::OnBnClickedQuery()
+{
+	CString txt;
+	GetDlgItem(IDC_MSG_ID)->GetWindowText(txt);
+	CGPSDlg::gpsDlg->m_nPstiNo = atoi(txt);
+
+	if(CGPSDlg::Ack != CGPSDlg::gpsDlg->QueryPsti(CGPSDlg::Return, &m_interval))
+	{
+    ::AfxMessageBox("Query PSTI message interval failed!");
+    return;
+  }
+  m_msgId = CGPSDlg::gpsDlg->m_nPstiNo;
+  txt.Format("Query PSTI%03d Interval successfully", m_msgId);
+	CGPSDlg::gpsDlg->add_msgtolist(txt);
+  txt.Format("PSTI%03d Interval : %d", m_msgId, m_interval);
+	CGPSDlg::gpsDlg->add_msgtolist(txt);
+
+  txt.Format("%d", m_interval);
+  GetDlgItem(IDC_INTERVAL)->SetWindowText(txt);
+  
+  CRegistry reg;
+	reg.SetRootKey(HKEY_CURRENT_USER);
+	if(reg.SetKey(VIEWER_REG_PATH, false))
+	{
+		reg.WriteInt("dlg_psti_id", m_msgId);
+  }
+}
+
+void CConfigQueryPstiIntervalDlg::DoCommand()
+{
+	CWaitCursor wait;
+  BinaryData cmd(5);
+  int idx = 0;
+  *cmd.GetBuffer(idx++) = 0x64;
+  *cmd.GetBuffer(idx++) = 0x21;
+  *cmd.GetBuffer(idx++) = m_msgId;
+  *cmd.GetBuffer(idx++) = m_interval;
+  *cmd.GetBuffer(idx++) = m_attribute;
+
+	configCmd.SetData(cmd);
+	configPrompt = "Configure PSTI message interval successfully";
+  AfxBeginThread(ConfigThread, 0);
+}
+
+// CConfigRegisterDlg 
+IMPLEMENT_DYNAMIC(CConfigRegisterDlg, CCommonConfigDlg)
+
+CConfigRegisterDlg::CConfigRegisterDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CFG_REGISTER, pParent)
+{
+	m_type = Register;
+}
+
+BEGIN_MESSAGE_MAP(CConfigRegisterDlg, CCommonConfigDlg)
+  ON_WM_CLOSE()
+	ON_BN_CLICKED(IDC_GET, &CConfigRegisterDlg::OnBnClickedGet)
+	ON_BN_CLICKED(IDC_SET, &CConfigRegisterDlg::OnBnClickedSet)
+	ON_BN_CLICKED(IDC_GET_ALL, &CConfigRegisterDlg::OnBnClickedGetAll)
+	ON_BN_CLICKED(IDC_SET_ALL, &CConfigRegisterDlg::OnBnClickedSetAll)
+	ON_BN_CLICKED(IDOK, &CConfigRegisterDlg::OnBnClickedClose)
+END_MESSAGE_MAP()
+
+void CConfigRegisterDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialog::DoDataExchange(pDX);
+	//DDX_Control(pDX, IDC_POINTS, m_points);
+}
+
+// CConfigRegisterDlg
+BOOL CConfigRegisterDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+  UpdateUiSetting(false);
+
+  switch(m_type)
+  {
+  case Register:
+    GetDlgItem(IDC_STC_ADDR)->SetWindowText("Address (00000000 ~ FFFFFFFF)");
+    GetDlgItem(IDC_STC_DATA)->SetWindowText("Data (00000000 ~ FFFFFFFF)");
+    GetDlgItem(IDC_STC_PROMPT)->SetWindowText("Configure Multiple Registers\r\n" \
+      "Follow the format below, press Ctrl+Enter to add new line and support multiple lines\r\n" \
+      "Enter only the address (no comma). Press \"Get All\" to read multiple registers.\r\n"
+      "Address(hex),Data(hex)\r\n" \
+      "Address(hex),Data(hex)\r\n" \
+      "...\r\n");
+    GetDlgItem(IDC_STC_SET_EXAMPLE)->SetWindowText("Set All example\r\n" \
+      "2000F004,00003C6E\r\n" \
+      "2000F014,004C0080");
+    GetDlgItem(IDC_STC_GET_EXAMPLE)->SetWindowText("Get All example\r\n" \
+      "2000F004\r\n" \
+      "2000F014");
+    GetDlgItem(IDC_STC_ADDR_HEX)->ShowWindow(SW_SHOW);
+    this->SetWindowText("Get / Set Multiple Registers");
+    break;
+  case RfIcRegister:
+    GetDlgItem(IDC_STC_ADDR)->SetWindowText("Address (0 ~ 255)");
+    GetDlgItem(IDC_STC_DATA)->SetWindowText("Data (000000 ~ FFFFFF)");
+    GetDlgItem(IDC_STC_PROMPT)->SetWindowText("Configure Multiple Registers\r\n" \
+      "Follow the format below, press Ctrl+Enter to add new line and support multiple lines\r\n" \
+      "Enter only the address (no comma). Press \"Get All\" to read multiple registers.\r\n"
+      "Address(dec),Data(hex)\r\n" \
+      "Address(dec),Data(hex)\r\n" \
+      "...\r\n");
+    GetDlgItem(IDC_STC_SET_EXAMPLE)->SetWindowText("Set All example\r\n13,6F8982\r\n" \
+      "0,0053FF");
+    GetDlgItem(IDC_STC_GET_EXAMPLE)->SetWindowText("Get All example\r\n13\r\n" \
+      "0");    
+    GetDlgItem(IDC_STC_ADDR_HEX)->ShowWindow(SW_HIDE);
+    this->SetWindowText("Get / Set Multiple RF IC Registers");
+    break;
+  }
+
+  CRect rc;
+  GetDlgItem(IDC_SET_ALL)->GetWindowRect(&rc);
+  ScreenToClient(&rc);
+  pAcceptBtn->MoveWindow(&rc, TRUE);
+  pAcceptBtn->ShowWindow(SW_HIDE);
+  pCancelBtn->SetWindowText("Close");
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigRegisterDlg::UpdateUiSetting(bool isSave)
+{
+  CString keyName, txt;
+  if(m_type == Register)
+  {
+    keyName = "getSetMultupleRegisters_edit";
+  }
+  else if(m_type == RfIcRegister)
+  {
+    keyName = "getSetMultupleRfIcRegisters_edit";
+  }
+  
+  if(isSave)
+  {
+		CRegistry reg;
+		reg.SetRootKey(HKEY_CURRENT_USER);
+    GetDlgItem(IDC_REG_LIST)->GetWindowText(txt);
+		if(reg.SetKey(VIEWER_REG_PATH, false))
+		{
+			reg.WriteString(keyName, txt);
+    }
+  }
+  else
+  {
+    CRegistry reg;
+		reg.SetRootKey(HKEY_CURRENT_USER);
+		if(reg.SetKey(VIEWER_REG_PATH, true))
+    {
+      txt = reg.ReadString(keyName, "");
+      GetDlgItem(IDC_REG_LIST)->SetWindowText(txt);
+    }
+  }
+}
+
+void CConfigRegisterDlg::OnCancel()
+{
+  UpdateUiSetting(true);
+  CCommonConfigDlg::OnCancel();
+}
+
+void CConfigRegisterDlg::OnOk()
+{
+  UpdateUiSetting(true);
+  CCommonConfigDlg::OnCancel();
+}
+
+void CConfigRegisterDlg::OnClose()
+{
+  UpdateUiSetting(true);
+	CCommonConfigDlg::OnClose();
+}
+
+void CConfigRegisterDlg::OnBnClickedGet()
+{
+  CString txt, okMsg, ngMsg;
+  GetDlgItem(IDC_ADDRESS)->GetWindowText(txt);
+	U32 regAddr;
+  U32 ackValue = 0;
+  CGPSDlg::CmdErrorCode err;
+  
+  if(Register == m_type)
+  {
+    regAddr = ConvertCharToU32(txt);
+    err = CGPSDlg::gpsDlg->QueryRegisterx(CGPSDlg::Return, regAddr, &ackValue);
+    txt.Format("%08X", ackValue);
+    okMsg = "Get register successfully.";
+    ngMsg = "Get register failed!";
+  }
+  else if(RfIcRegister == m_type)
+  {
+    BinaryData ackData;
+    regAddr = atoi(txt);
+    err = CGPSDlg::gpsDlg->QueryOneRfRegister(CGPSDlg::Return, &ackData, (U08)regAddr);
+    txt.Format("%06X", ConvertLeonU32(ackData.Ptr(6)) & 0xFFFFFF);
+    okMsg = "Get RF IC register successfully.";
+    ngMsg = "Get RF IC register failed!";
+  }
+    
+  if(err != CGPSDlg::Ack)
+	{
+    ::AfxMessageBox(ngMsg);
+    return;
+  }
+  GetDlgItem(IDC_DATA)->SetWindowText(txt);
+  ::AfxMessageBox(okMsg);
+}
+
+void CConfigRegisterDlg::OnBnClickedSet()
+{
+  CString txt;
+  if(m_type == Register)
+  {
+    GetDlgItem(IDC_ADDRESS)->GetWindowText(txt);
+	  U32 regAddr = ConvertCharToU32(txt);
+    GetDlgItem(IDC_DATA)->GetWindowText(txt);
+	  U32 regData = ConvertCharToU32(txt);
+
+	  CWaitCursor wait;
+	  BinaryData cmd(9);
+    *cmd.GetBuffer(0) = (Register == m_type) ? 0x72 : 0x74;
+    //Address
+	  *cmd.GetBuffer(1) = regAddr >> 24 & 0xFF;;
+	  *cmd.GetBuffer(2) = regAddr >> 16 & 0xFF;;
+	  *cmd.GetBuffer(3) = regAddr >> 8 & 0xFF;;
+	  *cmd.GetBuffer(4) = regAddr & 0xFF;;
+    //Data
+	  *cmd.GetBuffer(5) = regData >> 24 & 0xFF;;
+	  *cmd.GetBuffer(6) = regData >> 16 & 0xFF;;
+	  *cmd.GetBuffer(7) = regData >> 8 & 0xFF;;
+	  *cmd.GetBuffer(8) = regData & 0xFF;;
+
+    configCmd.SetData(cmd);
+    configPrompt = "Set register successfully";
+    CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), configPrompt, false);
+  }
+  else if(m_type == RfIcRegister)
+  {
+    GetDlgItem(IDC_ADDRESS)->GetWindowText(txt);
+	  U08 regAddr = atoi(txt);
+    GetDlgItem(IDC_DATA)->GetWindowText(txt);
+	  U32 regData = ConvertCharToU32(txt);
+    CConfigureRfIc::SetRfRegister(regAddr, regData, false);
+  }
+}
+
+int CConfigRegisterDlg::GetRegistersData()
+{
+  CString txt;
+  int pos1 = 0;
+
+  GetDlgItem(IDC_REG_LIST)->GetWindowText(txt);
+  m_regData.clear();
+  while(1)
+  {
+    CString token = txt.Tokenize(_T("\r\n"), pos1);
+    if(token.IsEmpty())
+    {
+      break;
+    }
+
+    U32 regAddr = 0, regData = 0;
+    //Address
+    int pos2 = 0;
+    CString token2 = token.Tokenize(_T(","), pos2);
+    if(token2.IsEmpty())
+    { 
+      continue;
+    }
+    if(m_type == Register)
+    {
+      regAddr = ConvertCharToU32(token2);
+    }
+    else if(m_type == RfIcRegister)
+    {
+      regAddr = atoi(token2);
+    }
+
+    //Data
+    token2 = token.Tokenize(_T(","), pos2);
+    if(token2.IsEmpty())
+    {
+      m_regData.push_back(make_pair(regAddr, 0));
+      continue;
+    }
+    regData = ConvertCharToU32(token2);
+    m_regData.push_back(make_pair(regAddr, regData));
+  }
+
+  if(m_regData.size() == 0)
+  {
+    ::AfxMessageBox("Nothing to do!");
+    return 0;
+  }
+  return m_regData.size();
+}
+
+void CConfigRegisterDlg::RestoreRegistersData()
+{
+  CString txt, editTxt;
+  vector< pair<U32, U32> >::iterator end = m_regData.end(), iter;
+  for(iter = m_regData.begin(); iter != end; ++iter)
+  {
+    if(m_type == Register)
+    {
+      txt.Format("%08X,%08X\r\n", iter->first, iter->second);
+    }
+    else if(m_type == RfIcRegister)
+    {
+      txt.Format("%02d,%06X\r\n", iter->first, iter->second);
+    }
+    editTxt += txt;
+  }
+  GetDlgItem(IDC_REG_LIST)->SetWindowText(editTxt);
+}
+
+void CConfigRegisterDlg::OnBnClickedGetAll()
+{
+  int count = GetRegistersData();
+  if(count == 0)
+  {
+    return;
+  }
+
+  CString okMsg, ngMsg;
+  CGPSDlg::CmdErrorCode err;
+  vector< pair<U32, U32> >::iterator end = m_regData.end(), iter;
+  for(iter = m_regData.begin(); iter != end; ++iter)
+  {
+    U32 regAddr = iter->first;
+    U32 ackValue = 0;
+    if(Register == m_type)
+    {
+      err = CGPSDlg::gpsDlg->QueryRegisterx(CGPSDlg::Return, regAddr, &ackValue);
+      ngMsg = "Get registers faild!";
+      okMsg = "Query registers successfully.";
+    }
+    else if(RfIcRegister == m_type)
+    {
+      BinaryData ackData;
+      err = CGPSDlg::gpsDlg->QueryOneRfRegister(CGPSDlg::Return, &ackData, (U08)regAddr);
+      ackValue = ConvertLeonU32(ackData.Ptr(6)) & 0xFFFFFF;
+      ngMsg = "Get RF IC registers faild!";
+      okMsg = "Query RF IC registers successfully.";
+    }
+    
+    if(err != CGPSDlg::Ack)
+	  {
+      break;
+    }
+    iter->second = ackValue;
+  }
+
+  if(err != CGPSDlg::Ack)
+	{
+    ::AfxMessageBox(ngMsg);
+    return;
+  }
+
+  RestoreRegistersData();
+  ::AfxMessageBox(okMsg);
+}
+
+void CConfigRegisterDlg::OnBnClickedClose()
+{
+  UpdateUiSetting(true);
+  CCommonConfigDlg::OnCancel();
+}
+
+bool CConfigRegisterDlg::SetRegisters(CmdType type, vector< pair<U32, U32> >& regData)
+{
+  int count = regData.size();
+
+  CString okMsg, ngMsg;
+  bool allOk = true;
+  vector< pair<U32, U32> >::iterator end = regData.end(), iter;
+  for(iter = regData.begin(); (iter != end) && allOk; ++iter)
+  {
+    if(type == Register)
+    {
+      U32 regAddr = iter->first;
+      U32 regData = iter->second;
+	    BinaryData cmd(9);
+
+      *cmd.GetBuffer(0) = (Register == type) ? 0x72 : 0x74;
+      //Address
+	    *cmd.GetBuffer(1) = regAddr >> 24 & 0xFF;;
+	    *cmd.GetBuffer(2) = regAddr >> 16 & 0xFF;;
+	    *cmd.GetBuffer(3) = regAddr >> 8 & 0xFF;;
+	    *cmd.GetBuffer(4) = regAddr & 0xFF;;
+      //Data
+	    *cmd.GetBuffer(5) = regData >> 24 & 0xFF;;
+	    *cmd.GetBuffer(6) = regData >> 16 & 0xFF;;
+	    *cmd.GetBuffer(7) = regData >> 8 & 0xFF;;
+	    *cmd.GetBuffer(8) = regData & 0xFF;;
+
+      configCmd.SetData(cmd);
+      allOk = allOk && CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), NULL, false);
+    }
+    else if (type == RfIcRegister)
+    {
+      U08 regAddr = (U08)iter->first;
+      U32 regData = iter->second;
+	    allOk = allOk && CConfigureRfIc::SetRfRegister(regAddr, regData, true);
+    }
+  }
+
+  return allOk;
+}
+
+void CConfigRegisterDlg::OnBnClickedSetAll()
+{
+  if(0 == GetRegistersData())
+  {
+    return;
+  }
+
+  bool allOk = SetRegisters(m_type, m_regData);
+  if(!allOk)
+  {
+    if(m_type == Register)
+    {
+      ::AfxMessageBox("Set registers faild!");
+    }
+    else if(m_type == RfIcRegister)
+    {
+      ::AfxMessageBox("Set RF IC registers faild!");
+    }
+  }
+  else
+  {
+    if(m_type == Register)
+    {
+      ::AfxMessageBox("Set registers successfully.");
+    }
+    else if(m_type == RfIcRegister)
+    {
+      ::AfxMessageBox("Set RF IC registers successfully.");
+    }
+  }
+}
+
+void CConfigRegisterDlg::DoCommand()
+{
+
+}
+
+
+// CConfigV9PowerSave 
+IMPLEMENT_DYNAMIC(CConfigV9PowerSave, CCommonConfigDlg)
+
+CConfigV9PowerSave::CConfigV9PowerSave(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CONFIG_MSG_OUT, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigV9PowerSave, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigV9PowerSave::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigV9PowerSave 
+BOOL CConfigV9PowerSave::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+ // ((CComboBox*)GetDlgItem(IDC_TYPE))->AddString("UAV Binary");
+	//((CComboBox*)GetDlgItem(IDC_TYPE))->SetCurSel(0);
+	//((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigV9PowerSave::OnBnClickedOk()
+{	
+	m_psType = (PsType)((CComboBox*)GetDlgItem(IDC_TYPE))->GetCurSel();
+	OnOK();
+}
+
+void CConfigV9PowerSave::DoCommand()
+{
+  switch(m_psType)
+  {
+  case PS_RTC_Timer:
+    break;
+  case PS_IO_Toggle:
+    break;
+  case PS_Power_Cycle:
+    break;
+  }
+}
+
+INT_PTR CConfigV9PowerSave::DoDirect(int t)
+{
+  DdType type = (DdType)t;
+	switch(type)
+	{
+	case DD_RTC_Timer_30:
+		m_psType = PS_RTC_Timer;
+    m_timeout = 30;
+		break;
+	case DD_RTC_Timer_60:
+		m_psType = PS_RTC_Timer;
+    m_timeout = 60;
+		break;
+	case DD_RTC_Timer_90:
+		m_psType = PS_RTC_Timer;
+    m_timeout = 90;
+		break;
+	case DD_RTC_Timer_120:
+		m_psType = PS_RTC_Timer;
+    m_timeout = 120;
+		break;
+	default:
+		return IDCANCEL;
+	}
+
+  U32 timerReg = ((U32)(((1000000.0 / 30.5) * m_timeout + 0.5)) & 0x1FFFFFFF) | 0xE0000000;
+  vector< pair<U32, U32> > regData;
+  regData.push_back(make_pair(0x20014C2C, 0x006FFFFF));
+  regData.push_back(make_pair(0x20014C38, timerReg));
+  regData.push_back(make_pair(0x20014C2C, 0x806FFFFF));
+  bool allOk = CConfigRegisterDlg::SetRegisters(CConfigRegisterDlg::Register, regData);
+  if(allOk)
+  {
+    ::AfxMessageBox("Configure V9 power save failed!");
+  }
+  else
+  {
+    ::AfxMessageBox("Configure V9 power save successfully.");
+  }
+	return IDCANCEL;
 }

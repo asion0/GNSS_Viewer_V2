@@ -1,6 +1,8 @@
 #pragma once
 #include "stdafx.h"
 #include "float.h"
+#include <algorithm>    // std::find
+#include <vector>       // std::vector
 
 enum NmeaType
 {
@@ -14,6 +16,7 @@ enum NmeaType
 	MSG_GAGSA,
 	MSG_GNGSA,
 	MSG_GIGSA,
+	MSG_QZGSA,
 
 	MSG_GPGSV,
   MSG_GPGSV2,
@@ -23,6 +26,7 @@ enum NmeaType
 	MSG_GAGSV,
 	MSG_GNGSV,
 	MSG_GIGSV,
+	MSG_QZGSV,
 
 	MSG_RMC,
 	MSG_GLL,
@@ -34,6 +38,12 @@ enum NmeaType
 	MSG_ERROR,
 	MSG_REBOOT,
 };
+
+#define NonUseValue (-1)
+//enum { NonUseValue = -1 };
+enum { MaxNmeaParam = 30 };
+enum { MaxSnrSize = 16 };
+//enum { NonUsePrn = SHRT_MAX };
 
 typedef struct GPGGA
 {
@@ -96,25 +106,256 @@ typedef struct GPVTG
 	F32     SpeedKnots;
 	F32     SpeedKmPerHur;
 	U08     Mode;           //N=not valid, A=Auto, D=Diff, E=Estimated, M=Manual, S=Simulator
-}GPVTG, *pGPVTG, &rGPVTG;
+} GPVTG, *pGPVTG, &rGPVTG;
+
+extern bool IsValidateValue(int snr);
+extern bool IsValidateValue(D64 snr);
+
+class SnrTable
+{
+public:
+  SnrTable() {}
+  SnrTable(F32 s) { SetSnr(0, s, NonUseValue); }
+  SnrTable(int sg, F32 sn) { SetSnr(sg, sn, NonUseValue); }
+  SnrTable(int sg, F32 sn, U16 ci) { SetSnr(sg, sn, ci); }
+  SnrTable(const SnrTable &s) { Copy(s); }  // Copy constructor
+  SnrTable& operator = (const SnrTable &s)
+  {
+    Clear();
+    Copy(s);
+    return *this;
+  } 
+  virtual ~SnrTable(void) {}
+  enum { SnrPairSize = 5 };
+
+  bool SetSnr(int sg, F32 sn, U16 ci) 
+  {
+    for(int i = 0; i < SnrPairSize; ++i)
+    {
+      if(snrData[i].sig == 0 && sg != 0)
+      { //Replace sig 0 by others value
+        snrData[i].sig = sg;
+        snrData[i].snr = sn;
+        snrData[i].chInd = ci;
+        return true;
+      }
+      else if(snrData[i].sig == sg)
+      { //Replace exists
+        snrData[i].snr = sn;
+        snrData[i].chInd = ci;
+        return true;
+      }
+      else if(snrData[i].sig == NonUseValue)
+      { //Add new
+        if(i > 0 && sg == 0)
+        { //Do not add type 0 signal when already have others signal type
+          return true;
+        }
+        snrData[i].sig = sg;
+        snrData[i].snr = sn;
+        snrData[i].chInd = ci;
+        return false;
+      }
+    }
+    return false;
+  }
+
+  F32 GetSnr(const int sg) const 
+  {
+    for(int i = 0; i < SnrPairSize; ++i)
+    {
+      if(snrData[i].sig == sg)
+      {
+        return snrData[i].snr;
+      }
+      else if(snrData[i].sig == NonUseValue)
+      {
+        return NonUseValue;
+      }
+    }
+    return NonUseValue;
+  }
+
+  U16 GetChInd(const int sg) const 
+  {
+    for(int i = 0; i < SnrPairSize; ++i)
+    {
+      if(snrData[i].sig == sg)
+      {
+        if(snrData[i].chInd == (U16)NonUseValue)
+          return 0;
+        else
+          return snrData[i].chInd;
+      }
+      else if(snrData[i].sig == NonUseValue)
+      {
+        return 0;
+      }
+    }
+    return 0;
+  }
+
+  void Merge(const SnrTable& s)
+  {
+    for(int i = 0; i < SnrPairSize; ++i)
+    {
+      if(s.snrData[i].sig != NonUseValue)
+      {
+        SetSnr(s.snrData[i].sig, s.snrData[i].snr, s.snrData[i].chInd);
+      }
+      else
+      {
+        break;
+      }
+    }
+  }
+
+  void Clear() 
+  {
+    for(int i = 0; i < SnrPairSize; ++i)
+    {
+      snrData[i].sig = NonUseValue;
+      snrData[i].snr = NonUseValue;
+      snrData[i].chInd = NonUseValue;
+    }
+  }
+
+protected:
+  struct SnrPair
+  {
+    SnrPair() { sig = NonUseValue; snr = NonUseValue; chInd = NonUseValue; }
+    S16 sig;
+    F32 snr;
+    U16 chInd;
+  };
+  SnrPair snrData[SnrPairSize];
+
+  void Copy(const SnrTable& s)
+  {
+    for(int i = 0; i < SnrPairSize; ++i)
+    {
+      snrData[i] = s.snrData[i];
+    }
+  }
+};
 
 struct Satellite
 {	
-  U16     SatelliteID;
-  U16     Elevation;
-  U16     Azimuth;
-  F32     snr[2];
+public:
+  Satellite() { Clear(); }
+  Satellite(const Satellite &s) // Copy constructor 
+  {
+    Clear();
+    prn = s.prn; 
+    ele = s.ele; 
+    azi = s.azi; 
+    snr = s.snr; 
+  }
+  Satellite& operator = (const Satellite &s)
+  {
+    Clear();
+    prn = s.prn; 
+    ele = s.ele; 
+    azi = s.azi; 
+    snr = s.snr; 
+    return *this;
+  } 
+  virtual ~Satellite(void) {}
+
+  void Set(U16 p, U16 e, U16 a, const SnrTable& s)
+  {
+    prn = p;
+    if(e != (U16)NonUseValue)
+    {
+      ele = e;
+    }
+    if(a != (U16)NonUseValue)
+    {
+       azi = a;
+    }    
+    snr.Merge(s);
+  }
+
+  void Set(U16 p, U16 e, U16 a, int sigId, F32 s)
+  {
+    prn = p;
+    ele = e;
+    azi = a;
+    //chInd = i;
+    snr.SetSnr(sigId, s, NonUseValue);
+  }
+
+  void MergeSnr(const SnrTable& s) 
+  { 
+    snr.Merge(s); 
+  }
+
+  void Clear()
+  {
+    prn = NonUseValue;
+    ele = azi = 0;
+    snr.Clear();
+  }
+
+  void ClearSnr()
+  {
+    snr.Clear();
+  }
+
+  S16 GetPrn() const { return prn; }
+  S16 GetEle() const { return ele; }
+  S16 GetAzi() const { return azi; }
+  //U16 GetChInd() const { return chInd; }
+  const SnrTable& GetSnrTable() const { return snr; }
+  bool IsInUsePrn() const { return prn != (U16)NonUseValue; }
+
+protected:
+  U16 prn;
+  U16 ele;
+  U16 azi;
+  //U16 chInd;
+  SnrTable snr;
 };
 
 class Satellites
 {
 public:
   Satellites(void) { Init(); }
+  Satellites(const Satellites &ss) 
+  {
+    Init();
+    index = ss.index; 
+    inOrder = ss.inOrder; 
+    inOrder = ss.inOrder; 
+    signal = ss.signal; 
+    for(int i = 0; i < MAX_SATELLITE; ++i)
+    {
+      sate[i] = ss.sate[i];
+    }
+  } 
+
+  Satellites& operator = (const Satellites &ss)
+  {
+    index = ss.index; 
+    inOrder= ss.inOrder; 
+    inOrder= ss.inOrder; 
+    signal= ss.signal; 
+    for(int i = 0; i < MAX_SATELLITE; ++i)
+    {
+      sate[i] = ss.sate[i];
+    }
+    return *this;
+  }
   virtual ~Satellites(void) {}
 
   void Clear() { Init(); }
+  void SetSate(const Satellite& s)
+  {
+    SetSate2(s.GetPrn(), s.GetEle(), s.GetAzi(), s.GetSnrTable());
+  }
 
-  void SetSate(int prn, int ele, int azi, F32 snr0, F32 snr1 = -1)
+  //void SetSate(int prn, int ele, int azi, const SnrTable& snr)
+  void SetSate2(int prn, int ele, int azi, const SnrTable& snr)
   {
     int idx = GetPrnIndex(prn);
     if(idx == -1)
@@ -122,18 +363,22 @@ public:
       idx = index++;
       inOrder = false;
     }
-    sate[idx].SatelliteID = prn,
-    sate[idx].Elevation = ele;
-    sate[idx].Azimuth = azi;
+    //if(chInd & 0x08)
+    //{
+    //  int a = 0;
+    //}
+    sate[idx].Set(prn, ele, azi, snr);
+  }
 
-    if(snr0 != -1)
+  void SetSate(int prn, int ele, int azi, const SnrTable& snr)
+  {
+    int idx = GetPrnIndex(prn);
+    if(idx == -1)
     {
-      sate[idx].snr[0] = snr0;
+      idx = index++;
+      inOrder = false;
     }
-    if(snr1 != -1)
-    {
-      sate[idx].snr[1] = snr1;
-    }
+    sate[idx].Set(prn, ele, azi, snr);
   }
 
   int GetSateCount() { return index; }
@@ -142,13 +387,16 @@ public:
   void Sort()
   {
     if(inOrder)
+    {
       return;
+    }
+
     Satellite temp;
     for(int i = 0; i < index; ++i)
     {
       for(int j = i + 1; j < index; ++j)
       {
-        if(sate[i].SatelliteID > sate[j].SatelliteID)
+        if(sate[i].GetPrn() > sate[j].GetPrn())
         {
           temp = sate[i];
           sate[i] = sate[j];
@@ -164,23 +412,26 @@ public:
     int i, j;
     for(i = 0; i < index; ++i)
     {
-      if(sate[i].SatelliteID >= prnStart && sate[i].SatelliteID <= prnEnd)
+      if(sate[i].GetPrn() >= prnStart && sate[i].GetPrn() <= prnEnd)
       {
-        sate[i].SatelliteID = 0;
+        sate[i].Clear();
       }
     }
 
     int pos = -1;
     for(i = 0; i < index; ++i)
     {
-      if(sate[i].SatelliteID == 0)
+      //if(sate[i].prn == 0)
+      if(!sate[i].IsInUsePrn())
       {
         for(j = i; j < index; ++j)
         {
-          if(sate[j].SatelliteID != 0)
+          //if(sate[j].prn != 0)
+          if(sate[j].IsInUsePrn())
           {
             sate[i] = sate[j];
-            sate[j].SatelliteID = 0;
+            //sate[j].prn = 0;
+            sate[j].Clear();
             break;
           }
         }
@@ -192,38 +443,114 @@ public:
     }	
     index = i;
   }
+  void ClearSnr() 
+  {
+    for(int i = 0; i < index; ++i)
+    {
+      sate[i].ClearSnr();
+    }
+    signal.clear();
+  }
+
+  int GetSnrIdSize()
+  {
+    return signal.size();
+  }
+
+  int GetSnrIdList(std::vector<int>& v)
+  {
+    v = signal;
+    return v.size();
+  }
+
+  int GetSnrSigId(U16 idx)
+  {
+    if(signal.size() <= idx)
+    {
+      return NonUseValue;
+    }
+    return signal[idx];
+  }
+
+  bool AddSnrSigId(int sig)
+  {
+    std::vector<int>::iterator i;
+    if(std::find(signal.begin(), signal.end(), sig) == signal.end())
+    {
+      signal.push_back(sig);
+      return true;
+    }
+    return false;
+  }
 protected:
   Satellite sate[MAX_SATELLITE];
+  std::vector<int> signal;
   int index;
   bool inOrder;
 
-protected:
   void Init() 
   { 
-    memset(&sate, 0, sizeof(sate));  index = 0; inOrder = true; 
+    for(int i = 0; i < MAX_SATELLITE; ++i)
+    {
+      sate[i].Clear();
+    }
+    signal.clear();
+    index = 0; 
+    inOrder = true; 
   }
   int GetPrnIndex(int prn)
   {
     for(int i = 0; i < index; ++i)
     {
-      if(sate[i].SatelliteID == prn)
+      if(sate[i].GetPrn() == prn)
         return i;
     }
     return -1;
   }
-
 };
 
-typedef struct GPGSV
-{	
+struct GPGSV
+{
+public:
+  GPGSV() {};
+  GPGSV(const GPGSV &v) 
+  {
+    NumOfMessage = v.NumOfMessage; 
+    SequenceNum = v.SequenceNum; 
+    NumOfSate = v.NumOfSate; 
+    signalId = v.signalId; 
+    sates[0] = v.sates[0]; 
+    sates[1] = v.sates[1]; 
+    sates[2] = v.sates[2]; 
+    sates[3] = v.sates[3]; 
+  } 
+  GPGSV& operator = (const GPGSV &v) 
+  { 
+    NumOfMessage = v.NumOfMessage; 
+    SequenceNum = v.SequenceNum; 
+    NumOfSate = v.NumOfSate; 
+    signalId = v.signalId; 
+    return *this;
+  } 
+
+  void Clear()
+  {
+	  NumOfMessage = 0;
+    SequenceNum = 0;
+    NumOfSate = 0;
+    signalId = 0;
+    sates[0].Clear();
+    sates[1].Clear();
+    sates[2].Clear();
+    sates[3].Clear();
+  }
+
 	U16     NumOfMessage;
   U16     SequenceNum;
   U16     NumOfSate;
-	U08     have_gps;
-	U08     have_gnss;
   U08     signalId;
 	Satellite    sates[4];
-}GPGSV, *pGPGSV, &rGPGSV;
+};
 
 typedef struct GPRMC
 {	
@@ -257,8 +584,6 @@ typedef struct GPZDA
 	U16     LocaZoneMinutes;
 } GPZDA, *pGPZDA, &rGPZDA;
 
-enum { INVALIDATE_SNR = 999 };
-enum { MaxNmeaParam = 30 };
 //#define UWM_GNSS_DATA_UPDATE	(WM_USER + 0x1379)
 class GnssData
 {
@@ -294,6 +619,7 @@ public:
 		UpdateBdSate = 1 << 10,
 		UpdateGaSate = 1 << 11,
 		UpdateFixMode = 1 << 12,
+		UpdateGiSate = 1 << 13,
 	};
 
 	GnssData()
@@ -391,8 +717,6 @@ public:
 		hdop = h; 
 		GnssDataCs.Unlock();
 	}
-	//void SetFixMode(U16 ggaQtyInd, U16 gpGsaMode, U16 glGsaMode, U16 bdGsaMode, U08 rmcModeInd);
-
 	void ClearData() { Init(); }
 protected:
 	HWND	notifyWnd;
@@ -426,6 +750,7 @@ protected:
 	Satellite glSate[MAX_SATELLITE];
 	Satellite bdSate[MAX_SATELLITE];
 	Satellite gaSate[MAX_SATELLITE];
+	Satellite giSate[MAX_SATELLITE];
 
 	void Init()
 	{
@@ -453,28 +778,13 @@ protected:
 		//Fix Mode
 		fixMode = Uninitial;
 		//Satellite sataus
-		for(int i=0; i<MAX_SATELLITE; ++i)
+		for(int i = 0; i < MAX_SATELLITE; ++i)
 		{
-			gpSate[i].Azimuth = 0;
-			gpSate[i].Elevation = 0;
-			//gpSate[i].SNR = SHRT_MAX;
-      memset(gpSate[i].snr, 0, sizeof(gpSate[i].snr));
-			gpSate[i].SatelliteID = SHRT_MAX;
-			glSate[i].Azimuth = 0;
-			glSate[i].Elevation = 0;
-			//glSate[i].SNR = SHRT_MAX;
-      memset(glSate[i].snr, 0, sizeof(glSate[i].snr));
-			glSate[i].SatelliteID = SHRT_MAX;
-			bdSate[i].Azimuth = 0;
-			bdSate[i].Elevation = 0;
-			//bdSate[i].SNR = SHRT_MAX;
-      memset(bdSate[i].snr, 0, sizeof(bdSate[i].snr));
-			bdSate[i].SatelliteID = SHRT_MAX;
-			gaSate[i].Azimuth = 0;
-			gaSate[i].Elevation = 0;
-			//gaSate[i].SNR = SHRT_MAX;
-      memset(gaSate[i].snr, 0, sizeof(gaSate[i].snr));
-			gaSate[i].SatelliteID = SHRT_MAX;
+      gpSate[i].Clear();
+      glSate[i].Clear();
+      bdSate[i].Clear();
+      gaSate[i].Clear();
+      giSate[i].Clear();
 		}
 	}
 
@@ -530,6 +840,8 @@ public:
 		GN,
 	};
 
+  enum { NoSingalId = 0xFF };
+
 protected:
 	static int LSB(char lsb);
 	static int MSB(char msb);
@@ -551,10 +863,13 @@ protected:
 	static bool VTGProc(GPVTG& rvtg, LPCSTR pt, int len);
 
 	static bool firstGsaIn;
+  static GNSS_System currentGsv;
 public:
 	static GnssData gnssData;
 	static NMEA_Type nmeaType;
 
+  static void SetCurrentGsv(GNSS_System gs);
+  static GNSS_System GetCurrentGsv() { return currentGsv; };
 	static GNSS_System GetGNSSSystem(int prn);
 	static GNSS_System GetGNSSSystem0(int prn);
 	static GNSS_System GetGNSSSystem1(int prn);
@@ -571,7 +886,20 @@ public:
 	Satellites satellites_bd;
 	Satellites satellites_ga;
 	Satellites satellites_gi;
-
+  //For 0xDE and 0xE5 merger
+	Satellites satellites2_gp;
+	Satellites satellites2_gl;
+	Satellites satellites2_bd;
+	Satellites satellites2_ga;
+	Satellites satellites2_gi;
+  void CopySatellites()
+  {
+    satellites_gp = satellites2_gp;
+    satellites_gl = satellites2_gl;
+    satellites_bd = satellites2_bd;
+    satellites_ga = satellites2_ga;
+    satellites_gi = satellites2_gi;
+  }
   MyTimer  gpgsvTimer;
   MyTimer  glgsvTimer;
   MyTimer  bdgsvTimer;
@@ -608,6 +936,7 @@ public:
 //#endif
 	void ShowGLGSVmsg(GPGSV&, const char*, int);
 	void ShowGIGSVmsg(GPGSV&, const char*, int);
+	void ShowQZGSVmsg(GPGSV&, const char*, int);
 	void ShowGAGSVmsg(GPGSV&, const char*, int);
 	void ShowGNGSVmsg(GPGSV&, GPGSV&, GPGSV&, GPGSV&, GPGSV&, const char*, int);
 	void ShowBDGSVmsg(GPGSV&, const char*, int);
@@ -619,4 +948,5 @@ public:
 	void ShowBDGSAmsg(GPGSA& msg_bdgsa, const char* pt, int offset);
 	void ShowGAGSAmsg(GPGSA& msg_gagsa, const char* pt, int offset);
 	void ClearSatellites();
+  void ClearSatellites2();
 };

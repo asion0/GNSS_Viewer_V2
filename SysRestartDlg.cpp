@@ -240,7 +240,7 @@ void CSysRestartDlg::OnCbnCloseupSrmode()
 
 void CSysRestartDlg::Restart()
 {
-	CGPSDlg::gpsDlg->m_CloseBtn.ShowWindow(SW_HIDE);
+	//CGPSDlg::gpsDlg->m_CloseBtn.ShowWindow(SW_HIDE);
 	int i;
 	U08 messages[22] = {0};
 
@@ -274,5 +274,5 @@ void CSysRestartDlg::Restart()
 	messages[20]=(unsigned char)0x0d;
 	messages[21]=(unsigned char)0x0a;
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(messages, 22, "System Restart successfully.");
-	CGPSDlg::gpsDlg->m_CloseBtn.ShowWindow(SW_SHOW);
+//	CGPSDlg::gpsDlg->m_CloseBtn.ShowWindow(SW_SHOW);
 }

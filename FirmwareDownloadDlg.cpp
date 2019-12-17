@@ -84,7 +84,7 @@ BOOL CFirmwareDownloadDlg::OnInitDialog()
 	icTypeCombo->SetCurSel(m_nLoaderType);
 	baudrateCombo->SetCurSel(m_nBaudrateIdx);
 	GetDlgItem(IDC_IMG_PATH)->SetWindowText(m_strPath);
-	((CButton*)GetDlgItem(IDC_IN_LOADER))->SetCheck(m_isInternal);
+	//((CButton*)GetDlgItem(IDC_IN_LOADER))->SetCheck(m_isInternal);
 	bufferCombo->SetCurSel(m_nBufferIdx);
 	
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -95,7 +95,7 @@ void CFirmwareDownloadDlg::OnOK()
 	m_nLoaderType = (LoaderType)((CComboBox*)GetDlgItem(IDC_TYPE))->GetCurSel();
 	m_nBaudrateIdx = ((CComboBox*)GetDlgItem(IDC_BAUDRATE_IDX))->GetCurSel();
 	GetDlgItem(IDC_IMG_PATH)->GetWindowText(m_strPath);
-	m_isInternal = ((CButton*)GetDlgItem(IDC_IN_LOADER))->GetCheck();
+	//m_isInternal = ((CButton*)GetDlgItem(IDC_IN_LOADER))->GetCheck();
 	m_nBufferIdx = ((CComboBox*)GetDlgItem(IDC_BUFFER_IDX))->GetCurSel();
 
 	CRegistry reg;

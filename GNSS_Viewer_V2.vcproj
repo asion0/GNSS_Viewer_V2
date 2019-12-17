@@ -45,7 +45,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_NSHP_FIX_TOOL"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_GNSS_GENERAL_NEW"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG;_TAB_LAYOUT_;_NAVIC_CONVERT_;UPGRADE_DOWNLOAD2"
+				PreprocessorDefinitions="_DEBUG;_TAB_LAYOUT_"
 				Culture="1033"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
@@ -70,7 +70,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="Exe/GNSS_ViewerD.exe"
+				OutputFile="Exe\$(ProjectName)D.exe"
 				LinkIncremental="2"
 				GenerateManifest="false"
 				EnableUAC="false"
@@ -133,7 +133,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				WholeProgramOptimization="true"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_NSHP_FIX_TOOL"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_GNSS_GENERAL_NAVSPARK_MINI_GPIO"
 				StringPooling="true"
 				MinimalRebuild="false"
 				RuntimeLibrary="0"
@@ -150,7 +150,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG;_TAB_LAYOUT_;_NAVIC_CONVERT_;UPGRADE_DOWNLOAD"
+				PreprocessorDefinitions="NDEBUG;_TAB_LAYOUT_"
 				Culture="1033"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
@@ -159,7 +159,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="Exe/PatchTool.exe"
+				OutputFile="Exe/GNSS_ViewerNs-CustomerRelease.exe"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				EnableUAC="false"
@@ -2095,7 +2095,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="Exe/GNSS_Viewer(NAVIC)-CustomerRelease.exe"
+				OutputFile="Exe/GNSS_Viewer(LM)-CustomerRelease.exe"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				EnableUAC="false"
@@ -2225,6 +2225,273 @@
 				CommandLine="Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
+		<Configuration
+			Name="GNSS_General_NavIC|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="1"
+			CharacterSet="2"
+			ManagedExtensions="0"
+			WholeProgramOptimization="3"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				PreprocessorDefinitions="NDEBUG"
+				MkTypLibCompatible="false"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				WholeProgramOptimization="true"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;SWCFG_VENDOR_GNSS_GENERAL_NAVIC"
+				StringPooling="true"
+				MinimalRebuild="false"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				TreatWChar_tAsBuiltInType="true"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="StdAfx.h"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="0"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="NDEBUG;_TAB_LAYOUT_"
+				Culture="1033"
+				AdditionalIncludeDirectories="$(IntDir)"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				OutputFile="Exe/GNSS_Viewer-NavicCustomerRelease.exe"
+				LinkIncremental="1"
+				GenerateManifest="false"
+				EnableUAC="false"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				LinkTimeCodeGeneration="1"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine="Utility\upx.exe -9 &quot;$(TargetPath)&quot;"
+			/>
+		</Configuration>
+		<Configuration
+			Name="DebugInternalUse|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="1"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				PreprocessorDefinitions="_DEBUG"
+				MkTypLibCompatible="false"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_GNSS_INTERNALUSE_NEW"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				TreatWChar_tAsBuiltInType="true"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="StdAfx.h"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="4"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_DEBUG;_TAB_LAYOUT_"
+				Culture="1033"
+				AdditionalIncludeDirectories="$(IntDir)"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				OutputFile="Exe\$(ProjectName)D.exe"
+				LinkIncremental="2"
+				GenerateManifest="false"
+				EnableUAC="false"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="DebugGeneral|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="1"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				PreprocessorDefinitions="_DEBUG"
+				MkTypLibCompatible="false"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_GNSS_GENERAL_NAVSPARK_MINI_GPIO"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				TreatWChar_tAsBuiltInType="true"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="StdAfx.h"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="4"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_DEBUG;_TAB_LAYOUT_"
+				Culture="1033"
+				AdditionalIncludeDirectories="$(IntDir)"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				OutputFile="Exe\$(ProjectName)D.exe"
+				LinkIncremental="2"
+				GenerateManifest="false"
+				EnableUAC="false"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine=""
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -2240,10 +2507,6 @@
 			</File>
 			<File
 				RelativePath=".\BinaryChecksumCalDlg.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Cfg_binary_msg.cpp"
 				>
 			</File>
 			<File
@@ -2344,6 +2607,10 @@
 			</File>
 			<File
 				RelativePath=".\NmeaChecksumCalDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PromIniGeneratorDlg.cpp"
 				>
 			</File>
 			<File
@@ -2569,6 +2836,30 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="GNSS_General_NavIC|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugInternalUse|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DebugGeneral|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\VerifyFwDlg.cpp"
@@ -2590,10 +2881,6 @@
 			</File>
 			<File
 				RelativePath=".\BinaryChecksumCalDlg.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Cfg_binary_msg.h"
 				>
 			</File>
 			<File
@@ -2721,6 +3008,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PromIniGeneratorDlg.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Proprietary_nmea.h"
 				>
 			</File>
@@ -2775,6 +3066,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\res\exec2.bin"
+				>
+			</File>
+			<File
 				RelativePath=".\res\NewGNSS_Viewer.ico"
 				>
 			</File>
@@ -2820,6 +3115,14 @@
 			</File>
 			<File
 				RelativePath=".\ConfigureRfIc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DcdcRegister.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DcdcRegister.h"
 				>
 			</File>
 			<File

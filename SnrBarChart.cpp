@@ -22,6 +22,7 @@ static const int LevelLineGapY = 10;
 //static const int SecondLineStartY = 74;
 //static const char* IdFontName = "Impact";
 static const int BarChartIdGap = 2;
+//static const CSize SnrBar(18, 50);
 static const CSize SnrBar(18, 50);
 static const CPoint StartGnssBarChart(7, 52);
 static const COLORREF TransparentColor = RGB(255, 255, 255);
@@ -129,55 +130,57 @@ void CSnrBarChart::ShowBoxChart(CDC *dc)
 	DrawSnr(dc, n, uiSetting, gsvData, gsaData, ggaData, sateStatus);
 }
 
-int GetNoneZeroCount(Satellite* s)
+int GetNoneZeroCount(const Satellite* s)
 {
 	int count = 0;
-	while(s[count].SatelliteID != 0)
+	while(s[count].IsInUsePrn())
 	{
 		count++;
 	}
 	return count;
 }
 
-void CSnrBarChart::DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGSA* gsa, GPGGA* gga, Satellites* sate)
+void CSnrBarChart::DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGSA* gsa, GPGGA* gga, Satellites* ss)
 {
-	BITMAP bm = {0};
+	BITMAP bm = { 0 };
 	bm.bmWidth = bm.bmHeight = 20;
 	int cellOffset = BarChartIdGap / 2;
-
+  Satellites sates = *ss;
+  Satellites* sate = &sates;
 	//Sort the satellite prn. 
 	//int sateCount = GetNoneZeroCount(sate);
 	int sateCount = sate->GetSateCount();
-	if(sateCount==0)
+	if(sateCount == 0)
 	{
 		return;
 	}
 
   sate->Sort();
-	//vector< pair<int, int> > sateArray(sateCount);
-	//for(int i=0; i<sateCount; ++i)
-	//{
-	//	sateArray[i] = make_pair(i, sate[i].SatelliteID);
-	//}
-	//struct sort_pred {
-	//	bool operator()(const std::pair<int,int> &left, const std::pair<int,int> &right) 
-	//	{ return left.second < right.second; }
-	//};
-	//std::sort(sateArray.begin(), sateArray.end(), sort_pred());
 
-	CFont* oldFont = dc->SelectObject(&(s->idFont));	
+  CFont* oldFont = dc->SelectObject(&(s->idFont));	
 	CBrush* oldBrush = dc->SelectObject(&(s->noUseSnrBarBrush));	
 	CPen* oldPen = dc->SelectObject(&(s->noUseSnrBarPen));	
-
-	for(int i=0; i<sateCount; ++i)
+  std::vector<int> vSnrId;
+  int len = sate->GetSnrIdList(vSnrId);
+  COLORREF textCrTable[] = { s->inUseBarTextColor, RGB(10, 60, 10), RGB(10, 10, 10),
+    RGB(60, 10, 10), RGB(10, 10, 60)};
+  //int sigTable[4] = { -1, -1, -1, -1 };
+	for(int i = 0; i < sateCount; ++i)
 	{
-		//int arrayIdx = sateArray[i].first;
     const Satellite* pSate = sate->GetSateIndex(i);
-		int id = pSate->SatelliteID;
+		int id = pSate->GetPrn();
 
+    if(id == 18)
+    {
+      int aaa = 0;
+    }
 		int dx = 0, dy = 0;
 		int index = startId + i;
 
+    if(id < 0)
+    {
+      int aaa = 0;
+    }
 		if(index < MaxCountInRaw)
 		{	
 			dx = m_startBarChart.x + index * (BarChartIdGap + bm.bmWidth);
@@ -196,50 +199,104 @@ void CSnrBarChart::DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGS
 #else
 		DrawBarChartId(dc, s, isInUse, dx, dy, id); 
 #endif
-
-    F32 snrValue = pSate->snr[0];
-		if(snrValue == INVALIDATE_SNR)
-		{
-			continue;
-		}
-
-		//Draw gray rectangle out line.
-		dc->SelectObject(&(s->inUseSnrBarPen));
-		dc->SelectObject(&(s->noUseSnrBarBrush));
-		CRect barRect(dx + (bm.bmWidth - SnrBar.cx) / 2, dy - SnrBar.cy - 2,
-					dx + (bm.bmWidth + SnrBar.cx) / 2, dy - 1);
-		dc->Rectangle(barRect);
-
-		//Draw snr bar.
-		dc->SelectObject((isInUse) ? &(s->inUseSnrBarBrush) : &(s->noUseSnrBarBrush));
-		dc->SelectObject((isInUse) ? &(s->inUseSnrBarPen) : &(s->noUseSnrBarPen));
-		barRect.SetRect(dx + (bm.bmWidth - SnrBar.cx) / 2, dy - 1 - (int)snrValue,
-			dx + (bm.bmWidth + SnrBar.cx) / 2, dy - 1);
-		dc->Rectangle(barRect);
-
-		//Draw snr value text.
-		COLORREF cr = (isInUse) ? s->inUseBarTextColor : s->noUseBarTextColor;
-		if(isInUse && snrValue < 15)
-		{
-			cr = RGB(10, 10, 10);
-		}
-		dc->SetTextColor(cr);
-		CString idText;
-
-    if(IsFloat(snrValue))
+    if(len <= 0)
     {
-      idText.Format("%3.1f", snrValue);
+      continue;
+    }
+   
+    int sig = sate->GetSnrSigId(0);
+	  if(!IsValidateValue(sig))
+	  {
+		  continue;
+	  }
+
+    F32 snrValue = pSate->GetSnrTable().GetSnr(sig);
+	  if(!IsValidateValue(snrValue))
+	  {
+		  continue;
+	  }
+
+    //Draw gray rectangle out line.
+    dc->SelectObject(&(s->inUseSnrBarPen));
+    dc->SelectObject(&(s->noUseSnrBarBrush));
+    CRect barRect(dx + (bm.bmWidth - SnrBar.cx) / 2, dy - SnrBar.cy - 2,
+			    dx + (bm.bmWidth + SnrBar.cx) / 2, dy - 1);
+    dc->Rectangle(barRect);
+
+    //Draw snr bar.
+    dc->SelectObject((isInUse) ? &(s->inUseSnrBarBrush) : &(s->noUseSnrBarBrush));
+    if(IS_DEBUG && (pSate->GetSnrTable().GetChInd(sig) & 0x08))
+    {
+      dc->SelectObject(&(s->faultSnrBarPen));
     }
     else
     {
-      idText.Format("%d", (int)snrValue);
+      dc->SelectObject((isInUse) ? &(s->inUseSnrBarPen) : &(s->noUseSnrBarPen));
     }
-		barRect.SetRect(dx + (bm.bmWidth - SnrBar.cx) / 2, dy - 1 - SnrBar.cx,
-					dx + (bm.bmWidth + SnrBar.cx) / 2, dy - 1);
-		dc->SelectObject(&(s->barFont));	
-		dc->DrawText(idText, barRect, DT_VCENTER | DT_CENTER);
+
+    barRect.SetRect(dx + (bm.bmWidth - SnrBar.cx) / 2, dy - 1 - (int)snrValue,
+	    dx + (bm.bmWidth + SnrBar.cx) / 2, dy - 1);
+    dc->Rectangle(barRect);
+
+    int dyOffset = -15;
+    for(U16 vit = 0; vit < vSnrId.size(); ++vit)
+    {
+      sig = sate->GetSnrSigId(vit);
+      if(!IsValidateValue(sig))
+      {
+        continue;
+      }
+
+      snrValue = pSate->GetSnrTable().GetSnr(sig);
+      if(!IsValidateValue(snrValue))
+      {
+        continue;
+      }
+	    //Draw snr value text.
+	    COLORREF cr = (isInUse) ? textCrTable[vit] : s->noUseBarTextColor;
+	    if(isInUse && snrValue < 15)
+	    {
+		    cr = RGB(10, 10, 10);
+	    }
+	    dc->SetTextColor(cr);
+
+	    CString idText;
+      if(IsFloat(snrValue))
+      {
+        idText.Format("%3.1f", snrValue);
+      }
+      else
+      {
+        idText.Format("%d", (int)snrValue);
+      }
+	    barRect.SetRect(dx + (bm.bmWidth - SnrBar.cx) / 2, dy - 1 - SnrBar.cx + dyOffset * vit,
+				    dx + (bm.bmWidth + SnrBar.cx) / 2, dy - 1 + dyOffset * vit);
+	    dc->SelectObject(&(s->barFont));	
+	    dc->DrawText(idText, barRect, DT_VCENTER | DT_CENTER);
+    }
 	} 
 	startId += sateCount;
+  UINT id = IDC_GP_FREQ_T;
+  if(s->noUseSnrBarPenColor == gpUI.noUseSnrBarPenColor)
+  {
+    CGPSDlg::gpsDlg->SetFreqText(IDC_GP_FREQ_T, sate->GetSnrSigId(0), sate->GetSnrSigId(1), sate->GetSnrSigId(2), sate->GetSnrSigId(3));
+  } 
+  if(s->noUseSnrBarPenColor == glUI.noUseSnrBarPenColor)
+  {
+    CGPSDlg::gpsDlg->SetFreqText(IDC_GL_FREQ_T, sate->GetSnrSigId(0), sate->GetSnrSigId(1), sate->GetSnrSigId(2), sate->GetSnrSigId(3));
+  } 
+  if(s->noUseSnrBarPenColor == bdUI.noUseSnrBarPenColor)
+  {
+    CGPSDlg::gpsDlg->SetFreqText(IDC_BD_FREQ_T, sate->GetSnrSigId(0), sate->GetSnrSigId(1), sate->GetSnrSigId(2), sate->GetSnrSigId(3));
+  } 
+  if(s->noUseSnrBarPenColor == gaUI.noUseSnrBarPenColor)
+  {
+    CGPSDlg::gpsDlg->SetFreqText(IDC_GA_FREQ_T, sate->GetSnrSigId(0), sate->GetSnrSigId(1), sate->GetSnrSigId(2), sate->GetSnrSigId(3));
+  } 
+  if(s->noUseSnrBarPenColor == giUI.noUseSnrBarPenColor)
+  {
+    CGPSDlg::gpsDlg->SetFreqText(IDC_GI_FREQ_T, sate->GetSnrSigId(0), sate->GetSnrSigId(1), sate->GetSnrSigId(2), sate->GetSnrSigId(3));
+  } 
 
 	dc->SelectObject(oldFont);	
 	dc->SelectObject(oldBrush);	
@@ -276,7 +333,7 @@ CSnrBarChartGlonass::CSnrBarChartGlonass(void)
 	m_startBarChart = StartGnssBarChart;
 	m_minId = GnssIdStart;
 	m_maxId = GnssIdEnd;
-	m_titleText = "GNSS";
+	m_titleText = "GLONASS";
 	SetUISetting(&glUI);
 }
 
@@ -305,9 +362,9 @@ CSnrBarChartDual::CSnrBarChartDual(void)
 	m_minId = GpsIdStart;
 	m_maxId = GpsIdEnd;
 #ifdef _NAVIC_CONVERT_
-	m_titleText = "GPS / NAVIC";
+	m_titleText = "GPS / NavIC";
 #else
-	m_titleText = "GPS / GNSS";
+	m_titleText = "GPS / GLONASS";
 #endif
 	SetUISetting(&gpUI);
 	SetUISetting2(&glUI);
@@ -333,6 +390,62 @@ void CSnrBarChartDual::ShowBoxChart(CDC *dc)
 	DrawSnr(dc, n, uiSetting, gsvData, gsaData, ggaData, sateStatus);
 	DrawSnr(dc, n, uiSetting2, gsvData2, gsaData2, ggaData2, sateStatus2);
 }
+
+//============================================================================
+CSnrBarChartMulti::CSnrBarChartMulti(void) 
+{
+  for(int i = 0; i < MaxSystemCount; ++i)
+  {
+	  gsvDataP[i] = NULL;
+	  gsaDataP[i] = NULL;
+	  ggaDataP[i] = NULL;
+	  sateStatusP[i] = NULL;
+  }
+
+	m_startBarChart = StartGnssBarChart;
+	m_minId = GpsIdStart;
+	m_maxId = GpsIdEnd;
+//#ifdef _NAVIC_CONVERT_
+//	m_titleText = "GPS / NavIC";
+//#else
+//	m_titleText = "GPS / GLONASS";
+//#endif
+	SetUISetting(0, &bdUI);
+	SetUISetting(1, &gaUI);
+	SetUISetting(2, &giUI);
+}
+
+CSnrBarChartMulti::~CSnrBarChartMulti(void) 
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CSnrBarChartMulti, CSnrBarChart)
+	ON_WM_PAINT()
+END_MESSAGE_MAP()
+
+void CSnrBarChartMulti::OnPaint()
+{
+	RefreshBarChart();
+}
+
+void CSnrBarChartMulti::ShowBoxChart(CDC *dc)
+{
+	int n = 0;
+  if(gsvDataP[0])
+  {
+	  DrawSnr(dc, n, uiSettingP[0], gsvDataP[0], gsaDataP[0], ggaDataP[0], sateStatusP[0]);
+  }
+  if(gsvDataP[1])
+  {
+	  DrawSnr(dc, n, uiSettingP[1], gsvDataP[1], gsaDataP[1], ggaDataP[1], sateStatusP[1]);
+  }
+  if(gsvDataP[2])
+  {
+	  DrawSnr(dc, n, uiSettingP[2], gsvDataP[2], gsaDataP[2], ggaDataP[2], sateStatusP[2]);
+  }
+}
+
 //============================================================================
 static const CSize SnrBarL2(14, 50);
 static const CPoint StartGnssBarChartL2(5, 52);
@@ -357,7 +470,7 @@ void CSnrBarChartL2::Init(int t)
 	m_startBarChart = StartGnssBarChartL2;
 	m_minId = 1;
 	m_maxId = 31;
-	m_titleText = "Beidou";
+	m_titleText = "BeiDou";
   if(t == 0)
   {
 	  SetUISetting(&gpl1UI);
@@ -385,8 +498,8 @@ void CSnrBarChartL2::ShowBoxChart(CDC *dc)
 	DrawSnr(dc, n, uiSetting, uiSettingSub, gsvData, gsaData, ggaData, sateStatus);
 }
 
-void CSnrBarChartL2::DrawSnr(CDC *dc, int& startId, UISetting* s, UISetting* sSub, GPGSV* gsv, GPGSA* gsa, GPGGA* gga, 
-                             Satellites* sate)
+void CSnrBarChartL2::DrawSnr(CDC *dc, int& startId, UISetting* s, UISetting* sSub, 
+  GPGSV* gsv, GPGSA* gsa, GPGGA* gga, Satellites* sate)
 {
 	BITMAP bm = {0};
 	bm.bmWidth = bm.bmHeight = 20;
@@ -395,31 +508,6 @@ void CSnrBarChartL2::DrawSnr(CDC *dc, int& startId, UISetting* s, UISetting* sSu
 	//Sort the satellite prn. 
   sate->Sort();
   int sateCount = sate->GetSateCount();
-	//int sateCount = GetNoneZeroCount(sate);
-	//int sateSubCount = GetNoneZeroCount(sateSub);
-	//if(sateCount == 0 && sateSubCount == 0)
-	//{
-	//	return;
-	//}
-
-	//struct sort_pred {
-	//	bool operator()(const std::pair<int,int> &left, const std::pair<int,int> &right) 
-	//	{ return left.second < right.second; }
-	//};
-
-	//vector< pair<int, int> > sateArray(sateCount);
-	//for(int i = 0; i < sateCount; ++i)
-	//{
-	//	sateArray[i] = make_pair(i, sate[i].SatelliteID);
-	//}
-	//std::sort(sateArray.begin(), sateArray.end(), sort_pred());
-
-	//vector< pair<int, int> > sateSubArray(sateSubCount);
-	//for(int i = 0; i < sateSubCount; ++i)
-	//{
-	//	sateSubArray[i] = make_pair(i, sateSub[i].SatelliteID);
-	//}
-	//std::sort(sateSubArray.begin(), sateSubArray.end(), sort_pred());
 
 	CFont* oldFont = dc->SelectObject(&(s->idFont));	
 	CBrush* oldBrush = dc->SelectObject(&(s->noUseSnrBarBrush));	
@@ -429,7 +517,7 @@ void CSnrBarChartL2::DrawSnr(CDC *dc, int& startId, UISetting* s, UISetting* sSu
 	{
     const Satellite* pSate = sate->GetSateIndex(i);
 		//int arrayIdx = sateArray[i].first;
-		int id = pSate->SatelliteID;
+		int id = pSate->GetPrn();
     int dx = 0, dy = 0;
 		int index = startId + i;
 
@@ -451,9 +539,9 @@ void CSnrBarChartL2::DrawSnr(CDC *dc, int& startId, UISetting* s, UISetting* sSu
 		CString idText;
     CRect barRect;
     COLORREF cr;
+
     //======Draw L1 SNR Chart
-    snrValue = pSate->snr[0];
-    if(snrValue != INVALIDATE_SNR)
+    if(IsValidateValue(sate->GetSnrSigId(0)))
     {
 		  //Draw gray rectangle out line.
 		  dc->SelectObject(&(s->inUseSnrBarPen));
@@ -491,8 +579,7 @@ void CSnrBarChartL2::DrawSnr(CDC *dc, int& startId, UISetting* s, UISetting* sSu
     }
     
     //======Draw L2 SNR Chart
-    snrValue2 = pSate->snr[1];
-    if(snrValue != INVALIDATE_SNR && snrValue2 != 0)
+    if(IsValidateValue(sate->GetSnrSigId(1)))
     {
       //Draw l2 gray rectangle out line.
 		  dc->SelectObject(&(sSub->inUseSnrBarPen));
@@ -591,7 +678,7 @@ CSnrBarChartNavic::CSnrBarChartNavic(void)
 	m_startBarChart = StartGnssBarChart;
 	m_minId = 1;
 	m_maxId = 31;
-	m_titleText = "NAVIC";
+	m_titleText = "NavIC";
 	SetUISetting(&giUI);
 }
 

@@ -1,38 +1,40 @@
 #include "stdafx.h"
 #include "GPS.h"
-#include "MaskedBitmap.h"
+//#include "MaskedBitmap.h"
 #include "GPSDlg.h"
-#include "UISetting.h"
-#include "SnrBarChart.h"
-#include "Pic_Earth.h"
+//#include "UISetting.h"
+//#include "SnrBarChart.h"
+//#include "Pic_Earth.h"
 
-static CSize GpsBarChartBg(685, 170);
-static int StartGpsBarChartX = 3;
-static int GpsBarChartGapX = 22;
+//static CSize GpsBarChartBg(685, 170);
+//static int StartGpsBarChartX = 3;
+//static int GpsBarChartGapX = 22;
+//
+//static CSize GnssBarChartBg(685, 94);
+//static int StartGnssBarChartX = 3;
+//static int StartGnssBarChartY = 170;
+//static int GnssBarChartGapX = 22;
+//
+//static int MaxGpsId = 61;
+//static int HalfMaxGpsId = (MaxGpsId + 1) / 2;
+//static int GnssIdStart = 65;
 
-static CSize GnssBarChartBg(685, 94);
-static int StartGnssBarChartX = 3;
-static int StartGnssBarChartY = 170;
-static int GnssBarChartGapX = 22;
-
-static int MaxGpsId = 61;
-static int HalfMaxGpsId = (MaxGpsId + 1) / 2;
-static int GnssIdStart = 65;
-
-CGPSDlg::PrnType CGPSDlg::GetPrnType(int id)
-{
-	if(id <= 51 || (id >= 193 && id <= 197))
-	{
-		return Gps;
-	}
-
-	if(id >= 65 && id <= 96)
-	{
-		return Glonass;
-	}
-
-	return Unknown;
-}
+//CGPSDlg::PrnType CGPSDlg::GetPrnType(int id)
+//{
+//	//20181205 modify QZSS upper prn to 200, request from Kevin
+//  //if(id <= 51 || (id >= 193 && id <= 197))
+//  if(id <= 51 || (id >= 193 && id <= 200))
+//	{
+//		return Gps;
+//	}
+//
+//	if(id >= 65 && id <= 96)
+//	{
+//		return Glonass;
+//	}
+//
+//	return Unknown;
+//}
 
 int CGPSDlg::CreateSubMenu(const HMENU hMenu, const MenuItemEntry* menuItemTable, LPCSTR pszSubMenuText)
 {

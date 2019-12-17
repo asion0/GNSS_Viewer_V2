@@ -116,7 +116,8 @@ BOOL CheckUbloxClass(U08 c)
 MessageType MessageParser::GetParsingData(void *buffer, DWORD bufferSize, DWORD* totalSize, DWORD timeout)
 {	
 #ifdef _DEBUG
-  const int dbgMode = 1;
+  const int dbgMode = 0;
+  timeout = 300000;
 #else
   const int dbgMode = 0;
 #endif
@@ -138,7 +139,6 @@ MessageType MessageParser::GetParsingData(void *buffer, DWORD bufferSize, DWORD*
 	{ 
 		if(t.GetDuration() > timeout && dbgMode == 0)
 		{
-
 		  return type;
 		}
 
@@ -251,8 +251,9 @@ MessageType MessageParser::GetParsingData(void *buffer, DWORD bufferSize, DWORD*
     }
     else if(NmeaBody == ps) 
     {
-      if(0x0D == *bufferIter && messageLength > 5)
+      if(0x0D == *bufferIter)
       {
+        //&& messageLength > 5)
         ps = NmeaEol0D;
       }
       else if(IsPrintable(*bufferIter) && messageLength < 128)
@@ -269,7 +270,7 @@ MessageType MessageParser::GetParsingData(void *buffer, DWORD bufferSize, DWORD*
     {
       if(*bufferIter == 0x0A)
       {
-        type = NmeaMessage;
+        type = (messageLength < 7) ? MtUnknown : NmeaMessage;
         ps = ParsingDone;
       }
       else

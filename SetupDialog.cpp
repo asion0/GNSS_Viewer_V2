@@ -124,7 +124,12 @@ void CSetupDialog::OnBnClickedOk()
 	setting->downloadTesting = ((CButton*)GetDlgItem(IDC_DOWNLOAD_TEST))->GetCheck();
 	setting->downloadRomInternal = ((CButton*)GetDlgItem(IDC_ROM_INTERNAL))->GetCheck();
 	setting->downloadUseBinExternal = ((CButton*)GetDlgItem(IDC_BIN_EXTERNAL))->GetCheck();
+	setting->showAllUnknownBinary = ((CButton*)GetDlgItem(IDC_SHOW_UNKNOWN_BIN))->GetCheck();
+	setting->autoAgpsAfterColdStart = ((CButton*)GetDlgItem(IDC_AUTO_AGPS))->GetCheck();
 
+	GetDlgItem(IDC_WN_ROLLOVER_CYCLE)->GetWindowText(s);
+  setting->weekNumberCycle = (s.IsEmpty()) ? 2 : atoi(s);
+  
 	setting->responseLog = ((CButton*)GetDlgItem(IDC_ENABLE_LOG))->GetCheck();
 	((CEdit*)GetDlgItem(IDC_LOG_PATH))->GetWindowText(setting->responseLogPath);
 	setting->specifyCenter = ((CButton*)GetDlgItem(IDC_SPY_CENTER))->GetCheck();
@@ -188,6 +193,12 @@ BOOL CSetupDialog::OnInitDialog()
 	((CButton*)GetDlgItem(IDC_DOWNLOAD_TEST))->SetCheck(setting->downloadTesting);
 	((CButton*)GetDlgItem(IDC_ROM_INTERNAL))->SetCheck(setting->downloadRomInternal);
 	((CButton*)GetDlgItem(IDC_BIN_EXTERNAL))->SetCheck(setting->downloadUseBinExternal);
+	((CButton*)GetDlgItem(IDC_SHOW_UNKNOWN_BIN))->SetCheck(setting->showAllUnknownBinary);
+	((CButton*)GetDlgItem(IDC_AUTO_AGPS))->SetCheck(setting->autoAgpsAfterColdStart);
+
+	s.Format("%d", setting->weekNumberCycle);
+	GetDlgItem(IDC_WN_ROLLOVER_CYCLE)->SetWindowText(s);
+
 	((CButton*)GetDlgItem(IDC_ENABLE_LOG))->SetCheck(setting->responseLog);
 	((CEdit*)GetDlgItem(IDC_LOG_PATH))->SetWindowText(setting->responseLogPath);
 	((CButton*)GetDlgItem(IDC_SPY_CENTER))->SetCheck(setting->specifyCenter);
@@ -272,12 +283,14 @@ void CSetupDialog2::OnBnClickedOk()
 	setting->downloadTesting = ((CButton*)GetDlgItem(IDC_DOWNLOAD_TEST))->GetCheck();
 	setting->downloadRomInternal = ((CButton*)GetDlgItem(IDC_ROM_INTERNAL))->GetCheck();
 	setting->downloadUseBinExternal = ((CButton*)GetDlgItem(IDC_BIN_EXTERNAL))->GetCheck();
+	//setting->showAllUnknownBinary = ((CButton*)GetDlgItem(IDC_SHOW_UNKNOWN_BIN))->GetCheck();
+	GetDlgItem(IDC_WN_ROLLOVER_CYCLE)->GetWindowText(s);
+  setting->weekNumberCycle = (s.IsEmpty()) ? 2 : atoi(s);
 
 	setting->responseLog = ((CButton*)GetDlgItem(IDC_ENABLE_LOG))->GetCheck();
 	((CEdit*)GetDlgItem(IDC_LOG_PATH))->GetWindowText(setting->responseLogPath);
 	setting->specifyCenter = ((CButton*)GetDlgItem(IDC_SPY_CENTER))->GetCheck();
 	setting->specifyCenterAlt = ((CButton*)GetDlgItem(IDC_SPY_ALT))->GetCheck();
-
 
 	GetDlgItem(IDC_ALT)->GetWindowText(s);
 	setting->scatterCenterAlt = atof(s);
@@ -336,6 +349,10 @@ BOOL CSetupDialog2::OnInitDialog()
 	((CButton*)GetDlgItem(IDC_DOWNLOAD_TEST))->SetCheck(setting->downloadTesting);
 	((CButton*)GetDlgItem(IDC_ROM_INTERNAL))->SetCheck(setting->downloadRomInternal);
 	((CButton*)GetDlgItem(IDC_BIN_EXTERNAL))->SetCheck(setting->downloadUseBinExternal);
+	//((CButton*)GetDlgItem(IDC_SHOW_UNKNOWN_BIN))->SetCheck(setting->showAllUnknownBinary);
+	s.Format("%d", setting->weekNumberCycle);
+	GetDlgItem(IDC_WN_ROLLOVER_CYCLE)->SetWindowText(s);
+
 	((CButton*)GetDlgItem(IDC_ENABLE_LOG))->SetCheck(setting->responseLog);
 	((CEdit*)GetDlgItem(IDC_LOG_PATH))->SetWindowText(setting->responseLogPath);
 	((CButton*)GetDlgItem(IDC_SPY_CENTER))->SetCheck(setting->specifyCenter);
