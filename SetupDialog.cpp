@@ -126,6 +126,7 @@ void CSetupDialog::OnBnClickedOk()
 	setting->downloadUseBinExternal = ((CButton*)GetDlgItem(IDC_BIN_EXTERNAL))->GetCheck();
 	setting->showAllUnknownBinary = ((CButton*)GetDlgItem(IDC_SHOW_UNKNOWN_BIN))->GetCheck();
 	setting->autoAgpsAfterColdStart = ((CButton*)GetDlgItem(IDC_AUTO_AGPS))->GetCheck();
+	setting->rtkStatusChanged = ((CButton*)GetDlgItem(IDC_RTK_STATUS_CHANGED))->GetCheck();
 
 	GetDlgItem(IDC_WN_ROLLOVER_CYCLE)->GetWindowText(s);
   setting->weekNumberCycle = (s.IsEmpty()) ? 2 : atoi(s);
@@ -195,6 +196,7 @@ BOOL CSetupDialog::OnInitDialog()
 	((CButton*)GetDlgItem(IDC_BIN_EXTERNAL))->SetCheck(setting->downloadUseBinExternal);
 	((CButton*)GetDlgItem(IDC_SHOW_UNKNOWN_BIN))->SetCheck(setting->showAllUnknownBinary);
 	((CButton*)GetDlgItem(IDC_AUTO_AGPS))->SetCheck(setting->autoAgpsAfterColdStart);
+	((CButton*)GetDlgItem(IDC_RTK_STATUS_CHANGED))->SetCheck(setting->rtkStatusChanged);
 
 	s.Format("%d", setting->weekNumberCycle);
 	GetDlgItem(IDC_WN_ROLLOVER_CYCLE)->SetWindowText(s);

@@ -319,7 +319,7 @@ DownloadErrocCode ProcessWlfResult(WlfResult w)
 	switch(w)
 	{
 	case wlf_timeout:
-		AfxMessageBox("Timeout: GPS device no response.");						
+		AfxMessageBox("Timeout3: GPS device no response.");						
 		break;
 	case wlf_error1:
 		AfxMessageBox("Error1 : Flash Wrong");	
@@ -365,12 +365,21 @@ bool CGPSDlg::FirmwareUpdate(const CString& strFwPath)
 			case EnternalLoaderInBinCmd:
 			case FileLoaderInBinCmd:
 			case InternalLoaderV8:
+      case InternalLoaderV9AddTagInBinCmd:
 			case ParallelDownloadType0:
 			case ParallelDownloadType1:
 			case InternalLoaderV8AddTag:
 			case InternalLoaderSpecial:
 			case RomExternalDownload:
-				res = PlRomNoAllocV8(strFwPath);
+				//res = PlRomNoAllocV8(strFwPath);
+        if(m_useLzmaDownload)
+        { 
+          res = PlRomNoAlloc7z(strFwPath);
+        }
+        else
+        {
+          res = PlRomNoAllocV8(strFwPath);
+        }
 				break;
 			case CustomerUpgrade:
 				res = PlRomCustomerUpgrade(m_nDownloadResource);
@@ -1007,7 +1016,7 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 	return RETURN_NO_ERROR;		
 }
 
-bool EmptyPromUniqueTag(U08* buffer, int size, int tagPos)
+bool EmptyPromUniqueTag(U08* buffer, int size, U32 tagPos)
 {
     U08* p = buffer + tagPos;
     for(int i = 0; i < 16; ++i)
@@ -1020,9 +1029,9 @@ bool EmptyPromUniqueTag(U08* buffer, int size, int tagPos)
 
 U08 CGPSDlg::PlRomNoAllocV8(const CString& promPath)
 {
-  Param promTag = { 0 };
-	int extraSize = ParserBinFile(promPath, &promTag);
-	char messages[100] = {0};
+  //Param promTag = { 0 };
+	//int extraSize = ParserBinFile(promPath, &promTag);
+	char messages[100] = { 0 };
 
 	BinaryData binFile(promPath);
 	if(binFile.Size() == 0)
@@ -1134,6 +1143,166 @@ U08 CGPSDlg::PlRomNoAllocV8(const CString& promPath)
 	return result;		
 }
 
+CString CGPSDlg::EncodeLzma(const CString& path)
+{
+  CString source, cmdLine, output;
+	source = Utility::GetSpecialFolder(CSIDL_APPDATA);
+	source += "\\GNSS_Viewer_V2";
+	::CreateDirectory(source, NULL);
+  output = source + "\\p.7z";
+  DeleteFile(output);
+
+	source += "\\lzma.exe";
+	Utility::CopyResToFile(source, IDR_LZMA, "EXEC");
+  cmdLine.Format("%s e \"%s\" %s -d13", source, path, output);
+	//cmdLine += regPath;
+	if(!Utility::ExecuteExeWait(cmdLine))
+  {
+    ::AfxMessageBox("LZMA decode failed!");
+    return "";
+  }
+  return output;
+}
+
+
+U08 CGPSDlg::PlRomNoAlloc7z(const CString& promPath)
+{
+  const int LzmaHeaderSize = 13;
+  Param promTag = { 0 };
+	int extraSize = ParserBinFile(promPath, &promTag);
+
+	BinaryData binFile(promPath);
+	if(binFile.Size() == 0)
+	{
+		::AfxMessageBox("PROM bin file not found!");
+		return RETURN_ERROR;
+	}
+
+	DWORD promLen = (DWORD)binFile.Size();
+  if(uniqueTag && !emptyTag)
+  {
+    EmptyPromUniqueTag(binFile.GetBuffer(), promLen, tagPos);
+  }
+
+	binFile.Seek(0);
+	U08 mycheck = GetPromBinCheckSum(binFile, promLen);
+
+#ifdef TEST_SREC
+	::AfxMessageBox("Press OK to start download.");
+#endif
+	//Old FW will return "END" itself after loader upload, but new FW will return "END" via loader. 
+	//Therefore, using the old FW with the new loader, it will receive "END" twice.
+
+  BinaryData lzmaData(EncodeLzma(promPath));
+  if(lzmaData.Size() == 0)
+  {
+	  ::AfxMessageBox("PROM bin read failed!");
+	  return RETURN_ERROR;  
+  }
+
+  promLen = lzmaData.Size() - LzmaHeaderSize;
+	bool bResendbin = true;
+	while(bResendbin)
+	{
+		U32 checkCode = 0;
+		CString strBinsizeCmd;
+		if(m_DownloadMode == InternalLoaderV8AddTag || downloadAddTag)
+		{
+      if(uniqueTag)
+      {
+        int mode = 0;
+			  checkCode = promLen + mycheck + tagPos + mode;
+			  strBinsizeCmd.Format("BINSIZ3 = %d %d %u %u %u ", promLen, mycheck, tagPos, mode, checkCode);
+      }
+      else
+      {
+			  checkCode = promLen + mycheck + m_nDownloadBaudIdx + tagAddress + tagValue;
+			  strBinsizeCmd.Format("BINSIZ2 = %d %d %u %u %u %u ", 
+          promLen, mycheck, m_nDownloadBaudIdx, tagAddress, tagValue, checkCode);
+        downloadAddTag = FALSE;
+        tagAddress = 0;
+        tagValue = 0;
+      }
+		}
+		else
+		{
+      if(uniqueTag)
+      {
+        //int mode = 0;
+			  //checkCode = promLen + mycheck + tagPos + mode;
+			  //strBinsizeCmd.Format("BINSIZ3 = %d %d %u %u %u ", promLen, mycheck, tagPos, mode, checkCode);
+        int mode = 0;
+			  checkCode = promLen + mycheck + tagPos + mode;
+        for(int i = 0; i < LzmaHeaderSize; ++i)
+        {
+          checkCode += lzmaData[i];
+        }
+			  strBinsizeCmd.Format("BINSIZ8 = %d %d %u %u %d %d %d %d %d %d %d %d %d %d %d %d %d %u ", 
+          promLen, mycheck, tagPos, mode, 
+          lzmaData[0], lzmaData[1], lzmaData[2], lzmaData[3], lzmaData[4], lzmaData[5], lzmaData[6], 
+          lzmaData[7], lzmaData[8], lzmaData[9], lzmaData[10], lzmaData[11], lzmaData[12], 
+          checkCode);
+      }
+      else
+      {
+			  checkCode = promLen + mycheck;
+        for(int i = 0; i < LzmaHeaderSize; ++i)
+        {
+          checkCode += lzmaData[i];
+        }
+			  strBinsizeCmd.Format("BINSIZ7 = %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %u ", 
+          promLen, mycheck, 
+          lzmaData[0], lzmaData[1], lzmaData[2], lzmaData[3], lzmaData[4], lzmaData[5], lzmaData[6], 
+          lzmaData[7], lzmaData[8], lzmaData[9], lzmaData[10], lzmaData[11], lzmaData[12], 
+          checkCode);
+      }
+		}
+
+    m_serial->SendData((LPCSTR)strBinsizeCmd, strBinsizeCmd.GetLength() + 1);	
+		bool isEnd = false;
+		do 
+		{
+			WlfResult wlf = WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, BinSizeTimeout, &m_responseList);
+			switch(wlf)
+			{
+			case wlf_end:
+				isEnd = true;
+				break;
+			case wlf_ok:
+				bResendbin = false;
+				isEnd = false;
+				break;
+			case wlf_resendbin:
+				bResendbin = true;
+				isEnd = false;
+				break;
+			default:
+				ProcessWlfResult(wlf);
+				return RETURN_ERROR;		        
+				break;
+			}
+		} while(isEnd);
+	}	//while(bResendbin)
+
+	downloadTotalSize = promLen;
+	downloadProgress = 0;
+	m_psoftImgDlDlg->PostMessage(UWM_SETPROMPT_MSG, IDS_WAITROM_MSG);
+	
+	int result = RETURN_NO_ERROR;
+	int retryCount = 1;
+	do
+	{
+		//f.SeekToBegin();
+		lzmaData.Seek(LzmaHeaderSize);
+		Sleep(500);	//for GPSDO
+    result = SendRomBuffer3(NULL, 0, lzmaData, promLen, false, m_psoftImgDlDlg);
+	} while(result == RETURN_RETRY && (retryCount--) > 0);
+
+	//f.Close();
+	m_psoftImgDlDlg->PostMessage(UWM_SETPROMPT_MSG, IDS_ROMWRITINGOK_MSG);
+	return result;		
+}
+
 U08 CGPSDlg::PlRomCustomerUpgrade(UINT rid)
 {
 	BinaryData prom(rid, "BIN");
@@ -1233,7 +1402,10 @@ bool CGPSDlg::DownloadLoader(DownloadMode mode)
 	const int bufferSize = 256;
 	char messages[100] = {0};
 
-  if(mode != EnternalLoaderInBinCmd && mode != InternalLoaderV8AddTagInBinCmd &&mode != FileLoaderInBinCmd)
+  if(mode != EnternalLoaderInBinCmd && 
+     mode != InternalLoaderV8AddTagInBinCmd &&
+     mode != InternalLoaderV9AddTagInBinCmd &&
+     mode != FileLoaderInBinCmd)
 	{
 		GetLoaderDownloadCmd(messages, sizeof(messages));
 		
@@ -1262,13 +1434,21 @@ bool CGPSDlg::DownloadLoader(DownloadMode mode)
 	else
 	{
 		U08 msg[7] = {0};
-		msg[0] = 0x64;
-		msg[1] = 0x1B;
-		msg[2] = (U08)m_nDownloadBaudIdx;
-		msg[3] = (U08)0;
-		msg[4] = (U08)0;
-		msg[5] = (U08)0;
-		msg[6] = (U08)m_nDownloadBufferIdx;
+    if(m_v9NewDownloadCmd)
+    {
+		  msg[0] = 0x64;
+		  msg[1] = 0x4F;
+    }
+    else
+    {
+		  msg[0] = 0x64;
+		  msg[1] = 0x1B;
+    }
+	  msg[2] = (U08)m_nDownloadBaudIdx;
+	  msg[3] = (U08)0;
+	  msg[4] = (U08)0;
+	  msg[5] = (U08)0;
+	  msg[6] = (U08)m_nDownloadBufferIdx;
 		int len = SetMessage(msg, sizeof(msg));
 
 		bool b = SendToTarget(m_inputMsg, len, "Send upload loader successfully", 6000);
@@ -1293,7 +1473,8 @@ bool CGPSDlg::DownloadLoader(DownloadMode mode)
 	theApp.CheckExternalSrec(externalSrecFile);
 
 	if(EnternalLoaderInBinCmd == mode || 
-     FileLoader == mode || FileLoaderInBinCmd == mode)
+     FileLoader == mode || 
+     FileLoaderInBinCmd == mode)
 	{
     if(externalSrecFile.IsEmpty())
     {
@@ -1304,6 +1485,17 @@ bool CGPSDlg::DownloadLoader(DownloadMode mode)
 		  srec.ReadFromFile(externalSrecFile);
     }
 	}
+  else if(InternalLoaderV9AddTagInBinCmd == mode)
+  {
+    if(externalSrecFile.IsEmpty())
+    {
+      srec.ReadFromResource(IDR_V9_AT_SREC, "SREC");
+    }
+    else
+    {
+		  srec.ReadFromFile(externalSrecFile);
+    }
+  }
 	else
 	{
 		UINT loaderID = GetSrecFromResource(m_nDownloadBaudIdx);
@@ -1397,8 +1589,10 @@ bool CGPSDlg::DownloadLoader(DownloadMode mode)
 		case FileLoaderInBinCmd:
 		case InternalLoaderV8:
 		case InternalLoaderV8AddTag:
+    case InternalLoaderV9AddTagInBinCmd:
 		case RomExternalDownload:
 		case InternalLoaderSpecial:
+    
 			break;
 		default:
 			ASSERT(FALSE);
@@ -1587,6 +1781,24 @@ bool IsV9FirmwareVersion(const BinaryData& ackCmd)
   return false;
 }
 
+bool IsV9NewDownloadCmd(const BinaryData& ackCmd)
+{
+  if(ackCmd[13] >= 31)
+  {
+    return true;
+  }
+  return false;
+}
+
+bool IsV9LzmaLoader(const BinaryData& ackCmd)
+{
+  if(ackCmd[13] > 29)
+  {
+    return true;
+  }
+  return false;
+}
+
 static const int SpiBaudIndex = 9;
 //static bool SecondRun = false;
 bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
@@ -1609,6 +1821,7 @@ bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
 		case ParallelDownloadType1:
 		case InternalLoaderV8AddTag:
     case InternalLoaderV8AddTagInBinCmd:
+    case InternalLoaderV9AddTagInBinCmd:
 		case RomExternalDownload:
 		case InternalLoaderSpecial:
 		case EnternalLoaderInBinCmd:
@@ -1639,11 +1852,11 @@ bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
 			    CreateGPSThread();
         }
 				//m_gpsdoInProgress = false;
-        if(EnternalLoaderInBinCmd == m_DownloadMode)
-        {
-          m_DownloadMode = InternalLoaderV8;
-          return RealDownload(restoreConnection, boostBaudRate);
-        }
+        //if(EnternalLoaderInBinCmd == m_DownloadMode)
+        //{
+        //  m_DownloadMode = InternalLoaderV8;
+        //  return RealDownload(restoreConnection, boostBaudRate);
+        //}
 				return false;
 			}
 			break;
@@ -1658,13 +1871,27 @@ bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
 			int cmdSize = 0;	
 			if(m_DownloadMode==InternalLoaderV8 || m_DownloadMode==GpsdoMasterSlave)
 			{
-				msg[0] = 0x0B;
-				msg[1] = (U08)m_nDownloadBaudIdx;
-				msg[2] = (U08)0;
-				msg[3] = (U08)0;
-				msg[4] = (U08)0;
-				msg[5] = (U08)m_nDownloadBufferIdx;
-				cmdSize = 6;
+        if(m_v9NewDownloadCmd)
+        {
+				  msg[0] = 0x64;
+				  msg[1] = 0x4E;
+				  msg[2] = (U08)m_nDownloadBaudIdx;
+				  msg[3] = (U08)0;
+				  msg[4] = (U08)0;
+				  msg[5] = (U08)0;
+				  msg[6] = (U08)m_nDownloadBufferIdx;
+				  cmdSize = 7;
+        }
+        else
+        {
+				  msg[0] = 0x0B;
+				  msg[1] = (U08)m_nDownloadBaudIdx;
+				  msg[2] = (U08)0;
+				  msg[3] = (U08)0;
+				  msg[4] = (U08)0;
+				  msg[5] = (U08)m_nDownloadBufferIdx;
+				  cmdSize = 6;
+        }
 			}
 			else if(m_DownloadMode==CustomerDownload)
 			{
@@ -1708,7 +1935,7 @@ bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
 			ASSERT(FALSE);
 	}
 
-	if(m_DownloadMode==HostBasedCmdOnly)
+	if(m_DownloadMode == HostBasedCmdOnly)
 	{
 		//m_gpsdoInProgress = false;
 		return false;
@@ -1720,7 +1947,7 @@ bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
   }
 	if(isSuccessful)
 	{
-		if(NULL==m_psoftImgDlDlg)
+		if(NULL == m_psoftImgDlDlg)
 		{
 			m_psoftImgDlDlg = new CSoftImDwDlg;	
 			AfxBeginThread(ShowDownloadProgressThread, 0); 
@@ -1781,77 +2008,9 @@ bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
 	return isSuccessful;
 }
 
-bool CheckPromUniqueTag(const CString& imgPath, int& tagPos, bool& emptyTag)
-{
-  CFile f(imgPath, CFile::modeRead);
-  tagPos = 0;
-  int imgSize = (int)f.GetLength();
-  if(imgSize <= 0)
-  {
-    f.Close();
-    return false;
-  }
-
-  U08* buff = new U08[imgSize];
-  UINT s = f.Read(buff, imgSize);
-  f.Close();
-
-  if(s != imgSize)
-  {
-    delete [] buff;
-    return false;
-  }
-
-  U08 checkPattern[] = { 0x21, 0x22, 0x23, 0x24, 0x26, 0x2A, 0x28, 0x29, 
-                         0x2F, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F, 0x40 };
-  int checkSize = sizeof(checkPattern);
-
-  U08 *p = buff;
-  while (true) 
-  {
-    U08* ptr = (U08*)memchr(p, checkPattern[0], s); 
-    if(ptr == NULL)
-    { //Not found
-      p = NULL;
-      break;
-    }
-    if(0 == memcmp(ptr, checkPattern, checkSize))
-    { //Pattern found
-      p = ptr;
-      break;
-    }
-    s -= (ptr - p) + 1;
-    if(s <= 0)
-    {
-      p = NULL;
-      break;
-    }
-    p = ptr + 1;
-  }
-
-  if(p)
-  {
-    tagPos = (int)(p - buff) - 16;
-
-    p = buff + tagPos;
-    emptyTag = true;
-    for(int i = 0; i < 16; ++i)
-    {
-      if(*p != 0xFF)
-      {
-        emptyTag = false;
-        //*p = 0xFF;
-      }
-    }
-    delete [] buff;
-    return true;
-  }
-  delete [] buff;
-  return false;
-}
-
 bool CGPSDlg::Download()
 {
+  m_useLzmaDownload = FALSE;
   if(g_setting.GetBaudrateIndex() == 0) //4800 bps
   { //Turn off message output
 	  BinaryCommand cmd(3);
@@ -1865,27 +2024,12 @@ bool CGPSDlg::Download()
 
   tagPos = 0;
   emptyTag = false;
-  uniqueTag = CheckPromUniqueTag(m_strDownloadImage, tagPos, emptyTag);
-  if(uniqueTag && m_DownloadMode == InternalLoaderV8)
+  uniqueTag = Utility::CheckPromUniqueTag(m_strDownloadImage, tagPos, emptyTag);
+  if(uniqueTag && !emptyTag)
   {
-    m_DownloadMode = EnternalLoaderInBinCmd;
+    uniqueTag = false;
+    tagPos = 0;
   }
-
-  if(m_DownloadMode == ForceInternalLoaderV8)
-  {
-    m_DownloadMode = InternalLoaderV8;
-    return RealDownload();
-  }
-
-	if(m_DownloadMode == CustomerUpgrade)
-	{
-		return Download2();
-	}
-
-	if(m_DownloadMode == GpsdoMasterSlave)
-	{
-		return DownloadMasterSlave();
-	}
 
 	bool isSuccessful = true;
 	do 
@@ -1908,6 +2052,12 @@ bool CGPSDlg::Download()
 		if(m_DownloadMode != FileLoader && !DOWNLOAD_IMMEDIATELY)
     {
       ackQueryReg = QueryRegister(Return, &chipmode);
+      if(_NEIL_TEMP_VER_)
+      {
+        CString strMsg;
+        strMsg.Format("%d:QueryRegister", (int)ackQueryReg);
+        ::AfxMessageBox(strMsg);
+      }
     }
     if(Ack == ackQueryReg)
 		{
@@ -1918,26 +2068,54 @@ bool CGPSDlg::Download()
 		if(m_DownloadMode != FileLoader && !DOWNLOAD_IMMEDIATELY)
     {
       ackQueryVer = QuerySoftwareVersionSystemCode(Return, &ackVer);
+      if(_NEIL_TEMP_VER_)
+      {
+        CString strMsg;
+        strMsg.Format("%d:QuerySoftwareVersionSystemCode", (int)ackQueryReg);
+        ::AfxMessageBox(strMsg);
+      }
     }
+
     if(Ack == ackQueryVer)
 		{
 			hasAckVersion = TRUE;
 		}
-    else
+    else if(!_NEIL_TEMP_VER_)
     {
 			::AfxMessageBox("Device no response!");
       return false;
     }
 
 		m_nDefaultTimeout = g_setting.defaultTimeout;
-
+    if(IsV9FirmwareVersion(ackVer))
+    {
+      m_useLzmaDownload = TRUE;
+    }
+    m_v9NewDownloadCmd = (IsV9NewDownloadCmd(ackVer)) ? TRUE : FALSE;
+    
     if(m_DownloadMode == InternalLoaderV8)
     {
-      //if(uniqueTag )
-      if(uniqueTag || IsV9FirmwareVersion(ackVer))
-      { //V9 use EnternalLoaderInBinCmd now
-        m_DownloadMode = EnternalLoaderInBinCmd;
+      //if(uniqueTag)
+      //{ //V9 use EnternalLoaderInBinCmd now
+      //  m_DownloadMode = EnternalLoaderInBinCmd;
+      //}
+      //else if(IsV9FirmwareVersion(ackVer))
+      //{
+      //  m_useLzmaDownload = TRUE;
+      //  if(!IsV9LzmaLoader(ackVer))
+      //  {
+      //    m_DownloadMode = InternalLoaderV9AddTagInBinCmd;
+      //  }
+      //}
+      if(IsV9FirmwareVersion(ackVer))
+      {
+        m_useLzmaDownload = TRUE;
+        if(!IsV9LzmaLoader(ackVer))
+        {
+          m_DownloadMode = InternalLoaderV9AddTagInBinCmd;
+        }
       }
+
       //else if(IsV8ChinaTowerOem(ackVer))
       //{
       //  m_DownloadMode = InternalLoaderV8;
@@ -1954,7 +2132,6 @@ bool CGPSDlg::Download()
       { //Winbond flash
         m_DownloadMode = InternalLoaderV8;
       }
-
       else if(ackQueryReg == Timeout && hasAckVersion)
       { //RTK Slave fw
         m_DownloadMode = InternalLoaderV8;

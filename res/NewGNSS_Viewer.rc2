@@ -231,9 +231,19 @@ IDR_V8_DL_SREC_460800 SREC						"res\\loader_v8_download_460800.srec"
 //IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag.srec"
 //IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag_2019011816343348.srec"
 //IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag_20191212113345.srec"
-IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag_20191217105058.srec"
+//IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag_20191217105058.srec"
+//IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag_20200116180720.srec"
+//IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag_20200206145058.srec"
+//IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag_20191220144037.srec"
+//IDR_V8_AT_SREC        SREC						"res\\loader_v8_add_tag_20200302154408.srec"
+IDR_V8_AT_SREC        SREC						"res\\loader_v9_add_tag_20200303152641.srec"
+//IDR_V9_AT_SREC        SREC						"res\\loader_v8_add_tag_20200206145058.srec"
+//IDR_V9_AT_SREC        SREC						"res\\loader_v8_add_tag_20200302154408.srec"
+IDR_V9_AT_SREC        SREC						"res\\loader_v9_add_tag_20200303152641.srec"
+
 //IDR_INTERNAL_LOADER_SPECIAL     SREC  "res\\loader_v8_new.srec"
 IDR_V8_IO_TESTER      SREC						"res\\ioTest.srec"
+IDR_V9_IO_TESTER      SREC						"res\\ioTestV9-200207172400.srec"
 
 /////////////////////////////////////////////////////////////////////////////
 //

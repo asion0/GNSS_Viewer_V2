@@ -564,7 +564,6 @@ protected:
 	S08 m_nInsertSecond;
 	U08 m_attribute;
 
-
 	DECLARE_MESSAGE_MAP()
 };
 
@@ -1023,7 +1022,8 @@ public:
     RtkSvGps,
     RtkSvSbasQzss,
     RtkSvGlonass,
-    RtkSvBeidou2
+    RtkSvBeidou2,
+    RtkSvGalileo
   };
   void SetSvMode(SvMode s) { m_svMode = s; };
 
@@ -1086,6 +1086,7 @@ protected:
 	U08 m_field4;
 	U08 m_field5;
 	U08 m_field6;
+	U08 m_field7;
 	U08 m_field8;
 	U08 m_field9;
 	U08 m_field10;
@@ -1513,6 +1514,29 @@ protected:
 	DdType m_ddType;
 	PsType m_psType;
 	int m_timeout;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+class CConfigRtkElevationAndCnrMask : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigRtkElevationAndCnrMask)
+public:
+	CConfigRtkElevationAndCnrMask(CWnd* pParent = NULL);   
+	virtual ~CConfigRtkElevationAndCnrMask() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
+
+protected:
+	S08 m_ele;
+	U08 m_cnr;
+	U08 m_gcnr;
+	S08 m_ele2;
+	U08 m_cnr2;
+	U08 m_gcnr2;
+  U08 m_attribute;
 
 	DECLARE_MESSAGE_MAP()
 };

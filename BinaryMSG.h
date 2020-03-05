@@ -31,4 +31,5 @@ void ShowUbxNavSvStatus(U08* src, bool convertOnly = false, CString* pStr = NULL
 void ShowUbxNavPosllh(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowUbxNavDop(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowUbxNavVelned(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowStqSpecialDrInfo(U08* src, bool convertOnly = false, CString* pStr = NULL);
 

@@ -169,18 +169,9 @@ void CSnrBarChart::DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGS
 	{
     const Satellite* pSate = sate->GetSateIndex(i);
 		int id = pSate->GetPrn();
-
-    if(id == 18)
-    {
-      int aaa = 0;
-    }
 		int dx = 0, dy = 0;
 		int index = startId + i;
 
-    if(id < 0)
-    {
-      int aaa = 0;
-    }
 		if(index < MaxCountInRaw)
 		{	
 			dx = m_startBarChart.x + index * (BarChartIdGap + bm.bmWidth);
@@ -204,13 +195,18 @@ void CSnrBarChart::DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGS
       continue;
     }
    
-    int sig = sate->GetSnrSigId(0);
-	  if(!IsValidateValue(sig))
+    int sig1 = sate->GetSnrSigId(0);
+    int sig2 = sate->GetSnrSigId(1);
+	  if(!IsValidateValue(sig1) && !IsValidateValue(sig2))
 	  {
 		  continue;
 	  }
 
-    F32 snrValue = pSate->GetSnrTable().GetSnr(sig);
+    F32 snrValue1 = pSate->GetSnrTable().GetSnr(sig1);
+    F32 snrValue2 = pSate->GetSnrTable().GetSnr(sig2);
+
+    F32 snrValue = (snrValue1 > snrValue2) ? snrValue1 : snrValue2;
+    int sig = (snrValue1 > snrValue2) ? sig1 : sig2;
 	  if(!IsValidateValue(snrValue))
 	  {
 		  continue;

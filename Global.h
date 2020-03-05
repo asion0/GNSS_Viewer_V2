@@ -133,6 +133,7 @@ struct Setting
 			reg.WriteInt("setting_downloadUseBinExternal", downloadUseBinExternal);
 			reg.WriteInt("setting_showAllUnknownBinary", showAllUnknownBinary);
 			reg.WriteInt("setting_autoAgpsAfterColdStart", autoAgpsAfterColdStart);
+			reg.WriteInt("setting_rtkStatusChanged", rtkStatusChanged);
 			reg.WriteInt("setting_weekNumberCycle", weekNumberCycle);
       
 			reg.WriteInt("recentScatterCenterCount", recentScatterCenter.GetCount());
@@ -174,6 +175,7 @@ struct Setting
 			downloadUseBinExternal = reg.ReadInt("setting_downloadUseBinExternal", FALSE);
 			showAllUnknownBinary = reg.ReadInt("setting_showAllUnknownBinary", FALSE);
 			autoAgpsAfterColdStart = reg.ReadInt("setting_autoAgpsAfterColdStart", FALSE);
+			rtkStatusChanged = reg.ReadInt("setting_rtkStatusChanged", FALSE);
 			weekNumberCycle = reg.ReadInt("setting_weekNumberCycle", 2);
 
 			int recentCount = reg.ReadInt("recentScatterCenterCount", 0);
@@ -214,6 +216,7 @@ struct Setting
       downloadUseBinExternal = FALSE;
       showAllUnknownBinary = FALSE;
       autoAgpsAfterColdStart = FALSE;
+      rtkStatusChanged = FALSE;
 			weekNumberCycle = 2;
 		}
 
@@ -271,6 +274,8 @@ struct Setting
 	int BaudrateIndex(int b);
 	int BaudrateValue(int i){ return BaudrateTable[i]; }
 	int GetBaudrateIndex() { return baudrate; }
+  int GetShortTimeout() { return (baudrate > 0) ? 1000 : 2000; }
+  int GetLongTimeout() { return (baudrate > 0) ? 3000 : 5000; }
 	int GetBaudrate() { return BaudrateTable[baudrate]; }
 	void SetBaudrateIndex(int b) { baudrate = b; }
 	int SetBaudrateByValue(int b);
@@ -297,6 +302,7 @@ struct Setting
   BOOL downloadUseBinExternal;
   BOOL showAllUnknownBinary;
   BOOL autoAgpsAfterColdStart;
+  BOOL rtkStatusChanged;
 	int weekNumberCycle;
 
 	BOOL responseLog;

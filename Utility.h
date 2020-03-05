@@ -47,6 +47,7 @@ namespace Utility
   //Procress functions
 	DWORD ExecuteExternalFileW(LPCWSTR csCmdLine, CString& strResult);
 	BOOL ExecuteExeNoWait(LPCSTR csCmdLine);
+  BOOL ExecuteExeWait(LPCSTR csCmdLine);
 	bool IsProcessRunning(LPWSTR processName);
 
   //Pipe utilities
@@ -81,6 +82,11 @@ namespace Utility
 	CString GetNameAttachPid(LPCSTR name);
 	void DoEvents();
 	void GetErrorString(CString& msg, DWORD errorCode);
+  
+  // return true when OK, 
+  //bool CalcFirmwareCrc(const CString& fwPath, U16& crc1, U16& crc2, U32& crc3, U08& checkSum);
+  bool CalcFirmwareCrc(const CString& fwPath, int flashSize, U16& crcM, U16& crcS, U32& crc32_16m, U32& crc32_8m, U08& checkSum);
+  bool CheckPromUniqueTag(const CString& imgPath, U32& tagPos, bool& emptyTag);
 }
 
 class ScopeTimer
@@ -309,7 +315,6 @@ public:
 		{
 			AtlThrow(E_INVALIDARG);
 		}
-			
 		return(dataPtr[iChar]);
 	}
 

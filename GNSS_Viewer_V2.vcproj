@@ -3413,6 +3413,26 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="CRC24Q"
+				>
+				<File
+					RelativePath=".\CRC24Q\crc24q_parity.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\CRC24Q\crc24q_parity.h"
+					>
+				</File>
+				<File
+					RelativePath=".\CRC24Q\st_basic_const.h"
+					>
+				</File>
+				<File
+					RelativePath=".\CRC24Q\st_basic_type.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="3_UIComponent"
@@ -3511,6 +3531,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\res\FtpCheck.exe"
+			>
+		</File>
+		<File
 			RelativePath=".\res\GpsDis.png"
 			>
 		</File>
@@ -3520,6 +3544,10 @@
 		</File>
 		<File
 			RelativePath=".\res\IQPlot.exe"
+			>
+		</File>
+		<File
+			RelativePath=".\res\lzma.exe"
 			>
 		</File>
 		<File

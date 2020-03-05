@@ -831,6 +831,10 @@ DWORD CSerial::GetZenlaneResponse1(void *buffer, DWORD bufferSize, DWORD timeout
 
 DWORD CSerial::GetBinaryAck(void *buffer, DWORD bufferSize, DWORD timeout)
 {	
+
+#if _DEBUG
+timeout = 300000;
+#endif
 	U08* bufferIter = (U08*)buffer;
 	DWORD totalSize = 0;
 	ScopeTimer t;
@@ -896,14 +900,18 @@ DWORD CSerial::GetBinaryAck(void *buffer, DWORD bufferSize, DWORD timeout)
           cmdHeaderCome = true;
 					continue;
 				}
-				else if(*bufferIter==0x0a && *(bufferIter-1)==0x0d)
+        else if(*bufferIter == 0x0a && *(bufferIter - 1) != 0x0d)
+        {
+          int a = 0;
+        }
+				else if(*bufferIter == 0x0a && *(bufferIter - 1) == 0x0d)
 				{
-					unsigned char *chk_ptr = bufferIter - totalSize;
+					U08 *chk_ptr = bufferIter - totalSize;
 					
 					if (*chk_ptr == 0xa0)
 					{
 						int tmp_len = *(chk_ptr + 2);
-						tmp_len = tmp_len << 8 | *(chk_ptr+3);
+						tmp_len = tmp_len << 8 | *(chk_ptr + 3);
 						if (totalSize == tmp_len + 6) 
 						{
 							*(bufferIter+1) = 0;

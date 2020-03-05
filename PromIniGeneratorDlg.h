@@ -7,7 +7,12 @@ class PromIniGeneratorDlg : public CDialog
 	DECLARE_DYNAMIC(PromIniGeneratorDlg)
 
 public:
-	PromIniGeneratorDlg(LPCSTR pszPromPath, int t = 0, CWnd* pParent = NULL);   // 
+  enum UIType
+  {
+    V8,
+    Phoenix,
+  };
+	PromIniGeneratorDlg(LPCSTR pszPromPath, UIType t = V8, CWnd* pParent = NULL);   // 
 	virtual ~PromIniGeneratorDlg();
 
 protected:
@@ -17,14 +22,15 @@ protected:
 public:
 	virtual BOOL OnInitDialog();
 	
-  afx_msg void OnEnChangeInput();
+  afx_msg void OnEnChangeTagValue();
+  afx_msg void OnEnChangeProductName();
   afx_msg void OnBnClickedEnableTag();
 	afx_msg void OnBnClickedRename();
 	afx_msg void OnBnClickedOk();
 
 protected:
   CString promPath;
-  int type;
+  UIType type;
   
 	virtual void OnOK();
   void UpdateUiStatus();

@@ -34,6 +34,7 @@ enum NmeaType
 	MSG_GNS,
 	MSG_VTG,
 	MSG_STI,
+  MSG_PIRNSF,
 
 	MSG_ERROR,
 	MSG_REBOOT,
@@ -132,7 +133,7 @@ public:
   {
     for(int i = 0; i < SnrPairSize; ++i)
     {
-      if(snrData[i].sig == 0 && sg != 0)
+      if(snrData[i].sig == 0 && sg != 0 && snrData[i].snr == 0)
       { //Replace sig 0 by others value
         snrData[i].sig = sg;
         snrData[i].snr = sn;
@@ -265,11 +266,11 @@ public:
   void Set(U16 p, U16 e, U16 a, const SnrTable& s)
   {
     prn = p;
-    if(e != (U16)NonUseValue)
+    if(e != (U16)NonUseValue && ele == 0)
     {
       ele = e;
     }
-    if(a != (U16)NonUseValue)
+    if(a != (U16)NonUseValue && azi == 0)
     {
        azi = a;
     }    
@@ -354,7 +355,6 @@ public:
     SetSate2(s.GetPrn(), s.GetEle(), s.GetAzi(), s.GetSnrTable());
   }
 
-  //void SetSate(int prn, int ele, int azi, const SnrTable& snr)
   void SetSate2(int prn, int ele, int azi, const SnrTable& snr)
   {
     int idx = GetPrnIndex(prn);
@@ -363,10 +363,6 @@ public:
       idx = index++;
       inOrder = false;
     }
-    //if(chInd & 0x08)
-    //{
-    //  int a = 0;
-    //}
     sate[idx].Set(prn, ele, azi, snr);
   }
 

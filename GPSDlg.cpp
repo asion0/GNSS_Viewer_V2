@@ -226,7 +226,6 @@ void CGPSDlg::Copy_NMEA_Memery(bool needUpdate /*= true*/)
 	memcpy(&m_bdgsaMsgCopy1, &m_bdgsaMsgCopy, sizeof(GPGSA));
 	memcpy(&m_gagsaMsgCopy1, &m_gagsaMsgCopy, sizeof(GPGSA));
 	memcpy(&m_gigsaMsgCopy1, &m_gigsaMsgCopy, sizeof(GPGSA));
-
 	memcpy(&m_gpggaMsgCopy1, &m_gpggaMsgCopy, sizeof(GPGGA));
 
   m_gpgsvMsgCopy1 = m_gpgsvMsgCopy;
@@ -234,11 +233,6 @@ void CGPSDlg::Copy_NMEA_Memery(bool needUpdate /*= true*/)
   m_bdgsvMsgCopy1 = m_bdgsvMsgCopy;
   m_gagsvMsgCopy1 = m_gagsvMsgCopy;
   m_gigsvMsgCopy1 = m_gigsvMsgCopy;
-	//memcpy(&m_gpgsvMsgCopy1, &m_gpgsvMsgCopy, sizeof(GPGSV));
-	//memcpy(&m_glgsvMsgCopy1, &m_glgsvMsgCopy, sizeof(GPGSV));
-	//memcpy(&m_bdgsvMsgCopy1, &m_bdgsvMsgCopy, sizeof(GPGSV));
-	//memcpy(&m_gagsvMsgCopy1, &m_gagsvMsgCopy, sizeof(GPGSV));
-	//memcpy(&m_gigsvMsgCopy1, &m_gigsvMsgCopy, sizeof(GPGSV));
 
 	memcpy(&m_gpzdaMsgCopy1, &m_gpzdaMsgCopy, sizeof(GPZDA));
 	memcpy(&m_gprmcMsgCopy1, &m_gprmcMsgCopy, sizeof(GPRMC));
@@ -418,7 +412,6 @@ void CGPSDlg::CLEAR_NMEA_TO_USE()
 	memset(&m_bdgsaMsg, 0, sizeof(GPGSA));
 	memset(&m_gagsaMsg, 0, sizeof(GPGSA));
 	memset(&m_gigsaMsg, 0, sizeof(GPGSA));
-
 	memset(&m_gpggaMsg, 0, sizeof(GPGGA));
 
   m_gpgsvMsg.Clear();
@@ -426,11 +419,6 @@ void CGPSDlg::CLEAR_NMEA_TO_USE()
   m_bdgsvMsg.Clear();
   m_gagsvMsg.Clear();
   m_gigsvMsg.Clear();
-	//memset(&m_gpgsvMsg, 0, sizeof(GPGSV));
-	//memset(&m_glgsvMsg, 0, sizeof(GPGSV));
-	//memset(&m_bdgsvMsg, 0, sizeof(GPGSV));
-	//memset(&m_gagsvMsg, 0, sizeof(GPGSV));
-	//memset(&m_gigsvMsg, 0, sizeof(GPGSV));
 
 	memset(&m_gpzdaMsg, 0, sizeof(GPZDA));
 	memset(&m_gprmcMsg, 0, sizeof(GPRMC));
@@ -447,7 +435,6 @@ void CGPSDlg::CLEAR_NMEA_TO_USE()
 	csSatelliteStruct.Unlock();
 }
 
-
 bool CGPSDlg::NmeaProc(const char* buffer, int offset, NmeaType& nmeaType)
 {
 	offset = NMEA::TrimTail(buffer, offset);
@@ -463,7 +450,6 @@ bool CGPSDlg::NmeaProc(const char* buffer, int offset, NmeaType& nmeaType)
 //  nmeaType = MSG_GAGSA;
 //if(nmeaType == MSG_BDGSV)
 //  nmeaType = MSG_GAGSV;
-
 
 	switch(nmeaType)
 	{
@@ -515,6 +501,8 @@ bool CGPSDlg::NmeaProc(const char* buffer, int offset, NmeaType& nmeaType)
 		break;
 	case MSG_STI:
 		parse_sti_message(buffer, offset);
+	case MSG_PIRNSF:
+		parse_pirnsf_message(buffer, offset);
 		break;
 	case MSG_GLGSV:
 		nmea.ShowGLGSVmsg(m_glgsvMsgCopy, buffer, offset);
@@ -542,6 +530,7 @@ bool CGPSDlg::NmeaProc(const char* buffer, int offset, NmeaType& nmeaType)
 		break;
 	case MSG_REBOOT:
 		this->DeleteNmeaMemery();
+    OutputRtkStatusChangedMessage(RebootDetected);
 		break;
 	case MSG_Unknown:
 	case MSG_ERROR:
@@ -931,6 +920,9 @@ U16 CGPSDlg::UbloxProc(U08* buffer, int len, CFile* fo)
 		break;
   case 0x0112:
     ShowUbxNavVelned(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
+		break;
+  case 0x6CA0:
+    ShowStqSpecialDrInfo(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
 		break;
 	default:
 		break;
@@ -1436,6 +1428,7 @@ void CAboutDlg::OnPaint()
 CGPSDlg::CGPSDlg(CWnd* pParent /*=NULL*/)
 : CDialog(CGPSDlg::IDD, pParent)
 {
+  m_useLzmaDownload = FALSE;
   m_autoAgpsSilentMode = FALSE;
 	dia_monitor_1pps = NULL;
 	m_InfoTabStat = BasicInfo;
@@ -1513,6 +1506,8 @@ CGPSDlg::CGPSDlg(CWnd* pParent /*=NULL*/)
   tagPos = 0;
   emptyTag = false;
   uniqueTag = false;
+  m_becomeRtkFloat = 0;
+  m_becomeGnssFixed = 0;
 }
 
 void CGPSDlg::DoDataExchange(CDataExchange* pDX)
@@ -1589,6 +1584,7 @@ void CGPSDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_BK_INDICATOR_T, m_lbl_backward_indicator);
 	DDX_Control(pDX, IDC_FW_CRC1, m_fwCrc1);
 	DDX_Control(pDX, IDC_FW_CRC2, m_fwCrc2);
+	DDX_Control(pDX, IDC_FW_CRC3, m_fwCrc3);
 	DDX_Control(pDX, IDC_FW_CHECKSUM, m_fwCheckSum);
 }
 
@@ -1696,6 +1692,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_LOG_CONFIGURE2, OnDatalogConfigure2)
 	ON_COMMAND(ID_LOGW_CONFIGURE, OnDatalogWatchLogConfigureControl)
 	ON_COMMAND(ID_TEST_ALPHA_IO, OnTestAlphaIo)
+	ON_COMMAND(ID_TEST_ALPHA_PLUS_IO, OnTestAlphaPlusIo)
 	ON_COMMAND(ID_TMP_ACT_LICENSE, OnTmpActiveLicense)
 
 	ON_COMMAND(ID_ALPHA_AG_CALIB_UP, OnAlphaAgCalibrationUp)
@@ -1708,12 +1705,14 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 
 	ON_COMMAND(ID_QUERY_V9_TAG_ADDR, OnQueryV9TagAddress)
 	ON_COMMAND(ID_QUERY_V9_UNQ_ID, OnQueryV9UniqueId)
+	ON_COMMAND(ID_QUERY_V9_SW_FEATURE, OnQueryPhoenixSoftwareFeature)
 	ON_COMMAND(ID_QUERY_V9_EXT_ID, OnQueryV9ExtendedId)
   
 	ON_COMMAND(ID_QUERY_V9_TAG, OnQueryV9Tag)
 	ON_COMMAND(ID_QUERY_V9_PROM_AES_TAG, OnQueryV9PromAesTag)
 	ON_COMMAND(ID_QUERY_V9_EXT_AES_TAG, OnQueryV9ExternalAesTag)
 	ON_COMMAND(ID_CFG_V9_AES_TAG, OnConfigV9AesTag)
+	ON_COMMAND(ID_RESET_V9_AES_TAG, OnResetV9AesTag)
 	ON_COMMAND(ID_NMEA_CHECKSUM_CAL, OnNmeaChecksumCalculator)
 	ON_COMMAND(ID_BIN_CHECKSUM_CAL, OnBinaryChecksumCalculator)
 	ON_COMMAND(ID_BINARY_COMMAND_TESTER, OnBinaryCommandTester)
@@ -1792,7 +1791,8 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_MESSAGE(UWM_UPDATE_UI, OnUpdateUI)
 	//ON_MESSAGE(UWM_GPSDO_HI_DOWNLOAD, OnGpsdoHiDownload)
 	ON_MESSAGE(UWM_DO_ZENLANE_CMD, OnDoZenlaneCmd)
-  ON_MESSAGE(WM_HOTKEY, OnHotKey)
+  //ON_MESSAGE(WM_HOTKEY, OnHotKey)
+  //ON_WM_CHAR()
 #if defined(XN120_TESTER)
 	ON_MESSAGE(UWM_TEST_XN112_START, OnTestXn112Start)
 #endif
@@ -1955,6 +1955,8 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_CLEAR_RTK_SLAVE_DATA, OnClearRtkSlaveData)
 	ON_COMMAND(ID_QUERY_RTK_GL_CPIF_BIAS, OnQueryRtkCpifBias)
 	ON_COMMAND(ID_CFG_RTK_GL_CPIF_BIAS, OnConfigRtkCpifBias)
+	ON_COMMAND(ID_QUERY_RTK_ELE_CNR_MSK, OnQueryRtkElevationAndCnrMask)
+	ON_COMMAND(ID_CFG_RTK_ELE_CNR_MSK, OnConfigRtkElevationAndCnrMask)
 
 	ON_COMMAND(ID_QUERY_BASE_POSITION, OnQueryBasePosition)
 	ON_COMMAND(ID_CONFIG_RTK_MODE, OnConfigRtkMode)
@@ -1969,6 +1971,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_RTK_ONOFF_SQ_SV, OnRtkOnOffSbasQzssSv)
 	ON_COMMAND(ID_RTK_ONOFF_GL_SV, OnRtkOnOffGlonassSv)
 	ON_COMMAND(ID_RTK_ONOFF_BD_SV, OnRtkOnOffBeidouSv)
+	ON_COMMAND(ID_RTK_ONOFF_GA_SV, OnRtkOnOffGalileoSv)
 	ON_COMMAND(ID_QUERY_RTK_REF_POSITION, OnQueryRtkReferencePosition)
  
 	ON_COMMAND(ID_QUERY_PSCM_DEV_ADDR, OnQueryPstmDeviceAddress)
@@ -1979,7 +1982,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	//ON_COMMAND(ID_QUERY_SIG_DISTUR_DATA, OnQuerySignalDisturbanceData)
 	//ON_COMMAND(ID_QUERY_SIG_DISTUR_STATUS, OnQuerySignalDisturbanceStatus)
 	//ON_COMMAND(ID_CONFIG_SIG_DISTUR_STATUS, OnConfigureSignalDisturbanceStatus)
-	//ON_COMMAND(ID_CONFIG_GPS_LEAP_IN_UTC, OnConfigureGpsUtcLeapSecondsInUtc)
+	ON_COMMAND(ID_CONFIG_GPS_LEAP_IN_UTC, OnConfigureGpsUtcLeapSecondsInUtc)
 
 	ON_REGISTERED_MESSAGE(UWM_PLAYNMEA_EVENT, OnPlayNmeaEvent)
 	ON_REGISTERED_MESSAGE(UWM_SAVENMEA_EVENT, OnSaveNmeaEvent)
@@ -2052,17 +2055,25 @@ BOOL CGPSDlg::OnInitDialog()
 	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
 	ASSERT(IDM_ABOUTBOX < 0xF000);
 
-
-#ifdef _DEBUG //debugª©¥»   
-    int  nRet = RegisterHotKey(GetSafeHwnd(),m_nHotKeyID[0],MOD_ALT, 'R' ); //Hotkey Alt+R
-    if (!nRet)  
-        AfxMessageBox(_T("RegisterHotKey 0 false" ));  
-    nRet = RegisterHotKey(GetSafeHwnd(),m_nHotKeyID[1], MOD_ALT, 'M' );  //Hotkey Alt+M  
-    if (!nRet)  
-        AfxMessageBox(_T("RegisterHotKey 1 false" ));  
-#else //releaseª©¥»   
-    RegisterHotKey(GetSafeHwnd(), m_nHotKeyID[0], MOD_ALT, 'R');  //Hotkey Alt+R
-    RegisterHotKey(GetSafeHwnd(), m_nHotKeyID[1], MOD_ALT, 'M');  //Hotkey Alt+M
+  m_nHotKeyID[0] = 101;
+  m_nHotKeyID[1] = 102;
+#ifdef _DEBUG
+  //DWORD err = 0;
+  //int  nRet = RegisterHotKey(GetSafeHwnd(), m_nHotKeyID[0], MOD_CONTROL, 'R' ); //Hotkey Alt+R
+  //if (!nRet)
+  //{
+  //    err = ::GetLastError();
+  //    AfxMessageBox(_T("RegisterHotKey Ctrl+R failed!" ));
+  //}
+  //nRet = RegisterHotKey(GetSafeHwnd(), m_nHotKeyID[1], MOD_CONTROL, 'M' );  //Hotkey Alt+M  
+  //if (!nRet)
+  //{
+  //    err = ::GetLastError();
+  //    AfxMessageBox(_T("RegisterHotKey Ctrl+M failed!" ));
+  //}
+#else
+    //RegisterHotKey(GetSafeHwnd(), m_nHotKeyID[0], MOD_CONTROL, 'R');  //Hotkey Alt+R
+    //RegisterHotKey(GetSafeHwnd(), m_nHotKeyID[1], MOD_CONTROL, 'M');  //Hotkey Alt+M
 #endif 
 
 	CMenu* pSysMenu = GetSystemMenu(FALSE);
@@ -3813,6 +3824,18 @@ void CGPSDlg::ShowStatus()
 			"Fix RTK",
 			"Float RTK",
 		};
+    if(mode == FloatRTK && lastMode == FixRTK)
+    {
+      OutputRtkStatusChangedMessage(BecomeRtkFloat);
+    }
+    if((mode == DgpsMode || mode == PositionFix3d || mode == PositionFix2d)&& lastMode == FixRTK)
+    {
+      OutputRtkStatusChangedMessage(BecomeGnssFixed);
+    }
+    if((lastMode == DgpsMode || lastMode == PositionFix3d || lastMode == PositionFix2d) && mode == Unlocated)
+    {
+      OutputRtkStatusChangedMessage(BecomeNoFixed);
+    }
 
 		CString txt = statusStrings[mode];
 		lastMode = mode;
@@ -4561,7 +4584,7 @@ bool CGPSDlg::TIMEOUT_METHOD(time_t start, time_t end)
 {
 	if((end-start) > TIME_OUT_MS )
 	{
-		AfxMessageBox("Timeout: GPS device no response.");
+		AfxMessageBox("Timeout4: GPS device no response.");
 		return true;
 	}
 	return false;
@@ -5835,7 +5858,7 @@ void CGPSDlg::LoadMenu()
 		{ UPGRADE_DOWNLOAD, MF_STRING, ID_UPGRADE_DOWNLOAD, "Upgrade", NULL },
 		{ SHOW_PATCH_MENU, MF_STRING, ID_PATCH, "Patch!", NULL },
 
-		{ !NMEA_INPUT && !SHOW_PATCH_MENU, MF_STRING, ID_GPSDO_FW_DOWNLOAD, "Master/Slave Firmware Download", NULL },
+		{ !NMEA_INPUT && !SHOW_PATCH_MENU && IS_DEBUG, MF_STRING, ID_GPSDO_FW_DOWNLOAD, "Master/Slave Firmware Download", NULL },
 		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ !SHOW_PATCH_MENU, MF_STRING, ID_FILE_SETUP, "S&etup", NULL },
 		{ 1, MF_STRING, ID_FILE_EXIT, "E&xit", NULL },
@@ -5936,7 +5959,6 @@ void CGPSDlg::LoadMenu()
 		{ 1, MF_STRING, ID_CFG_NMEA_TALKER_ID, "Configure NMEA Talker ID", NULL },
 
 		{ IS_DEBUG, MF_STRING, ID_CFG_REGISTER, "Configure Register", NULL },
-		//{ IS_DEBUG, MF_STRING, ID_CFG_REGISTER16, "Configure 16-IO Register", NULL },
 		{ ODOMETER_SUPPORT, MF_STRING, ID_RESET_ODOMETER, "Reset Odometer", NULL },
 
 		{ 0, 0, 0, NULL, NULL }	//End of table
@@ -6053,13 +6075,14 @@ void CGPSDlg::LoadMenu()
 		{ IS_DEBUG, MF_STRING, ID_QUERY_CUSTOMER_ID, "Query Customer ID", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CONFIG_DOZE_MODE, "Configure GNSS Doze Mode", NULL },
 		//20160408 Add GPSDO menu to customer release version for Patrick's customer.
-		{ !LITEON_CUSTOMIZE, MF_POPUP, 0, "GPSDO Control", GpsdoControlMenu },
-		{ !LITEON_CUSTOMIZE, MF_POPUP, 0, "SUP800 User Data Storage", Sup800Menu },
+		//{ !LITEON_CUSTOMIZE, MF_POPUP, 0, "GPSDO Control", GpsdoControlMenu },
+		//{ !LITEON_CUSTOMIZE, MF_POPUP, 0, "SUP800 User Data Storage", Sup800Menu },
 		{ IS_DEBUG && !LITEON_CUSTOMIZE, MF_POPUP, 0, "Geofencing", GeoFencingMenu },
 		//{ IS_DEBUG , MF_POPUP, 0, "Signal Disturbance Test", SignalDisturbanceMenu },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_SBAS_DEFAULT, "Query SBAS Default", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CFG_QRY_PSTI_INTERVAL, "Configure / Query PSTI Message Interval", NULL },
-		{ 1, MF_SEPARATOR, 0, NULL, NULL },
+		{ IS_DEBUG, MF_STRING, ID_CLOCK_OFFSET_PREDICT, "Clock Offset Predict(New)", NULL },
+    { 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 1, MF_STRING, ID_QUERY_SBAS, "Query SBAS", NULL },
 		{ 1, MF_STRING, ID_QUERY_SBAS2, "Query SBAS Advance", NULL },
 		{ 1, MF_STRING, ID_QUERY_SAEE, "Query SAEE", NULL },
@@ -6083,9 +6106,9 @@ void CGPSDlg::LoadMenu()
 		{ 1, MF_STRING, ID_QUERY_VERY_LOW, "Query Kernel Very Low Speed", NULL },
 		{ 1, MF_POPUP, 0, "Query PSTI Interval", QueryPstiInterval },
     //2018/08/29 Added, request from Eric
-    { IS_DEBUG, MF_STRING, ID_QUERY_CPU_BOOST_MODE, "Query ISR CPU Clock Boost Mode", NULL },
+    //{ IS_DEBUG, MF_STRING, ID_QUERY_CPU_BOOST_MODE, "Query ISR CPU Clock Boost Mode", NULL },
     //2018/09/19 Added, request from Terrance
-    { 1, MF_STRING, ID_QUERY_NAVIC_MSG, "Query NavIC Message Interval", NULL },
+    //{ 1, MF_STRING, ID_QUERY_NAVIC_MSG, "Query NavIC Message Interval", NULL },
 
 		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 1, MF_STRING, ID_CFG_SBAS, "Configure SBAS", NULL },
@@ -6111,16 +6134,15 @@ void CGPSDlg::LoadMenu()
 		{ 1, MF_STRING, ID_CONFIG_VERY_LOW, "Configure Kernel Very Low Speed", NULL },
 		{ 1, MF_POPUP, 0, "Configure PSTI Interval", ConfigPstiInterval },
     //2018/08/29 Added, request from Eric
-    { IS_DEBUG, MF_STRING, ID_CFG_CPU_BOOST_MODE, "Configure ISR CPU Clock Boost Mode", NULL },
+    //{ IS_DEBUG, MF_STRING, ID_CFG_CPU_BOOST_MODE, "Configure ISR CPU Clock Boost Mode", NULL },
     //2018/09/19 Added, request from Terrance
-		{ 1, MF_STRING, ID_CFG_NAVIC_MSG, "Configure NavIC Message Interval", NULL },
+		//{ 1, MF_STRING, ID_CFG_NAVIC_MSG, "Configure NavIC Message Interval", NULL },
 
-		{ IS_DEBUG, MF_SEPARATOR, 0, NULL, NULL },
-		{ IS_DEBUG, MF_STRING, ID_CONFIG_GPS_LEAP_IN_UTC, "Configure GPS/UTC Leap Seconds In UTC", NULL },
-		{ IS_DEBUG, MF_STRING, ID_CLOCK_OFFSET_PREDICT, "Clock Offset Predict(New)", NULL },
+		//{ IS_DEBUG, MF_SEPARATOR, 0, NULL, NULL },
+		//{ IS_DEBUG, MF_STRING, ID_CONFIG_GPS_LEAP_IN_UTC, "Configure GPS/UTC Leap Seconds In UTC", NULL },
 		//{ IS_DEBUG, MF_STRING, ID_CLOCK_OFFSET_PREDICT_OLD, "Clock Offset Predict(Old)", NULL },
-		{ IS_DEBUG, MF_STRING, ID_HOSTBASED_DOWNLOAD, "Host-Based Image Download", NULL },
-		{ IS_DEBUG, MF_STRING, ID_PARALLEL_DOWNLOAD, "Parallel Image Download", NULL },
+		//{ IS_DEBUG, MF_STRING, ID_HOSTBASED_DOWNLOAD, "Host-Based Image Download", NULL },
+		//{ IS_DEBUG, MF_STRING, ID_PARALLEL_DOWNLOAD, "Parallel Image Download", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
 	if(!NMEA_INPUT && !SHOW_PATCH_MENU)
@@ -6131,20 +6153,23 @@ void CGPSDlg::LoadMenu()
 	//Venus 9 Menu
 	static MenuItemEntry menuItemVenus9[] =
 	{
-		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_TAG_ADDR, "Query V9 Tag Address", NULL },
-		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_UNQ_ID, "Query V9 Unique ID", NULL },
-		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_EXT_ID, "Query V9 Extended ID", NULL },
-		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_TAG, "Query V9 Tag", NULL },
-		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_PROM_AES_TAG, "Query V9 PROM AES Tag", NULL },
-		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_EXT_AES_TAG, "Query V9 External AES Tag", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_TAG_ADDR, "Query Phoenix Tag Address", NULL },
+		//{ IS_DEBUG, MF_STRING, ID_QUERY_V9_UNQ_ID, "Query Phoenix Unique ID", NULL },
+		{ 1, MF_STRING, ID_QUERY_V9_EXT_ID, "Query Phoenix Extended ID", NULL },
+		{ 1, MF_STRING, ID_QUERY_V9_TAG, "Query Phoenix Tag", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_PROM_AES_TAG, "Query Phoenix PROM Tag", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_EXT_AES_TAG, "Query Phoenix External Tag", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_SW_FEATURE, "Query Phoenix Sofeware Feature", NULL },
+    
 		{ 1, MF_SEPARATOR, 0, NULL, NULL },
-		{ IS_DEBUG, MF_STRING, ID_CFG_V9_AES_TAG, "Configure V9 AES Tag", NULL },
+		{ IS_DEBUG, MF_STRING, ID_RESET_V9_AES_TAG, "Reset Phoenix Tag", NULL },
+		{ 1, MF_STRING, ID_CFG_V9_AES_TAG, "Configure Phoenix Tag", NULL },
 		//{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
-	if(!NMEA_INPUT && IS_DEBUG)
+	if(!NMEA_INPUT)
 	{
-		CreateSubMenu(hMenu, menuItemVenus9, "Venus &9");
+		CreateSubMenu(hMenu, menuItemVenus9, "Phoenix");
 	}
 
 	static MenuItemEntry menuItemRaw[] =
@@ -6197,6 +6222,7 @@ void CGPSDlg::LoadMenu()
 		{ IS_DEBUG, MF_STRING, ID_RTK_ONOFF_SQ_SV, "Enable/Disable SBAS + QZSS SV mechanism", NULL },
 		{ IS_DEBUG, MF_STRING, ID_RTK_ONOFF_GL_SV, "Enable/Disable GLONASS SV mechanism", NULL },
 		{ IS_DEBUG || DEVELOPER_VERSION, MF_STRING, ID_RTK_ONOFF_BD_SV, "Enable/Disable BEIDOU2 SV mechanism", NULL },
+		{ IS_DEBUG || DEVELOPER_VERSION, MF_STRING, ID_RTK_ONOFF_GA_SV, "Enable/Disable Galileo SV mechanism", NULL },
 		{ 1, MF_STRING, ID_QUERY_RTK_REF_POSITION, "Configure RTK Reference Static Started Position", NULL },
 		{ 1, MF_STRING, ID_CLEAR_RTK_SLAVE_DATA, "Clear RTK Slave Backup Data", NULL },
 
@@ -6205,6 +6231,7 @@ void CGPSDlg::LoadMenu()
 		{ 1, MF_STRING, ID_QUERY_RTK_MODE2, "Query RTK Mode And Operational Function", NULL },
 		{ 1, MF_STRING, ID_QUERY_RTK_SLAVE_BAUD, "Query RTK Slave Serial Port Baud Rate", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_GL_CPIF_BIAS, "Query RTK GLONASS Carrier-Phase Inter-Frequency Bias", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_ELE_CNR_MSK, "Query RTK Elevation and CNR Mask", NULL },
 		//{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_PARAM, "Query RTK Parameters", NULL },
 		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 1, MF_STRING, ID_CONFIG_RTK_MODE, "Configure RTK Mode", NULL },
@@ -6212,6 +6239,7 @@ void CGPSDlg::LoadMenu()
 		{ 1, MF_STRING, ID_CFG_RTK_SLAVE_BAUD, "Configure RTK Slave Serial Port Baud Rate", NULL },
 		//{ IS_DEBUG, MF_STRING, ID_CONFIG_RTK_PARAM, "Configure RTK Parameters", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CFG_RTK_GL_CPIF_BIAS, "Configure RTK GLONASS Carrier-Phase Inter-Frequency Bias", NULL },
+		{ IS_DEBUG, MF_STRING, ID_CFG_RTK_ELE_CNR_MSK, "Configure RTK Elevation and CNR Mask", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
 	if(!NMEA_INPUT && RTK_MENU && !SHOW_PATCH_MENU)
@@ -6416,6 +6444,7 @@ void CGPSDlg::LoadMenu()
 	static MenuItemEntry menuItemWatchDataLog[] =
 	{
 		{ IS_DEBUG, MF_STRING, ID_TEST_ALPHA_IO, "Test Alpha RTK GPIO", NULL },
+		{ IS_DEBUG, MF_STRING, ID_TEST_ALPHA_PLUS_IO, "Test Alpha+ RTK GPIO", NULL },
 		{ IS_DEBUG, MF_STRING, ID_TMP_ACT_LICENSE, "Temporarily Activate License", NULL },
 		{ 1, MF_STRING, ID_ALPHA_AG_CALIB_UP, "A/G Calibration Up", NULL },
 		{ 1, MF_STRING, ID_ALPHA_AG_CALIB_DN, "A/G Calibration Down", NULL },
@@ -6451,10 +6480,10 @@ void CGPSDlg::LoadMenu()
 
   static MenuItemEntry ConfigV9PowerSave[] =
 	{
-		{ 1, MF_STRING, ID_CFG_v9_PWR_SAVE_30, "Configure V9 Power Save for 30 seconds", NULL },
-  	{ 1, MF_STRING, ID_CFG_v9_PWR_SAVE_60, "Configure V9 Power Save for 60 seconds", NULL },
-		{ 1, MF_STRING, ID_CFG_v9_PWR_SAVE_90, "Configure V9 Power Save for 90 seconds", NULL },
-		{ 1, MF_STRING, ID_CFG_v9_PWR_SAVE_120, "Configure V9 Power Save for 120 seconds", NULL },
+		{ 1, MF_STRING, ID_CFG_v9_PWR_SAVE_30, "Configure Phoenix Power Save for 30 seconds", NULL },
+  	{ 1, MF_STRING, ID_CFG_v9_PWR_SAVE_60, "Configure Phoenix Power Save for 60 seconds", NULL },
+		{ 1, MF_STRING, ID_CFG_v9_PWR_SAVE_90, "Configure Phoenix Power Save for 90 seconds", NULL },
+		{ 1, MF_STRING, ID_CFG_v9_PWR_SAVE_120, "Configure Phoenix Power Save for 120 seconds", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
 
@@ -6567,16 +6596,29 @@ void CGPSDlg::add_msgtolist(LPCTSTR msg)
 {
 	if(g_setting.responseLog)
 	{
-		CFile f;
-		f.Open(g_setting.responseLogPath,
-			CFile::modeWrite | CFile::modeNoTruncate | CFile::modeCreate);
-		f.SeekToEnd();
-		CString ts = CTime::GetCurrentTime().Format("%Y-%m-%d %H:%M:%S");
-		f.Write(ts, strlen(ts));
-		f.Write(" - ", 3);
-		f.Write(msg, strlen(msg));
-		f.Write("\r\n", 2);
-		f.Close();
+    try
+    {
+		  CFile f;
+		  if (f.Open(g_setting.responseLogPath,
+			  CFile::modeWrite | CFile::modeNoTruncate | CFile::modeCreate))
+      {
+		    f.SeekToEnd();
+		    CString ts = CTime::GetCurrentTime().Format("%Y-%m-%d %H:%M:%S");
+		    f.Write(ts, strlen(ts));
+		    f.Write(" - ", 3);
+		    f.Write(msg, strlen(msg));
+		    f.Write("\r\n", 2);
+		    f.Close();
+      }
+      else
+      {
+        DWORD err = ::GetLastError();
+      }
+    }
+    catch(TCHAR* err)
+    {
+      ::OutputDebugString(err);
+    }
 	}
 	m_responseList.AddString(msg);
 	m_responseList.SetCurSel(m_responseList.GetCount()-1);
@@ -6973,61 +7015,31 @@ void CGPSDlg::OnFileCleannema()
 	m_nmeaList.DeleteAllItems();
 }
 
-void CalcFirmwareCrc(const CString& fwPath, U16& crc1, U16& crc2, U32& crc3, U08& checkSum)
-{
-  CFile f(fwPath, CFile::modeRead);
-  int fwSize = (int)f.GetLength();
-  U08* buffer = new U08[fwSize];
-  crc1 = 0;
-  crc2 = 0;
-  crc3 = 0;
-  checkSum = 0;
-  f.Read(buffer, fwSize);
-  f.Close();
-  for (int i = 0; i < fwSize; ++i)
-  {
-    crc1 += buffer[i];
-    crc3 += buffer[i];
-    checkSum += buffer[i];
-  }
-  crc2 = crc1;
-  int count = (fwSize > 0x100000) ? 4 : 2;
-  for (int i = fwSize; i < 0x80000 * count; ++i)
-  {
-    crc1 += 0xFF;
-  }
-  for (int i = fwSize; i < 0x100000 * count; ++i)
-  {
-    crc3 += 0xFF;
-  }
-  crc1 &= 0xFFFF;
-  crc2 &= 0xFFFF;
-  delete[] buffer;
-}
-
 void CGPSDlg::SetFwInfo(const CString& fwPath)
 {
   CString txt;
-	if(!Utility::IsFileExist(fwPath))
+  U16 crcM = 0, crcS = 0;
+  U32 crc32 = 0, crc32_8m = 0;
+  U08 checkSum = 0;
+	if(!Utility::CalcFirmwareCrc(fwPath, 0, crcM, crcS, crc32, crc32_8m, checkSum))
   {
     txt = "";
     GetDlgItem(IDC_FW_CRC1)->SetWindowText(txt);
     GetDlgItem(IDC_FW_CRC2)->SetWindowText(txt);
+    GetDlgItem(IDC_FW_CRC3)->SetWindowText(txt);
     GetDlgItem(IDC_FW_CHECKSUM)->SetWindowText(txt);
-    m_lbl_firmware_path.SetWindowText("");
+    m_lbl_firmware_path.SetWindowText(txt);
     return;
   }
 
-  U16 crc1 = 0, crc2 = 0;
-  U32 crc3 = 0;
-  U08 checkSum = 0;
-  CalcFirmwareCrc(fwPath, crc1, crc2, crc3, checkSum);
-  txt.Format("Master CRC : %04X", crc1);
+  txt.Format("Master CRC : %04X", crcM);
   GetDlgItem(IDC_FW_CRC1)->SetWindowText(txt);
-  txt.Format("Slave CRC : %04X", crc2);
+  txt.Format("Slave CRC : %04X", crcS);
   GetDlgItem(IDC_FW_CRC2)->SetWindowText(txt);
   txt.Format("Check Sum : %02X(%d)", checkSum, checkSum);
   GetDlgItem(IDC_FW_CHECKSUM)->SetWindowText(txt);
+  txt.Format("CRC32 : %08X", crc32);
+  GetDlgItem(IDC_FW_CRC3)->SetWindowText(txt);
 
   m_lbl_firmware_path.SetWindowText(fwPath);
   m_lbl_firmware_path.Invalidate();
@@ -9078,121 +9090,7 @@ void CGPSDlg::OnEphemerisSettimecorrections()
 	m_time_correction_attr = 0;
 	::AfxBeginThread(SetTimeCorrectionThread, 0);
 }
-/*
-int m_1pps_output_mode;
-int m_1pps_output_mode_attr;
-int m_1pps_output_align;
 
-UINT config_1PPS_output_mode_thread(LPVOID param)
-{
-	U08 msg[4];
-
-	msg[0] = 0x55;
-	msg[1] = m_1pps_output_mode;
-	msg[2] = m_1pps_output_align;
-	msg[3] = m_1pps_output_mode_attr;
-
-	int len = CGPSDlg::gpsDlg->SetMessage(msg,sizeof(msg));
-	CGPSDlg::gpsDlg->ExecuteConfigureCommand(CGPSDlg::m_inputMsg, len, "Configure 1PPS Output Mode successfully");
-	return 0;
-}
-
-void CGPSDlg::OnConfigure1PpsOutputMode()
-{
-	if(!CheckConnect())
-	{
-    return;
-  }
-
-  CCon1PPS_OutputMode dlg;
-	if(dlg.DoModal()==IDOK)
-	{
-		m_1pps_output_mode = dlg.mode;
-		m_1pps_output_align =dlg.align_to;
-		m_1pps_output_mode_attr = dlg.attr;
-		::AfxBeginThread(config_1PPS_output_mode_thread, 0);
-	}
-	else
-	{
-		SetMode();
-		CreateGPSThread();
-	}
-}
-*/
-/*
-UINT query_1PPS_output_mode_thread(LPVOID param)
-{
-	U08 buff[100];
-	U08 msg[1];
-	CString tmp;
-	time_t start,end;
-	int res;
-
-	msg[0] = 0x56;
-
-	int len = CGPSDlg::gpsDlg->SetMessage(msg,sizeof(msg));
-
-	CGPSDlg::gpsDlg->ClearQue();
-
-	if(CGPSDlg::gpsDlg->SendToTarget(CGPSDlg::m_inputMsg,len,"Query 1PPS Output successfully", true))
-	{
-
-		start = clock();
-		while(1)
-		{
-			memset(buff, 0, 100);
-			res = CGPSDlg::gpsDlg->m_serial->GetBinaryAck(buff, sizeof(buff));
-
-			if(ReadOK(res) && BINARY_HD1==buff[0] && BINARY_HD2==buff[1])
-			{
-				if(Cal_Checksum(buff) == 0xC3)
-				{
-					if(TIMING_MODE)
-					{
-						if(buff[5] == 0)
-							CGPSDlg::gpsDlg->add_msgtolist("PPS No Output");
-						else if(buff[5] == 1)
-							CGPSDlg::gpsDlg->add_msgtolist("PPS Output if GPS/UTC time is available");
-						else if(buff[5] == 2)
-						{
-							CGPSDlg::gpsDlg->add_msgtolist("PPS Output always and align to GPS/UTC time");
-							CGPSDlg::gpsDlg->add_msgtolist("automatically");
-						}
-						if(buff[6]==0)
-							CGPSDlg::gpsDlg->add_msgtolist("Align to GPS time");
-						else if(buff[6] == 1)
-							CGPSDlg::gpsDlg->add_msgtolist("Align to UTC time");
-					}
-					else
-					{
-						if(buff[5] == 0)
-							CGPSDlg::gpsDlg->add_msgtolist("PPS always output");
-						else if(buff[5] == 1)
-							CGPSDlg::gpsDlg->add_msgtolist("PPS output after 3D fixed");
-					}
-					break;
-				}
-			}
-			end=clock();
-			if(CGPSDlg::gpsDlg->TIMEOUT_METHOD(start,end))
-				break;
-		}
-	}
-
-	CGPSDlg::gpsDlg->SetMode();
-	CGPSDlg::gpsDlg->CreateGPSThread();
-	return 0;
-}
-*/
-/*
-void CGPSDlg::OnQuery1PpsOutputMode()
-{
-	if(CheckConnect())
-	{
-		::AfxBeginThread(query_1PPS_output_mode_thread, 0);
-	}
-}
-*/
 bool CGPSDlg::BoostBaudrate(BOOL bRestore, BoostMode mode, bool isForce)
 {
   bool r = true;
@@ -9726,8 +9624,13 @@ void CGPSDlg::RescaleDialog()
 		FALSE, 0, IDC_GI_FREQ_T2, {926, 230, 62, 18},
 
 		//SNR Chart
+#if (EXTRA_WIDE)
+		TRUE, 0, IDC_GP_BAR, {301, 151, 798, 75},
+		TRUE, 0, IDC_BD_BAR, {301, 248, 798, 75},
+#else
 		TRUE, 0, IDC_GP_BAR, {301, 151, 698, 75},
 		TRUE, 0, IDC_BD_BAR, {301, 248, 698, 75},
+#endif
 		FALSE, 0, IDC_GA_BAR, {656, 248, 343, 75},
 		FALSE, 0, IDC_GI_BAR, {656, 248, 343, 75},
 #else
@@ -9797,8 +9700,9 @@ void CGPSDlg::RescaleDialog()
 
 		//Download
 		FIRMWARE_DOWNLOAD, 0, IDC_FW_CRC1, {482, 630, 120, 16},
-		FIRMWARE_DOWNLOAD, 0, IDC_FW_CRC2, {618, 630, 120, 16},
-		FIRMWARE_DOWNLOAD, 0, IDC_FW_CHECKSUM, {754, 630, 160, 16},
+		FIRMWARE_DOWNLOAD, 0, IDC_FW_CRC3, {608, 630, 120, 16},
+		FIRMWARE_DOWNLOAD, 0, IDC_FW_CRC2, {734, 630, 120, 16},
+		FIRMWARE_DOWNLOAD, 0, IDC_FW_CHECKSUM, {860, 630, 128, 16},
 		FIRMWARE_DOWNLOAD, 0, IDC_DOWNLOAD, {305, 625, 67, 27},
 		FIRMWARE_DOWNLOAD, 0, IDC_DL_BAUDRATE, {375, 626, 80, 18},
 		FIRMWARE_DOWNLOAD, 0, IDC_BROWSE, {456, 626, 24, 24},
@@ -9848,6 +9752,7 @@ void CGPSDlg::RescaleDialog()
 
 		GetDlgItem(IDC_FW_CRC1)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_FW_CRC2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_FW_CRC3)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_FW_CHECKSUM)->ShowWindow(SW_HIDE);
 
 		GetDlgItem(IDC_DOWNLOAD)->ShowWindow(SW_HIDE);
@@ -9878,7 +9783,7 @@ bool CGPSDlg::CheckTimeOut(DWORD duration, DWORD timeOut, bool silent)
 	{
 		if(!silent)
 		{
-			AfxMessageBox("Timeout: GPS device no response.");
+			AfxMessageBox("Timeout5: GPS device no response.");
 		}
 		return true;
 	}
@@ -9945,39 +9850,39 @@ void CGPSDlg::OnHostLog()
   m_saveNmeaDlg = NULL;
 }
 
-U32 get_crc32(const char *buf, int len)
-{
-  /* Nibble lookup table for 0x04C11DB7 polynomial. */
-  U32 crc_tab[] = {
-      0x00000000U, 0x04C11DB7U, 0x09823B6EU, 0x0D4326D9U,
-      0x130476DCU, 0x17C56B6BU, 0x1A864DB2U, 0x1E475005U,
-      0x2608EDB8U, 0x22C9F00FU, 0x2F8AD6D6U, 0x2B4BCB61U,
-      0x350C9B64U, 0x31CD86D3U, 0x3C8EA00AU, 0x384FBDBDU
-  };
-
-  /* Initial XOR value. */
-  U32 crc = 0xFFFFFFFF;
-
-  for (int i = 0; i < len; i += 4)
-  {
-      U32 v = buf[i] << 24 | buf[i + 1] << 16 | buf[i + 2] << 8 | buf[i];
-      crc ^= v;
-
-      /* Process 32-bits, 4 at a time, or 8 rounds.
-        * - Assumes 32-bit reg, masking index to 4-bits;
-        * - 0x04C11DB7 Polynomial used in STM32.
-        */
-      crc = (crc << 4) ^ crc_tab[crc >> 28];
-      crc = (crc << 4) ^ crc_tab[crc >> 28];
-      crc = (crc << 4) ^ crc_tab[crc >> 28];
-      crc = (crc << 4) ^ crc_tab[crc >> 28];
-      crc = (crc << 4) ^ crc_tab[crc >> 28];
-      crc = (crc << 4) ^ crc_tab[crc >> 28];
-      crc = (crc << 4) ^ crc_tab[crc >> 28];
-      crc = (crc << 4) ^ crc_tab[crc >> 28];
-  }
-  return crc;
-}
+//U32 get_crc32(const char *buf, int len)
+//{
+//  /* Nibble lookup table for 0x04C11DB7 polynomial. */
+//  U32 crc_tab[] = {
+//      0x00000000U, 0x04C11DB7U, 0x09823B6EU, 0x0D4326D9U,
+//      0x130476DCU, 0x17C56B6BU, 0x1A864DB2U, 0x1E475005U,
+//      0x2608EDB8U, 0x22C9F00FU, 0x2F8AD6D6U, 0x2B4BCB61U,
+//      0x350C9B64U, 0x31CD86D3U, 0x3C8EA00AU, 0x384FBDBDU
+//  };
+//
+//  /* Initial XOR value. */
+//  U32 crc = 0xFFFFFFFF;
+//
+//  for (int i = 0; i < len; i += 4)
+//  {
+//      U32 v = buf[i] << 24 | buf[i + 1] << 16 | buf[i + 2] << 8 | buf[i];
+//      crc ^= v;
+//
+//      /* Process 32-bits, 4 at a time, or 8 rounds.
+//        * - Assumes 32-bit reg, masking index to 4-bits;
+//        * - 0x04C11DB7 Polynomial used in STM32.
+//        */
+//      crc = (crc << 4) ^ crc_tab[crc >> 28];
+//      crc = (crc << 4) ^ crc_tab[crc >> 28];
+//      crc = (crc << 4) ^ crc_tab[crc >> 28];
+//      crc = (crc << 4) ^ crc_tab[crc >> 28];
+//      crc = (crc << 4) ^ crc_tab[crc >> 28];
+//      crc = (crc << 4) ^ crc_tab[crc >> 28];
+//      crc = (crc << 4) ^ crc_tab[crc >> 28];
+//      crc = (crc << 4) ^ crc_tab[crc >> 28];
+//  }
+//  return crc;
+//}
 
 void CGPSDlg::OnPromIniGenerator()
 {
@@ -10008,7 +9913,7 @@ void CGPSDlg::OnPromIniGenerator2()
 
   if(Utility::IsFileExist(promPath))
   {
-    PromIniGeneratorDlg dlg(promPath, 1);
+    PromIniGeneratorDlg dlg(promPath, PromIniGeneratorDlg::Phoenix);
 	  INT_PTR ret = dlg.DoModal();
   }
   else
@@ -10056,6 +9961,74 @@ void CGPSDlg::OnTestAlphaIo()
   //IoCount - Test IO pair count
   //io1, io2... - High byte - gpio pin from, Low byte gpio pin to.
   char buff[1024] = "TEST01 = 0001 0001 030A ";
+	CGPSDlg::gpsDlg->m_serial->SendData((U08*)buff, (U16)strlen(buff) + 1);	
+  WlfResult wlf = WaitingLoaderFeedback(m_serial, 1000, NULL);
+  if(wlf != wlf_ok)
+  {
+    AfxMessageBox("The test command did not respond and the test failed!");
+    SetMode();
+	  CreateGPSThread();
+    return;
+  }
+  add_msgtolist("Test command has responded");
+  int passCount = 0;
+	for(int i = 0; i < 5; ++i)
+	{
+		memset(buff, 0, sizeof(buff));
+		int len = CGPSDlg::gpsDlg->m_serial->GetOneLine(buff, sizeof(buff), 500);
+    if(len == 0)
+      continue;
+    add_msgtolist(buff);
+    char* ptr = strstr(buff, "PASS");
+    if(ptr != NULL)
+    {
+      ++passCount;
+    }
+
+    ptr = strstr(buff, "FINISH");
+    if(ptr != NULL)
+    {
+      ++passCount;
+    }
+
+    if(passCount == 2)
+    {
+      AfxMessageBox("Test PASS.");
+      SetMode();
+      CreateGPSThread();
+      return;
+    }
+	}
+  AfxMessageBox("============ Test failed! ============");
+
+	SetMode();
+	CreateGPSThread();
+}
+
+void CGPSDlg::OnTestAlphaPlusIo()
+{
+	if(!CheckConnect())
+	{
+		return;
+	}
+
+  BinaryData srec;
+  srec.ReadFromResource(IDR_V9_IO_TESTER, "SREC");
+	//if(!DownloadLoader(externalSrecFile, true))
+	if(!CGPSDlg::gpsDlg->DownloadLoader2(true, false, srec))
+	{
+    AfxMessageBox("The loader isn't responding, please check the device!");
+    SetMode();
+	  CreateGPSThread();
+    return;
+	}
+  add_msgtolist("Test IO SREC executed");
+  //TEST01 = Flag IoCount io1 io2 io3 io4 ......
+  //Flag - bit wise for test function : 0 - IO Test, 1 - GSN MAG Test, 2 - Rtc Test
+  //IoCount - Test IO pair count
+  //io1, io2... - High byte - gpio pin from, Low byte gpio pin to.
+  char buff[1024] = "TEST01 = 0001 0001 0306 ";
+  //char buff[1024] = "TEST01 = 0001 0001 0F06 ";
 	CGPSDlg::gpsDlg->m_serial->SendData((U08*)buff, (U16)strlen(buff) + 1);	
   WlfResult wlf = WaitingLoaderFeedback(m_serial, 1000, NULL);
   if(wlf != wlf_ok)
@@ -11232,6 +11205,18 @@ void CGPSDlg::ParsingMessage(BOOL isPlayer)
 				add_msgtolist((const char*)buffer);
 			}
       break;
+		case StqSpecialDrBinary:
+			  if(BINMSG_ERROR != UbloxProc(buffer, length + 1))
+        {
+          if(lastType != type)
+          {
+            InitMessageBox(BinaryMessageMode);
+            lastType = type;
+          }
+			    Copy_NMEA_Memery();
+			    SetNmeaUpdated(true);
+        }
+		  break;
     default:
       if(AllPrintable((LPCSTR)buffer, length))
       {
@@ -11351,11 +11336,15 @@ BOOL CGPSDlg::PreTranslateMessage(MSG* pMsg)
 {
 	m_tip.RelayEvent(pMsg);
 
-	if(pMsg->message==WM_KEYDOWN &&
-		(pMsg->wParam==VK_ESCAPE || pMsg->wParam==VK_RETURN))
+	if(pMsg->message == WM_KEYDOWN &&
+		(pMsg->wParam == VK_ESCAPE || pMsg->wParam == VK_RETURN))
 	{
 		return TRUE;
 	}
+  else if(pMsg->message == WM_KEYDOWN && pMsg->wParam == 'R')
+  {
+    OnBnClickedColdstart();   
+  }
 	return CDialog::PreTranslateMessage(pMsg);
 }
 
@@ -11711,6 +11700,7 @@ void CGPSDlg::Xn116TesterEvent()
   }
 }
 #endif
+
 void CGPSDlg::SetFreqText(UINT id, int sig1, int sig2, int sig3, int sig4)
 {
   CStringW txt;
@@ -11759,14 +11749,11 @@ void CGPSDlg::SetFreqText(UINT id, int sig1, int sig2, int sig3, int sig4)
   };
   SignalDescEntry giTable[] = {
 		{ 0, L"All Signals" },
-		{ 1, L"L5"},      //4
-		{ 2, L"L1 P"},
-		{ 3, L"L1 M"},
-		{ 4, L"L2 P"},
-		{ 5, L"L2C-M"},
-		{ 6, L"L2C-L"},
-		{ 7, L"L5-I"},
-		{ 8, L"L5-Q"}
+		{ 1, L"L5-SPS"},      //4
+		{ 2, L"S-SPS"},
+		{ 3, L"L5-RS"},
+		{ 4, L"S-RS"},
+		{ 5, L"L1-SPS"},
   };
 
   SignalDescEntry*  table = NULL;
@@ -11863,17 +11850,17 @@ void CGPSDlg::AutoAgpsBackgroundDownload()
     }
   }
 }
-
-LONG  CGPSDlg::OnHotKey( WPARAM  wParam, LPARAM  lParam)           
+/*
+LONG CGPSDlg::OnHotKey( WPARAM  wParam, LPARAM  lParam)           
 {  
   UINT fuModifiers = (UINT)LOWORD(lParam);  // key-modifier flags    
   UINT uVirtKey = (UINT)HIWORD(lParam);     // virtual-key code    
   
-  if(MOD_ALT == fuModifiers && 'R' == uVirtKey)  
+  if(MOD_CONTROL == fuModifiers && 'R' == uVirtKey)  
   {  
     OnBnClickedColdstart();   
   }  
-  else if(MOD_ALT == fuModifiers && 'M' == uVirtKey)  
+  else if(MOD_CONTROL == fuModifiers && 'M' == uVirtKey)  
   {  
     //AfxMessageBox(_T("alt + m" ));    
   }  
@@ -11883,3 +11870,45 @@ LONG  CGPSDlg::OnHotKey( WPARAM  wParam, LPARAM  lParam)
   }
   return  0;          
 } 
+
+void CGPSDlg::OnChar(UINT nChar,UINT nRepCnt,UINT nFlags)
+{
+  OnBnClickedColdstart();
+}
+*/
+void CGPSDlg::OutputRtkStatusChangedMessage(RtkStatusChanged type)
+{
+  if(!g_setting.rtkStatusChanged)
+    return;
+
+	CTime t = CTime::GetCurrentTime();
+
+  CString strMsg;
+  switch(type)
+  {
+  case BecomeRtkFloat:
+	  strMsg.Format("%02d%02d%02d_%02d%02d%02d Down to RTK Float(%d)", 
+      t.GetYear(), t.GetMonth(), t.GetDay(),
+		  t.GetHour(), t.GetMinute(), t.GetSecond(),
+      ++m_becomeRtkFloat);
+    break;
+  case BecomeGnssFixed:
+	  strMsg.Format("%02d%02d%02d_%02d%02d%02d Down to GNSS Fixed(%d)", 
+      t.GetYear(), t.GetMonth(), t.GetDay(),
+		  t.GetHour(), t.GetMinute(), t.GetSecond(),
+      ++m_becomeGnssFixed);
+    break;
+  case BecomeNoFixed:
+	  strMsg.Format("%02d%02d%02d_%02d%02d%02d Become No Fixed", 
+      t.GetYear(), t.GetMonth(), t.GetDay(),
+		  t.GetHour(), t.GetMinute(), t.GetSecond());
+    break;
+  case RebootDetected:
+	  strMsg.Format("%02d%02d%02d_%02d%02d%02d Reboot Detected", 
+      t.GetYear(), t.GetMonth(), t.GetDay(),
+		  t.GetHour(), t.GetMinute(), t.GetSecond());
+    break;
+  }
+
+  add_msgtolist(strMsg);
+}

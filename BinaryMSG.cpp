@@ -513,9 +513,28 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
   if(hasGp)
   {
     CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfMessage = 3;
-    CGPSDlg::gpsDlg->m_gpgsvMsgCopy.SequenceNum =3;
+    CGPSDlg::gpsDlg->m_gpgsvMsgCopy.SequenceNum = 3;
   }
-
+  if(hasBd)
+  {
+    CGPSDlg::gpsDlg->m_bdgsvMsgCopy.NumOfMessage = 3;
+    CGPSDlg::gpsDlg->m_bdgsvMsgCopy.SequenceNum = 3;
+  }
+  if(hasGa)
+  {
+    CGPSDlg::gpsDlg->m_gagsvMsgCopy.NumOfMessage = 3;
+    CGPSDlg::gpsDlg->m_gagsvMsgCopy.SequenceNum = 3;
+  }
+  if(hasGl)
+  {
+    CGPSDlg::gpsDlg->m_glgsvMsgCopy.NumOfMessage = 3;
+    CGPSDlg::gpsDlg->m_glgsvMsgCopy.SequenceNum = 3;
+  }
+  if(hasGi)
+  {
+    CGPSDlg::gpsDlg->m_gigsvMsgCopy.NumOfMessage = 3;
+    CGPSDlg::gpsDlg->m_gigsvMsgCopy.SequenceNum = 3;
+  }
   //for (int i = 0; i < nmeas; ++i)
   //{
 	 // ptr = decode_1bytes(ptr, &channel.typeNsingel);
@@ -886,6 +905,10 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 	CGPSDlg::gpsDlg->m_bdgsvMsgCopy.NumOfSate = beidou_c;
 	CGPSDlg::gpsDlg->m_bdgsvMsgCopy.NumOfMessage = (beidou_c + 3) / 4;
 	CGPSDlg::gpsDlg->m_bdgsvMsgCopy.SequenceNum = (beidou_c + 3) / 4;
+
+	CGPSDlg::gpsDlg->m_gagsvMsgCopy.NumOfSate = galileo_c;
+	CGPSDlg::gpsDlg->m_gagsvMsgCopy.NumOfMessage = (galileo_c + 3) / 4;
+	CGPSDlg::gpsDlg->m_gagsvMsgCopy.SequenceNum = (galileo_c + 3) / 4;
 
 	CGPSDlg::gpsDlg->m_gigsvMsgCopy.NumOfSate = navic_c;
 	CGPSDlg::gpsDlg->m_gigsvMsgCopy.NumOfMessage = (navic_c + 3) / 4;
@@ -2975,22 +2998,19 @@ static void save_msm_obs(int sys, msm_h_t *h, const double *cnr, Satellites* sat
 
 static int decode_msm7(U08 *buff, int len)
 {
-  //int i, j, sync, iod, ncell;
   int i, j;
-  // decode msm header
   if (decode_msm_head(buff, len, &msm_header, &i) < 0) 
   {
     return -1;
   }
   
-  //int ncell = msm_header.ncell;
   if (i + msm_header.nsat * 36 + msm_header.ncell * 80 > len * 8) 
   {
       return -1;
   }
 
-  i+= msm_header.nsat * 8;
-  i+= msm_header.nsat * 4;
+  i += msm_header.nsat * 8;
+  i += msm_header.nsat * 4;
   i += msm_header.nsat * 10;
   i += msm_header.nsat * 14;
   i += msm_header.ncell * 20;
@@ -2998,16 +3018,14 @@ static int decode_msm7(U08 *buff, int len)
   i += msm_header.ncell * 10;
   i += msm_header.ncell * 1;
 
-  for (j=0; j < msm_header.ncell; j++) 
+  for (j = 0; j < msm_header.ncell; ++j) 
   { // cnr 
       msm_cnr[j] = getbitu(buff, i, 10) * 0.0625; 
       i += 10;
   }
 
   i += msm_header.ncell * 15;
-
-
-    return msm_header.sync ? 0 : 1;
+  return msm_header.sync ? 0 : 1;
 }
 
 //static int decode_msm7(rtcm_t *rtcm, int sys)
@@ -3653,6 +3671,59 @@ void ShowUbxNavVelned(U08* src, bool convertOnly, CString* pStr)
 
   CGPSDlg::gpsDlg->m_gprmcMsgCopy.SpeedKnots = (F32)gSpeed / 100 * MS2KMHR / KNOTS2KMHR;
   CGPSDlg::gpsDlg->m_gprmcMsgCopy.TrueCourse = (F32)heading / 100000;
+}
+
+void ShowStqSpecialDrInfo(U08* src, bool convertOnly, CString* pStr)
+{
+  U32 timeTag = 0;
+  U16 flags = 0;
+  U16 id = 0;
+  U32 data1 = 0;  //x-axis gyroscope
+  U32 data2 = 0;  //y-axis gyroscope
+  U32 data3 = 0;  //z-axis gyroscope
+  U32 data4 = 0;  //x-axis accelerometer
+  U32 data5 = 0;  //y-axis accelerometer
+  U32 data6 = 0;  //z-axis accelerometer
+  U32 data7 = 0;  //gyroscope temperature
+  U32 data8 = 0;  //speed
+  U32 data9 = 0;  //speed
+
+
+  GetByteDataFromLE(&src[6],  0, 4, (U08*)(&timeTag), sizeof(timeTag));
+  GetByteDataFromLE(&src[6],  4, 2, (U08*)(&flags), sizeof(flags));
+  GetByteDataFromLE(&src[6],  6, 2, (U08*)(&id), sizeof(id));
+  GetByteDataFromLE(&src[6],  8, 4, (U08*)(&data1), sizeof(data1));
+  data1 = ((data1 & 0x800000) != 0) ? (data1 | 0xFF800000) : (data1 & 0x00FFFFFF);
+  GetByteDataFromLE(&src[6], 12, 4, (U08*)(&data2), sizeof(data2));
+  data2 = ((data2 & 0x800000) != 0) ? (data2 | 0xFF800000) : (data2 & 0x00FFFFFF);
+  GetByteDataFromLE(&src[6], 16, 4, (U08*)(&data3), sizeof(data3));
+  data3 = ((data3 & 0x800000) != 0) ? (data3 | 0xFF800000) : (data3 & 0x00FFFFFF);
+
+  GetByteDataFromLE(&src[6], 20, 4, (U08*)(&data4), sizeof(data4));
+  data4 = ((data4 & 0x800000) != 0) ? (data4 | 0xFF800000) : (data4 & 0x00FFFFFF);
+  GetByteDataFromLE(&src[6], 24, 4, (U08*)(&data5), sizeof(data5));
+  data5 = ((data5 & 0x800000) != 0) ? (data5 | 0xFF800000) : (data5 & 0x00FFFFFF);
+  GetByteDataFromLE(&src[6], 28, 4, (U08*)(&data6), sizeof(data6));
+  data6 = ((data6 & 0x800000) != 0) ? (data6 | 0xFF800000) : (data6 & 0x00FFFFFF);
+
+  GetByteDataFromLE(&src[6], 32, 4, (U08*)(&data7), sizeof(data7));
+  data7 = ((data7 & 0x800000) != 0) ? (data7 | 0xFF800000) : (data7 & 0x00FFFFFF);
+
+  GetByteDataFromLE(&src[6], 36, 4, (U08*)(&data8), sizeof(data8));
+  GetByteDataFromLE(&src[6], 40, 4, (U08*)(&data9), sizeof(data9));
+
+  //strBuffer.Format("$STQ-DR(0x6C,0xA0,t=%d,f=%02X,id=%04X,gx=%d,gy=%d,gz=%d,ax=%d,ay=%d,az=%d,w=%c%d,s=%d", 
+  //  timeTag, flags, id, data1 & 0xFFFFFF, data2 & 0xFFFFFF, data3 & 0xFFFFFF, data4 & 0xFFFFFF, 
+  //  data5 & 0xFFFFFF, data6 & 0xFFFFFF, ((data7 & 0x800000) == 0) ? 'F' : 'B', data7 & 0x7FFFFF, data8 & 0xFFFFFF);
+  strBuffer.Format("$STQ-DR(0x6C,0xA0,T=%d,f=%02X,id=%04X,gx=%d,gy=%d,gz=%d,ax=%d,ay=%d,az=%d,t=%d,w=%c%d,s=%d", 
+    timeTag, flags, id, data1, data2, data3, data4, data5, data6, data7,
+    ((data8 & 0x800000) == 0) ? 'F' : 'B', data8 & 0x7FFFFF, data9 & 0xFFFFFF);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+  if(convertOnly)
+	{
+		return;
+	}
 }
 
 

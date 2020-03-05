@@ -223,6 +223,7 @@ public:
 		InternalLoaderV6GnssDelTag,
 		InternalLoaderV8AddTag,
     InternalLoaderV8AddTagInBinCmd,
+    InternalLoaderV9AddTagInBinCmd,
 		CustomerDownload,
 		InternalLoaderSpecial,
     ForceInternalLoaderV8,
@@ -238,6 +239,8 @@ public:
     FileLoader,
     FileLoaderInBinCmd,
 	} m_DownloadMode;
+  BOOL m_useLzmaDownload;
+  BOOL m_v9NewDownloadCmd;
 
 	enum InfoTabStat {
 		BasicInfo = 0,
@@ -331,6 +334,7 @@ protected:
 	CBitmapButton m_RecordBtn;
 	CColorStatic m_fwCrc1;
 	CColorStatic m_fwCrc2;
+  CColorStatic m_fwCrc3;
 	CColorStatic m_fwCheckSum;
 
 public:
@@ -663,7 +667,7 @@ public:
 	CString m_strDownloadImage;
 	CString m_strDownloadImage2;
 
-  int tagPos;
+  U32 tagPos;
   bool emptyTag;
   bool uniqueTag;
 
@@ -747,9 +751,11 @@ private:
 		FIX_MULTI_HZ_POI_C = 0x0D,
 	};
 
+  CString CGPSDlg::EncodeLzma(const CString& promPath);
 	UINT GetBinFromResource(int baud);
 	U08 PlRomNoAlloc2(const CString& prom_path);
 	U08 PlRomNoAllocV8(const CString& prom_path);
+	U08 PlRomNoAlloc7z(const CString& prom_path);
 	U08 PlRomCustomerUpgrade(UINT rid);
 	bool FirmwareUpdate(const CString& strFwPath);
 	int SendRomBuffer3(const U08* sData, int sDataSize, BinaryData &binData, int fbinSize, 
@@ -777,6 +783,7 @@ public:
 	CmdErrorCode QueryRtkSlaveBaud(CmdExeMode nMode, void* outputData);
 	CmdErrorCode ClearRtkSlaveData(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryRtkCpifBias(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryRtkElevationAndCnrMask(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryBasePosition(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryPsti(CmdExeMode nMode, void* outputData);
 	//CmdErrorCode QueryPsti032(CmdExeMode nMode, void* outputData);
@@ -822,6 +829,9 @@ public:
 	CmdErrorCode QuerySoftwareVersionSystemCode(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySoftwareCrcSystemCode(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySoftwareCrc32SystemCode(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryPhoenixSoftwareFeature(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryV9TagAddress(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryV9Tag(CmdExeMode nMode, void* outputData);
 
   U08 m_nGeofecingNo;
 
@@ -922,12 +932,11 @@ protected:
 	CmdErrorCode AlphaAgCalibrationDown(CmdExeMode nMode, void* outputData);
 	CmdErrorCode AlphaEcompassCalibration(CmdExeMode nMode, void* outputData);
 
-	CmdErrorCode QueryV9TagAddress(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryV9UniqueId(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryV9ExtendedId(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryV9Tag(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryV9PromAesTag(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryV9ExternalAesTag(CmdExeMode nMode, void* outputData);
+	CmdErrorCode ResetV9AesTag(CmdExeMode nMode, void* outputData);
 
 protected:
   int m_nHotKeyID[2];
@@ -938,7 +947,8 @@ protected:
   void SetFwInfo(const CString& fwPath);
 	void DoDatalogLogReadBatch(DataLogCommandSet cmdSet);
   
-  afx_msg LONG  OnHotKey( WPARAM  wParam, LPARAM  lParam);
+  afx_msg LONG OnHotKey( WPARAM  wParam, LPARAM  lParam);
+  afx_msg void OnChar(UINT nChar,UINT nRepCnt,UINT nFlags);
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
@@ -1145,6 +1155,7 @@ protected:
 	afx_msg void OnTestExternalSrec();
 	afx_msg void OnIqPlot();
   afx_msg void OnTestAlphaIo();
+  afx_msg void OnTestAlphaPlusIo();
   //afx_msg void OnTmpActiveLicense();
 	afx_msg void OnReadMemToFile();
 	afx_msg void OnReadMemToFile2();
@@ -1196,6 +1207,8 @@ protected:
 	afx_msg void OnConfigBasePosition();
 	afx_msg void OnConfigRtkParameters();
   afx_msg void OnConfigRtkCpifBias();
+  afx_msg void OnConfigRtkElevationAndCnrMask();
+
 	afx_msg void OnRtkReset();
 	afx_msg void OnConfigMessageOut();
 	afx_msg void OnConfigSubSecRegister();
@@ -1223,6 +1236,7 @@ protected:
 	afx_msg void OnRtkOnOffSbasQzssSv();
 	afx_msg void OnRtkOnOffGlonassSv();
 	afx_msg void OnRtkOnOffBeidouSv();
+	afx_msg void OnRtkOnOffGalileoSv();
 	afx_msg void OnQueryRtkReferencePosition();
 
 	afx_msg void OnInsdrTest();
@@ -1432,7 +1446,9 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryRtkSlaveBaud); }	
 	afx_msg void OnQueryRtkCpifBias()
 	{ GenericQuery(&CGPSDlg::QueryRtkCpifBias); }	
-	afx_msg void OnClearRtkSlaveData()
+	afx_msg void OnQueryRtkElevationAndCnrMask()
+	{ GenericQuery(&CGPSDlg::QueryRtkElevationAndCnrMask); }	
+  afx_msg void OnClearRtkSlaveData()
 	{ GenericQuery(&CGPSDlg::ClearRtkSlaveData); }	
   afx_msg void OnQueryBasePosition()
 	{ GenericQuery(&CGPSDlg::QueryBasePosition); }
@@ -1515,6 +1531,8 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryV9TagAddress); }
   afx_msg void OnQueryV9UniqueId()
 	{ GenericQuery(&CGPSDlg::QueryV9UniqueId); }
+  afx_msg void OnQueryPhoenixSoftwareFeature()
+	{ GenericQuery(&CGPSDlg::QueryPhoenixSoftwareFeature); }
   afx_msg void OnQueryV9ExtendedId()
 	{ GenericQuery(&CGPSDlg::QueryV9ExtendedId); }
   afx_msg void OnQueryV9Tag()
@@ -1523,6 +1541,8 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryV9PromAesTag); }
   afx_msg void OnQueryV9ExternalAesTag()
 	{ GenericQuery(&CGPSDlg::QueryV9ExternalAesTag); }
+  afx_msg void OnResetV9AesTag()
+	{ GenericQuery(&CGPSDlg::ResetV9AesTag); }
 
 	struct MenuItemEntry {
 		BOOL showOption;
@@ -1573,6 +1593,7 @@ protected:
 	void parse_sti_03_message(const char *buff,int len); /* for timing module */
 	void parse_sti_04_001_message(const char *buff, int len); /* for timing module */
 	void parse_sti_message(const char *buff,int len);
+	void parse_pirnsf_message(const char *buff,int len);
 	void parse_sti_0_message(const char *buff,int len); /* for timing module */
 	//	void parse_rtoem_message(const char *buff, int len);
 	void parse_psti_50(const char *buff);
@@ -1685,4 +1706,15 @@ public:
   bool DoCConfigRegisterDirect(U32 addr, U32 value);
   bool DoCConfigRfIcDirect(U08 type, U32* reg, int size);
 
+protected:
+  enum RtkStatusChanged
+  {
+    BecomeRtkFloat = 1,
+    BecomeGnssFixed,
+    BecomeNoFixed,
+    RebootDetected,
+  };
+  int m_becomeRtkFloat;
+  int m_becomeGnssFixed;
+  void OutputRtkStatusChangedMessage(RtkStatusChanged type);
 };

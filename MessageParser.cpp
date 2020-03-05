@@ -20,6 +20,14 @@ enum ParsingState {
   NoComing,
   StqHeaderA0,
   StqHeaderA1,
+  StqDrSpecialHeader6C,
+  StqDrSpecialHeaderA0,
+  StqSpecialDrSize1,
+  StqSpecialDrSize2,
+  StqSpecialDrBody,
+  StqSpecialDrChecksum,
+  StqSpecialDrEol0D,
+  StqSpecialDrEol0A,
   StqHeaderS1,
   StqHeaderS2,
   StqEol0D,
@@ -186,7 +194,11 @@ MessageType MessageParser::GetParsingData(void *buffer, DWORD bufferSize, DWORD*
     }
     else if(StqHeaderA1 == ps)
     {
-      if(*bufferIter >= 0x10)
+      if(*bufferIter == 0x6C)
+      {
+        ps = StqDrSpecialHeader6C;
+      }
+      else if(*bufferIter >= 0x10)
       { //Oversized
         ps = CheckHeader(*bufferIter);
         if(ps != NoComing)
@@ -200,6 +212,95 @@ MessageType MessageParser::GetParsingData(void *buffer, DWORD bufferSize, DWORD*
         ps = StqHeaderS1;
       }
     }
+    else if(StqDrSpecialHeader6C == ps)
+    {
+      switch(*bufferIter)
+      {
+      case 0xA0:
+        ps = StqDrSpecialHeaderA0;
+        break;
+      default:
+        ps = CheckHeader(*bufferIter);
+        if(ps != NoComing)
+        {
+          messageStart = *totalSize - 1;
+        }
+        break;
+      }
+    }
+    else if(StqDrSpecialHeaderA0 == ps)
+    {
+      if(*bufferIter != 0x30)
+      { //Oversized
+        ps = CheckHeader(*bufferIter);
+        if(ps != NoComing)
+        {
+          messageStart = *totalSize - 1;
+        }
+      }
+      else
+      {
+        messageSize = *bufferIter;
+        ubloxCkA = 0x6C ^ 0xA0 ^ *bufferIter;
+        ps = StqSpecialDrSize1;
+      }
+    }
+    else if(StqSpecialDrSize1 == ps)
+    {
+        messageSize |= *bufferIter << 8;
+        ubloxCkA ^= *bufferIter;
+        messageLength = 0;
+        ps = StqSpecialDrSize2;
+    }
+    else if(StqSpecialDrSize2 == ps)
+    {
+        ++messageLength;
+        ubloxCkA ^= *bufferIter;
+        ps = StqSpecialDrBody;
+    }
+    else if(StqSpecialDrBody == ps)
+    {
+      ++messageLength;
+      ubloxCkA ^= *bufferIter;
+      if(messageSize == messageLength)  
+      {
+        ps = StqSpecialDrChecksum;
+      }
+    }
+    else if(StqSpecialDrChecksum == ps)
+    {
+      if(*bufferIter != ubloxCkA)
+      {
+        ps = NoComing;
+      }
+      else
+      {
+        ps = StqSpecialDrEol0D;
+      }
+    }
+    else if(StqSpecialDrEol0D == ps)
+    {
+      if(*bufferIter == 0x0D)
+      {
+        ps = StqSpecialDrEol0A;
+      }
+      else
+      {
+        ps = NoComing;
+      }
+    } 
+    else if(StqSpecialDrEol0A == ps)
+    {
+      if(*bufferIter == 0x0A)
+      {
+        type = StqSpecialDrBinary;
+        ps = ParsingDone;
+      }
+      else
+      {
+        ps = NoComing;
+      }
+    }     
     else if(StqHeaderS1 == ps)
     {
         messageSize |= *bufferIter;

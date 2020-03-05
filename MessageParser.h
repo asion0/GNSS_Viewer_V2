@@ -8,6 +8,7 @@ enum MessageType {
   NmeaMessage,
   RtcmMessage,
   UbloxMessage,
+  StqSpecialDrBinary,
 };
 
 //If the function succeeds, the return value is 1.

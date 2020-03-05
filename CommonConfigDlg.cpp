@@ -4547,7 +4547,7 @@ void CRtkOnOffSv::UpdateStatus()
     "Reserved", "Reserved", "Reserved", "Reserved"
   };
 
-  const char* svNameBBeidou2[] = {
+  const char* svNameBeidou2[] = {
     "BD SV 201", "BD SV 202", "BD SV 203", "BD SV 204", 
     "BD SV 205", "BD SV 206", "BD SV 207", "BD SV 208", 
     "BD SV 209", "BD SV 210", "BD SV 211", "BD SV 212", 
@@ -4556,6 +4556,17 @@ void CRtkOnOffSv::UpdateStatus()
     "BD SV 221", "BD SV 222", "BD SV 224", "BD SV 224", 
     "BD SV 225", "BD SV 226", "BD SV 227", "BD SV 228", 
     "BD SV 229", "BD SV 230", "Reserved", "Reserved"
+  };
+
+  const char* svNameGalileo[] = {
+    "GA SV 1", "GA SV 2", "GA SV 3", "GA SV 4", 
+    "GA SV 5", "GA SV 6", "GA SV 7", "GA SV 8", 
+    "GA SV 9", "GA SV 10", "GA SV 11", "GA SV 12", 
+    "GA SV 13", "GA SV 14", "BD SV 15", "GA SV 16", 
+    "GA SV 17", "GA SV 18", "GA SV 19", "GA SV 20", 
+    "GA SV 21", "GA SV 22", "GA SV 24", "GA SV 24", 
+    "GA SV 25", "GA SV 26", "GA SV 27", "GA SV 28", 
+    "GA SV 29", "GA SV 30", "GA SV 31", "GA SV 32"
   };
 
   const char** svNamePtr = svNameGps;
@@ -4581,10 +4592,16 @@ void CRtkOnOffSv::UpdateStatus()
     title = "RTK Enable/Disable GLONASS SV Mechanism";
     break;
   case RtkSvBeidou2:
-    svNamePtr = svNameBBeidou2;
+    svNamePtr = svNameBeidou2;
     m_svReadAddr = 0xFE00007B;
     m_svWriteAddr = 0xCE00000B;
     title = "RTK Enable/Disable BEIDOU2 SV Mechanism";
+    break;
+  case RtkSvGalileo:
+    svNamePtr = svNameGalileo;
+    m_svReadAddr = 0xFE00007D;
+    m_svWriteAddr = 0xCE00000C;
+    title = "RTK Enable/Disable Galileo SV Mechanism";
     break;
   }
 
@@ -4704,6 +4721,7 @@ BOOL ConfigRtcmMeasurementDataOutDlg::OnInitDialog()
     ((CButton*)GetDlgItem(IDC_FIELD4))->SetCheck(ackCmd[7]);
     ((CButton*)GetDlgItem(IDC_FIELD5))->SetCheck(ackCmd[8]);
     ((CButton*)GetDlgItem(IDC_FIELD6))->SetCheck(ackCmd[9]);
+    ((CButton*)GetDlgItem(IDC_FIELD7))->SetCheck(ackCmd[10]);
     ((CButton*)GetDlgItem(IDC_FIELD8))->SetCheck(ackCmd[11]);
     ((CButton*)GetDlgItem(IDC_FIELD9))->SetCheck(ackCmd[12]);
     ((CButton*)GetDlgItem(IDC_FIELD10))->SetCheck(ackCmd[13]);
@@ -4717,6 +4735,7 @@ BOOL ConfigRtcmMeasurementDataOutDlg::OnInitDialog()
     ((CButton*)GetDlgItem(IDC_FIELD4))->SetCheck(1);
     ((CButton*)GetDlgItem(IDC_FIELD5))->SetCheck(1);
     ((CButton*)GetDlgItem(IDC_FIELD6))->SetCheck(1);
+    ((CButton*)GetDlgItem(IDC_FIELD7))->SetCheck(1);
     ((CButton*)GetDlgItem(IDC_FIELD8))->SetCheck(1);
     ((CButton*)GetDlgItem(IDC_FIELD9))->SetCheck(1);
     ((CButton*)GetDlgItem(IDC_FIELD10))->SetCheck(1);
@@ -4748,6 +4767,7 @@ void ConfigRtcmMeasurementDataOutDlg::OnBnClickedOk()
 	m_field4 = ((CButton*)GetDlgItem(IDC_FIELD4))->GetCheck();
 	m_field5 = ((CButton*)GetDlgItem(IDC_FIELD5))->GetCheck();
 	m_field6 = ((CButton*)GetDlgItem(IDC_FIELD6))->GetCheck();
+	m_field7 = ((CButton*)GetDlgItem(IDC_FIELD7))->GetCheck();
 	m_field8 = ((CButton*)GetDlgItem(IDC_FIELD8))->GetCheck();
 	m_field9 = ((CButton*)GetDlgItem(IDC_FIELD9))->GetCheck();
 	m_field10 = ((CButton*)GetDlgItem(IDC_FIELD10))->GetCheck();
@@ -4769,6 +4789,7 @@ void ConfigRtcmMeasurementDataOutDlg::UpdateStatus()
     GetDlgItem(IDC_FIELD6)->EnableWindow(FALSE);
     ((CButton*)GetDlgItem(IDC_FIELD6))->SetCheck(0);
   }
+	GetDlgItem(IDC_FIELD7)->EnableWindow(enable);
 	GetDlgItem(IDC_FIELD8)->EnableWindow(enable);
 	GetDlgItem(IDC_FIELD9)->EnableWindow(enable);
 	GetDlgItem(IDC_FIELD10)->EnableWindow(enable);
@@ -4788,6 +4809,7 @@ void ConfigRtcmMeasurementDataOutDlg::DoCommand()
 	*cmd.GetBuffer(3) = (U08)m_field4;
 	*cmd.GetBuffer(4) = (U08)m_field5;
 	*cmd.GetBuffer(5) = (U08)m_field6;
+	*cmd.GetBuffer(6) = (U08)m_field7;
 	*cmd.GetBuffer(7) = (U08)m_field8;
 	*cmd.GetBuffer(8) = (U08)m_field9;
 	*cmd.GetBuffer(9) = (U08)m_field10;
@@ -5882,7 +5904,6 @@ void CConfigRtkGlCpifBias::DoCommand()
   AfxBeginThread(ConfigThread, 0);
 }
 
-
 // CConfigCpuBoostMode 
 IMPLEMENT_DYNAMIC(CConfigCpuBoostMode, CCommonConfigDlg)
 
@@ -5949,8 +5970,8 @@ BOOL CConfigureAlphaKeyDlg::OnInitDialog()
 	CCommonConfigDlg::OnInitDialog();
   if(m_cmdType == V9AesTag)
   {
-    this->SetWindowText("Configure V9 AES Tag");
-    GetDlgItem(IDC_TITLE)->SetWindowText("V9 AES Tag (16 byte hexadecimal numbers)");
+    this->SetWindowText("Configure Phoenix Tag");
+    GetDlgItem(IDC_TITLE)->SetWindowText("Phoenix Tag (16 byte hexadecimal numbers)");
   }
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
@@ -6008,7 +6029,7 @@ void CConfigureAlphaKeyDlg::DoCommand()
 
 	configCmd.SetData(cmd);
 	configPrompt = (m_cmdType == AlphaKey) ?
-    "Configure Alpha RTK Key successfully" : "Configure V9 AES Tag successfully";
+    "Configure Alpha RTK Key successfully" : "Configure Phoenix Tag successfully";
   AfxBeginThread(ConfigThread, 0);
 }
 
@@ -6677,11 +6698,103 @@ INT_PTR CConfigV9PowerSave::DoDirect(int t)
   bool allOk = CConfigRegisterDlg::SetRegisters(CConfigRegisterDlg::Register, regData);
   if(allOk)
   {
-    ::AfxMessageBox("Configure V9 power save failed!");
+    ::AfxMessageBox("Configure Phoenix power save failed!");
   }
   else
   {
-    ::AfxMessageBox("Configure V9 power save successfully.");
+    ::AfxMessageBox("Configure Phoenix power save successfully.");
   }
 	return IDCANCEL;
+}
+
+// CConfigRtkGlCpifBias 
+IMPLEMENT_DYNAMIC(CConfigRtkElevationAndCnrMask, CCommonConfigDlg)
+
+CConfigRtkElevationAndCnrMask::CConfigRtkElevationAndCnrMask(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_RTK_ELE_CNR_MASK, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigRtkElevationAndCnrMask, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigRtkElevationAndCnrMask::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigRtkGlCpifBias 
+BOOL CConfigRtkElevationAndCnrMask::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+  BinaryData ackCmd;
+  CString txt, title;
+  this->GetWindowText(title);
+  //Alex
+	if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryRtkElevationAndCnrMask(CGPSDlg::Return, &ackCmd))
+	{
+    title += " (Query successfully)";
+    
+    DisplayStatic(this, IDC_ELE, "%d", ackCmd[6]);
+    DisplayStatic(this, IDC_CNR, "%d", ackCmd[7]);
+    DisplayStatic(this, IDC_GCNR, "%d", ackCmd[8]);
+    DisplayStatic(this, IDC_ELE2, "%d", ackCmd[9]);
+    DisplayStatic(this, IDC_CNR2, "%d", ackCmd[10]);
+    DisplayStatic(this, IDC_GCNR2, "%d", ackCmd[11]);
+  }
+  else
+  {
+    title += " (Query failed)";
+    
+    DisplayStatic(this, IDC_ELE, "%d", 10);
+    DisplayStatic(this, IDC_CNR, "%d", 35);
+    DisplayStatic(this, IDC_GCNR, "%d", 38);
+    
+    DisplayStatic(this, IDC_ELE2, "%d", 25);
+    DisplayStatic(this, IDC_CNR2, "%d", 38);
+    DisplayStatic(this, IDC_GCNR2, "%d", 40);
+  }
+  this->SetWindowText(title);
+  ((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigRtkElevationAndCnrMask::OnBnClickedOk()
+{	
+	CString txt;
+
+  GetDlgItem(IDC_ELE)->GetWindowText(txt);
+	m_ele = atoi(txt);
+  GetDlgItem(IDC_CNR)->GetWindowText(txt);
+  m_cnr = atoi(txt);
+  GetDlgItem(IDC_GCNR)->GetWindowText(txt);
+	m_gcnr = atoi(txt);
+
+  GetDlgItem(IDC_ELE2)->GetWindowText(txt);
+	m_ele2 = atoi(txt);
+  GetDlgItem(IDC_CNR2)->GetWindowText(txt);
+  m_cnr2 = atoi(txt);
+  GetDlgItem(IDC_GCNR2)->GetWindowText(txt);
+	m_gcnr2 = atoi(txt);
+
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
+void CConfigRtkElevationAndCnrMask::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(9);
+	*cmd.GetBuffer(0) = 0x6A;
+	*cmd.GetBuffer(1) = 0x11;
+  *cmd.GetBuffer(2) = (U08)m_ele;
+  *cmd.GetBuffer(3) = (U08)m_cnr;
+  *cmd.GetBuffer(4) = (U08)m_gcnr;
+  *cmd.GetBuffer(5) = (U08)m_ele2;
+  *cmd.GetBuffer(6) = (U08)m_cnr2;
+  *cmd.GetBuffer(7) = (U08)m_gcnr2;
+	*cmd.GetBuffer(8) = (U08)m_attribute;
+	configCmd.SetData(cmd);
+
+	configPrompt = "Configure RTK elevation and CNR successfully";
+  AfxBeginThread(ConfigThread, 0);
 }

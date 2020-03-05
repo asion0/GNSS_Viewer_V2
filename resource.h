@@ -267,6 +267,8 @@
 #define IDB_GI_FREQ_I                   523
 #define IDB_GI_FREQ_I2                  524
 #define IDR_FTPCHECK                    525
+#define IDR_LZMA                        526
+#define IDR_V9_AT_SREC                  527
 #define IDC_CONNECT                     1000
 #define IDC_CLOSE                       1001
 #define IDC_SETORIGIN                   1002
@@ -498,10 +500,10 @@
 #define IDC_CHECK27                     1096
 #define IDC_LBL_DOWNLOAD                1096
 #define IDC_CHECK116                    1096
-#define IDC_FW_CRC3                     1096
 #define IDC_FW_CHECKSUM                 1096
 #define IDC_CHECK28                     1097
 #define IDC_CHECK117                    1097
+#define IDC_FW_CRC3                     1098
 #define IDC_CHECK29                     1098
 #define IDC_POS_PINNING                 1098
 #define IDC_CHECK118                    1098
@@ -1108,6 +1110,8 @@
 #define IDC_AUTO_AGPS                   1329
 #define IDD_PLAY_NMEA                   1330
 #define IDC_SN                          1330
+#define IDC_AUTO_AGPS2                  1330
+#define IDC_RTK_STATUS_CHANGED          1330
 #define IDC_FILENAME                    1331
 #define IDC_OVERDUE_SEC                 1331
 #define IDD_SET_UART_PASS_THROUGH       1331
@@ -1144,12 +1148,15 @@
 #define IDC_CRC                         1346
 #define IDC_FILEPATH                    1347
 #define IDC_CRC32                       1347
+#define IDC_CRC32_16M                   1347
 #define IDC_FILEPATH2                   1348
 #define IDC_LON                         1348
 #define IDC_GNSSTYPE                    1348
 #define IDC_LAT                         1349
 #define IDC_GNSSTYPE_C                  1349
 #define IDC_SPY_CENTER                  1350
+#define IDC_CRC33                       1350
+#define IDC_CRC32_8M                    1350
 #define IDC_PASS_THROUGH                1351
 #define IDC_LAT2                        1351
 #define IDC_ALT                         1351
@@ -1277,6 +1284,7 @@
 #define IDC_FIELD9                      1416
 #define IDC_NORTH_PROJECTION_T          1417
 #define IDC_STATIC_ADDR                 1417
+#define IDC_FIELD7                      1417
 #define IDC_BASELINE_COURSE_T           1418
 #define IDC_STATIC_DATA                 1418
 #define IDC_UP_PROJECTION_T             1419
@@ -1496,16 +1504,22 @@
 #define IDC_REV02                       1567
 #define IDC_T_W_REG7                    1568
 #define IDC_KEY                         1568
+#define IDC_ELE                         1568
 #define IDC_T_W_REG8                    1569
 #define IDC_NOTIFY                      1569
+#define IDC_CNR                         1569
 #define IDC_T_W_REG9                    1570
 #define IDC_ADDR                        1570
+#define IDC_CIFB_L5                     1570
+#define IDC_GCNR2                       1570
 #define IDC_T_W_REG10                   1571
 #define IDC_ADDR2                       1571
 #define IDC_DUMP_SIZE                   1571
 #define IDC_TITLE                       1571
+#define IDC_ELE2                        1571
 #define IDC_T_W_REG11                   1572
 #define IDC_MSG_ID                      1572
+#define IDC_CNR2                        1572
 #define IDC_T_W_REG12                   1573
 #define ID_QUERY                        1573
 #define IDC_T_W_REG13                   1574
@@ -1641,6 +1655,7 @@
 #define IDC_GA_FREQ_I2                  1639
 #define IDC_NEW_NAME                    1639
 #define IDC_W_REG23                     1639
+#define IDC_PRODUCT_NAME                1639
 #define IDC_CHECK_M2_30                 1640
 #define IDC_GI_FREQ_I2                  1640
 #define IDC_RENAME                      1640
@@ -1661,11 +1676,14 @@
 #define IDC_CRC32_T                     1649
 #define IDC_GNSSTYPE_T                  1650
 #define IDC_T_R_REG00                   1651
+#define IDC_CRC32_T2                    1651
 #define IDC_T_R_REG01                   1652
 #define IDC_T_R_REG02                   1653
 #define IDC_R_REG00                     1654
 #define IDC_R_REG01                     1655
 #define IDC_R_REG02                     1656
+#define IDC_NEW_FILENAME                1657
+#define IDC_GCNR                        1658
 #define IDC_CHECK_M3_00                 1710
 #define IDC_CHECK_M3_01                 1711
 #define IDC_CHECK_M3_02                 1712
@@ -2036,6 +2054,8 @@
 #define IDD_CFG_DR_MEMS_NOISE_LV        2684
 #define IDD_CFG_ADR_ODO_SCL_FACT        2685
 #define IDD_CFG_RF_IC2                  2686
+#define IDR_V9_IO_TESTER                2687
+#define IDD_RTK_ELE_CNR_MASK            2688
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_SYSTEM_RESTART               32811
@@ -2378,6 +2398,12 @@
 #define ID_AGPS_TEST                    33261
 #define ID_CFG_v9_RF_CLK_OUT_ON         33262
 #define ID_CFG_v9_RF_CLK_OUT_OFF        33263
+#define ID_QUERY_V9_SW_FEATURE          33264
+#define ID_RESET_V9_AES_TAG             33265
+#define ID_TEST_ALPHA_PLUS_IO           33266
+#define ID_RTK_ONOFF_GA_SV              33267
+#define ID_QUERY_RTK_ELE_CNR_MSK        33268
+#define ID_CFG_RTK_ELE_CNR_MSK          33269
 
 // Next default values for new objects
 // 
@@ -2385,7 +2411,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        485
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1657
+#define _APS_NEXT_CONTROL_VALUE         1659
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

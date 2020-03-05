@@ -270,6 +270,7 @@ bool NMEA::GNSProc(GPGGA& rgga, LPCSTR pt, int len)
 
 bool NMEA::GSVProc(GPGSV& rgsv, LPCSTR pt, int len)
 {
+  static bool noSigId = false;
 	int dot[MaxNmeaParam] = {0};	    
 	int dotPos = ScanDot(pt, len, dot);
 
@@ -302,6 +303,7 @@ bool NMEA::GSVProc(GPGSV& rgsv, LPCSTR pt, int len)
 	rgsv.SequenceNum = ParamInt(pt, dot[1], dot[2], 0);
 	rgsv.NumOfSate = ParamInt(pt, dot[2], dot[3], 0);
   int i = 3;
+
   for(int groupIdx = 0; i < dotPos; i += 4, ++groupIdx)
 	{
     rgsv.sates[groupIdx].Set(
@@ -310,6 +312,10 @@ bool NMEA::GSVProc(GPGSV& rgsv, LPCSTR pt, int len)
       ParamInt(pt, dot[i+2], dot[i+3], 0),
       (rgsv.signalId == NoSingalId) ? 0 : rgsv.signalId, 
       ParamFloatOrInt(pt, dot[i+3], dot[i+4], NonUseValue));
+#ifdef _DEBUG
+    if(pt[2] == 'B' && rgsv.signalId == 1 && groupIdx == 1)
+      break;
+#endif
 	}
   return true;
 }
@@ -685,7 +691,8 @@ NmeaType NMEA::MessageType(LPCSTR pt, int len)
 
 		{ "$PSTI,", MSG_STI },
 		{ "$SkyTraq,", MSG_REBOOT },
-		{ "$OLinkStar,", MSG_REBOOT },
+		//{ "$OLinkStar,", MSG_REBOOT },
+		{ "$PIRNSF,", MSG_PIRNSF },
 		{ NULL, MSG_Unknown }
 	};
 
@@ -803,11 +810,11 @@ void NMEA::ShowGNGSAmsg(GPGSA& rgpgsa, GPGSA& rglgsa, GPGSA& rbdgsa, GPGSA& rgag
 	      hasBdGsa = true;
 	      //rgigsa.SatelliteID[bdIndex++] = tmpGsa.SatelliteID[i];
 	      //hasGiGsa = true;
-      case 5:
+      case 5: //NMEA 4.11 Id 5 is GQ Qzss system
 	      rgigsa.SatelliteID[giIndex++] = tmpGsa.SatelliteID[i];
 	      hasGiGsa = true;
 	      break;
-      case 6:
+      case 6: //NMEA 4.11 Standard
 	      rgigsa.SatelliteID[giIndex++] = tmpGsa.SatelliteID[i];
 	      hasGiGsa = true;
 	      break;      
@@ -1071,29 +1078,30 @@ void NMEA::ShowGPGSVmsg2(GPGSV& rgpgsv, GPGSV& rglgsv, GPGSV& rbdgsv, GPGSV& rga
 	  }
     s->SetSate(tmpGsv.sates[i]);
 	} //for(int i = 0; i < 4; ++i)
-  if(s != NULL)
-  {
-    s->AddSnrSigId(tmpGsv.signalId);
-  }
 
 	if(gpgsvHasNavic)
 	{
+    satellites_gi.AddSnrSigId(tmpGsv.signalId);
     rgigsv = tmpGsv;
 	}
 	if(gpgsvHasGlonass)
 	{
+    satellites_gl.AddSnrSigId(tmpGsv.signalId);
     rglgsv = tmpGsv;
 	}
 	if(gpgsvHasBeidou)
 	{
+    satellites_bd.AddSnrSigId(tmpGsv.signalId);
 		rbdgsv = tmpGsv;
 	}
 	if(gpgsvHasGalileo)
 	{
+    satellites_ga.AddSnrSigId(tmpGsv.signalId);
 		rgagsv = tmpGsv;
   }
 	if(gpgsvHasGps)
 	{
+    satellites_gp.AddSnrSigId(tmpGsv.signalId);
 		rgpgsv = tmpGsv;
 	}
 }

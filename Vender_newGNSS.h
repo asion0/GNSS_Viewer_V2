@@ -372,7 +372,7 @@
 // .342 20180919 Add [Configure/Query NAVIC Message Interval] in Venus 8 menu,  request from Terrance.
 // .343 20181023 Add [Temporarily Activate License] in Alpha menu, request from Angus.
 // .344 20181205 Modify QZSS upper prn from 197 to 200, request from Kevin.
-// .345 20181221 Support V9 AES Tag download, request from Andrew.
+// .345 20181221 Support V9 Tag download, request from Andrew.
 // .345 20190109 Add 3 calibration functions in Alpha menu, request from Leo.
 // .345 20190116 NMEA PlaYER check time / date field length avoid crash, report from Leo.
 // .346 20190119 Update download loader for 0x64, 0x1b command.
@@ -416,7 +416,7 @@
 // .377 20190704 Modify GPS Ephemeris channel from 32 to 37 for QZSS, rquest from Andrew.
 // .378 20190704 Special version (AUTO_GET_CLOCK_OFFSET) for show clock offset every 3 seconds, rquest from Oliver and Ming-Jen.
 // .379 20190725 Modify pseudorange unit changed to 1 meter for LockheedMartin(_LOCKHEED_MARTIN_), rquest from Oliver.  //released special version
-// .380 20190806 Support Query Extened Id for new AES Tag, rquest from Andrew. 
+// .380 20190806 Support Query Extened Id for new Tag, rquest from Andrew. 
 // .381 20190822 Remove [Signal Disturbance Test] from Venus 8 menu, rquest from Neil. 
 // .381 20190827 Support multi frequency raw 0xE5, rquest from Neil / Andrew / Ming-Jen. 
 // .382 20190906 Support NCGSA and NCGSV for Quectel LC79D, request from Oliver. 
@@ -439,9 +439,24 @@
 // .395 20191125 Automatic detect v9 aes tag prom binary file and use 0x64 0x1b command to download, request from Andrew
 // .396 20191129 Dual-freq RTCM support: 1077, 1087, 1107, 1117, 1127, request from Ken and Neil
 // .397 20191212 Update loader_v8_add_tag_20191212113345 for QFN40 V9 with EON16M/8M, Alex released
-// .397 20191212 Add Configure RF Clock Out, request from Ming-Jen
+// .397 20191212 Add Configure RF Clock Out, request from Ming-Jen, V8 Final
 // .398 20191217 Update loader_v8_add_tag_20191212113345 for V9 EVB W25Q80, report from Ken
-//* means not release
+// .399 20191220 Update loader_v8_add_tag_20191220144037 for LZMA download, Alex released
+// .400 20191227 Add Hot key for cold start and RTK status notify, request from Austin
+// .401 20191231 Support LC79D NMEA with dual freq, request from Oliver, Ken
+// .402 20200102 Fixed BD12 display issue, report from Andrew
+// .404 20200107 Decode DR special message, report from Roger
+// .405 20200108 Fixed Phoenix PROM ini generator issues, report from Andrew
+// .406 20200116 Update loader_v8_add_tag_20191220144037 for tag support EON 16M, report from Andrew
+// .407 20200204 Add RTCM Galileo MSM 7 1097 option in Configure RTCM Measurement Data Out, request from Neil
+// .408 20200205 Add RTCM Galileo MSM 7 1097 option in Query RTCM Measurement Data Out, request from Neil
+// .409 20200206 Update loader_v8_add_tag_20200206145058 for Alpha Key issue, report from Andrew
+// .409 20200207 Add [Test Alpha+ RTK GPIO], request from Angus
+// .410 20200214 Fixed issue of Raw Galileo display, report from Andrew
+// .411 20200214 Add [Enable/Disable Galileo SV mechanism] in RTK menu, request from Ken
+// .412 20200219 Make a wide version for Galileo satellites display
+// .413 20200227 Add [RTK Elevation and CNR Mask] functions, require from Neil and Andrew
+// .001 20200302 Update  loader_v8_add_tag_20200302154408.srec for new download commands, request from Andrew
 
 #define SW_FUN_DATALOG		        0x0001
 #define SW_FUN_AGPS				        0x0002
@@ -452,8 +467,8 @@
 //title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 #define APP_CAPTION				        "GNSS Viewer"
 #define APP_TITLE				          ""              //Internal Use, Customer Release, NMEA Player...
-#define APP_VERSION				        "2.0.398"
-#define APP_MODULE				        "Venus 8"
+#define APP_VERSION				        "2.1.001"
+#define APP_MODULE				        "Phoenix"
 
 #define	Sktyraq					          0x0000
 #define SWID					            0x0001		//重慶西南集成電路設計
@@ -523,7 +538,12 @@
 #define RAW_MENU				          1		//Show RAW menu 20161201 request from Ryan
 #define RTK_MENU				          1		//Show RTK menu
 #define INS_DR_MENU				        1	  //Show INS_DR menu
-#define CLIENT_WIDTH			        1008	//Viewer window client width
+#define EXTRA_WIDE                0   //Window has extra wide size
+#if (EXTRA_WIDE)
+ #define CLIENT_WIDTH			        1108	//Viewer window client width
+#else
+ #define CLIENT_WIDTH			        1008	//Viewer window client width
+#endif
 #define CLIENT_HEIGHT			        678	//Viewer window client height
 #define AUTO_QUERY_VERSION		    0
 #define DOWNLOAD_IMMEDIATELY	    0		//start download immediately when nmea come in.
@@ -553,7 +573,7 @@
 #define MICROSATELLITE_PATCH      0   //For Microsatellite upgrade
 #define ENABLE_AUTO_AGPS          0   //Do autmatic AGPS when push cold start button
 #define NAVSPARK_MINI_GPIO_QUERY  0   //For a navspark-mini customer to query GPIO status
-
+#define _NEIL_TEMP_VER_           0
 ////////////////////////////////////////////////////////////////////////////////////////////
 #if defined(SWCFG_VENDOR_GNSS_GENERAL_NAVSPARK_MINI_GPIO)  //20191028
  #undef APP_CAPTION

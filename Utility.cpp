@@ -351,22 +351,75 @@ BOOL Utility::ExecuteExeNoWait(LPCSTR csCmdLine)
 		&sInfo, &pInfo);
 }
 
+BOOL Utility::ExecuteExeWait(LPCSTR csCmdLine)
+{
+	CStringW strCmdLine(csCmdLine);
+
+	SECURITY_ATTRIBUTES secattr; 
+	ZeroMemory(&secattr,sizeof(secattr));
+	secattr.nLength = sizeof(secattr);
+	secattr.bInheritHandle = TRUE;
+
+	STARTUPINFOW sInfo; 
+	ZeroMemory(&sInfo, sizeof(sInfo));
+	PROCESS_INFORMATION pInfo; 
+	ZeroMemory(&pInfo, sizeof(pInfo));
+
+	sInfo.cb = sizeof(sInfo);
+	sInfo.dwFlags = STARTF_USESTDHANDLES;
+	sInfo.hStdInput = NULL; 
+	sInfo.hStdOutput = NULL; 
+	sInfo.hStdError = NULL;
+
+	//Create the process here.
+	BOOL result =  CreateProcessW(0, (LPWSTR)(LPCWSTR)strCmdLine, 
+		0, 0, TRUE,
+		NORMAL_PRIORITY_CLASS|CREATE_NO_WINDOW, 0, 0,
+		&sInfo, &pInfo);
+
+  if(!result)
+  {
+      return FALSE;
+  }
+  else
+  {
+    DWORD exitCode;
+    // Successfully created the process.  Wait for it to finish.
+    WaitForSingleObject(pInfo.hProcess, INFINITE);
+
+    // Get the exit code.
+    result = GetExitCodeProcess(pInfo.hProcess, &exitCode);
+
+    // Close the handles.
+    CloseHandle(pInfo.hProcess);
+    CloseHandle(pInfo.hThread);
+
+    if(!result)
+    {
+       // Could not get exit code.
+       return FALSE;
+    }
+    // We succeeded.
+    return TRUE;
+  }
+}
+
 bool Utility::IsProcessRunning(LPWSTR processName)
 {
 	CStringW name(processName);
-    bool exists = false;
-    PROCESSENTRY32W entry;
-    entry.dwSize = sizeof(entry);
+  bool exists = false;
+  PROCESSENTRY32W entry = { 0 };
+  entry.dwSize = sizeof(entry);
 
-    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
-
-    if (Process32FirstW(snapshot, &entry))
-        while (Process32NextW(snapshot, &entry))
-			if (0==name.Compare(entry.szExeFile))
-                exists = true;
-
-    CloseHandle(snapshot);
-    return exists;
+  HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+  if(Process32FirstW(snapshot, &entry))
+  {
+    while(Process32NextW(snapshot, &entry))
+	    if(0 == name.Compare(entry.szExeFile))
+        exists = true;
+  }
+  CloseHandle(snapshot);
+  return exists;
 }
 
 bool Utility::IsNamedPipeUsing(LPCTSTR name)
@@ -952,4 +1005,121 @@ void Utility::GetErrorString(CString& msg, DWORD errorCode)
 
 	msg.Format("%s", lpMsgBuf);
 	LocalFree(lpMsgBuf);
+}
+
+//flashSize 0 is auto detect
+bool Utility::CalcFirmwareCrc(const CString& fwPath, int flashSize, 
+                              U16& crcM, U16& crcS, 
+                              U32& crc32_16m, 
+                              U32& crc32_8m, 
+                              U08& checkSum)
+{
+  if(!Utility::IsFileExist(fwPath))
+  {
+    return false;
+  }
+
+  BinaryData fw(fwPath);
+  crcM = 0;
+  crcS = 0;
+  crc32_16m = 0;
+  crc32_8m = 0;
+  checkSum = 0;
+  for (int i = 0; i < fw.Size(); ++i)
+  {
+    crcM += fw[i];
+    crc32_16m += fw[i];
+    crc32_8m += fw[i];
+    checkSum += fw[i];
+  }
+  crcS = crcM;
+  int realFlashSize = flashSize;
+  int oneMFlashSize = 1024 * 1024;
+  if(flashSize == 0)
+  {
+    //realFlashSize = (fw.Size() > 0xC0000) ? (2 * 1024 * 1024) : (1 * 1024 *1024);
+    realFlashSize = 2 * 1024 * 1024;
+  }
+
+  for (int i = fw.Size(); i < oneMFlashSize; ++i)
+  {
+    crcM += 0xFF;
+    crc32_16m += 0xFF;
+  }
+  crc32_8m = crc32_16m;
+  for (int i = oneMFlashSize; i < realFlashSize; ++i)
+  {
+    crcM += 0xFF;
+    crc32_16m += 0xFF;
+  }
+  return true;
+}
+
+
+bool Utility::CheckPromUniqueTag(const CString& imgPath, U32& tagPos, bool& emptyTag)
+{
+  if(!Utility::IsFileExist(imgPath))
+  {
+    return false;
+  }
+
+  BinaryData img(imgPath);
+  tagPos = 0;
+  if(img.Size() <= 0)
+  {
+    return false;
+  }
+
+  //U08* buff = new U08[imgSize];
+  //UINT s = f.Read(buff, imgSize);
+  //f.Close();
+
+  //if(s != imgSize)
+  //{
+  //  delete [] buff;
+  //  return false;
+  //}
+  UINT s = (UINT)img.Size();
+  U08 checkPattern[] = { 0x21, 0x22, 0x23, 0x24, 0x26, 0x2A, 0x28, 0x29, 
+                         0x2F, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F, 0x40 };
+  int checkSize = sizeof(checkPattern);
+  U08 *p = img.GetBuffer(0);
+  while (true) 
+  {
+    U08* ptr = (U08*)memchr(p, checkPattern[0], s); 
+    if(ptr == NULL)
+    { //Not found
+      p = NULL;
+      break;
+    }
+    if(0 == memcmp(ptr, checkPattern, checkSize))
+    { //Pattern found
+      p = ptr;
+      break;
+    }
+    s -= (ptr - p) + 1;
+    if(s <= 0)
+    {
+      p = NULL;
+      break;
+    }
+    p = ptr + 1;
+  }
+
+  if(p)
+  {
+    tagPos = (int)(p - img.GetBuffer(0)) - 16;
+    p = img.GetBuffer(0) + tagPos;
+    emptyTag = true;
+    for(int i = 0; i < 16; ++i)
+    {
+      if(*p != 0xFF)
+      {
+        emptyTag = false;
+        return true;
+      }
+    }
+    return true;
+  }
+  return false;
 }
