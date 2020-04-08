@@ -559,9 +559,15 @@ int CKmlDlg::GET_NMEA_SENTENCE(CFile& file, unsigned char* buffer)
 
 U08 CKmlDlg::NMEA_PROC(const char* buffer, int offset)
 {
+  static int count = 0;
 	offset = NMEA::TrimTail(buffer, offset);
 	U08 MsgType = NMEA::MessageType(buffer, offset);
 	
+  Utility::Log("NMEA_PROC", "L", ++count);
+  if(count == 255)
+  {
+    int aaa = 0;
+  }
 	switch(MsgType)
 	{
 	case MSG_ERROR:

@@ -202,6 +202,9 @@ public:
 		NACK,
 		FormatError,
 		Timeout,
+		Ok,
+		End,
+		Error,
 	};
 
 	enum CmdExeMode {
@@ -211,6 +214,9 @@ public:
 	};
 
 	enum DownloadMode {
+    DownloadMode_Auto,
+    DownloadMode_FileSrec,
+
 		EnternalLoader,
 		EnternalLoaderInBinCmd,
 		InternalLoaderV6Gps,
@@ -239,8 +245,21 @@ public:
     FileLoader,
     FileLoaderInBinCmd,
 	} m_DownloadMode;
+
   BOOL m_useLzmaDownload;
   BOOL m_v9NewDownloadCmd;
+	int m_nDownloadBaudIdx;
+	int m_nDownloadBufferIdx;
+	UINT m_nDownloadResource;
+	CString m_strDownloadImage;
+	CString m_strDownloadImage2;
+
+  enum DownloadCmdType {
+    DirectlyDownload0x0B,
+    DirectlyDownload0x644E,
+    ExternalLoader0x641B,
+    ExternalLoader0x644F,
+  };
 
 	enum InfoTabStat {
 		BasicInfo = 0,
@@ -661,11 +680,7 @@ public:
 
 	//For Common Download Clasases
 public:
-	int m_nDownloadBaudIdx;
-	int m_nDownloadBufferIdx;
-	UINT m_nDownloadResource;
-	CString m_strDownloadImage;
-	CString m_strDownloadImage2;
+
 
   U32 tagPos;
   bool emptyTag;
@@ -688,6 +703,9 @@ public:
 	bool Download();
 	bool Download2();
 	bool DownloadMasterSlave();
+  bool NewDownload(DownloadMode dm, int baufIdx, const CString& image);
+  bool NewRealDownload(DownloadCmdType type, DownloadMode dm, int baufIdx, const CString& image);
+
 	void SetBaudrate(int b);
 	BOOL GetShowBinaryCmdData() { return m_bShowBinaryCmdData; }
 	bool BoostBaudrate(BOOL bRestore, BoostMode mode = ChangeToTemp, bool isForce = false);
@@ -724,8 +742,12 @@ public:
 	{ return m_customerID; }
 	NMEA nmea;
 	bool DownloadLoader2(BOOL useBinCmd, BOOL needSleep, const BinaryData& srec, CWnd* notifyWnd = NULL);
-
+	bool DownloadLoader3(DownloadCmdType type, BOOL needSleep, const BinaryData& srec, CWnd* notifyWnd = NULL);
+  bool BinSizeCmd(int size, U08 ck);
+  CmdErrorCode GetTextAck(CString& strAckCmd, DWORD timeout);
+  bool SendFwBufferPhoenix(const BinaryData &fwFile, CWnd* notifyWnd);
 private:
+  CString m_lastErrorMsg;
 	BOOL m_bShowBinaryCmdData;
 	int downloadTotalSize;
 	int downloadProgress;
@@ -832,6 +854,8 @@ public:
 	CmdErrorCode QueryPhoenixSoftwareFeature(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryV9TagAddress(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryV9Tag(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QuerySecurityTag(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QuerySecurityTagOnly(CmdExeMode nMode, void* outputData);
 
   U08 m_nGeofecingNo;
 
@@ -1537,6 +1561,10 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryV9ExtendedId); }
   afx_msg void OnQueryV9Tag()
 	{ GenericQuery(&CGPSDlg::QueryV9Tag); }
+  afx_msg void OnQuerySecurityTag()
+	{ GenericQuery(&CGPSDlg::QuerySecurityTag); }
+  afx_msg void OnQuerySecurityTagOnly()
+	{ GenericQuery(&CGPSDlg::QuerySecurityTagOnly); }
   afx_msg void OnQueryV9PromAesTag()
 	{ GenericQuery(&CGPSDlg::QueryV9PromAesTag); }
   afx_msg void OnQueryV9ExternalAesTag()

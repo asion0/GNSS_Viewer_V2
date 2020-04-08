@@ -158,8 +158,6 @@ void ScatterData::SetENU(double lon, double lat, double h)
 	ENU = _WGS842NEU * ENU;			
 
 	LockEnuData();				
-	//current_x = ENU(0,0);
-	//current_y = ENU(1,0);
 	enu_x.push_back(ENU(0,0)/1000);
 	enu_y.push_back(ENU(1,0)/1000);
 	enu_x_mean  = 0;
@@ -193,7 +191,6 @@ void ScatterData::SetENU(double lon, double lat, double h)
 	{				
 		sum_error_y += ( (*enu_y_it-enu_y_mean)*(*enu_y_it-enu_y_mean) );
 	}			
-
 
 	rms_y = sqrt(sum_error_y/enu_y.size());
 	TwoDrms = (sqrt( rms_x*rms_x + rms_y*rms_y ))*1000;

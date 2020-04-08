@@ -24,8 +24,11 @@ void ShowRtcm1107(U08* src, int len, bool convertOnly = false, CString* pStr = N
 void ShowRtcm1117(U08* src, int len, bool convertOnly = false, CString* pStr = NULL);
 void ShowRtcm1127(U08* src, int len, bool convertOnly = false, CString* pStr = NULL);
 void ShowRtcm1087(U08* src, int len, bool convertOnly = false, CString* pStr = NULL);
+void ShowRtcm1097(U08* src, int len, bool convertOnly = false, CString* pStr = NULL);
 void ShowUbxTimTp(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowUbxNavSol(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowUbxNavPvt(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowUbxNavClock(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowUbxNavSvInfo(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowUbxNavSvStatus(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowUbxNavPosllh(U08* src, bool convertOnly = false, CString* pStr = NULL);

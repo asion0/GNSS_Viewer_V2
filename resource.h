@@ -2404,6 +2404,8 @@
 #define ID_RTK_ONOFF_GA_SV              33267
 #define ID_QUERY_RTK_ELE_CNR_MSK        33268
 #define ID_CFG_RTK_ELE_CNR_MSK          33269
+#define ID_QUERY_SECURITY_TAG           33270
+#define ID_QUERY_SECURITY_TAG_ONLY      33271
 
 // Next default values for new objects
 // 

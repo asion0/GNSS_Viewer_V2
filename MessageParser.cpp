@@ -83,6 +83,20 @@ static ParsingState CheckHeader(U08 c)
 
 BOOL IsSupportedRtcmType(U16 rtcmType)
 {
+  //switch(rtcmType)
+  //{
+  //case 1005:
+  //case 1077:
+  //case 1087:
+  //case 1107:
+  //case 1117:
+  //case 1127:
+  //  return TRUE;
+  //default:
+  //  return FALSE;
+  //}
+  //return FALSE;
+
   switch(rtcmType)
   {
   case 1005:
@@ -92,10 +106,14 @@ BOOL IsSupportedRtcmType(U16 rtcmType)
   case 1117:
   case 1127:
     return TRUE;
+  case 1088:
+    return TRUE;
+  case 1097:
+    return TRUE;
   default:
-    return FALSE;
+    return TRUE;
   }
-  return FALSE;
+  return TRUE;
 }
 
 BOOL CheckUbloxClass(U08 c)
@@ -151,6 +169,10 @@ MessageType MessageParser::GetParsingData(void *buffer, DWORD bufferSize, DWORD*
 		}
 
     DWORD b = lpReadOneChar(bufferIter, 10);
+    if(messageSize == 0xAA && messageLength == 0xAC && *bufferIter == 0xEB)
+    {
+      int aaa = 0;
+    }
     if(MessageParser::READERROR == b)
     { //COM error
       type = MtReadError;

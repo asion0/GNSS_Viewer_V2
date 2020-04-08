@@ -804,25 +804,16 @@ WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)
 	} WlfEntry;
 
 	WlfEntry feedbackTable[] = {
-		{ wlf_Ready, "READY", 5},
-		{ wlf_Ready1, "READY1", 6},
-		{ wlf_Ready2, "READY2", 6},
-		{ wlf_error41, "Error41", 7},
-		{ wlf_error42, "Error42", 7},
-		{ wlf_error43, "Error43", 7},
-		//^^^^^^^^^for Loader debug
+		{ wlf_error7, "Error7", 6},
+		{ wlf_error6, "Error6", 6},
 		{ wlf_error5, "Error5", 6},
 		{ wlf_error4, "Error4", 6},
 		{ wlf_error3, "Error3", 6},
 		{ wlf_error2, "Error2", 6},
 		{ wlf_error1, "Error1", 6},
-		{ wlf_resendbin, "Resendbin", 9},
-		{ wlf_reset, "Reset", 5},
-		{ wlf_resend, "RESEND", 6},
 		{ wlf_end, "END", 3},
 		{ wlf_ok, "OK", 2},
 		{ wlf_None, "WAIT\n\r", 6},
-		//{ wlf_None, ""},
 	};
 
 	WlfResult nReturn = wlf_ok;

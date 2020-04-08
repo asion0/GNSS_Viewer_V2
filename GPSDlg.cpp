@@ -860,10 +860,11 @@ U16 CGPSDlg::RtcmProc(U08* buffer, int len)
   U32 crc24Check = CRC24Q_get_for_rtcm_3_x(buffer, packetLen + 6);
 	if(crc24 != crc24Check)
 	{
-		return FALSE;
+		//return FALSE;
 	}
 
 	U16 msgType = (buffer[3] << 4) | (buffer[4] >> 4);
+  int aa = 0;
 	switch(msgType)
 	{
   case 1005:
@@ -875,7 +876,7 @@ U16 CGPSDlg::RtcmProc(U08* buffer, int len)
   case 1107:
     ShowRtcm1107(buffer, packetLen + 3);
 		break;
-  case 1117:
+  case 1117:  //QZSS
     ShowRtcm1117(buffer, packetLen + 3);
 		break;
   case 1127:
@@ -884,7 +885,18 @@ U16 CGPSDlg::RtcmProc(U08* buffer, int len)
   case 1087:
     ShowRtcm1087(buffer, packetLen + 3);
 		break;
+  case 1088:
+    ShowRtcm1097(buffer, packetLen + 3);
+    aa = 1;
+		break;
+  case 1097:
+    ShowRtcm1097(buffer, packetLen + 3);
+    aa = 2;
+		break;
 	default:
+    //
+    //ShowRtcm1087(buffer, packetLen + 3);
+    aa = 99;
 		break;
 	}
 	return msgType;
@@ -906,6 +918,9 @@ U16 CGPSDlg::UbloxProc(U08* buffer, int len, CFile* fo)
     ShowUbxNavSol(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
     ShowTime();
 		break;
+  case 0x0107:
+    ShowUbxNavPvt(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
+		break;
   case 0x0130:
     ShowUbxNavSvInfo(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
 		break;
@@ -920,6 +935,9 @@ U16 CGPSDlg::UbloxProc(U08* buffer, int len, CFile* fo)
 		break;
   case 0x0112:
     ShowUbxNavVelned(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
+		break;
+  case 0x0122:
+    ShowUbxNavClock(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
 		break;
   case 0x6CA0:
     ShowStqSpecialDrInfo(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
@@ -1709,6 +1727,8 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_QUERY_V9_EXT_ID, OnQueryV9ExtendedId)
   
 	ON_COMMAND(ID_QUERY_V9_TAG, OnQueryV9Tag)
+	ON_COMMAND(ID_QUERY_SECURITY_TAG_ONLY, OnQuerySecurityTagOnly)
+	ON_COMMAND(ID_QUERY_SECURITY_TAG, OnQuerySecurityTag)
 	ON_COMMAND(ID_QUERY_V9_PROM_AES_TAG, OnQueryV9PromAesTag)
 	ON_COMMAND(ID_QUERY_V9_EXT_AES_TAG, OnQueryV9ExternalAesTag)
 	ON_COMMAND(ID_CFG_V9_AES_TAG, OnConfigV9AesTag)
@@ -4632,6 +4652,15 @@ UINT demoagps_thread(LPVOID param)
 	return TRUE;
 }
 
+UINT DownloadThread2(LPVOID pParam)
+{
+	CGPSDlg::gpsDlg->NewDownload(
+    CGPSDlg::gpsDlg->m_DownloadMode, 
+    CGPSDlg::gpsDlg->m_nDownloadBaudIdx, 
+    CGPSDlg::gpsDlg->m_strDownloadImage);
+	return 0;
+}
+
 UINT DownloadThread(LPVOID pParam)
 {
 	CGPSDlg::gpsDlg->Download();
@@ -5858,8 +5887,8 @@ void CGPSDlg::LoadMenu()
 		{ UPGRADE_DOWNLOAD, MF_STRING, ID_UPGRADE_DOWNLOAD, "Upgrade", NULL },
 		{ SHOW_PATCH_MENU, MF_STRING, ID_PATCH, "Patch!", NULL },
 
-		{ !NMEA_INPUT && !SHOW_PATCH_MENU && IS_DEBUG, MF_STRING, ID_GPSDO_FW_DOWNLOAD, "Master/Slave Firmware Download", NULL },
-		{ 1, MF_SEPARATOR, 0, NULL, NULL },
+		//{ !NMEA_INPUT && !SHOW_PATCH_MENU && IS_DEBUG, MF_STRING, ID_GPSDO_FW_DOWNLOAD, "Master/Slave Firmware Download", NULL },
+		//{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ !SHOW_PATCH_MENU, MF_STRING, ID_FILE_SETUP, "S&etup", NULL },
 		{ 1, MF_STRING, ID_FILE_EXIT, "E&xit", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
@@ -5894,7 +5923,7 @@ void CGPSDlg::LoadMenu()
     //20180910, Alex remove "Factory Reset No Reboot", FW already reserved this function.
 		//{ 1, MF_POPUP, 0, "Set Factory Default", SetFactoryDefaultMenu },
     { 1, MF_STRING, ID_FCTRY_DFLT_RBT, "Set Factory Default", NULL },
-		{ IS_DEBUG, MF_STRING, ID_FIRMWARE_DOWNLOAD, "Firmware Image Download", NULL },
+		//{ IS_DEBUG, MF_STRING, ID_FIRMWARE_DOWNLOAD, "Firmware Image Download", NULL },
     { 1, MF_STRING, ID_QUERY_CLOCK_OFFSET, "Query Clock Offset", NULL },
     { 1, MF_STRING, ID_SET_CLOCK_OFFSET, "Set Default Clock Offset", NULL },
  		{ IS_DEBUG, MF_STRING, ID_CFG_REGISTER16, "Get / Set Multiple Registers", NULL },
@@ -6157,6 +6186,8 @@ void CGPSDlg::LoadMenu()
 		//{ IS_DEBUG, MF_STRING, ID_QUERY_V9_UNQ_ID, "Query Phoenix Unique ID", NULL },
 		{ 1, MF_STRING, ID_QUERY_V9_EXT_ID, "Query Phoenix Extended ID", NULL },
 		{ 1, MF_STRING, ID_QUERY_V9_TAG, "Query Phoenix Tag", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_SECURITY_TAG_ONLY, "Query Security Point", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_SECURITY_TAG, "Use Security Point", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_PROM_AES_TAG, "Query Phoenix PROM Tag", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_EXT_AES_TAG, "Query Phoenix External Tag", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_SW_FEATURE, "Query Phoenix Sofeware Feature", NULL },
@@ -6167,7 +6198,7 @@ void CGPSDlg::LoadMenu()
 		//{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
-	if(!NMEA_INPUT)
+	if(!NMEA_INPUT && !NO_PHOENIX_MENU)
 	{
 		CreateSubMenu(hMenu, menuItemVenus9, "Phoenix");
 	}
@@ -6227,14 +6258,14 @@ void CGPSDlg::LoadMenu()
 		{ 1, MF_STRING, ID_CLEAR_RTK_SLAVE_DATA, "Clear RTK Slave Backup Data", NULL },
 
 		{ 1, MF_SEPARATOR, 0, NULL, NULL },
-		{ 1, MF_STRING, ID_QUERY_RTK_MODE, "Query RTK Mode", NULL },
+		//{ 1, MF_STRING, ID_QUERY_RTK_MODE, "Query RTK Mode", NULL },
 		{ 1, MF_STRING, ID_QUERY_RTK_MODE2, "Query RTK Mode And Operational Function", NULL },
 		{ 1, MF_STRING, ID_QUERY_RTK_SLAVE_BAUD, "Query RTK Slave Serial Port Baud Rate", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_GL_CPIF_BIAS, "Query RTK GLONASS Carrier-Phase Inter-Frequency Bias", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_ELE_CNR_MSK, "Query RTK Elevation and CNR Mask", NULL },
 		//{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_PARAM, "Query RTK Parameters", NULL },
 		{ 1, MF_SEPARATOR, 0, NULL, NULL },
-		{ 1, MF_STRING, ID_CONFIG_RTK_MODE, "Configure RTK Mode", NULL },
+		//{ 1, MF_STRING, ID_CONFIG_RTK_MODE, "Configure RTK Mode", NULL },
 		{ 1, MF_STRING, ID_CONFIG_RTK_MODE2, "Configure RTK Mode And Operational Function", NULL },
 		{ 1, MF_STRING, ID_CFG_RTK_SLAVE_BAUD, "Configure RTK Slave Serial Port Baud Rate", NULL },
 		//{ IS_DEBUG, MF_STRING, ID_CONFIG_RTK_PARAM, "Configure RTK Parameters", NULL },
@@ -6519,8 +6550,8 @@ void CGPSDlg::LoadMenu()
 		{ IS_DEBUG, MF_STRING, ID_PATCH_ROM_EPH, "Patch ROM 20130221 Ephemeris", NULL },
 		{ IS_DEBUG, MF_STRING, ID_IO_TESTER, "IO Tester", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CFG_IIR, "Configure IIR", NULL },
-		{ IS_DEBUG || DEVELOPER_VERSION, MF_STRING, ID_CFG_MULTI_RFIC, "Get / Set Multiple RF IC Registers", NULL },
-		{ IS_DEBUG || DEVELOPER_VERSION, MF_STRING, ID_CFG_RFIC, "Get / Set RF IC Registers", NULL },
+		{ IS_DEBUG || DEVELOPER_VERSION || SHOW_RF_CONFIG, MF_STRING, ID_CFG_MULTI_RFIC, "Get / Set Multiple RF IC Registers", NULL },
+		{ IS_DEBUG || DEVELOPER_VERSION || SHOW_RF_CONFIG, MF_STRING, ID_CFG_RFIC, "Get / Set RF IC Registers", NULL },
 		{ IS_DEBUG || DEVELOPER_VERSION, MF_STRING, ID_CFG_DCDC, "Configure Power Register", NULL },
 		{ IS_DEBUG || DEVELOPER_VERSION, MF_POPUP, 0, "Power Save By RTC Timer", ConfigV9PowerSave },
 		{ IS_DEBUG || DEVELOPER_VERSION, MF_POPUP, 0, "Configure RF Clock to GPIO0", ConfigV9RfClockToGpio0 },
@@ -6528,7 +6559,7 @@ void CGPSDlg::LoadMenu()
 		{ 0, 0, 0, NULL, NULL },
 	};
 
-	if(IS_DEBUG | DEVELOPER_VERSION && !SHOW_PATCH_MENU)
+	if((IS_DEBUG || SHOW_RF_CONFIG || DEVELOPER_VERSION) && !SHOW_PATCH_MENU)
 	{
 		CreateSubMenu(hMenu, menuItemUtility, "&Utility");
 	}
@@ -6893,58 +6924,21 @@ bool CGPSDlg::DoDownload(int dlBaudIdx)
 		return false;
 	}
 
-	//if(CUSTOMER_DOWNLOAD && CUSTOMER_ID == OlinkStar)	//Olinkstar must check prom.bin
-	//{
-	//	if(!CheckOlinkstarFirmware(m_strDownloadImage))
-	//	{
-	//		::AfxMessageBox("PROM file not support!");
-	//		return false;
-	//	}
-	//}
-
-	if(!CheckConnect())
-	{
-		return false;
-	}
-
-//#if GG12A
-//	if(check_gg12a_format(m_strDownloadImage) == FALSE)
-//	{
-//		return false;
-//	}
-//#endif
-	//Detect Loader Type
-	//BOOL usingInternal = ((CButton*)GetDlgItem(IDC_IN_LOADER))->GetCheck();
-	BOOL isCheat = IS_DEBUG && (GetAsyncKeyState(VK_LSHIFT) & 0x8000) && (GetAsyncKeyState(VK_LMENU)& 0x8000);
-
-	m_DownloadMode = InternalLoaderV8;
-	if(CUSTOMER_DOWNLOAD)
-	{
-		m_DownloadMode = CustomerDownload;
-	}
   //Press Shift + Alt to enter production download
-  if(isCheat)
-  {
-    CString imageIni = Utility::GetFilePathName(m_strDownloadImage) + ".ini";
-    if(Utility::IsFileExist(imageIni))
-    {
-      tagAddress = Utility::GetPrivateProfileHex("Firmware", "Address", 0x00000000, imageIni);
-      tagValue = Utility::GetPrivateProfileHex("Firmware", "Value", 0x00000000, imageIni);
-      downloadAddTag = TRUE;
-    }
-    else
-    {
-      isCheat = FALSE;
-      downloadAddTag = FALSE;
-    }
-  }
+  //BOOL isCheat = IS_DEBUG && (GetAsyncKeyState(VK_LSHIFT) & 0x8000) && (GetAsyncKeyState(VK_LMENU)& 0x8000);
 
+	m_DownloadMode = DownloadMode_Auto;
+	//if(CUSTOMER_DOWNLOAD)
+	//{
+	//	m_DownloadMode = CustomerDownload;
+	//}
+  
 	CString externalSrecFile;
 	if(theApp.CheckExternalSrec(externalSrecFile))
 	{	//Not ParallelDownload and external loader is exist. Prompts the user to use external loader.
 		if(ALWAYS_USE_EXTERNAL_SREC || IDYES == ::AfxMessageBox("Do you want to use extenal loader?", MB_YESNO))
 		{
-      m_DownloadMode = (g_setting.downloadUseBinExternal) ? FileLoaderInBinCmd : FileLoader;
+      m_DownloadMode = DownloadMode_FileSrec;
 		}
 	}
 	else if(!theApp.CheckExternalSrec(externalSrecFile) && ALWAYS_USE_EXTERNAL_SREC)
@@ -6952,29 +6946,21 @@ bool CGPSDlg::DoDownload(int dlBaudIdx)
 		::AfxMessageBox("No external loader exist!");
 		return false;
 	}
-	else if(RESOURCE_LOADER_ID)
-	{
-		m_DownloadMode = InternalLoaderSpecial;
-	}
-  else if(isCheat && m_DownloadMode == InternalLoaderV8)
-  {
-    m_DownloadMode = EnternalLoader;
-  }
+	//else if(RESOURCE_LOADER_ID)
+	//{
+	//	m_DownloadMode = InternalLoaderSpecial;
+	//}
+
 	m_nDownloadBaudIdx = dlBaudIdx;
 	m_nDownloadBufferIdx = 0;
 	SetInputMode(NoOutputMode);
 
-	::AfxBeginThread(DownloadThread, 0);
+	::AfxBeginThread(DownloadThread2, 0);
 	return true;
 }
 
 bool CGPSDlg::DoDownload(int dlBaudIdx, UINT rid)
 {
-	if(!CheckConnect())
-	{
-		return false;
-	}
-
 	m_DownloadMode = CustomerUpgrade;
 	m_nDownloadBaudIdx = dlBaudIdx;
 	m_nDownloadBufferIdx = 0;
@@ -6987,19 +6973,23 @@ bool CGPSDlg::DoDownload(int dlBaudIdx, UINT rid)
 
 void CGPSDlg::OnBnClickedDownload()
 {
-	int dlBaudIdx = ((CComboBox*)GetDlgItem(IDC_DL_BAUDRATE))->GetCurSel();
-	//dlBaudIdx += 5;	//Download Baudrate start in 115200
-  if(SPECIAL_BAUD_RATE)
-  {
-    dlBaudIdx = 3;
-  }
-	theApp.SetIntSetting("dl_baudIdx", dlBaudIdx);
+	if(!CheckConnect())
+	{
+		return;
+	}
 
+	int dlBaudIdx = ((CComboBox*)GetDlgItem(IDC_DL_BAUDRATE))->GetCurSel();
+	theApp.SetIntSetting("dl_baudIdx", dlBaudIdx);
 	DoDownload(dlBaudIdx);
 }
 
 void CGPSDlg::OnUpgradeDownload()
 {
+	if(!CheckConnect())
+	{
+		return;
+	}
+
 #if defined (UPGRADE_DOWNLOAD)
 	DoDownload(6, IDR_UPGRADE_DOWNLOAD_PROM);
 #endif
@@ -7007,6 +6997,11 @@ void CGPSDlg::OnUpgradeDownload()
 
 void CGPSDlg::OnPatch()
 {
+	if(!CheckConnect())
+	{
+		return;
+	}
+
 	DoDownload(6, IDR_UPGRADE_DOWNLOAD_PROM2);
 }
 

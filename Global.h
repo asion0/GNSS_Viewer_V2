@@ -382,17 +382,19 @@ enum WlfResult {
 	wlf_error3,
 	wlf_error4,
 	wlf_error5,
-	wlf_resend,
-	wlf_reset,
-	wlf_resendbin,
+	wlf_error6,
+	wlf_error7,
+	//wlf_resend,
+	//wlf_reset,
+	//wlf_resendbin,
 	wlf_timeout,
 	//for Loader debug
-	wlf_error41,
-	wlf_error42,
-	wlf_error43,
-	wlf_Ready,
-	wlf_Ready1,
-	wlf_Ready2,
+	//wlf_error41,
+	//wlf_error42,
+	//wlf_error43,
+	//wlf_Ready,
+	//wlf_Ready1,
+	//wlf_Ready2,
 };
 
 extern Setting g_setting;

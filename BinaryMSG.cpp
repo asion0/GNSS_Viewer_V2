@@ -2854,11 +2854,15 @@ static void sigindex(int sys, const unsigned char *code, const int *freq, int n,
 #define MINPRNQZS   193                 /* min satellite PRN number of QZSS */
 #define MAXPRNQZS   199                 /* max satellite PRN number of QZSS */
 
-#define MINPRNCMP   201                   /* min satellite sat number of BeiDou */
-#define MAXPRNCMP   235                  /* max satellite sat number of BeiDou */
+#define MINPRNCMP   01                   /* min satellite sat number of BeiDou */
+#define MAXPRNCMP   42                  /* max satellite sat number of BeiDou */
 
 #define MINPRNGLO   65                   /* min satellite slot number of GLONASS */
 #define MAXPRNGLO   96                  /* max satellite slot number of GLONASS */
+
+#define MINPRNGAL   1                   /* min satellite slot number of GLONASS */
+#define MAXPRNGAL   42                  /* max satellite slot number of GLONASS */
+
 
 /* max satellite PRN number of GPS */
 extern int satno(int sys, int prn)
@@ -2888,17 +2892,19 @@ extern int satno(int sys, int prn)
         case 4: //SYS_GLO:
             //if (prn<MINPRNGLO||MAXPRNGLO<prn) return 0;
             return prn+MINPRNGLO-1;
-        //case SYS_GAL:
-        //    if (prn<MINPRNGAL||MAXPRNGAL<prn) return 0;
-        //    return NSATGPS+NSATGLO+prn-MINPRNGAL+1;
-
+        case 5:
+            //if (prn<MINPRNGAL||MAXPRNGAL<prn) return 0;
+            return prn+MINPRNGAL-1;;
+        default:
         //case SYS_CMP:
         //    if (prn<MINPRNCMP||MAXPRNCMP<prn) return 0;
         //    return NSATGPS+NSATGLO+NSATGAL+NSATQZS+prn-MINPRNCMP+1;
         //case SYS_LEO:
         //    if (prn<MINPRNLEO||MAXPRNLEO<prn) return 0;
         //    return NSATGPS+NSATGLO+NSATGAL+NSATQZS+NSATCMP+prn-MINPRNLEO+1;
-
+          {
+            int aaa = 0;
+          }
     }
     return 0;
 }
@@ -2950,13 +2956,22 @@ static void save_msm_obs(int sys, msm_h_t *h, const double *cnr, Satellites* sat
           if(h->sigs[i] == 2) sigId = 1;
           else if(h->sigs[i] == 8) sigId = 3;
           break;
+        case 5: //SYS_GAL: 
+          sig[i] = msm_sig_gal[h->sigs[i] - 1];
+          if(h->sigs[i] == 2) sigId = 7;
+          else if(h->sigs[i] == 15) sigId = 2;
+          break;
         default: 
           sig[i]=""; 
           break;
       }
-      if(sys == 0 || sys == 3 || sys == 4)
+      if(sys == 0 || sys == 3 || sys == 4|| sys == 5)
       {
         sate->AddSnrSigId(sigId);
+      }
+      else
+      {
+        int aaaq = 0;
       }
       /* signal to rinex obs type */
       code[i] = obs2code(sig[i], freq + i);
@@ -3113,7 +3128,7 @@ void ShowRtcm1127(U08* src, int len, bool convertOnly, CString* pStr)
 		return;
 	}
 
-  int pos = CGPSDlg::gpsDlg->nmea.ClearSatellitesInRange(NMEA::Beidou, 201, 232);
+  int pos = CGPSDlg::gpsDlg->nmea.ClearSatellitesInRange(NMEA::Beidou, 1, 48);
   save_msm_obs(3, &msm_header, msm_cnr, &(CGPSDlg::gpsDlg->nmea.satellites_bd));
                
 	CGPSDlg::gpsDlg->m_bdgsvMsgCopy.NumOfSate = satNum;
@@ -3148,6 +3163,31 @@ void ShowRtcm1087(U08* src, int len, bool convertOnly, CString* pStr)
 
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
 	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
+}
+
+void ShowRtcm1097(U08* src, int len, bool convertOnly, CString* pStr)
+{
+  decode_msm7(src, len);
+  int satNum = msm_header.nsat;
+  ShowRtcmMsm7Data(satNum, "Rtcm1097", src, convertOnly, pStr);
+//return;
+  if(convertOnly)
+	{
+		return;
+	}
+
+  int pos = CGPSDlg::gpsDlg->nmea.ClearSatellitesInRange(NMEA::Galileo, 1, 36);
+  save_msm_obs(5, &msm_header, msm_cnr, &(CGPSDlg::gpsDlg->nmea.satellites_ga));
+              
+	CGPSDlg::gpsDlg->m_gagsvMsgCopy.NumOfSate = satNum;
+	CGPSDlg::gpsDlg->m_gagsvMsgCopy.NumOfMessage = 1;
+	CGPSDlg::gpsDlg->m_gagsvMsgCopy.SequenceNum = 1;
+
+  CGPSDlg::gpsDlg->m_gpggaMsgCopy.NumsOfSatellites = 0;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
+	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+
 	CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
 }
 
@@ -3321,6 +3361,44 @@ void ShowUbxNavSol(U08* src, bool convertOnly, CString* pStr)
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude = longitude;
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude_E_W = (longitude >= 0) ? 'E' : 'W';
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Altitude = (F32)altitude - CGPSDlg::gpsDlg->m_gpggaMsgCopy.GeoidalSeparation;
+}
+
+void ShowUbxNavPvt(U08* src, bool convertOnly, CString* pStr)
+{
+  if(convertOnly)
+  {
+    strBuffer.Format("$UBX-NAV-PVT");
+  }
+  else
+  {
+    strBuffer.Format("$UBX-NAV-PVT(0x01,0x07)");
+  }
+
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+  if(convertOnly)
+	{
+		return;
+	}
+}
+
+void ShowUbxNavClock(U08* src, bool convertOnly, CString* pStr)
+{
+  if(convertOnly)
+  {
+    strBuffer.Format("$UBX-NAV-CLOCK");
+  }
+  else
+  {
+    strBuffer.Format("$UBX-NAV-CLOCK(0x01,0x22)");
+  }
+
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+  if(convertOnly)
+	{
+		return;
+	}
 }
 
 U08 AdjustUbloxPrn(U08 p)

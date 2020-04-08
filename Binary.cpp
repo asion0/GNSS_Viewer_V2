@@ -151,6 +151,8 @@ static CommandEntry cmdTable[] =
 	{ 0x64, 0x49, 2, 0x00, 0x00 },
 	//DatalogRead2Cmd,
 	{ 0x64, 0x4A, 6, 0x00, 0x00 },
+  //QuerySecurityTagCmd
+	{ 0x64, 0x6C, 31, 0x64, 0xF2 },
   //QueryPhoenixSoftwareFeatureCmd
 	{ 0x64, 0x6D, 2, 0x64, 0xF3 },
   //QueryExtendedIdCmd
@@ -320,6 +322,7 @@ enum SqBinaryCmd
   QueryDataLogStatus2Cmd,
   DatalogClear2Cmd,
   DatalogRead2Cmd,
+  QuerySecurityTagCmd,
   QueryPhoenixSoftwareFeatureCmd,
   QueryExtendedIdCmd,
   QueryOneRfRegisterCmd,
@@ -4934,53 +4937,56 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssBootStatus(CmdExeMode nMode, void* outpu
 		ExcuteBinaryCommandNoWait(QueryGnssBootStatusCmd, &cmd);
 		return Timeout;
 	}
+
 	BinaryData ackCmd;
-	if(Ack == ExcuteBinaryCommand(QueryGnssBootStatusCmd, &cmd, &ackCmd))
+  CmdErrorCode err = ExcuteBinaryCommand(QueryGnssBootStatusCmd, &cmd, &ackCmd);
+	if(Ack != err)
 	{
-		m_bootInfo = ackCmd;
+    return err;
+  }
 
-		if(nMode == Return)
-		{
-			*((U32*)outputData) = MAKEWORD(ackCmd[6], ackCmd[7]);
-			return Ack;
-		}
-
-		CString strMsg = "Get GNSS ROM Boot Status successfully";
-		add_msgtolist(strMsg);
-		switch(ackCmd[6])
-		{
-		case 0:
-			strMsg.SetString("Status: Boot flash OK");
-			break;
-		case 1:
-			strMsg.SetString("Status: Fail over to boot from ROM");
-			break;
-		default:
-			strMsg.Format("Status: %d", ackCmd[6]);
-			break;
-		}
-		add_msgtolist(strMsg);
-		switch(ackCmd[7])
-		{
-		case 0:
-			strMsg.SetString("Flash Type: ROM");
-			break;
-		case 1:
-			strMsg.SetString("Flash Type: QSPI Flash Type 1");		//Winbond-type 
-			break;
-		case 2:
-			strMsg.SetString("Flash Type: QSPI Flash Type 2");		// EON-type 
-			break;
-		case 4:
-			strMsg.SetString("Flash Type: Parallel Flash");
-			break;
-		default:
-			strMsg.Format("Flash Type: %d", ackCmd[7]);
-			break;
-		}
-		add_msgtolist(strMsg);	
+	m_bootInfo = ackCmd;
+	if(nMode == Return)
+	{
+		*((U32*)outputData) = MAKEWORD(ackCmd[7], ackCmd[6]);
+		return Ack;
 	}
-	return Timeout;
+
+	CString strMsg = "Get GNSS ROM Boot Status successfully";
+	add_msgtolist(strMsg);
+	switch(ackCmd[6])
+	{
+	case 0:
+		strMsg.SetString("Status: Boot flash OK");
+		break;
+	case 1:
+		strMsg.SetString("Status: Fail over to boot from ROM");
+		break;
+	default:
+		strMsg.Format("Status: %d", ackCmd[6]);
+		break;
+	}
+	add_msgtolist(strMsg);
+	switch(ackCmd[7])
+	{
+	case 0:
+		strMsg.SetString("Flash Type: ROM");
+		break;
+	case 1:
+		strMsg.SetString("Flash Type: QSPI Flash Type 1");		//Winbond-type 
+		break;
+	case 2:
+		strMsg.SetString("Flash Type: QSPI Flash Type 2");		// EON-type 
+		break;
+	case 4:
+		strMsg.SetString("Flash Type: Parallel Flash");
+		break;
+	default:
+		strMsg.Format("Flash Type: %d", ackCmd[7]);
+		break;
+	}
+	add_msgtolist(strMsg);	
+	return Ack;
 }
 
 /*
@@ -8545,7 +8551,9 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryV9TagAddress(CmdExeMode nMode, void* outputD
   U32 tagAddr = ConvertLeonU32(ackCmd.Ptr(6));
 	CString strMsg = "Query Phoenix Tag Address successfully";
 	add_msgtolist(strMsg);
-	strMsg.Format("Tag Address: 0x%X(%d)", tagAddr, tagAddr);
+	strMsg.Format("Tag Address:");
+	add_msgtolist(strMsg);
+	strMsg.Format("%8X", tagAddr);
 	add_msgtolist(strMsg);
 
 	return err;
@@ -8679,6 +8687,148 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryV9Tag(CmdExeMode nMode, void* outputData)
   strMsg.Format("%02X%02X%02X%02X%02X%02X%02X%02X", 
     ackCmd[6], ackCmd[7], ackCmd[8], ackCmd[9], 
     ackCmd[10], ackCmd[11], ackCmd[12], ackCmd[13] );
+	add_msgtolist(strMsg);
+
+	return err;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QuerySecurityTag(CmdExeMode nMode, void* outputData)
+{
+  int ndx = 1;
+	BinaryCommand cmd(cmdTable[QuerySecurityTagCmd].cmdSize);
+	cmd.SetU08(ndx++, cmdTable[QuerySecurityTagCmd].cmdId);
+	cmd.SetU08(ndx++, cmdTable[QuerySecurityTagCmd].cmdSubId);
+  //Class
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x01);
+  //UID length
+  cmd.SetU08(ndx++, 12);
+  //UID
+  cmd.SetU08(ndx++, 0x54);
+  cmd.SetU08(ndx++, 0x5A);
+  cmd.SetU08(ndx++, 0x5D);
+  cmd.SetU08(ndx++, 0x44);
+  cmd.SetU08(ndx++, 0x41);
+  cmd.SetU08(ndx++, 0x35);
+  cmd.SetU08(ndx++, 0xE2);
+  cmd.SetU08(ndx++, 0x55);
+  cmd.SetU08(ndx++, 0x54);
+  cmd.SetU08(ndx++, 0x74);
+  cmd.SetU08(ndx++, 0x22);
+  cmd.SetU08(ndx++, 0xD5);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+
+  //TAG
+  cmd.SetU08(ndx++, 0x01);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x0A);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x01);
+
+	BinaryData ackCmd;
+  CmdErrorCode err = ExcuteBinaryCommand(QuerySecurityTagCmd, &cmd, &ackCmd);
+	if(err != Ack)
+	{
+    return err;
+  }
+
+	if(Return == nMode)
+	{	//Return command data
+    *((BinaryData*)outputData) = ackCmd;
+		return err;
+	}
+
+	CString strMsg = "Query Security Tag successfully";
+	add_msgtolist(strMsg);
+
+  U32 pdPts = ConvertLeonU32(ackCmd.Ptr(6));
+  U32 pdClass = ConvertLeonU32(ackCmd.Ptr(10));
+  strMsg.Format("Class:%d, Points left: %d", pdClass, pdPts);
+	add_msgtolist(strMsg);
+
+	strMsg.Format("Security Tag:");
+	add_msgtolist(strMsg);
+  ndx = 14;
+  strMsg.Format("%02X %02X %02X %02X %02X %02X %02X %02X", 
+    ackCmd[ndx + 0], ackCmd[ndx + 1], ackCmd[ndx + 2], ackCmd[ndx + 3], 
+    ackCmd[ndx + 4], ackCmd[ndx + 5], ackCmd[ndx + 6], ackCmd[ndx + 7]);
+	add_msgtolist(strMsg);
+  ndx = 22;
+  strMsg.Format("%02X %02X %02X %02X %02X %02X %02X %02X", 
+    ackCmd[ndx + 0], ackCmd[ndx + 1], ackCmd[ndx + 2], ackCmd[ndx + 3], 
+    ackCmd[ndx + 4], ackCmd[ndx + 5], ackCmd[ndx + 6], ackCmd[ndx + 7]);
+  add_msgtolist(strMsg);
+	return err;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QuerySecurityTagOnly(CmdExeMode nMode, void* outputData)
+{
+  int ndx = 1;
+	BinaryCommand cmd(cmdTable[QuerySecurityTagCmd].cmdSize);
+	cmd.SetU08(ndx++, cmdTable[QuerySecurityTagCmd].cmdId);
+	cmd.SetU08(ndx++, cmdTable[QuerySecurityTagCmd].cmdSubId);
+  //Class
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  //UID length
+  cmd.SetU08(ndx++, 00);
+  //UID
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0xD5);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+
+  //TAG
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+  cmd.SetU08(ndx++, 0x00);
+
+	BinaryData ackCmd;
+  CmdErrorCode err = ExcuteBinaryCommand(QuerySecurityTagCmd, &cmd, &ackCmd);
+	if(err != Ack)
+	{
+    return err;
+  }
+
+	if(Return == nMode)
+	{	//Return command data
+    *((BinaryData*)outputData) = ackCmd;
+		return err;
+	}
+
+	CString strMsg = "Query Security Tag successfully";
+	add_msgtolist(strMsg);
+
+  U32 pdPts = ConvertLeonU32(ackCmd.Ptr(6));
+  U32 pdClass = ConvertLeonU32(ackCmd.Ptr(10));
+  strMsg.Format("Class:%d, Pts left: %d", pdClass, pdPts);
 	add_msgtolist(strMsg);
 
 	return err;

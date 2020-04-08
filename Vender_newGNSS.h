@@ -456,7 +456,14 @@
 // .411 20200214 Add [Enable/Disable Galileo SV mechanism] in RTK menu, request from Ken
 // .412 20200219 Make a wide version for Galileo satellites display
 // .413 20200227 Add [RTK Elevation and CNR Mask] functions, require from Neil and Andrew
-// .001 20200302 Update  loader_v8_add_tag_20200302154408.srec for new download commands, request from Andrew
+// .001 20200302 Update loader_v8_add_tag_20200302154408.srec for new download commands, request from Andrew
+// .002 20200302 Update loader_v8_add_tag_20200302154408.srec for new download commands, request from Andrew
+// .003 20200312 Update v9DownloadLoaderAddTag-20200312175555.srec for download issues, request from Alex
+// .004 20200323 Modify Phoenix menu for Security board commands, request from Alex
+// .004 20200324 Add GNSS_General_SwidCustomer version, request from Ming-Jen
+// .005 20200325 *Update v9DownloadLoaderAddTag-20200325154841.srec, detect prom size and add some download error message, request from Andrew
+// .005 20200407 Support UBX NAV-PVT and NAV_CLOCK message, request from Roger
+// .006 20200408 Support Gelileo RTCM1097 message and disable Configure / Query RTK Mode, request from forum user and Roger
 
 #define SW_FUN_DATALOG		        0x0001
 #define SW_FUN_AGPS				        0x0002
@@ -467,7 +474,7 @@
 //title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 #define APP_CAPTION				        "GNSS Viewer"
 #define APP_TITLE				          ""              //Internal Use, Customer Release, NMEA Player...
-#define APP_VERSION				        "2.1.001"
+#define APP_VERSION				        "2.1.006"
 #define APP_MODULE				        "Phoenix"
 
 #define	Sktyraq					          0x0000
@@ -526,7 +533,7 @@
 
 #define TIMING_MONITORING		      1
 #define TIMING_OUTPUT_ALIGN		    1
-#define	SHOW_ERROR_NMEA_NOTIFY	  1
+#define	SHOW_ERROR_NMEA_NOTIFY	  0
 #define	SHOW_ERROR_TIME_NOTIFY	  0
 #define	MORE_ENU_SCALE			      1
 #define	GPS_183_188				        1   //PRN 183 ~ 188 for QZSS system
@@ -574,8 +581,39 @@
 #define ENABLE_AUTO_AGPS          0   //Do autmatic AGPS when push cold start button
 #define NAVSPARK_MINI_GPIO_QUERY  0   //For a navspark-mini customer to query GPIO status
 #define _NEIL_TEMP_VER_           0
+#define SHOW_RF_CONFIG            0   //For SWID show RF Configuration
+#define NO_PHOENIX_MENU           0   //For SWID 
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////
-#if defined(SWCFG_VENDOR_GNSS_GENERAL_NAVSPARK_MINI_GPIO)  //20191028
+#if defined(SWCFG_VENDOR_GNSS_GENERAL_SWID)  ////20200324 Request from Ming-Jen for SWID
+ #undef APP_CAPTION
+ #undef APP_TITLE
+ #undef APP_MODULE
+ #undef GNSS_VIEWER
+ #undef IS_DEBUG
+ #undef BAUDRATE_DEFAULT
+ #undef TIMING_MODE
+ #undef _MORE_INFO_
+ #undef _TAB_LAYOUT_
+ #undef SHOW_RF_CONFIG
+ #undef NO_PHOENIX_MENU
+ #undef SOFTWARE_FUNCTION
+
+ #define APP_CAPTION			          "GNSS Viewer"
+ #define APP_TITLE				          "Customer Release"
+ #define APP_MODULE                 "Phoenix"
+ #define GNSS_VIEWER			          1
+ #define IS_DEBUG				            0
+ #define BAUDRATE_DEFAULT		        7
+ #define TIMING_MODE			          1
+ #define _MORE_INFO_			          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
+ #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.
+ #define SHOW_RF_CONFIG             1
+ #define NO_PHOENIX_MENU            1
+ #define SOFTWARE_FUNCTION		      (SW_FUN_AGPS)
+
+#elif defined(SWCFG_VENDOR_GNSS_GENERAL_NAVSPARK_MINI_GPIO)  //20191028
  #undef APP_CAPTION
  #undef APP_TITLE
  #undef GNSS_VIEWER

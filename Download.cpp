@@ -512,14 +512,6 @@ int CGPSDlg::SendRomBufferCustomerUpgrade(const U08* sData, int sDataSize, Binar
 				Utility::LogFatal(__FUNCTION__, "wlf_timeout", __LINE__);
 				return RETURN_ERROR;
 				break;
-			case wlf_resend:
-				Utility::Log(__FUNCTION__, "wlf_resend", __LINE__);
-				bResend = true;
-				break;
-			case wlf_reset:
-				Utility::Log(__FUNCTION__, "wlf_reset", __LINE__);
-				return RETURN_RETRY;
-				break;
 			default:
 				Utility::LogFatal(__FUNCTION__, messages, __LINE__);
 				return RETURN_ERROR;
@@ -592,14 +584,6 @@ int CGPSDlg::SendRomBufferCustomerUpgrade(const U08* sData, int sDataSize, Binar
 			Utility::LogFatal(__FUNCTION__, "wlf_timeout", __LINE__);
 			return RETURN_ERROR;
 			break;
-		case wlf_resend:
-			Utility::Log(__FUNCTION__, "wlf_resend", __LINE__);
-			bResend = true;
-			break;
-		case wlf_reset:
-			Utility::Log(__FUNCTION__, "wlf_reset", __LINE__);
-			return RETURN_RETRY;
-			break;
 		default:
 			Utility::LogFatal(__FUNCTION__, messages, __LINE__);
 			return RETURN_ERROR;
@@ -627,11 +611,7 @@ int CGPSDlg::SendRomBufferCustomerUpgrade(const U08* sData, int sDataSize, Binar
 		add_msgtolist(messages);
 		//msgWnd->SetWindowText(messages);	
 		break;
-	case wlf_reset:
-		AfxMessageBox("Reset!");						
-		return RETURN_RETRY;
-		break;
-	default:
+		default:
 		ProcessWlfResult(wlf);
 		Utility::LogFatal(__FUNCTION__, messages, __LINE__);
 		return RETURN_ERROR;
@@ -715,14 +695,6 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, BinaryData &binData
 				Utility::LogFatal(__FUNCTION__, "wlf_timeout", __LINE__);
 				return RETURN_ERROR;
 				break;
-			case wlf_resend:
-				Utility::Log(__FUNCTION__, "wlf_resend", __LINE__);
-				bResend = true;
-				break;
-			case wlf_reset:
-				Utility::Log(__FUNCTION__, "wlf_reset", __LINE__);
-				return RETURN_RETRY;
-				break;
 			default:
 				Utility::LogFatal(__FUNCTION__, messages, __LINE__);
 				return RETURN_ERROR;
@@ -803,14 +775,6 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, BinaryData &binData
 			  Utility::LogFatal(__FUNCTION__, "wlf_timeout", __LINE__);
 			  return RETURN_ERROR;
 			  break;
-		  case wlf_resend:
-			  Utility::Log(__FUNCTION__, "wlf_resend", __LINE__);
-			  bResend = true;
-			  break;
-		  case wlf_reset:
-			  Utility::Log(__FUNCTION__, "wlf_reset", __LINE__);
-			  return RETURN_RETRY;
-			  break;
 		  default:
 			  Utility::LogFatal(__FUNCTION__, messages, __LINE__);
 			  return RETURN_ERROR;
@@ -848,10 +812,6 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, BinaryData &binData
 		add_msgtolist(messages);
 		//msgWnd->SetWindowText(messages);	
 		break;
-	case wlf_reset:
-		AfxMessageBox("Reset!");						
-		return RETURN_RETRY;
-		break;
 	default:
 		ProcessWlfResult(wlf);
 		Utility::LogFatal(__FUNCTION__, messages, __LINE__);
@@ -860,6 +820,87 @@ int CGPSDlg::SendRomBuffer3(const U08* sData, int sDataSize, BinaryData &binData
 	}	
 	return RETURN_NO_ERROR;		
 }
+
+CGPSDlg::CmdErrorCode CGPSDlg::GetTextAck(CString& strAckCmd, DWORD timeout)
+{
+  const int ReserveSize = 4096;
+	ScopeTimer t;
+  //strAckCmd.reserve(ReserveSize);
+  CmdErrorCode err = Timeout;
+  LPSTR buff = strAckCmd.GetBuffer(ReserveSize);
+	while(1)
+	{
+		if(t.GetDuration() > timeout)
+		{	
+      err = Timeout;
+			break;
+		}
+    DWORD len = m_serial->GetString(buff, ReserveSize, timeout - t.GetDuration());
+		if(!ReadOK(len))
+		{	
+			continue;
+		}
+    if(0 == strAckCmd.Compare("OK"))
+		{
+      err = Ok;
+			break;
+		}
+    if(0 == strAckCmd.Compare("END"))
+		{
+      err = End;
+			break;
+		}
+    if(0 == strAckCmd.Compare("Error5"))
+		{
+      m_lastErrorMsg = "Loader Error5\r\nData receiving size errorr!";
+      err = Error;
+			break;
+		}
+    if(0 == strAckCmd.Compare("Error2"))
+		{
+      m_lastErrorMsg = "Loader Error2\r\nDownload checksum error!";
+      err = Error;
+			break;
+		}
+	}
+  strAckCmd.ReleaseBuffer();
+
+	return err;
+}
+
+bool CGPSDlg::SendFwBufferPhoenix(const BinaryData &fwFile, CWnd* notifyWnd)
+{
+  //Write block size is 8K bytes.
+	const DWORD bufferSize = 8192;
+	DWORD leftSize = fwFile.Size();
+	DWORD sentSize = 0;
+
+  m_serial->ClearQueue();
+	while(leftSize)
+	{ 
+    if(notifyWnd)
+    {
+      notifyWnd->PostMessage(UWM_SETPROGRESS, sentSize, fwFile.Size());
+    }
+
+    DWORD sendSize = (leftSize >= bufferSize) ? bufferSize : leftSize;
+		if(sendSize != m_serial->SendData(fwFile.Ptr(sentSize), sendSize, true))
+		{
+			return false;
+		}
+
+    CString strAckCmd;
+		CmdErrorCode err = GetTextAck(strAckCmd, 3000);
+		if(err != Ok)
+		{
+			return false;
+		}
+		sentSize += sendSize;
+		leftSize -= sendSize;
+	}
+	return true;	
+}
+
 
 U08 GetPromBinCheckSum(CFile& f, int size)
 {
@@ -945,10 +986,6 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 		case wlf_ok:
 			bResendbin = false;
 			break;
-		case wlf_resendbin:
-			Utility::Log(__FUNCTION__, messages, __LINE__);
-			bResendbin = true;
-			break;
 		default:
 			ProcessWlfResult(wlf);
 			Utility::LogFatal(__FUNCTION__, messages, __LINE__);
@@ -987,10 +1024,6 @@ U08 CGPSDlg::PlRomNoAlloc2(const CString& prom_path)
 		{
 		case wlf_ok:
 			bResendbin = false;
-			break;
-		case wlf_resendbin:
-			Utility::Log(__FUNCTION__, messages, __LINE__);
-			bResendbin = true;
 			break;
 		default:
 			ProcessWlfResult(wlf);
@@ -1109,11 +1142,7 @@ U08 CGPSDlg::PlRomNoAllocV8(const CString& promPath)
 				bResendbin = false;
 				isEnd = false;
 				break;
-			case wlf_resendbin:
-				Utility::Log(__FUNCTION__, messages, __LINE__);
-				bResendbin = true;
-				isEnd = false;
-				break;
+
 			default:
 				ProcessWlfResult(wlf);
 				Utility::LogFatal(__FUNCTION__, messages, __LINE__);
@@ -1272,10 +1301,6 @@ U08 CGPSDlg::PlRomNoAlloc7z(const CString& promPath)
 				bResendbin = false;
 				isEnd = false;
 				break;
-			case wlf_resendbin:
-				bResendbin = true;
-				isEnd = false;
-				break;
 			default:
 				ProcessWlfResult(wlf);
 				return RETURN_ERROR;		        
@@ -1354,10 +1379,6 @@ U08 CGPSDlg::PlRomCustomerUpgrade(UINT rid)
 				break;
 			case wlf_ok:
 				bResendbin = false;
-				isEnd = false;
-				break;
-			case wlf_resendbin:
-				bResendbin = true;
 				isEnd = false;
 				break;
 			default:
@@ -1733,6 +1754,148 @@ bool CGPSDlg::DownloadLoader2(BOOL useBinCmd, BOOL needSleep, const BinaryData& 
   return true;
 }
 
+bool CGPSDlg::BinSizeCmd(int size, U08 ck)
+{
+  CString strCmd;
+  U32 check = size + ck;
+	strCmd.Format("BINSIZE = %d Checksum = %d %u ", size, ck, check);
+  m_serial->SendData((LPCSTR)strCmd, strCmd.GetLength() + 1);
+	
+  WlfResult wlf = WaitingLoaderFeedback(m_serial, 10000, NULL);
+	switch(wlf)
+	{
+	case wlf_ok:
+    return true;
+	case wlf_error1:
+    m_lastErrorMsg = "Loader Error1\r\nFailed to detect flash type!";
+    return false;
+	case wlf_error3:
+    m_lastErrorMsg = "Loader Error3\r\nProm size error!";
+    return false;
+	case wlf_error4:
+    m_lastErrorMsg = "Loader Error4\r\nFlash erase error!";
+    return false;
+	case wlf_error6:
+    m_lastErrorMsg = "Loader Error6\r\nBINSIZE format error!";
+  default:
+    m_lastErrorMsg = "Unknown error!";
+    return false;
+	}
+
+  return false;
+}
+
+bool CGPSDlg::DownloadLoader3(DownloadCmdType type, BOOL needSleep, const BinaryData& srec, CWnd* notifyWnd)
+{
+  if(type != ExternalLoader0x641B && type != ExternalLoader0x644F)
+  {
+    m_lastErrorMsg = "Image Download External command type error!";
+    return false;
+  }
+
+	BinaryData dat(7);
+  if(type == ExternalLoader0x641B)
+  {
+	  *dat.GetBuffer(0) = 0x64;
+	  *dat.GetBuffer(1) = 0x1B;
+  }
+  else if(type == ExternalLoader0x644F)
+  {
+	  *dat.GetBuffer(0) = 0x64;
+	  *dat.GetBuffer(1) = 0x4F;
+  }
+	*dat.GetBuffer(2) = (U08)m_nDownloadBaudIdx;
+  *dat.GetBuffer(3) = 0;
+  *dat.GetBuffer(4) = 0;
+  *dat.GetBuffer(5) = 0;
+  *dat.GetBuffer(6) = m_nDownloadBufferIdx;
+  
+  BinaryCommand cmd(dat);
+  bool ret = SendToTarget(cmd.GetBuffer(), cmd.Size(), "Send loader successfully", 6000);
+	if(!ret)
+	{
+    m_lastErrorMsg = "Image Download External command failed!";
+		return false;
+	}
+
+	CloseOpenUart();
+	m_serial->ResetPort(m_nDownloadBaudIdx);
+	m_BaudRateCombo.SetCurSel(m_nDownloadBaudIdx);
+	Sleep(200);
+
+  if(notifyWnd)
+  {
+	  notifyWnd->PostMessage(UWM_SETPROMPT_MSG, IDS_FLASHWRITINGOK_MSG);
+  }
+
+	const int bufferSize = 256;
+  const U08* sData = srec.Ptr();
+	long leftSize = srec.Size();
+	int needdelay = 0;
+	int totalByte = 0;
+	char buff[bufferSize] = { 0 };
+
+	while(leftSize > 0)
+	{
+		int ProgressPos = 0;
+		int packetSize = 0;
+		const U08 *tmp = sData;
+
+		memset(buff, 0, sizeof(buff));
+		while(1)
+		{
+			++packetSize;
+			if(*tmp == '\n')
+			{
+				break;
+			}
+			++tmp;
+		}
+		memcpy(buff, sData, packetSize - 1);
+		buff[packetSize - 2] = 0x0A;
+    if(leftSize > packetSize)
+    {
+		  SendToTargetNoAck((U08*)buff, packetSize);
+    }
+    else
+    {
+		  SendToTargetNoAck((U08*)buff, packetSize);
+    }
+		leftSize -= packetSize;
+		sData += packetSize;
+		totalByte += packetSize;  //deduct by end of string character in sending
+
+    if(notifyWnd)
+    {
+		  notifyWnd->PostMessage(UWM_SETPROGRESS, totalByte, srec.Size());
+    }
+	}
+
+  CString msgTxt;
+	memset(buff, 0, sizeof(buff));
+	switch(WaitingLoaderFeedback(CGPSDlg::gpsDlg->m_serial, TIME_OUT_MS, &m_responseList))
+	{
+	case wlf_end:
+    msgTxt.Format("Loader size: %d bytes", totalByte);
+		add_msgtolist(msgTxt);	
+		break;
+	default:
+    m_lastErrorMsg = "Loader does not respond!";
+		return false;
+	}	
+
+  if(notifyWnd)
+  {
+	  notifyWnd->PostMessage(UWM_SETPROGRESS, 100, 100);
+	  notifyWnd->PostMessage(UWM_SETPROMPT_MSG, IDS_FLASHWRITINGOK_MSG);
+  }
+
+  if(needSleep)
+  {
+	  Sleep(200);
+  }
+  return true;
+}
 
 UINT ShowDownloadProgressThread(LPVOID pParam)
 {
@@ -1790,6 +1953,11 @@ bool IsV9NewDownloadCmd(const BinaryData& ackCmd)
   return false;
 }
 
+U08 GetMinorSoftwareVer(const BinaryData& ackCmd)
+{
+  return ackCmd[13];
+}
+
 bool IsV9LzmaLoader(const BinaryData& ackCmd)
 {
   if(ackCmd[13] > 29)
@@ -1800,7 +1968,6 @@ bool IsV9LzmaLoader(const BinaryData& ackCmd)
 }
 
 static const int SpiBaudIndex = 9;
-//static bool SecondRun = false;
 bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
 {
   bool isSuccessful = true;
@@ -2006,6 +2173,140 @@ bool CGPSDlg::RealDownload(bool restoreConnection, bool boostBaudRate)
 	  CreateGPSThread();
   }
 	return isSuccessful;
+}
+
+bool CGPSDlg::NewDownload(DownloadMode dm, int baufIdx, const CString& image)
+{
+	ScopeTimer t("DownloadLoader()");
+  if(g_setting.GetBaudrateIndex() == 0) //4800 bps
+  { //Turn off message output when current baud rate is slow
+	  BinaryCommand cmd(3);
+	  cmd.SetU08(1, 0x09);
+	  cmd.SetU08(2, 0x00);
+	  cmd.SetU08(3, 0x00);
+
+	  ClearQue();
+	  SendToTarget(cmd.GetBuffer(), cmd.Size(), "", 10000);	
+  }
+  
+  CmdErrorCode err;
+  DownloadCmdType type = ExternalLoader0x644F;
+
+  U32 regData = 0;
+  //UART_HARDWARE_VER_ADDR
+  err = QueryRegisterx(Return, 0x20002438, &regData);
+  if(Ack != err)
+	{
+    ::AfxMessageBox("Device no response!");
+	} 
+  if(regData != 0xA5)
+	{
+    ::AfxMessageBox("Unsupported device!");
+	} 
+  
+  U32 boot;
+  Sleep(50);
+  err = QueryGnssBootStatus(Return, &boot);
+  if(Ack != err)
+	{
+    ::AfxMessageBox("Device no response2!");
+	}
+
+  if((boot & 0x0100) != 0 || (boot & 0x00FF) == 0)
+  { //ROM mode
+    type = ExternalLoader0x641B;
+  }
+  else
+  {
+    BinaryData ackVer;
+    err = QuerySoftwareVersionSystemCode(Return, &ackVer);
+    if(Ack != err)
+	  {
+      ::AfxMessageBox("Device no response3!");
+	  }
+    if(GetMinorSoftwareVer(ackVer) >= 31)
+    {
+      type = ExternalLoader0x644F;
+    }
+    else
+    {
+      type = ExternalLoader0x641B;
+    }
+  }
+  Sleep(50);
+
+  bool ret = NewRealDownload(type, dm, baufIdx, image);
+	if(m_psoftImgDlDlg)
+	{
+		m_psoftImgDlDlg->SetFinish(true);	
+	}
+
+  CString txt;
+  if(!ret)
+  {
+	  txt.Format("Download failed!");
+	  add_msgtolist(txt);
+    return false;
+  }
+
+	txt.Format("Download total time %d seconds.", t.GetDuration() / 1000);
+	add_msgtolist(txt);
+
+  BoostBaudrate(TRUE);
+	SetMode();
+	m_firstDataIn = false;
+	ClearInformation();
+	CreateGPSThread();
+  return true;
+}
+
+bool CGPSDlg::NewRealDownload(DownloadCmdType type, DownloadMode dm, int baufIdx, const CString& image)
+{
+  BoostBaudrate(FALSE);
+	m_psoftImgDlDlg = new CSoftImDwDlg;	
+	AfxBeginThread(ShowDownloadProgressThread, 0); 
+
+  BinaryData srec;
+  if(DownloadMode_FileSrec == dm)
+  {
+    CString srecFile;
+    theApp.CheckExternalSrec(srecFile);
+    srec.ReadFromFile(srecFile);
+  }
+  else
+  {
+    srec.ReadFromResource(IDR_V9_AT_SREC, "SREC");
+  }
+  
+  if(!DownloadLoader3(type, TRUE, srec, m_psoftImgDlDlg))
+  {
+		::AfxMessageBox(m_lastErrorMsg);
+		return false;
+  }
+
+  BinaryData binFile(image);
+	if(binFile.Size() == 0)
+	{
+		::AfxMessageBox("Cannot read image file!");
+		return false;
+	}
+
+  U08 ck = GetPromBinCheckSum(binFile, binFile.Size());
+  bool ret = BinSizeCmd(binFile.Size(), ck);
+	if(!ret)
+	{
+		::AfxMessageBox(m_lastErrorMsg);
+		return false;
+	}
+  ret = SendFwBufferPhoenix(binFile, m_psoftImgDlDlg);
+
+  CString strAckCmd;
+	if(End != GetTextAck(strAckCmd, 6000))
+	{
+		::AfxMessageBox(m_lastErrorMsg);
+		return false;
+	}
+  return true;
 }
 
 bool CGPSDlg::Download()
