@@ -4520,7 +4520,7 @@ void CRtkOnOffSv::UpdateStatus()
     "GPS SV 9", "GPS SV 10", "GPS SV 11", "GPS SV 12", 
     "GPS SV 13", "GPS SV 14", "GPS SV 15", "GPS SV 16", 
     "GPS SV 17", "GPS SV 18", "GPS SV 19", "GPS SV 20", 
-    "GPS SV 21", "GPS SV 22", "GPS SV 24", "GPS SV 24", 
+    "GPS SV 21", "GPS SV 22", "GPS SV 23", "GPS SV 24", 
     "GPS SV 25", "GPS SV 26", "GPS SV 27", "GPS SV 28", 
     "GPS SV 29", "GPS SV 30", "GPS SV 31", "GPS SV 32"
   };
@@ -4553,7 +4553,7 @@ void CRtkOnOffSv::UpdateStatus()
     "BD SV 209", "BD SV 210", "BD SV 211", "BD SV 212", 
     "BD SV 213", "BD SV 214", "BD SV 215", "BD SV 216", 
     "BD SV 217", "BD SV 218", "BD SV 219", "BD SV 220", 
-    "BD SV 221", "BD SV 222", "BD SV 224", "BD SV 224", 
+    "BD SV 221", "BD SV 222", "BD SV 223", "BD SV 224", 
     "BD SV 225", "BD SV 226", "BD SV 227", "BD SV 228", 
     "BD SV 229", "BD SV 230", "Reserved", "Reserved"
   };
@@ -5475,7 +5475,7 @@ BOOL CConfigRtkSlaveBaud::OnInitDialog()
     title += " (Query failed)";
     pBox->SetCurSel(5);
   }
-	this->SetWindowText(title);;
+	this->SetWindowText(title);
 	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
@@ -6797,4 +6797,112 @@ void CConfigRtkElevationAndCnrMask::DoCommand()
 
 	configPrompt = "Configure RTK elevation and CNR successfully";
   AfxBeginThread(ConfigThread, 0);
+}
+
+// CConfigCustomStringIntervalDlg 
+IMPLEMENT_DYNAMIC(CConfigCustomStringIntervalDlg, CCommonConfigDlg)
+
+CConfigCustomStringIntervalDlg::CConfigCustomStringIntervalDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CFG_NMEA_STRING_INTV, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigCustomStringIntervalDlg, CCommonConfigDlg)
+  ON_CBN_SELENDOK(IDC_NMEA_STR, &CConfigCustomStringIntervalDlg::OnCbnSelEndNmeaString)
+	ON_BN_CLICKED(IDC_QUERY, &CConfigCustomStringIntervalDlg::OnBnClickedQuery)
+	ON_BN_CLICKED(IDOK, &CConfigCustomStringIntervalDlg::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigCustomStringIntervalDlg 
+BOOL CConfigCustomStringIntervalDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+  this->GetWindowText(m_title);
+  ((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigCustomStringIntervalDlg::UpdateInterval()
+{
+  CString txt;
+  CString title = m_title;
+  BinaryData ackCmd;
+
+  CComboBox* cmb = (CComboBox*)GetDlgItem(IDC_NMEA_STR);
+  if(cmb->GetCurSel() == -1)
+  {
+    GetDlgItem(IDC_NMEA_STR)->GetWindowText(txt);
+  }
+  else
+  {
+    cmb->GetLBText(cmb->GetCurSel(), txt);
+  }
+  if(txt.GetLength() != 3)
+  {
+    ::AfxMessageBox("NMEA string is invalid, it can only 3 uppercase letters!");
+    return;
+  }
+
+	if(CGPSDlg::Ack != CGPSDlg::gpsDlg->QueryNmeaStringX(CGPSDlg::Return, txt, &ackCmd))
+  {
+    title += " (Query failed)";
+    txt = "0";
+  }
+  else
+  {
+    title += " (Query successfully)";
+    txt.Format("%d", ackCmd[6]);
+  }
+  GetDlgItem(IDC_INTERVAL)->SetWindowText(txt);
+  this->SetWindowText(title);
+}
+
+void CConfigCustomStringIntervalDlg::OnCbnSelEndNmeaString()
+{
+  UpdateInterval();
+}
+
+void CConfigCustomStringIntervalDlg::OnBnClickedQuery()
+{
+  UpdateInterval();
+}
+
+void CConfigCustomStringIntervalDlg::OnBnClickedOk()
+{	
+	CString txt;
+
+  GetDlgItem(IDC_NMEA_STR)->GetWindowText(txt);
+  if(txt.GetLength() != 3)
+  {
+    ::AfxMessageBox("NMEA string is invalid, it can only 3 uppercase letters!");
+    return;
+  }
+  m_nmeaId[0] = txt[0];
+  m_nmeaId[1] = txt[1];
+  m_nmeaId[2] = txt[2];
+
+  GetDlgItem(IDC_INTERVAL)->GetWindowText(txt);
+  m_interval = atoi(txt);
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+  
+  this->DoCommand();
+	//OnOK();
+}
+
+void CConfigCustomStringIntervalDlg::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(7);
+	*cmd.GetBuffer(0) = 0x64;
+	*cmd.GetBuffer(1) = 0x3B;
+	*cmd.GetBuffer(2) = m_nmeaId[0];
+	*cmd.GetBuffer(3) = m_nmeaId[1];
+	*cmd.GetBuffer(4) = m_nmeaId[2];
+	*cmd.GetBuffer(5) = m_interval;
+	*cmd.GetBuffer(6) = (U08)m_attribute;
+	configCmd.SetData(cmd);
+
+	configPrompt.Format("Configure NMEA String Interval successfully");
+  AfxBeginThread(ConfigThread, (LPVOID)1);  //do nte restore connection
 }

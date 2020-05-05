@@ -169,10 +169,14 @@ void BinaryProc(U08* buffer, int len, CFile& f)
 		ShowMeasurementChannel(buffer, true, &strOutput);
 		//Show_Message(buffer,len);
 		break;
-	case 0xDE:		// SV_CH status
+	case 0xDE:		// SV_CH status New
 		ShowMeasurementSv(buffer, true, &strOutput);
 		//Show_Message(buffer,len);
 		break;
+	//case 0xE7:		// SV_CH status
+	//	ShowMeasurementSv(buffer, true, &strOutput);
+	//	//Show_Message(buffer,len);
+	//	break;
 	case 0xDF:		// receiver state
 		ShowReceiverNav(buffer, true, &strOutput);
 		//Show_Message(buffer,len);

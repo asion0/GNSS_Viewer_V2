@@ -1540,3 +1540,29 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 };
+
+class CConfigCustomStringIntervalDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigCustomStringIntervalDlg)
+public:
+  enum { NmeaStringSize = 3 };
+
+	CConfigCustomStringIntervalDlg(CWnd* pParent = NULL);   
+	virtual ~CConfigCustomStringIntervalDlg() {};
+
+	virtual void DoCommand();
+	virtual BOOL OnInitDialog();
+
+	afx_msg void OnCbnSelEndNmeaString();
+  afx_msg void OnBnClickedQuery();
+	afx_msg void OnBnClickedOk();
+
+  void UpdateInterval();
+protected:
+	U08 m_nmeaId[NmeaStringSize];
+	U08 m_interval;
+  U08 m_attribute;
+  CString m_title;
+	DECLARE_MESSAGE_MAP()
+};
+

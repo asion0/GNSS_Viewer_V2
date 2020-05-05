@@ -900,10 +900,6 @@ timeout = 300000;
           cmdHeaderCome = true;
 					continue;
 				}
-        else if(*bufferIter == 0x0a && *(bufferIter - 1) != 0x0d)
-        {
-          int a = 0;
-        }
 				else if(*bufferIter == 0x0a && *(bufferIter - 1) == 0x0d)
 				{
 					U08 *chk_ptr = bufferIter - totalSize;

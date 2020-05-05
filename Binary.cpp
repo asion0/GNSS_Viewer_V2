@@ -20,6 +20,7 @@
 #include "ConfigEricssonIntervalDlg.h"
 #include "GetAlmanac.h"
 #include "CommonConfigDlg.h"
+#include "CommonQueryDlg.h"
 #include "GPSDlg.h"
 #include "DrTestDlg.h"
 #include "CRC24Q/crc24q_parity.h"
@@ -143,8 +144,8 @@ static CommandEntry cmdTable[] =
 	{ 0x64, 0x36, 2, 0x64, 0x9A },
 	//QueryVeryLowSpeedCmd,
 	{ 0x64, 0x38, 2, 0x64, 0x9B },
-  //QueryPstiCmd2
-	{ 0x64, 0x3C, 3, 0x64, 0x9D },
+  //QueryNmeaStringCmd
+	{ 0x64, 0x3C, 5, 0x64, 0x9D },
 	//QueryDataLogStatus2Cmd,
 	{ 0x64, 0x47, 2, 0x64, 0xA3 },
 	//DatalogClear2Cmd,
@@ -318,7 +319,7 @@ enum SqBinaryCmd
 	QueryGeofenceCmdEx,
 	QueryGeofenceResultCmdEx,
 	QueryVeryLowSpeedCmd,
-  QueryPstiCmd2,
+  QueryNmeaStringCmd,
   QueryDataLogStatus2Cmd,
   DatalogClear2Cmd,
   DatalogRead2Cmd,
@@ -4725,6 +4726,43 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRegisterx(CmdExeMode nMode, U32 addr, void* 
 	return Ack;
 }
 
+CGPSDlg::CmdErrorCode CGPSDlg::QueryNmeaStringX(CmdExeMode nMode, LPCSTR nmeaStr, void* outputData)
+{	    
+	BinaryCommand cmd(cmdTable[QueryNmeaStringCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryNmeaStringCmd].cmdId);
+  cmd.SetU08(2, cmdTable[QueryNmeaStringCmd].cmdSubId);
+	cmd.SetU08(3, nmeaStr[0]);
+	cmd.SetU08(4, nmeaStr[1]);
+	cmd.SetU08(5, nmeaStr[2]);
+
+	//if(NoWait == nMode)
+	//{
+	//	ExcuteBinaryCommandNoWait(QueryNmeaStringCmd, &cmd);
+	//	return Ack;
+	//}
+
+	BinaryData ackCmd;
+  CmdErrorCode err = ExcuteBinaryCommand(QueryNmeaStringCmd, &cmd, &ackCmd);
+	if(err != Ack)
+	{
+		return err;
+	}
+
+	if(Return == nMode)
+	{ //Return command data
+		*((BinaryData*)outputData) = ackCmd;
+		return Ack;
+	}
+
+	CString strMsg;
+	strMsg.Format("Query NMEA String Interval successfully");
+	add_msgtolist(strMsg);
+	strMsg.Format("%c%c%c NMEA Interval: %d second(s)", nmeaStr[0], nmeaStr[1], nmeaStr[2], ackCmd[6]);
+	add_msgtolist(strMsg);
+
+	return Ack;
+}
+
 CGPSDlg::CmdErrorCode CGPSDlg::QueryRegister(CmdExeMode nMode, void* outputData)
 {
   return QueryRegisterx(nMode, m_regAddress, outputData);
@@ -7597,6 +7635,28 @@ bool CGPSDlg::DoCommonConfig(CCommonConfigDlg* dlg)
   return false;
 }
 
+bool CGPSDlg::DoCommonQuery(CCommonQueryDlg* dlg)
+{
+  if(!CheckConnect())
+	{
+		return false;
+	}
+
+	SetInputMode(NoOutputMode);
+	INT_PTR nResult = dlg->DoModal();
+	if(nResult == IDOK) 
+	{
+		dlg->DoCommand();
+    return true;
+	}
+	else
+	{
+		SetMode();  
+		CreateGPSThread();
+	}
+  return false;
+}
+
 void CGPSDlg::DoCommonConfigNoDisconnect(CCommonConfigDlg* dlg)
 {
 	INT_PTR nResult = dlg->DoModal();
@@ -8161,6 +8221,47 @@ void CGPSDlg::OnConfigV9AesTag()
   DoCommonConfig(&dlg);
 }
 
+void CGPSDlg::OnConfigCustomStringInterval()
+{
+  CConfigCustomStringIntervalDlg dlg;
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnQueryCustomStringInterval()
+{
+  CQueryCustomStringIntervalDlg dlg;
+  DoCommonQuery(&dlg);
+}
+
+void CGPSDlg::OnQueryStringInterval(UINT id)
+{
+  const char* NmeaMiscCode[] = { 
+    "GGA", 
+    "GNS", 
+    "GSA", 
+    "GSV", 
+    "GLL", 
+    "RMC", 
+    "VTG", 
+    "ZDA", 
+    "DTM", 
+    "GBS", 
+    "GRS", 
+    "GST", 
+    "THS", 
+    "HDT"};
+
+	if(!CheckConnect())
+	{
+		return;
+	}
+
+	QueryNmeaStringX(CGPSDlg::Display, NmeaMiscCode[id - ID_QRY_GGA_STR_INTVAL], NULL);
+
+	SetMode();
+	CreateGPSThread();
+}
+
 //void CGPSDlg::OnResetV9AesTag()
 //{
 //  U32 tagAddr = 0xFE999996;
@@ -8379,6 +8480,28 @@ void CGPSDlg::OnInsdrTest()
 
 	DrTestDlg dlg;
   dlg.DoModal();
+
+	SetMode();
+	CreateGPSThread();
+}
+
+void CGPSDlg::OnPx100ExternalBurning()
+{
+	if(!CheckConnect())
+	{
+		return;
+	}
+
+  CmdErrorCode err = Timeout;
+	CGPSDlg::DoCConfigRegisterDirect(0x2000F090, 0x03020100);
+	CGPSDlg::DoCConfigRegisterDirect(0x2000F0A0, 0x03020100);
+	CGPSDlg::DoCConfigRegisterDirect(0x2000F094, 0x070C0504);
+	CGPSDlg::DoCConfigRegisterDirect(0x2000F0A4, 0x070C0504);
+	CGPSDlg::DoCConfigRegisterDirect(0x2000F098, 0x0B0A0908);
+	CGPSDlg::DoCConfigRegisterDirect(0x2000F0A8, 0x0B0A0908);
+	CGPSDlg::DoCConfigRegisterDirect(0x2000F09C, 0x0F0E0D06);
+	CGPSDlg::DoCConfigRegisterDirect(0x2000F0AC, 0x0F0E0D06);
+	CGPSDlg::DoCConfigRegisterDirect(0x2000F124, 0x00000001);
 
 	SetMode();
 	CreateGPSThread();

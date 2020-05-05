@@ -33,6 +33,7 @@ enum NmeaType
 	MSG_ZDA,
 	MSG_GNS,
 	MSG_VTG,
+	MSG_THS,
 	MSG_STI,
   MSG_PIRNSF,
 
@@ -98,6 +99,16 @@ typedef struct GPGSA
 	F32     HDOP;
   F32     VDOP;
   U16     SystemId;
+  int FindId(U16 id)
+  {
+    int i = 0;
+    for(; i < MAX_SATELLITE && SatelliteID[i] != 0; ++i)
+    {
+      if(SatelliteID[i] == id) 
+        return i;
+    }
+    return i;
+  }
 }GPGSA, *pGPGSA, &rGPGSA;
 
 typedef struct GPVTG
@@ -286,6 +297,19 @@ public:
     snr.SetSnr(sigId, s, NonUseValue);
   }
 
+  void Set(U16 p, U16 e, U16 a)
+  {
+    prn = p;
+    ele = e;
+    azi = a;
+  }
+
+  void Set(U16 p, const SnrTable& s)
+  {
+    prn = p;
+    snr.Merge(s); 
+  }
+
   void MergeSnr(const SnrTable& s) 
   { 
     snr.Merge(s); 
@@ -349,7 +373,10 @@ public:
   }
   virtual ~Satellites(void) {}
 
-  void Clear() { Init(); }
+  void Clear() 
+  { 
+    Init(); 
+  }
   void SetSate(const Satellite& s)
   {
     SetSate2(s.GetPrn(), s.GetEle(), s.GetAzi(), s.GetSnrTable());
@@ -364,6 +391,17 @@ public:
       inOrder = false;
     }
     sate[idx].Set(prn, ele, azi, snr);
+  }
+
+  void SetSate3(int prn, int ele, int azi)
+  {
+    int idx = GetPrnIndex(prn);
+    if(idx == -1)
+    {
+      idx = index++;
+      inOrder = false;
+    }
+    sate[idx].Set(prn, ele, azi);
   }
 
   void SetSate(int prn, int ele, int azi, const SnrTable& snr)
@@ -843,6 +881,7 @@ protected:
 	static int MSB(char msb);
   static float ParamFloatOrInt(LPCSTR p, int first, int second, float defaultValue);
 	static int ParamInt(LPCSTR p, int first, int second, int defaultValue);
+  static U32 ParamHexInt(LPCSTR p, int first, int second, int defaultValue);
 	static char ParamChar(LPCSTR p, int first, int second, char defaultValue);
 	static float ParamFloat(LPCSTR p, int first, int second, float defaultValue);
 	static double ParamDouble(LPCSTR p, int first, int second, float defaultValue);
@@ -857,6 +896,7 @@ protected:
 	static bool RMCProc(GPRMC& rrmc, LPCSTR pt, int len);
 	static bool ZDAProc(GPZDA& rzda, LPCSTR pt, int len);
 	static bool VTGProc(GPVTG& rvtg, LPCSTR pt, int len);
+	static bool THSProc(F32& trueHeading, LPCSTR pt, int len);
 
 	static bool firstGsaIn;
   static GNSS_System currentGsv;
@@ -924,6 +964,7 @@ public:
 	void ShowGNSmsg(GPGGA&, const char* ,int);
 	void ShowGPRMCmsg(GPRMC&, const char* ,int);
 	void ShowGPVTGmsg(GPVTG&, const char* ,int);
+	void ShowGPTHSmsg(F32&, const char* ,int);
 	void ShowGPGSVmsg(GPGSV&, const char* ,int);
 //#if(SUPPORT_BDL2_GSV2)
 //  void ShowGPGSVmsg2(GPGSV& rgpgsv, GPGSV& rgpgsv2, GPGSV& rglgsv, GPGSV& rglgsv2, GPGSV& rbdgsv, GPGSV& rbdgsv2, GPGSV& rgagsv, LPCSTR pt, int len);

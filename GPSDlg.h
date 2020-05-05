@@ -33,6 +33,7 @@
 #define UWM_DO_ZENLANE_CMD    (WM_USER + 0x10D)
 #define UWM_TEST_XN112_START  (WM_USER + 0x10E)
 #define UWM_UPDATE_PSTI033		(WM_USER + 0x10F)
+#define UWM_UPDATE_THS		    (WM_USER + 0x110)
 
 #define GNSS_CHANEL_LIMIT	16
 
@@ -172,6 +173,7 @@ class BinaryCommand;
 class BinaryData;
 class CPanelBackground;
 class CCommonConfigDlg;
+class CCommonQueryDlg;
 
 class CGPSDlg : public CDialog
 {
@@ -264,6 +266,7 @@ public:
 	enum InfoTabStat {
 		BasicInfo = 0,
 		RtkInfo,
+		RtkInfo2,
 	};
 
 	static UINT UWM_PLAYNMEA_EVENT;
@@ -315,6 +318,7 @@ protected:
 #if(_TAB_LAYOUT_)
 	//CColorStatic m_date2;	
 	CColorStatic m_cycleSlip;	
+	CColorStatic m_trueHeading;	
 	CColorStatic m_time2;	
 	CColorStatic m_eastProjection;	
 	CColorStatic m_baselineLength;	
@@ -327,6 +331,7 @@ protected:
 	PSTI031_Data m_psti031;
 	PSTI032_Data m_psti032;
 	PSTI033_Data m_psti033R;
+	F32 m_fTrueHeading;
 
 	CComboBox m_ComPortCombo;
 	CComboBox m_BaudRateCombo;	
@@ -856,6 +861,7 @@ public:
 	CmdErrorCode QueryV9Tag(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySecurityTag(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySecurityTagOnly(CmdExeMode nMode, void* outputData);
+  CmdErrorCode QueryNmeaStringX(CmdExeMode nMode, LPCSTR nmeaStr, void* outputData);
 
   U08 m_nGeofecingNo;
 
@@ -1025,7 +1031,7 @@ protected:
 	afx_msg void OnSoftwareimagedownloadLoaderimage();
 	afx_msg void OnSoftwareimagedownloadImageonly();
 	afx_msg void OnBinaryGetrgister();
-	afx_msg void OnBinaryGetrgister16();
+	//afx_msg void OnBinaryGetrgister16();
 	afx_msg void OnBinaryConfigureregister();
 	afx_msg void OnBinaryConfigureregister16();
 	afx_msg void OnBinaryConfigureClockOffset();
@@ -1109,6 +1115,7 @@ protected:
 	afx_msg LRESULT OnUpdatePsti033(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnDoZenlaneCmd(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnTestXn112Start(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnUpdateTHS(WPARAM wParam, LPARAM lParam);
 
 	afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
 	afx_msg void OnBnClickedRomMode();
@@ -1198,6 +1205,7 @@ protected:
 	afx_msg void OnConfigV9ClockToGpio0Off();
 	afx_msg void OnConfigV9ClockOutOn();
 	afx_msg void OnConfigV9ClockOutOff();
+	afx_msg void OnPx100ExternalBurning();
 
   afx_msg void OnWriteMemToFile();
 	afx_msg void OnUpgradeDownload();
@@ -1243,6 +1251,7 @@ protected:
 	afx_msg void OnGpsdoFirmwareDownload();
 	afx_msg void OnStnClickedInformationB();
 	afx_msg void OnStnClickedRtkInfoB();
+	afx_msg void OnStnClickedRtkInfo2B();
 	afx_msg void OnBnClickedCoorSwitch();
 	afx_msg void OnBnClickedAltitudeSwitch();
 	afx_msg void OnConfigPsti030();
@@ -1275,6 +1284,10 @@ protected:
 
 	afx_msg void OnConfigV9AesTag();
   afx_msg void OnConfigQueryPstiInterval();
+  
+  afx_msg void OnConfigCustomStringInterval();
+  afx_msg void OnQueryCustomStringInterval();
+  afx_msg void OnQueryStringInterval(UINT id);
 
 	//afx_msg void OnAgepTest()
 	//{ GenericQuery(&CGPSDlg::AgepTest); }
@@ -1571,6 +1584,8 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryV9ExternalAesTag); }
   afx_msg void OnResetV9AesTag()
 	{ GenericQuery(&CGPSDlg::ResetV9AesTag); }
+  //afx_msg void OnQueryCustomStringInterval()
+	//{ GenericQuery(&CGPSDlg::QueryCustomStringInterval); }
 
 	struct MenuItemEntry {
 		BOOL showOption;
@@ -1641,6 +1656,7 @@ protected:
 	//	void Config_silab_baudrate(HANDLE *m_DeviceHandle);
 	//	void Config_silab_baudrate_flash(HANDLE *m_DeviceHandle);
 	bool DoCommonConfig(CCommonConfigDlg* dlg);
+	bool DoCommonQuery(CCommonQueryDlg* dlg);
 	void DoCommonConfigNoDisconnect(CCommonConfigDlg* dlg);
 	void DoCommonConfigDirect(CCommonConfigDlg* dlg, int type);
 

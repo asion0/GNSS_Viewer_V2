@@ -40,6 +40,17 @@ struct SV_CH_DATA
 	U08 channel_status;
 };
 
+struct GnssSvChannelData
+{
+	U08 channelId;
+	U08 gnssTypeSignal;
+  U08 svid;
+	U08 svStatusInd;
+	U08 ura;
+	S08 cn0;
+	U08 chStatusInd;
+};
+
 struct RECEIVER_NAV_DATA
 {
 	U08 nav_status;
@@ -103,6 +114,188 @@ static U08* decode_1bytes(U08* src, U08* dst)
 	*dst = src[0];
 	src += 1;
 	return src;
+}
+
+void GetGnssTypeSignalTypeString(U08 typeSig, CString& typeTxt)
+{
+  switch(typeSig) 
+  {
+  case 0x00:
+    typeTxt = "GPS-L1 C/A";
+    break;
+  case 0x10:
+    typeTxt = "GPS-L1C";
+    break;
+  case 0x20:
+    typeTxt = "GPS-L2C";
+    break;
+  case 0x40:
+    typeTxt = "GPS-L5";
+    break;
+  case 0x01:
+    typeTxt = "SBAS-L1";
+    break;
+  case 0x02:
+    typeTxt = "GLONASS-L1";
+    break;
+  case 0x22:
+    typeTxt = "GLONASS-L2";
+    break;
+  case 0x42:
+    typeTxt = "GLONASS-L3";
+    break;
+  case 0x03:
+    typeTxt = "Galileo-E1";
+    break;
+  case 0x43:
+    typeTxt = "Galileo-E5a";
+    break;
+  case 0x53:
+    typeTxt = "Galileo-E5b";
+    break;
+  case 0x63:
+    typeTxt = "Galileo-E6";
+    break;
+  case 0x04:
+    typeTxt = "QZSS-L1 C/A";
+    break;
+  case 0x14:
+    typeTxt = "QZSS-L1C";
+    break;
+  case 0x24:
+    typeTxt = "QZSS-L2C";
+    break;
+  case 0x44:
+    typeTxt = "QZSS-L5";
+    break;
+  case 0x64:
+    typeTxt = "QZSS-LEX";
+    break;
+  case 0x05:
+    typeTxt = "BeiDou-B1I";
+    break;
+  case 0x15:
+    typeTxt = "BeiDou-B1C";
+    break;
+  case 0x45:
+    typeTxt = "BeiDou-B2A";
+    break;
+  case 0x55:
+    typeTxt = "BeiDou-B2I";
+    break;
+  case 0x75:
+    typeTxt = "BeiDou-B3I";
+    break;
+  case 0x46:
+    typeTxt = "NavIC-L5";
+    break;
+  default:
+    typeTxt.Format("Unknown(%02X)", typeSig);
+    break;
+  }
+}
+
+void GetGnssTypeAndSignalId(U08 typeSig, NMEA::GNSS_System& gnss, U08& sigId)
+{
+  gnss = NMEA::GsUnknown;
+  switch(typeSig) 
+  {
+  case 0x00:
+    sigId = 1;  //"GPS-L1 C/A";
+    gnss = NMEA::Gps;
+    break;
+  case 0x10:
+    sigId = 2;  //"GPS-L1C";
+    gnss = NMEA::Gps;
+    break;
+  case 0x20:
+    sigId = 5;  //"GPS-L2C";
+    gnss = NMEA::Gps;
+    break;
+  case 0x40:
+    sigId = 7;  //"GPS-L5";
+    gnss = NMEA::Gps;
+    break;
+  case 0x01:
+    sigId = 1;  //"SBAS-L1";
+    gnss = NMEA::Gps;
+    break;
+  case 0x02:
+    sigId = 1;  //"GLONASS-L1";
+    gnss = NMEA::Glonass;
+    break;
+  case 0x22:
+    sigId = 3;  //"GLONASS-L2";
+    gnss = NMEA::Glonass;
+    break;
+  case 0x42:
+    sigId = 4;  //"GLONASS-L3";
+    gnss = NMEA::Glonass;
+    break;
+  case 0x03:
+    sigId = 7;  //"Galileo-E1";
+    gnss = NMEA::Galileo;
+    break;
+  case 0x43:
+    sigId = 1;  //"Galileo-E5a";
+    gnss = NMEA::Galileo;
+    break;
+  case 0x53:
+    sigId = 2;  //"Galileo-E5b";
+    gnss = NMEA::Galileo;
+    break;
+  case 0x63:
+    sigId = 4;  //"Galileo-E6";
+    gnss = NMEA::Galileo;
+    break;
+  case 0x04:
+    sigId = 1;  //"QZSS-L1 C/A";
+    gnss = NMEA::Gps;
+    break;
+  case 0x14:
+    sigId = 2;  //"QZSS-L1C";
+    gnss = NMEA::Gps;
+    break;
+  case 0x24:
+    sigId = 5;  //"QZSS-L2C";
+    gnss = NMEA::Gps;
+    break;
+  case 0x44:
+    sigId = 7;  //"QZSS-L5";
+    gnss = NMEA::Gps;
+    break;
+  case 0x64:
+    sigId = 8;  //"QZSS-LEX";
+    gnss = NMEA::Gps;
+    break;
+  case 0x05:
+    sigId = 1;  //"BeiDou-B1I";
+    gnss = NMEA::Beidou;
+    break;
+  case 0x15:
+    sigId = 3;  //"BeiDou-B1C";
+    gnss = NMEA::Beidou;
+    break;
+  case 0x45:
+    sigId = 5;  //"BeiDou-B2A";
+    gnss = NMEA::Beidou;
+    break;
+  case 0x55:
+    sigId = 11;  //"BeiDou-B2I";
+    gnss = NMEA::Beidou;
+    break;
+  case 0x75:
+    sigId = 8;  //"BeiDou-B3I";
+    gnss = NMEA::Beidou;
+    break;
+  case 0x46:
+    sigId = 1;  //"NavIC-L5";
+    gnss = NMEA::Navic;
+    break;
+  default:
+    sigId = 0;
+    break;
+  }
 }
 
 void ShowMeasurementChannel(U08* src, bool convertOnly, CString* pStr)
@@ -301,16 +494,16 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
   bool hasGa = false;
   bool hasBd = false;
   bool hasGi = false;
-  U16 sigId;
+  
   if(nmeas != 0)
   {
     ExtMeasChannelData channel = { 0 };
     U32 tmp[2] = { 0 };
 
-    strBuffer.Format(" GnTp|SgTp|SVID|FrqID|LTInd|CN0|   PseudoRange|       AccCrrCyc|DopFreq|PRSdDv|ACCSdDv|DFSdDv| ChInd|");
+    strBuffer.Format("Gnss Signal|SVID|FrqID|LTInd|CN0|   PseudoRange|       AccCrrCyc|DopFreq|PRSdDv|ACCSdDv|DFSdDv| ChInd|");
     DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-    strBuffer.Format(" ----+----+----+-----+-----+---+--------------+----------------+-------+------+-------+------+------+");
+    strBuffer.Format("-----------+----+-----+-----+---+--------------+----------------+-------+------+-------+------+------+");
     DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
     CGPSDlg::gpsDlg->m_psti033B.numCycleSlippedTotal = 0;
 	  for (int i = 0; i < nmeas; ++i)
@@ -334,21 +527,18 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
 	    ptr = decode_1bytes(ptr, &reserve);
 	    ptr = decode_1bytes(ptr, &reserve);
 
-      //"$GnTp|SgTp|SVID|
-      // FrqID|LTInd|CN0|  
-      // PseudoRange|      AccCrrCyc|DopplerFreq|
-      // PRSdDv|ACCSdDv|DFSdDv| ChInd|");
-      strBuffer.Format("   %2d|  %2d| %3d|%5d|%5d|%3d| %13.3lf| % 15.3lf| % 6.0f|%6d|%7d|%6d|0x%04X|",
-          channel.typeNsingel & 0x0F, channel.typeNsingel >> 4, channel.svid, 
-          channel.freqIdNlockTimeInd & 0x0f, channel.freqIdNlockTimeInd >> 4, channel.cn0,
-          channel.pseduRange, channel.accCarrierCycle, channel.dopplerFreq, 
+      CString typeTxt;
+      GetGnssTypeSignalTypeString(channel.typeNsingel, typeTxt);
+    //strBuffer.Format("Gnss Signal|SVID|FrqID|LTInd|CN0|   PseudoRange|       AccCrrCyc|DopFreq|PRSdDv|ACCSdDv|DFSdDv| ChInd|");
+    //strBuffer.Format("-----------+----+-----+-----+---+--------------+----------------+-------+------+-------+------+------+");
+      strBuffer.Format("%11s|  %2d|%5d|%5d|%3d| %13.3lf| % 15.3lf| % 6.0f|%6d|%7d|%6d|0x%04X|",
+          typeTxt, channel.svid, channel.freqIdNlockTimeInd & 0x0f, channel.freqIdNlockTimeInd >> 4, 
+          channel.cn0, channel.pseduRange, channel.accCarrierCycle, channel.dopplerFreq, 
           channel.prStdDeviation, channel.accStdDeviation, channel.dfDeviation, channel.chInd);
       DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 
-      if(channel.chInd &0x08)
+      if(channel.chInd & 0x08)
       {
-        //strBuffer.Format("**********************************************************");
-        //DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
         ++CGPSDlg::gpsDlg->m_psti033B.numCycleSlippedTotal;
       }
 
@@ -357,8 +547,11 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
 		    continue;
 	    }
 
-      sigId = channel.typeNsingel >> 4;
+      U08 sigId;
       NMEA::GNSS_System gs = NMEA::GsUnknown;
+      GetGnssTypeAndSignalId(channel.typeNsingel, gs, sigId);
+/* 
+      sigId = channel.typeNsingel >> 4;
       switch(channel.typeNsingel & 0x0F)
       {
       case 0:
@@ -432,7 +625,7 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
        gs = NMEA::Gps;
        break;
       }
-
+*/
       if(gs == NMEA::Gps)
       {
         if(hasGp == false)
@@ -684,6 +877,32 @@ void ShowSubframe(U08 *src, bool convertOnly, CString* pStr)
   DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 }
 
+void ShowGeneralSubframe(U08 *src, bool convertOnly, CString* pStr)
+{
+	U08 msgType = src[4];
+	CString subFrameType;
+
+	subFrameType = "GENERAL_SUBFRAME(0xE6)";
+
+  CString typeTxt;
+	U08 version = src[5];
+	U08 typeSig = src[6];
+  U08 svid = src[7];
+  U08 len = src[8];
+  GetGnssTypeSignalTypeString(typeSig, typeTxt);
+
+  strBuffer.Format("$%s,VER=%d,%s,SVID=%d,Len=%d", subFrameType, version, typeTxt, svid, len);
+
+	//WORD packetLen = MAKEWORD(src[3], src[2]);
+	//for(int i = 3; i < packetLen; ++i)
+	//{
+	//	CString tmpBuff;
+ //   tmpBuff.Format("%02X ", src[4+i]);
+	//	strBuffer += tmpBuff;
+	//}
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+}
+
 void ShowMeasurementTime(U08 *src, bool convertOnly, CString* pStr)
 {
   static CString strBuffer("", 512);
@@ -913,6 +1132,304 @@ void ShowMeasurementSv(U08 *src, bool convertOnly, CString* pStr)
 	CGPSDlg::gpsDlg->m_gigsvMsgCopy.NumOfSate = navic_c;
 	CGPSDlg::gpsDlg->m_gigsvMsgCopy.NumOfMessage = (navic_c + 3) / 4;
 	CGPSDlg::gpsDlg->m_gigsvMsgCopy.SequenceNum = (navic_c + 3) / 4;
+}
+
+void ShowMeasurementSvEleAzi(U08 *src, bool convertOnly, CString* pStr)
+{
+  static CString strBuffer("", 512);
+	U08* ptr = &src[5];
+
+  U08 ver = 0;
+  U08 iod = 0;
+  U08 nsvs = 0;
+
+	ptr = decode_1bytes(ptr, &ver);
+	ptr = decode_1bytes(ptr, &iod);
+	ptr = decode_1bytes(ptr, &nsvs);
+
+  //SetListCtrlRedraw(FALSE);
+  strBuffer.Format("$GNSS_SV_ELE_AZI(0xE8),VER=%d,IOD=%d,NSVS=%d", ver, iod, nsvs);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+  if(nsvs == 0)
+  {
+    //SetListCtrlRedraw(TRUE);
+    return;
+  }
+
+  strBuffer.Format(" GNSS|SVID| Ele| Azi|");
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+  strBuffer.Format(" ----+----+----+----+");
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	int fixed_gps_c = 0, fixed_glonass_c = 0, fixed_beidou_c = 0, fixed_galileo_c = 0, fixed_navic_c = 0;
+	int gps_c = 0, glonass_c = 0, beidou_c = 0, galileo_c = 0, navic_c = 0;
+
+  U08 type, svid;
+  U16 ele, azi;
+	for (int i = 0; i < nsvs; ++i)
+	{
+		ptr = decode_1bytes(ptr, &type);
+		ptr = decode_1bytes(ptr, &svid);
+		ptr = decode_2bytes(ptr, &ele);
+		ptr = decode_2bytes(ptr, &azi);
+  //strBuffer.Format(" GNSS|SVID| Ele| Azi|");
+  //strBuffer.Format(" ----+----+----+----+");
+    strBuffer.Format(" %4d|%4d|%4d|%4d|",
+			type, svid, ele, azi);
+    DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+    //SetListCtrlRedraw(TRUE);
+    
+    if(ele < 0 || azi < 0)
+    {
+      strBuffer.Format("****ERROR****");
+      DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+    }
+	  if(convertOnly)
+	  {
+		  continue;
+	  }
+
+    NMEA::GNSS_System gs = NMEA::GsUnknown;
+    U08 sigId;
+    GetGnssTypeAndSignalId(type, gs, sigId);
+    if(NMEA::Gps == gs)
+		{
+      CGPSDlg::gpsDlg->nmea.satellites2_gp.SetSate3(svid, ele, azi);
+			gps_c++;
+		}
+		else if(NMEA::Glonass == gs)
+		{
+      CGPSDlg::gpsDlg->nmea.satellites2_gl.SetSate3(svid + 64, ele, azi);
+			glonass_c++;
+		}
+		else if(NMEA::Beidou == gs)
+		{
+      CGPSDlg::gpsDlg->nmea.satellites2_bd.SetSate3(svid, ele, azi);
+			beidou_c++;
+		}
+		else if(NMEA::Galileo == gs)
+		{
+      CGPSDlg::gpsDlg->nmea.satellites2_ga.SetSate3(svid, ele, azi);
+			galileo_c++;
+		}
+		else if(NMEA::Navic == gs)
+		{
+      CGPSDlg::gpsDlg->nmea.satellites2_gi.SetSate3(svid, ele, azi);
+			navic_c++;
+		}
+	}
+	
+	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfSate = gps_c;
+	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfMessage = (gps_c + 3) / 4;
+	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.SequenceNum = (gps_c + 3) / 4;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.NumsOfSatellites = fixed_gps_c + fixed_glonass_c;
+
+	CGPSDlg::gpsDlg->m_glgsvMsgCopy.NumOfSate = glonass_c;
+	CGPSDlg::gpsDlg->m_glgsvMsgCopy.NumOfMessage = (glonass_c + 3) / 4;
+	CGPSDlg::gpsDlg->m_glgsvMsgCopy.SequenceNum = (glonass_c + 3) / 4;
+
+	CGPSDlg::gpsDlg->m_bdgsvMsgCopy.NumOfSate = beidou_c;
+	CGPSDlg::gpsDlg->m_bdgsvMsgCopy.NumOfMessage = (beidou_c + 3) / 4;
+	CGPSDlg::gpsDlg->m_bdgsvMsgCopy.SequenceNum = (beidou_c + 3) / 4;
+
+	CGPSDlg::gpsDlg->m_gagsvMsgCopy.NumOfSate = galileo_c;
+	CGPSDlg::gpsDlg->m_gagsvMsgCopy.NumOfMessage = (galileo_c + 3) / 4;
+	CGPSDlg::gpsDlg->m_gagsvMsgCopy.SequenceNum = (galileo_c + 3) / 4;
+
+	CGPSDlg::gpsDlg->m_gigsvMsgCopy.NumOfSate = navic_c;
+	CGPSDlg::gpsDlg->m_gigsvMsgCopy.NumOfMessage = (navic_c + 3) / 4;
+	CGPSDlg::gpsDlg->m_gigsvMsgCopy.SequenceNum = (navic_c + 3) / 4;
+}
+
+void ShowMeasurementGnssSv(U08 *src, bool convertOnly, CString* pStr)
+{
+  static CString strBuffer("", 512);
+	U08* ptr = &src[5];
+
+  U08 ver = 0;
+  U08 iod = 0;
+  U08 nsvs = 0;
+
+	ptr = decode_1bytes(ptr, &ver);
+	ptr = decode_1bytes(ptr, &iod);
+	ptr = decode_1bytes(ptr, &nsvs);
+
+  //SetListCtrlRedraw(FALSE);
+  strBuffer.Format("$GNSS_SV_CH_STATUS(0xE7),VER=%d,IOD=%d,NSVS=%d", ver, iod, nsvs);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+  if(nsvs == 0)
+  {
+    //SetListCtrlRedraw(TRUE);
+    return;
+  }
+
+  strBuffer.Format(" ChId|Gnss Signal|SVID|SvInd| URA|CN0|ChInd|");
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+  strBuffer.Format(" ----+-----------|----+-----+----+---+-----+");
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	//int fixed_gps_c = 0, fixed_glonass_c = 0, fixed_beidou_c = 0, fixed_galileo_c = 0, fixed_navic_c = 0;
+	//int gps_c = 0, glonass_c = 0, beidou_c = 0, galileo_c = 0, navic_c = 0;
+	bool hasGp = false;
+  bool hasGl = false;
+  bool hasGa = false;
+  bool hasBd = false;
+  bool hasGi = false;
+	if(!convertOnly)
+	{
+		memset(CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID, 0, 
+      sizeof(CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID));
+		memset(CGPSDlg::gpsDlg->m_bdgsaMsgCopy.SatelliteID, 0, 
+      sizeof(CGPSDlg::gpsDlg->m_bdgsaMsgCopy.SatelliteID));
+		memset(CGPSDlg::gpsDlg->m_glgsaMsgCopy.SatelliteID, 0, 
+      sizeof(CGPSDlg::gpsDlg->m_glgsaMsgCopy.SatelliteID));
+		memset(CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID, 0, 
+      sizeof(CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID));
+	}
+
+  GnssSvChannelData sv;
+	//U08 channelId;
+	//U08 gnssTypeSignal;
+ // U08 svid;
+	//U08 svStatusInd;
+	//U08 ura;
+	//S08 cn0;
+	//U08 chStatusInd;
+	for (int i = 0; i < nsvs; ++i)
+	{
+		ptr = decode_1bytes(ptr, &sv.channelId);
+		ptr = decode_1bytes(ptr, &sv.gnssTypeSignal);
+		ptr = decode_1bytes(ptr, &sv.svid);
+		ptr = decode_1bytes(ptr, &sv.svStatusInd);
+		ptr = decode_1bytes(ptr, &sv.ura);
+		ptr = decode_1bytes(ptr, (U08*)&sv.cn0);
+		ptr = decode_1bytes(ptr, &sv.chStatusInd);
+
+    CString typeTxt;
+    GetGnssTypeSignalTypeString(sv.gnssTypeSignal, typeTxt);
+ // strBuffer.Format(" ChId|Gnss Signal|SVID|SvInd| URA|CN0|ChInd|");
+    strBuffer.Format("%5d|%11s|%4d| 0x%02X|%4d|%3d| 0x%02X|",
+			sv.channelId, typeTxt, sv.svid, sv.svStatusInd, 
+      sv.ura, sv.cn0, sv.chStatusInd);
+    DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+    //SetListCtrlRedraw(TRUE);
+    
+	  if(convertOnly)
+	  {
+		  continue;
+	  }
+
+    U08 sigId = 0;
+    NMEA::GNSS_System gs = NMEA::GsUnknown;
+	  GetGnssTypeAndSignalId(sv.gnssTypeSignal, gs, sigId);
+
+    if(gs == NMEA::Gps)
+    {
+      if(hasGp == false)
+      {
+        CGPSDlg::gpsDlg->nmea.satellites2_gp.ClearSnr();
+        hasGp = true;
+      }
+			if (sv.chStatusInd & 0x30)
+			{
+        int p = CGPSDlg::gpsDlg->m_gpgsaMsgCopy.FindId(sv.svid);
+        CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID[p] = sv.svid;
+			}
+      SnrTable snr(sigId, sv.cn0);
+      CGPSDlg::gpsDlg->nmea.satellites2_gp.SetSate2(sv.svid, NonUseValue, NonUseValue, snr);
+      CGPSDlg::gpsDlg->nmea.satellites2_gp.AddSnrSigId(sigId);
+    }
+    if(gs == NMEA::Beidou)
+    {
+      if(hasBd == false)
+      {
+        CGPSDlg::gpsDlg->nmea.satellites2_bd.ClearSnr();
+        hasBd = true;
+      }
+			if (sv.chStatusInd & 0x30)
+			{
+        CGPSDlg::gpsDlg->m_bdgsaMsgCopy.SatelliteID[CGPSDlg::gpsDlg->m_bdgsaMsgCopy.FindId(sv.svid)] = sv.svid;
+			}
+      SnrTable snr(sigId, sv.cn0);
+      CGPSDlg::gpsDlg->nmea.satellites2_bd.SetSate2(sv.svid, NonUseValue, NonUseValue, snr);
+      CGPSDlg::gpsDlg->nmea.satellites2_bd.AddSnrSigId(sigId);
+    }
+    if(gs == NMEA::Glonass)
+    {
+      if(hasGl == false)
+      {
+        CGPSDlg::gpsDlg->nmea.satellites2_gl.ClearSnr();
+        hasGl = true;
+      }
+			if (sv.chStatusInd & 0x30)
+			{
+        CGPSDlg::gpsDlg->m_glgsaMsgCopy.SatelliteID[CGPSDlg::gpsDlg->m_glgsaMsgCopy.FindId(sv.svid)] = sv.svid + 64;
+			}
+      SnrTable snr(sigId, sv.cn0);
+      CGPSDlg::gpsDlg->nmea.satellites2_gl.SetSate2(sv.svid + 64, NonUseValue, NonUseValue, snr);
+      CGPSDlg::gpsDlg->nmea.satellites2_gl.AddSnrSigId(sigId);
+    }
+    if(gs == NMEA::Galileo)
+    {
+      if(hasGa == false)
+      {
+        CGPSDlg::gpsDlg->nmea.satellites2_ga.ClearSnr();
+        hasGa = true;
+      }
+			if (sv.chStatusInd & 0x30)
+			{
+        CGPSDlg::gpsDlg->m_gagsaMsgCopy.SatelliteID[CGPSDlg::gpsDlg->m_gagsaMsgCopy.FindId(sv.svid)] = sv.svid;
+			}
+      SnrTable snr(sigId, sv.cn0);
+      CGPSDlg::gpsDlg->nmea.satellites2_ga.SetSate2(sv.svid, NonUseValue, NonUseValue,  snr);
+      CGPSDlg::gpsDlg->nmea.satellites2_ga.AddSnrSigId(sigId);
+    }
+    if(gs == NMEA::Navic)
+    {
+      if(hasGi == false)
+      {
+        CGPSDlg::gpsDlg->nmea.satellites2_gi.ClearSnr();
+        hasGi = true;
+      }
+			if (sv.chStatusInd & 0x30)
+			{
+        CGPSDlg::gpsDlg->m_gigsaMsgCopy.SatelliteID[CGPSDlg::gpsDlg->m_gigsaMsgCopy.FindId(sv.svid)] = sv.svid;
+			}
+      SnrTable snr(sigId, sv.cn0);
+      CGPSDlg::gpsDlg->nmea.satellites2_gi.SetSate2(sv.svid, NonUseValue, NonUseValue,  snr);
+      CGPSDlg::gpsDlg->nmea.satellites2_gi.AddSnrSigId(sigId);
+    }
+	}
+	
+if(hasGp)
+  {
+    CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfMessage = 3;
+    CGPSDlg::gpsDlg->m_gpgsvMsgCopy.SequenceNum = 3;
+  }
+  if(hasBd)
+  {
+    CGPSDlg::gpsDlg->m_bdgsvMsgCopy.NumOfMessage = 3;
+    CGPSDlg::gpsDlg->m_bdgsvMsgCopy.SequenceNum = 3;
+  }
+  if(hasGa)
+  {
+    CGPSDlg::gpsDlg->m_gagsvMsgCopy.NumOfMessage = 3;
+    CGPSDlg::gpsDlg->m_gagsvMsgCopy.SequenceNum = 3;
+  }
+  if(hasGl)
+  {
+    CGPSDlg::gpsDlg->m_glgsvMsgCopy.NumOfMessage = 3;
+    CGPSDlg::gpsDlg->m_glgsvMsgCopy.SequenceNum = 3;
+  }
+  if(hasGi)
+  {
+    CGPSDlg::gpsDlg->m_gigsvMsgCopy.NumOfMessage = 3;
+    CGPSDlg::gpsDlg->m_gigsvMsgCopy.SequenceNum = 3;
+  }
 }
 
 void ShowReceiverNav(U08 *src, bool convertOnly, CString* pStr)

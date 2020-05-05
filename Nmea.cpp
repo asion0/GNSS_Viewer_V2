@@ -90,6 +90,63 @@ int NMEA::ParamInt(LPCSTR p, int first, int second, int defaultValue)
 	return 0;
 }
 
+U32 NMEA::ParamHexInt(LPCSTR p, int first, int second, int defaultValue)
+{
+	ASSERT(first <= second - 1);
+	int sign = 1;
+	if(p[first + 1]=='-')
+	{
+		++first;
+		sign = -1;
+	}
+	int value = defaultValue;
+	switch(second - first - 1)
+	{
+	case 0:
+		return defaultValue;
+	case 1:
+		value = Utility::LSB(p[first + 1]);
+		break;
+	case 2:
+		value = Utility::LSB(p[first + 1]) * 0x10 + Utility::LSB(p[first + 2]);
+		break;
+	case 3:
+		value = Utility::LSB(p[first + 1]) * 0x100 + Utility::LSB(p[first + 2]) * 0x10 + 
+			Utility::LSB(p[first + 3]);
+		break;
+	case 4:
+		value = Utility::LSB(p[first + 1]) * 0x1000 + Utility::LSB(p[first + 2]) * 0x100 + 
+			Utility::LSB(p[first + 3]) * 0x10 + Utility::LSB(p[first + 4]);
+		break;
+	case 5:
+		value = Utility::LSB(p[first + 1]) * 0x10000 + Utility::LSB(p[first + 2]) * 0x1000 + 
+			Utility::LSB(p[first + 3]) * 0x100 + Utility::LSB(p[first + 4]) * 0x10 + 
+			Utility::LSB(p[first + 5]);
+		break;
+	case 6:
+		value = Utility::LSB(p[first + 1]) * 100000 + Utility::LSB(p[first + 2]) * 0x10000 + 
+			Utility::LSB(p[first + 3]) * 0x1000 + Utility::LSB(p[first + 4]) * 0x100 + 
+			Utility::LSB(p[first + 5]) * 0x10 + Utility::LSB(p[first + 6]);
+		break;
+	case 7:
+		value = Utility::LSB(p[first + 1]) * 1000000 + Utility::LSB(p[first + 2]) * 0x100000 + 
+			Utility::LSB(p[first + 3]) * 0x10000 + Utility::LSB(p[first + 4]) * 0x1000 + 
+			Utility::LSB(p[first + 5]) * 0x100 + Utility::LSB(p[first + 6]) * 0x10 + 
+			Utility::LSB(p[first + 7]);
+		break;
+	case 8:
+		value = Utility::LSB(p[first + 1]) * 10000000 + Utility::LSB(p[first + 2]) * 0x1000000 + 
+			Utility::LSB(p[first + 3]) * 0x100000 + Utility::LSB(p[first + 4]) * 0x10000 + 
+			Utility::LSB(p[first + 5]) * 0x1000 + Utility::LSB(p[first + 6]) * 0x100 + 
+			Utility::LSB(p[first + 7]) * 0x10 + Utility::LSB(p[first + 8]);
+		break;
+	default:
+		ASSERT(FALSE);
+	}
+	return value * sign;
+	return 0;
+}
+
 char NMEA::ParamChar(LPCSTR p, int first, int second, char defaultValue)
 {
 	ASSERT(first == second - 2 || first == second - 1);
@@ -292,7 +349,7 @@ bool NMEA::GSVProc(GPGSV& rgsv, LPCSTR pt, int len)
 		(dotPos + 1) == 17 || (dotPos + 1) == 21) 
 	{
 		dotPos -= 1;
-    rgsv.signalId = ParamInt(pt, dot[dotPos], dot[dotPos + 1], 0);
+    rgsv.signalId = (U08)ParamHexInt(pt, dot[dotPos], dot[dotPos + 1], 0);
 	}
   else
   { //Old style
@@ -438,6 +495,19 @@ bool NMEA::VTGProc(GPVTG& rvtg, LPCSTR pt, int len)
 	rvtg.SpeedKnots = ParamFloat(pt, dot[4], dot[5], 0.0F);
 	rvtg.SpeedKmPerHur = ParamFloat(pt, dot[6], dot[7], 0.0F);
 	rvtg.Mode = (U08)ParamChar(pt, dot[8], dot[9], 0);
+	return true;
+}
+
+bool NMEA::THSProc(F32& trueHeading, LPCSTR pt, int len)
+{	
+	int dot[MaxNmeaParam] = {0};	    
+	int dotPos = ScanDot(pt, len, dot);
+	if(dot[0] != 6 || pt[len - 3] != '*')
+	{
+		return false;
+	}
+
+	trueHeading = ParamFloat(pt, dot[0], dot[1], 0.0F);
 	return true;
 }
 
@@ -680,6 +750,10 @@ NmeaType NMEA::MessageType(LPCSTR pt, int len)
 		{ "$GPVTG,", MSG_VTG },
 		{ "$GNVTG,", MSG_VTG },
 		{ "$GIVTG,", MSG_VTG },
+
+		{ "$GPTHS,", MSG_THS },
+		{ "$GNTHS,", MSG_THS },
+		{ "$GITHS,", MSG_THS },
 
 		{ "$GPGLL,", MSG_GLL },
 		{ "$GNGLL,", MSG_GLL },
@@ -925,6 +999,13 @@ void NMEA::ShowGPVTGmsg(GPVTG& vtg, LPCSTR pt, int len)
 {
 	firstGsaIn = false;
 	VTGProc(vtg,pt,len);
+  currentGsv = GsUnknown;
+}
+
+void NMEA::ShowGPTHSmsg(F32& trueHeading, LPCSTR pt, int len)
+{
+	firstGsaIn = false;
+	THSProc(trueHeading, pt, len);
   currentGsv = GsUnknown;
 }
 

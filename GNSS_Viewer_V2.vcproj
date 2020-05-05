@@ -3203,6 +3203,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CommonQueryDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CommonQueryDlg.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ConfigureIir.cpp"
 				>
 			</File>

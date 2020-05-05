@@ -252,7 +252,9 @@
 #define IDD_CFG_REGISTER                508
 #define IDD_DCDC_REGISTER               509
 #define IDD_CFG_V9_PWR_SAVE             510
+#define IDD_QRY_NMEA_STRING_INTV        511
 #define IDB_GI_ACT                      511
+#define IDD_CFG_NMEA_STRING_INTV        512
 #define IDB_GI_DIS                      512
 #define IDB_GP_SNR2_T                   513
 #define IDB_BD_GA_GI_SNR_T              514
@@ -269,6 +271,9 @@
 #define IDR_FTPCHECK                    525
 #define IDR_LZMA                        526
 #define IDR_V9_AT_SREC                  527
+#define IDB_RTK_INFO2_T                 528
+#define IDB_RTK_INFO2_B                 529
+#define IDB_TRUE_HEADING                530
 #define IDC_CONNECT                     1000
 #define IDC_CLOSE                       1001
 #define IDC_SETORIGIN                   1002
@@ -840,6 +845,7 @@
 #define IDC_1PPS_MONITOR_LBL_NOW_STD    1222
 #define IDC_TXT_LAT                     1222
 #define IDC_CHECK239                    1222
+#define IDC_NMEA_STR                    1222
 #define IDC_RADIO_PPS_NO_OUTPUT         1223
 #define IDC_CHECK240                    1223
 #define IDC_TXT_LON                     1224
@@ -1684,6 +1690,7 @@
 #define IDC_R_REG02                     1656
 #define IDC_NEW_FILENAME                1657
 #define IDC_GCNR                        1658
+#define IDC_QUERY                       1659
 #define IDC_CHECK_M3_00                 1710
 #define IDC_CHECK_M3_01                 1711
 #define IDC_CHECK_M3_02                 1712
@@ -2056,6 +2063,10 @@
 #define IDD_CFG_RF_IC2                  2686
 #define IDR_V9_IO_TESTER                2687
 #define IDD_RTK_ELE_CNR_MASK            2688
+#define IDC_RTK_INFO2_T                 2689
+#define IDC_RTK_INFO2_B                 2690
+#define IDC_TRUE_HEADING                2691
+#define IDC_TRUE_HEADING_T              2692
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_SYSTEM_RESTART               32811
@@ -2406,6 +2417,23 @@
 #define ID_CFG_RTK_ELE_CNR_MSK          33269
 #define ID_QUERY_SECURITY_TAG           33270
 #define ID_QUERY_SECURITY_TAG_ONLY      33271
+#define ID_PX100_EXT_BURNING            33272
+#define ID_CFG_CUSTOM_STR_INTVAL        33280
+#define ID_QRY_CUSTOM_STR_INTVAL        33281
+#define ID_QRY_GGA_STR_INTVAL           33282
+#define ID_QRY_GNS_STR_INTVAL           33283
+#define ID_QRY_GSA_STR_INTVAL           33284
+#define ID_QRY_GSV_STR_INTVAL           33285
+#define ID_QRY_GLL_STR_INTVAL           33286
+#define ID_QRY_RMC_STR_INTVAL           33287
+#define ID_QRY_VTG_STR_INTVAL           33288
+#define ID_QRY_ZDA_STR_INTVAL           33289
+#define ID_QRY_DTM_STR_INTVAL           33290
+#define ID_QRY_GBS_STR_INTVAL           33291
+#define ID_QRY_GRS_STR_INTVAL           33292
+#define ID_QRY_GST_STR_INTVAL           33293
+#define ID_QRY_THS_STR_INTVAL           33294
+#define ID_QRY_HDT_STR_INTVAL           33295
 
 // Next default values for new objects
 // 
@@ -2413,7 +2441,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        485
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1659
+#define _APS_NEXT_CONTROL_VALUE         1660
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

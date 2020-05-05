@@ -88,7 +88,7 @@
 // .91 Support Gaileo NMEA.
 // .92 Add binary message error detection.
 // .93 Add [Configure Binary Measurement Data Out] in Customer Release Version.
-// .94 Add Query/Configure Datum Index in Venus 8 menu.
+// .94 20140515 Add [Query / Configure Datum Index] in Venus 8 menu. Request from Andrew
 // .95 Add [Save Binary] in File menu, it can record any output from device.
 // .96 Fix [Save Binary] issue.
 // .97 Version and Boot Status in Information will be updated after user query them in menu.
@@ -464,6 +464,12 @@
 // .005 20200325 *Update v9DownloadLoaderAddTag-20200325154841.srec, detect prom size and add some download error message, request from Andrew
 // .005 20200407 Support UBX NAV-PVT and NAV_CLOCK message, request from Roger
 // .006 20200408 Support Gelileo RTCM1097 message and disable Configure / Query RTK Mode, request from forum user and Roger
+// .007 20200408 Support 0xE6, 0xE7, 0xE8 message and Add Configure RTK GLONASS Carrier-Phase Inter-Frequency Bias to Customer Release, request from Andrew and Oliver
+// .008 20200413 Modify Beidou signal string table, request from Andrew
+// .009 20200414 Player show unknown RTCM, request from Andrew
+// .009 20200415 Parsing GNTHS message, request from Oliver
+// .010 20200422 Add ProductionTest PX100, request from Alex
+// .011 20200428 Add NMEA String Interval menu functions, request from Andrew/Alex
 
 #define SW_FUN_DATALOG		        0x0001
 #define SW_FUN_AGPS				        0x0002
@@ -474,7 +480,7 @@
 //title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 #define APP_CAPTION				        "GNSS Viewer"
 #define APP_TITLE				          ""              //Internal Use, Customer Release, NMEA Player...
-#define APP_VERSION				        "2.1.006"
+#define APP_VERSION				        "2.1.011"
 #define APP_MODULE				        "Phoenix"
 
 #define	Sktyraq					          0x0000

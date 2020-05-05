@@ -854,7 +854,7 @@ int Utility::FindNextNoneSpaceChar(LPCSTR pszInput, bool forward)
 
 bool CheckHex(LPCSTR pszInput)
 {
-	for(const char* c=pszInput; *c!=0; ++c)
+	for(const char* c = pszInput; *c != 0; ++c)
 	{
 		if(*c >= '0' && *c <= '9')
 			continue;

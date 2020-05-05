@@ -68,6 +68,9 @@ bool CCompressDlg::NMEA_PROC(const char* buffer,int offset)
 	case MSG_VTG:
     nmea.ShowGPVTGmsg(msg_gpvtg,buffer,offset);
 		break;
+	//case MSG_THS:
+ //   nmea.ShowGPTHSmsg(m_fTrueHeading,buffer,offset);
+	//	break;
 	default :
 		break;
 	}

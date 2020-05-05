@@ -2200,7 +2200,7 @@ bool CGPSDlg::NewDownload(DownloadMode dm, int baufIdx, const CString& image)
     ::AfxMessageBox("Device no response!");
 	} 
   if(regData != 0xA5)
-	{
+	{ //Not Phoenix
     ::AfxMessageBox("Unsupported device!");
 	} 
   

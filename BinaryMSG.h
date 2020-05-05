@@ -11,8 +11,11 @@
 
 void ShowMeasurementChannel(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowSubframe(U08*src, bool convertOnly = false, CString* pStr = NULL);
+void ShowGeneralSubframe(U08*src, bool convertOnly = false, CString* pStr = NULL);
 void ShowMeasurementTime(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowMeasurementSv(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowMeasurementSvEleAzi(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowMeasurementGnssSv(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowReceiverNav(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowBinaryOutput(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowDjiBinaryOutput(U08* src, bool convertOnly = false, CString* pStr = NULL);
