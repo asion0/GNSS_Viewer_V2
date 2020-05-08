@@ -608,6 +608,7 @@ if(!m_isConnectOn)
 		break;
 	case 0xDF:  // RCV_STATE¡V Receiver navigation status (0xDF) (Periodic) 
 		ShowReceiverNav(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
+    ShowTime();
 		break;
 	case 0xE0:		// sub frame data
 	case 0xE1:		// sub frame data
@@ -885,6 +886,9 @@ U16 CGPSDlg::RtcmProc(U08* buffer, int len)
 	{
   case 1005:
     ShowRtcm1005(buffer);
+		break;
+  case 1033:
+    ShowRtcm1033(buffer);
 		break;
   case 1077:
     ShowRtcm1077(buffer, packetLen + 3);
@@ -11134,7 +11138,7 @@ void CGPSDlg::ParsingMessage(BOOL isPlayer)
 //nmea.ClearSatellites();
   mp.SetCancelTransmission((isPlayer) ? &g_nmeaInputTerminate : m_serial->GetCancelTransmissionPtr());
   mp.SetReadOneCharCallback((isPlayer) ? ReadFileOneChar : ReadSerialOneChar);
-  bool noE5Message = true;
+  bool sateShowed = true;
 	while(m_isConnectOn && (isPlayer || m_serial != NULL))
 	{
     if(m_nDoFlag && !isPlayer)
@@ -11167,7 +11171,17 @@ void CGPSDlg::ParsingMessage(BOOL isPlayer)
 		case StqBinary:
 			if(!ShowCommand(buffer, length))
 			{
-        U08 msgType = BinaryProc(buffer, length + 1);
+        U08 msgType = Cal_Checksum(buffer);
+          
+        if(msgType == 0xE5 && !sateShowed)
+        {
+            nmea.CopySatellites();
+		        Copy_NMEA_Memery();
+		        SetNmeaUpdated(true);
+            sateShowed = true;
+        }
+
+        BinaryProc(buffer, length + 1);
 			  if(msgType != BINMSG_ERROR)
         {
           if(lastType != type)
@@ -11176,25 +11190,24 @@ void CGPSDlg::ParsingMessage(BOOL isPlayer)
             lastType = type;
           }
 
-          if(msgType == 0xE5 && noE5Message)
+          if(msgType == 0xE5)
           {
-            noE5Message = false;
-          //  nmea.CopySatellites();
-		        //SetNmeaUpdated(true);
+            sateShowed = false;
           }
 
-          //if(msgType == 0xDE && noE5Message)
           if(msgType == 0xDE || msgType == 0xE8)
           {
             nmea.CopySatellites();
 		        Copy_NMEA_Memery();
 		        SetNmeaUpdated(true);
-            if(noE5Message)
-            {
-              nmea.ClearSatellites2();
-            }
+            sateShowed = true;
           }
- 
+          if(msgType == 0xDF)
+          { //0xDF doesn't have satellites info.
+		        Copy_NMEA_Memery();
+		        SetNmeaUpdated(true);
+          }
+
           switch(msgType)
           {
           case 0xDC:

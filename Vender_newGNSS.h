@@ -470,6 +470,9 @@
 // .009 20200415 Parsing GNTHS message, request from Oliver
 // .010 20200422 Add ProductionTest PX100, request from Alex
 // .011 20200428 Add NMEA String Interval menu functions, request from Andrew/Alex
+// .012 20200506 Fixed calc CRC bug when prom size > 1Mb , report from Andrew
+// .012 20200507 Modify 0xE5, 0xE7, 0xE8 parser, report from Oliver, Ken
+// .012 20200508 Support RTCM 1033 (Display only), request from Andrew
 
 #define SW_FUN_DATALOG		        0x0001
 #define SW_FUN_AGPS				        0x0002
@@ -480,7 +483,7 @@
 //title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 #define APP_CAPTION				        "GNSS Viewer"
 #define APP_TITLE				          ""              //Internal Use, Customer Release, NMEA Player...
-#define APP_VERSION				        "2.1.011"
+#define APP_VERSION				        "2.1.012"
 #define APP_MODULE				        "Phoenix"
 
 #define	Sktyraq					          0x0000

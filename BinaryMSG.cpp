@@ -815,7 +815,7 @@ void ExtRawMeasEf(U08* src, bool convertOnly, CString* pStr)
 		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
 	}
 
-	volatile U16 i_sec;
+	U16 i_sec;
 	i_sec = (U16)(utc.sec * 1000);
 
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Hour = utc.hour;
@@ -1504,6 +1504,22 @@ void ShowReceiverNav(U08 *src, bool convertOnly, CString* pStr)
     return;
   }
 
+  UtcTime utc;
+  UtcConvertGpsToUtcTime(receiver.wn, receiver.tow, &utc);
+	U16 i_sec;
+	i_sec = (U16)(utc.sec * 1000);
+
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Hour = utc.hour;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Min = utc.minute;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Sec = i_sec * 0.001f;
+
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Year = utc.year;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Month = utc.month;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Day = utc.day;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Hour = utc.hour;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Min = utc.minute;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Sec = i_sec * 0.001f;
+
   switch(receiver.nav_status)
 	{
 	case 0:
@@ -2010,6 +2026,92 @@ void ShowRtcm1005(U08* src, bool convertOnly, CString* pStr)
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude = lon_d * 100.0 + lon_m;
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude_E_W = (lla.lon >= 0) ? 'E' : 'W';
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Altitude = lla.alt - CGPSDlg::gpsDlg->m_gpggaMsgCopy.GeoidalSeparation;
+}
+
+void ShowRtcm1033(U08* src, bool convertOnly, CString* pStr)
+{
+  const int BufferSize = 48;
+  U16 satId = 0;
+  int pos = 12;
+  int ps = 0;
+
+  GetBitData(&src[3], pos, 12, (U08*)(&satId), sizeof(satId));
+  pos += 12;
+
+  U08 nCounter = 0; //Antenna Descriptor Counter N
+  GetBitData(&src[3], pos, 8, (U08*)(&nCounter), sizeof(nCounter));
+  pos += 8;
+
+  U08 antennaDescriptor[BufferSize] = { 0 };
+  ps = 3 + pos / 8;
+  for(int n = 0; n < nCounter; ++n)
+  {
+    antennaDescriptor[n] = src[ps + n];
+    pos += 8;
+  }
+
+  U08 setupId = 0; //Antenna Setup ID
+  GetBitData(&src[3], pos, 8, (U08*)(&setupId), sizeof(setupId));
+  pos += 8;
+
+  U08 mCounter = 0; //Antenna Serial Number Counter M
+  GetBitData(&src[3], pos, 8, (U08*)(&mCounter), sizeof(mCounter));
+  pos += 8;
+
+  U08 antennaSerialNumber[BufferSize] = { 0 };
+  ps = 3 + pos / 8;
+  for(int m = 0; m < nCounter; ++m)
+  {
+    antennaSerialNumber[m] = src[ps + m];
+    pos += 8;
+  }
+
+  U08 iCounter = 0; //Receiver Type Descriptor Counter I
+  GetBitData(&src[3], pos, 8, (U08*)(&iCounter), sizeof(iCounter));
+  pos += 8;
+
+  U08 receiverTypeDescriptor[BufferSize] = { 0 };
+  ps = 3 + pos / 8;
+  for(int i = 0; i < iCounter; ++i)
+  {
+    receiverTypeDescriptor[i] = src[ps + i];
+    pos += 8;
+  }
+
+  U08 jCounter = 0; //Receiver Firmware Version Counter J
+  GetBitData(&src[3], pos, 8, (U08*)(&jCounter), sizeof(jCounter));
+  pos += 8;
+
+  U08 receiverFirmwareVersion[BufferSize] = { 0 };
+  ps = 3 + pos / 8;
+  for(int j = 0; j < jCounter; ++j)
+  {
+    receiverFirmwareVersion[j] = src[ps + j];
+    pos += 8;
+  }
+
+  U08 kCounter = 0; //Receiver Serial Number Counter K
+  GetBitData(&src[3], pos, 8, (U08*)(&kCounter), sizeof(kCounter));
+  pos += 8;
+
+  U08 receiverSerialNumber[BufferSize] = { 0 };
+  ps = 3 + pos / 8;
+  for(int k = 0; k < kCounter; ++k)
+  {
+    receiverSerialNumber[k] = src[ps + k];
+    pos += 8;
+  }
+
+  strBuffer.Format("$Rtcm1033,staId=%d,n=%d,\"%s\",setupId=%d,m=%d,\"%s\",i=%d,\"%s\",j=%d,\"%s\",k=%d,\"%s\"",
+		satId, nCounter, antennaDescriptor, setupId, mCounter, antennaSerialNumber, 
+    iCounter, receiverTypeDescriptor, jCounter, receiverFirmwareVersion, kCounter, receiverSerialNumber);
+
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+
+	if(convertOnly)
+	{
+		return;
+	}
 }
 
 //typedef int SINT;

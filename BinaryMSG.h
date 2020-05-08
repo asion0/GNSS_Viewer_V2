@@ -22,6 +22,7 @@ void ShowDjiBinaryOutput(U08* src, bool convertOnly = false, CString* pStr = NUL
 void ExtRawMeas(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ExtRawMeasEf(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowRtcm1005(U08* src, bool convertOnly = false, CString* pStr = NULL);
+void ShowRtcm1033(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowRtcm1077(U08* src, int len, bool convertOnly = false, CString* pStr = NULL);
 void ShowRtcm1107(U08* src, int len, bool convertOnly = false, CString* pStr = NULL);
 void ShowRtcm1117(U08* src, int len, bool convertOnly = false, CString* pStr = NULL);

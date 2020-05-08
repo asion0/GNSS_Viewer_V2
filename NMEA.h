@@ -361,10 +361,10 @@ public:
 
   Satellites& operator = (const Satellites &ss)
   {
-    index = ss.index; 
-    inOrder= ss.inOrder; 
-    inOrder= ss.inOrder; 
-    signal= ss.signal; 
+    index = ss.index;
+    inOrder= ss.inOrder;
+    inOrder= ss.inOrder;
+    signal= ss.signal;
     for(int i = 0; i < MAX_SATELLITE; ++i)
     {
       sate[i] = ss.sate[i];
@@ -935,6 +935,7 @@ public:
     satellites_bd = satellites2_bd;
     satellites_ga = satellites2_ga;
     satellites_gi = satellites2_gi;
+    ClearSatellites2();
   }
   MyTimer  gpgsvTimer;
   MyTimer  glgsvTimer;

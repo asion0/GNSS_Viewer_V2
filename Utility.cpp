@@ -1025,6 +1025,16 @@ bool Utility::CalcFirmwareCrc(const CString& fwPath, int flashSize,
   crc32_16m = 0;
   crc32_8m = 0;
   checkSum = 0;
+
+  //if(fw.Size() <= oneMFlashSize)
+  //{
+
+  //}
+  //else
+  //{
+  //}
+
+
   for (int i = 0; i < fw.Size(); ++i)
   {
     crcM += fw[i];
@@ -1037,7 +1047,6 @@ bool Utility::CalcFirmwareCrc(const CString& fwPath, int flashSize,
   int oneMFlashSize = 1024 * 1024;
   if(flashSize == 0)
   {
-    //realFlashSize = (fw.Size() > 0xC0000) ? (2 * 1024 * 1024) : (1 * 1024 *1024);
     realFlashSize = 2 * 1024 * 1024;
   }
 
@@ -1047,7 +1056,7 @@ bool Utility::CalcFirmwareCrc(const CString& fwPath, int flashSize,
     crc32_16m += 0xFF;
   }
   crc32_8m = crc32_16m;
-  for (int i = oneMFlashSize; i < realFlashSize; ++i)
+  for (int i = (fw.Size() < oneMFlashSize) ? oneMFlashSize : fw.Size(); i < realFlashSize; ++i)
   {
     crcM += 0xFF;
     crc32_16m += 0xFF;
