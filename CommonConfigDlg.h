@@ -12,6 +12,7 @@ public:
 	virtual void DoCommand() = 0;
 	virtual INT_PTR DoDirect(int type);
 	virtual BOOL OnInitDialog();
+
 protected:
 	CButton *pCancelBtn;
 	CButton *pAcceptBtn;
@@ -614,13 +615,13 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CIqPlot 
-class CIqPlot : public CCommonConfigDlg
+// CIqPlotDlg 
+class CIqPlotDlg : public CCommonConfigDlg
 {
-	DECLARE_DYNAMIC(CIqPlot)
+	DECLARE_DYNAMIC(CIqPlotDlg)
 public:
-	CIqPlot(CWnd* pParent = NULL);   
-	virtual ~CIqPlot() {};
+	CIqPlotDlg(CWnd* pParent = NULL);   
+	virtual ~CIqPlotDlg() {};
 
 	virtual void DoCommand();
 	afx_msg void OnBnClickedOk();
@@ -636,7 +637,42 @@ protected:
 	static BOOL m_bEnable;
 
   afx_msg void GetGnssTypeAndChannelFromCombo();
-  afx_msg void CIqPlot::OnCbnSelChangeGnssChannel();
+  afx_msg void OnCbnSelChangeGnssChannel();
+  void SetComboFromGnssTypeAndChannel(bool setType, bool setChannel);
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CNtripClientDlg 
+class CNtripClientDlg : public CDialog
+{
+	DECLARE_DYNAMIC(CNtripClientDlg)
+public:
+	CNtripClientDlg(CWnd* pParent = NULL);   
+	virtual ~CNtripClientDlg() {};
+
+	//virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+	afx_msg void OnBnClickedExit();
+	afx_msg LRESULT OnNtripStatus(WPARAM wParam, LPARAM lParam);
+
+	//afx_msg void OnCbnSelChangeGnssType();
+  void UpdateStarus(BOOL isStop);
+
+	virtual BOOL OnInitDialog();
+
+	static CString m_host;
+	static int m_port;
+	static CString m_mountpoint;
+	static CString m_user;
+	static CString m_password;
+	static BOOL m_stopThread;
+  static CString m_ntripStatusMessage;
+
+protected:
+
+  afx_msg void GetGnssTypeAndChannelFromCombo();
+  afx_msg void OnCbnSelChangeGnssChannel();
   void SetComboFromGnssTypeAndChannel(bool setType, bool setChannel);
 
 	DECLARE_MESSAGE_MAP()
@@ -653,6 +689,8 @@ public:
 	virtual void DoCommand();
 	virtual BOOL OnInitDialog();
 	void SetDataNo(int n) { m_no = n; }
+ 	virtual INT_PTR DoDirect(int type);
+
 protected:
 	struct Point
 	{
@@ -767,7 +805,9 @@ public:
 	afx_msg void OnCbnSelChangeRoverOpt();
 
 	virtual BOOL OnInitDialog();
+ 	virtual INT_PTR DoDirect(int type);
   void SetCommandMode(CommandMode m) { cmdMode = m; };
+
 protected:
 	U08 m_rtkMode;
 	U08 m_baseOpt;
@@ -781,6 +821,72 @@ protected:
 	F32 m_mvbLength;
 	U08 m_attribute;
 	CommandMode cmdMode;
+  void AdjustUI();
+	void UpdateStatus();
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfigRtkFunctions 
+class CConfigRtkFunctions : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigRtkFunctions)
+public:
+	CConfigRtkFunctions(CWnd* pParent = NULL);
+	virtual ~CConfigRtkFunctions() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+	afx_msg void OnCbnSelChangeRtkMode();
+	afx_msg void OnCbnSelChangeBaseOpt();
+	afx_msg void OnCbnSelChangeRoverOpt();
+	afx_msg void OnCbnSelChangeBinaryType();
+  afx_msg void OnBnClickedField11();
+  afx_msg void OnBnClickedField12();
+  afx_msg void OnBnClickedField13();
+  afx_msg void OnBnClickedField14();
+	virtual BOOL OnInitDialog();
+ 	//virtual INT_PTR DoDirect(int type);
+
+protected:
+	U08 m_rtkMode;
+	U08 m_baseOpt;
+	U08 m_roverOpt;
+	U08 m_pkbOpt;
+	U32 m_srvValue1;
+	U32 m_srvValue2;
+	D64 m_sttValue1;
+	D64 m_sttValue2;
+	F32 m_sttValue3;
+	F32 m_mvbLength;
+
+  //Rtcm
+  U08 m_field2;
+	U08 m_field3;
+	U08 m_field4;
+	U08 m_field5;
+	U08 m_field6;
+	U08 m_field7;
+	U08 m_field8;
+	U08 m_field9;
+	U08 m_field10;
+  U08 m_field11;
+  U08 m_field12;
+  U08 m_field13;
+  U08 m_field14;
+  U16 cnstMode;
+  BOOL m_supportEph;
+
+  //Raw
+  U08 m_rate;
+	//U08 m_measTime;
+	//U08 m_rawMeas;
+	U08 m_svChStatus;
+	U08 m_rcvChStatus;
+	U08 m_extRawMeas;
+	U08 m_subFrame;
+
+	U08 m_attribute;
+
   void AdjustUI();
 	void UpdateStatus();
 	DECLARE_MESSAGE_MAP()
@@ -856,12 +962,12 @@ protected:
 };
 */
 // CConfigTimingCableDelay
-class CConfigTimingCableDelay : public CCommonConfigDlg
+class CConfigTimingCableDelayDlg : public CCommonConfigDlg
 {
-	DECLARE_DYNAMIC(CConfigTimingCableDelay)
+	DECLARE_DYNAMIC(CConfigTimingCableDelayDlg)
 public:
-	CConfigTimingCableDelay(CWnd* pParent = NULL);   
-	virtual ~CConfigTimingCableDelay() {};
+	CConfigTimingCableDelayDlg(CWnd* pParent = NULL);   
+	virtual ~CConfigTimingCableDelayDlg() {};
 
 	virtual void DoCommand();
 	afx_msg void OnBnClickedOk();
@@ -869,7 +975,27 @@ public:
 	virtual BOOL OnInitDialog();
 
 protected:
-	U32 m_delay;
+	U32 m_cableDelay;
+	U08 m_attribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CConfig1PpsPulseWidth
+class CConfig1PpsPulseWidthDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfig1PpsPulseWidthDlg)
+public:
+	CConfig1PpsPulseWidthDlg(CWnd* pParent = NULL);   
+	virtual ~CConfig1PpsPulseWidthDlg() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+
+	virtual BOOL OnInitDialog();
+
+protected:
+	U32 m_pulseWidth;
 	U08 m_attribute;
 
 	DECLARE_MESSAGE_MAP()
@@ -1079,6 +1205,10 @@ public:
 	virtual BOOL OnInitDialog();
 
   afx_msg void OnBnClickedField2();
+  afx_msg void OnBnClickedField11();
+  afx_msg void OnBnClickedField12();
+  afx_msg void OnBnClickedField13();
+  afx_msg void OnBnClickedField14();
 	afx_msg void OnBnClickedOk();
 protected:
 	U08 m_field2;
@@ -1090,8 +1220,14 @@ protected:
 	U08 m_field8;
 	U08 m_field9;
 	U08 m_field10;
+  U08 m_field11;
+  U08 m_field12;
+  U08 m_field13;
+  U08 m_field14;
 	U08 m_attribute;
   U16 cnstMode;
+  BOOL m_supportEph;
+  void UpdateUiByNumber(UINT txtId, UINT checkId);
 	void UpdateStatus();
 
 	DECLARE_MESSAGE_MAP()
@@ -1267,6 +1403,26 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
+// CConfigRtkKinematicBaud
+class CConfigRtkKinematicBaud : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigRtkKinematicBaud)
+public:
+	CConfigRtkKinematicBaud(CWnd* pParent = NULL);   
+	virtual ~CConfigRtkKinematicBaud() {};
+
+	virtual void DoCommand();
+	afx_msg void OnBnClickedOk();
+
+	virtual BOOL OnInitDialog();
+
+protected:
+	int m_rate;
+  int m_nAttribute;
+
+	DECLARE_MESSAGE_MAP()
+};
+
 // C1ppsOutputModeDlg
 class C1ppsOutputModeDlg : public CCommonConfigDlg
 {
@@ -1392,6 +1548,33 @@ protected:
 	afx_msg void OnEnChangeKey();
 
 	BinaryData m_keyData;
+
+	DECLARE_MESSAGE_MAP()
+};
+
+// CTrackingModuleParameterSettingDlg 
+class CTrackingModuleParameterSettingDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CTrackingModuleParameterSettingDlg)
+public:
+	CTrackingModuleParameterSettingDlg(CWnd* pParent = NULL);   
+	virtual ~CTrackingModuleParameterSettingDlg() {};
+
+  virtual void DoCommand();
+
+	afx_msg void OnBnClickedOk();
+	virtual BOOL OnInitDialog();
+
+protected:
+  U08 m_type;
+  U08 m_channel;
+  U08 m_svid;
+  U08 m_dll_gain;
+  U16 m_fll_gain;
+  U16 m_pll_c1_gain;
+  U08 m_pll_c2_gain;
+  U08 m_fll_mode;
+  U08 m_divider;
 
 	DECLARE_MESSAGE_MAP()
 };
@@ -1566,3 +1749,22 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
+class ConfigureNmeaTalkerIdDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(ConfigureNmeaTalkerIdDlg)
+public:
+  enum { NmeaStringSize = 3 };
+
+	ConfigureNmeaTalkerIdDlg(CWnd* pParent = NULL);   
+	virtual ~ConfigureNmeaTalkerIdDlg() {};
+
+	virtual void DoCommand();
+	virtual BOOL OnInitDialog();
+
+	afx_msg void OnBnClickedOk();
+
+protected:
+	U08 m_talker;
+  U08 m_attribute;
+	DECLARE_MESSAGE_MAP()
+};

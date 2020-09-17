@@ -473,6 +473,35 @@
 // .012 20200506 Fixed calc CRC bug when prom size > 1Mb , report from Andrew
 // .012 20200507 Modify 0xE5, 0xE7, 0xE8 parser, report from Oliver, Ken
 // .012 20200508 Support RTCM 1033 (Display only), request from Andrew
+// .013 20200604 Add Host Data Dump On/Off, request from Andrew/Jason
+// .014 20200605 Fixed cycle slip display, report from Ken
+// .015 20200608 Remove QZSS 1 - 3 restriction, request from Ken
+// .016 20200611 Max Geo-Fencing number to 16, request from Andrew
+// .016 20200611 Add PROUCTION_TEST_200611 for Angus production, request from Oliver
+// .017 20200611 Add PSTI007 for Geo-Fencing, request from Andrew
+// .018 20200611 Modify Query Geofecing Data timeout, request from Andrew
+// .019 20200617 Add Query RTC in Utility menu for Developer version, request from Ming-Jen
+// .020 20200620 Fix RTCM decode issue, report from Ken
+// .021 20200621 Use QueryGnssConstellationType in Configure RTCM dialg, report from Ken
+// .022 20200622 Fixed player bug when only GLRMC, report from Ken
+// .023 20200629 Fixed timeout issue, report from Andrew
+// .024 20200707 Adjust time out for ROM mode at 9600 bps, report from Jason
+// .025 20200708 Add [Query / Configure RTK Precisely Kinematic Base serial port baud rate] commands, report from Andrew
+// .026 20200804 Add datum "CGCS2000" as index 221, request from Andrew
+// .026 20200805 Support 0xE9 time stamp when raw output, request from Andrew, Oliver
+// .026 20200811 Change IQ Plot GALILEO GAL-E5b channel from 3 to 2, request from Eric
+// .026 20200811 Add [Configure Tracking Module Parameter Setting], request from Iyan and Andrew
+// .026 20200811 SkyTraq raw message 0xE5 doesn't use for draw earth and snr, request Andrew when multi-Hz
+// .027 20200812 Change [Configure 1PPS Pulse Width] range from (1~100000) to (1000~500000), request Ken
+// .028 20200813 Different spec on [Configure 1PPS Pulse Width] and [Configure Cable Delay] for SWID Developer version, request Ken / Jason
+// .029 20200828 Modify [Configure / Query RTCM Measurement Data Out] for RTCM ephemeris, request from Yu-Hsien and Andrew
+// .029 20200828 Add [Configure RTK Functions] in RTK menu, request from Ken
+// .030 20200828 Supports show 33 satellites in a row of SNR chart, request from Ken
+// .030 20200828 Supports continuous GSA (supports more than 12 sates in use), request from Ken
+// .031 20200902 Modify [Configure Tracking Module Parameter Setting] UI, request from Iyan
+// .033 20200903 Modify [Configure Tracking Module Parameter Setting] UI, request from Iyan
+// .034 20200908 Fixed Configure Mode to base mode, parser will stop issue, request from Ken
+// .035 20200909 Add NTRIP function, request from Oliver
 
 #define SW_FUN_DATALOG		        0x0001
 #define SW_FUN_AGPS				        0x0002
@@ -483,7 +512,7 @@
 //title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 #define APP_CAPTION				        "GNSS Viewer"
 #define APP_TITLE				          ""              //Internal Use, Customer Release, NMEA Player...
-#define APP_VERSION				        "2.1.012"
+#define APP_VERSION				        "2.1.035"
 #define APP_MODULE				        "Phoenix"
 
 #define	Sktyraq					          0x0000
@@ -539,7 +568,6 @@
 //Type 2 - GP: 1~85; BD: others
 //Type 3 - GL: 65~96; GP: 1~64, 183~188, 193~200; BD: others; Don't care GPS_183_188 flag.
 #define NMEA_PRN_TYPE			        0
-
 #define TIMING_MONITORING		      1
 #define TIMING_OUTPUT_ALIGN		    1
 #define	SHOW_ERROR_NMEA_NOTIFY	  0
@@ -554,9 +582,10 @@
 #define RAW_MENU				          1		//Show RAW menu 20161201 request from Ryan
 #define RTK_MENU				          1		//Show RTK menu
 #define INS_DR_MENU				        1	  //Show INS_DR menu
-#define EXTRA_WIDE                0   //Window has extra wide size
+#define EXTRA_WIDE                1   //Window has extra wide size
 #if (EXTRA_WIDE)
- #define CLIENT_WIDTH			        1108	//Viewer window client width
+ #define EXTRAS_WIDE_SIZE         4
+ #define CLIENT_WIDTH			        (1008 + EXTRAS_WIDE_SIZE)	//Viewer window client width
 #else
  #define CLIENT_WIDTH			        1008	//Viewer window client width
 #endif
@@ -592,6 +621,7 @@
 #define _NEIL_TEMP_VER_           0
 #define SHOW_RF_CONFIG            0   //For SWID show RF Configuration
 #define NO_PHOENIX_MENU           0   //For SWID 
+#define PROUCTION_TEST_200611     0   //For Angus production test in 2020/06/11 
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -1107,7 +1137,7 @@
  #undef TIMING_MODE
  #undef NMEA_INPUT
  #undef SHOW_ERROR_NMEA_NOTIFY
- #undef CLIENT_WIDTH
+ //#undef CLIENT_WIDTH
  #undef CLIENT_HEIGHT
  #undef _MORE_INFO_
  #undef _TAB_LAYOUT_
@@ -1120,7 +1150,7 @@
  #define TIMING_MODE			          1
  #define NMEA_INPUT				          1
  #define SHOW_ERROR_NMEA_NOTIFY     1
- #define CLIENT_WIDTH			          1008	
+ //#define CLIENT_WIDTH			          1008
  #define CLIENT_HEIGHT			        614
  #define _MORE_INFO_			          0		//Please define _MORE_INFO_ in resource preprocessor for rc2.
  #define _TAB_LAYOUT_			          1		//Please define _TAB_LAYOUT_ in resource preprocessor for rc2.

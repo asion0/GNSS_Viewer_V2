@@ -102,6 +102,7 @@
 #define IDR_GNSS_PRELOADER_57600        348
 #define IDD_CON_NMEA_TALKER             349
 #define IDR_GNSS_PRELOADER_115200       349
+#define IDD_CFG_NMEA_TALKER             349
 #define IDD_IQIBLA_TEST                 350
 #define IDR_GNSS_PRELOADER_230400       350
 #define IDD_CON_PROPRIETARY             351
@@ -154,6 +155,7 @@
 #define IDR_GNSS_CREATETAG_SREC_115200  403
 #define IDR_GNSS_REMOVETAG_SREC_115200  404
 #define IDD_CONFIG_1PPS_PULSE_WIDTH     405
+#define IDD_CFG_1PPS_PULSE_WIDTH        405
 #define IDD_CFG_INF_DTE_CTRL            406
 #define IDD_CFG_NMBI_OUT_DES            407
 #define IDD_CFG_PARAM_SEARCH_ENG_NUM    408
@@ -238,7 +240,7 @@
 #define IDD_HOSTLOG                     494
 #define IDB_ALTITUDE2                   495
 #define IDD_CFG_RTK_REF_POSITION        496
-#define IDD_CONFIG_RTCM_MEA_DAT_OUT     497
+#define IDD_CFG_RTCM_MEA_DAT_OUT        497
 #define IDD_DR_TEST                     498
 #define IDD_SAVE_BINARY_NOPARSING       499
 #define IDD_CFG_SBAS2                   500
@@ -274,6 +276,8 @@
 #define IDB_RTK_INFO2_T                 528
 #define IDB_RTK_INFO2_B                 529
 #define IDB_TRUE_HEADING                530
+#define IDD_CFG_TM_PM_SETTING           531
+#define IDD_NTRIP_CLIENT                532
 #define IDC_CONNECT                     1000
 #define IDC_CLOSE                       1001
 #define IDC_SETORIGIN                   1002
@@ -682,6 +686,7 @@
 #define IDC_BINARY_ATTRI2               1155
 #define IDC_TIGGER_MODE                 1155
 #define IDC_CHECK172                    1155
+#define IDC_CABLE_DELAY                 1155
 #define IDC_1PPS_CABLE_ATTRI            1156
 #define IDC_CHECK173                    1156
 #define IDC_RADIO_DOP_AUTO              1157
@@ -807,6 +812,7 @@
 #define IDC_NMEA_COM_ATTR2              1208
 #define IDC_RDO_ACQUISITION_BINARY      1208
 #define IDC_CHECK225                    1208
+#define IDC_TALKER                      1208
 #define IDC_DETECT_ANTENNA              1209
 #define IDC_RDO_ACQUISITION_ASCII       1209
 #define IDC_CHECK226                    1209
@@ -920,6 +926,7 @@
 #define IDC_PKB_OPT_FUN                 1245
 #define IDC_CHECK262                    1245
 #define IDC_CHECK263                    1246
+#define IDC_BINARY_TYPE                 1246
 #define IDC_CHECK264                    1247
 #define IDC_CHECK265                    1248
 #define IDC_CHECK266                    1249
@@ -977,12 +984,16 @@
 #define IDC_CHANNEL                     1271
 #define IDC_COMPORT_T                   1272
 #define IDC_CHECK289                    1272
+#define IDC_DLL_GAIN                    1272
 #define IDC_BAUDRATE_T                  1273
 #define IDC_CHECK290                    1273
+#define IDC_FLL_GAIN                    1273
 #define IDC_OPEN_CLOSE_T                1274
 #define IDC_CHECK291                    1274
+#define IDC_PLL_C1_GAIN                 1274
 #define IDC_MESSAGE_T                   1275
 #define IDC_CHECK292                    1275
+#define IDC_PLL_C2_GAIN                 1275
 #define IDC_RESPONSE_T                  1276
 #define IDC_CHECK293                    1276
 #define IDC_COORDINATE_T                1277
@@ -1065,12 +1076,16 @@
 #define IDC_FIELD10                     1311
 #define IDC_SLIDER10                    1312
 #define IDC_PLAY_CONTROL                1312
+#define IDC_FIELD11                     1312
 #define IDC_SLIDER11                    1313
 #define IDC_BINSIZE_DELAY               1313
+#define IDC_FIELD12                     1313
 #define IDC_SLIDER12                    1314
 #define IDC_BOOST_BAUDRATE              1314
+#define IDC_FIELD13                     1314
 #define IDC_BOOT_STATUS_T               1315
 #define IDC_AUTO_QUERY_VERSION          1315
+#define IDC_FIELD14                     1315
 #define IDC_SW_VER_T                    1316
 #define IDC_WARNING                     1316
 #define IDC_AUTO_QUERY_VERSION2         1316
@@ -1212,6 +1227,9 @@
 #define IDC_WRITE14                     1369
 #define IDC_SLAVE_T                     1370
 #define IDC_WRITE15                     1370
+#define IDC_SVID3                       1370
+#define IDC_DIVIDER                     1370
+#define IDC_PASSWORD                    1370
 #define IDC_ADD1                        1371
 #define IDC_WRITE16                     1371
 #define IDC_WRITE17                     1372
@@ -1539,8 +1557,11 @@
 #define IDC_INTERVAL                    1579
 #define IDC_R_REG1                      1580
 #define IDC_TITLE4                      1580
+#define IDC_INTERVAL2                   1580
 #define IDC_R_REG2                      1581
+#define IDC_INTERVAL3                   1581
 #define IDC_R_REG3                      1582
+#define IDC_INTERVAL4                   1582
 #define IDC_R_REG4                      1583
 #define IDC_R_REG5                      1584
 #define IDC_R_REG6                      1585
@@ -1691,6 +1712,20 @@
 #define IDC_NEW_FILENAME                1657
 #define IDC_GCNR                        1658
 #define IDC_QUERY                       1659
+#define IDC_STATIC11                    1660
+#define IDC_STATIC21                    1661
+#define IDC_STATIC31                    1662
+#define IDC_STATIC14                    1663
+#define IDC_STATIC41                    1663
+#define IDC_STATIC6                     1664
+#define IDC_STATIC7                     1665
+#define IDC_STATIC8                     1666
+#define IDC_STATIC9                     1667
+#define IDC_MOUNTPOINT                  1668
+#define IDC_USER                        1669
+#define IDC_EXIT                        1670
+#define IDC_MSG                         1671
+#define IDC_PROG                        1672
 #define IDC_CHECK_M3_00                 1710
 #define IDC_CHECK_M3_01                 1711
 #define IDC_CHECK_M3_02                 1712
@@ -1917,8 +1952,8 @@
 #define IDC_CHECK_MV_31                 2341
 #define IDD_RTK_GL_CPIF_BIAS            2342
 #define IDC_CHECK_M8_00                 2342
-#define IDD_CFG_CPU_BOOST_MODE          2343
 #define IDC_CHECK_M8_01                 2343
+#define IDD_CFG_CPU_BOOST_MODE          2343
 #define IDR_V8_IO_TESTER                2344
 #define IDC_CHECK_M8_02                 2344
 #define IDD_CFG_IIR                     2345
@@ -2067,6 +2102,8 @@
 #define IDC_RTK_INFO2_B                 2690
 #define IDC_TRUE_HEADING                2691
 #define IDC_TRUE_HEADING_T              2692
+#define IDD_RTK_KINEMATIC_BAUD          2693
+#define IDD_RTK_CFG_FUNCTIONS           2694
 #define ID_FILE_EXIT                    32775
 #define ID_HELP_ABOUT                   32776
 #define ID_SYSTEM_RESTART               32811
@@ -2434,14 +2471,29 @@
 #define ID_QRY_GST_STR_INTVAL           33293
 #define ID_QRY_THS_STR_INTVAL           33294
 #define ID_QRY_HDT_STR_INTVAL           33295
+#define ID_HOST_DATA_DUMP_ON            33296
+#define ID_HOST_DATA_DUMP_OFF           33297
+#define ID_QUERY_PSTI007                33298
+#define ID_CONFIG_PSTI007               33299
+#define ID_CLEAR_GEOFENCE_ALL           33300
+#define ID_CLEAR_GEOFENCE1              33301
+#define ID_CLEAR_GEOFENCE2              33302
+#define ID_CLEAR_GEOFENCE3              33303
+#define ID_CLEAR_GEOFENCE4              33304
+#define ID_QUERY_RTC                    33305
+#define ID_CFG_RTK_PKB_BAUD             33306
+#define ID_QRY_RTK_PKB_BAUD             33307
+#define ID_CFG_TM_PARAM_SETTING         33308
+#define ID_CONFIG_RTK_FUNCTIONS         33309
+#define ID_NTRIP_CLIENT                 33310
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        485
+#define _APS_NEXT_RESOURCE_VALUE        486
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1660
+#define _APS_NEXT_CONTROL_VALUE         1673
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

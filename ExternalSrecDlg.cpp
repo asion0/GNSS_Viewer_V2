@@ -14,6 +14,7 @@ CExternalSrecDlg::CExternalSrecDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CExternalSrecDlg::IDD, pParent)
 {
   m_isV6 = false;
+  m_isUseBin = false;
 }
 
 CExternalSrecDlg::~CExternalSrecDlg()
@@ -88,7 +89,7 @@ void CExternalSrecDlg::OnBnClickedGo()
 		}
 	}
   m_isV6 = ((CButton*)GetDlgItem(IDC_V6))->GetCheck() != 0;
-  m_isV6 = ((CButton*)GetDlgItem(IDC_USE_BIN))->GetCheck() != 0;
+  m_isUseBin = ((CButton*)GetDlgItem(IDC_USE_BIN))->GetCheck() != 0;
 
 
 	CString externalSrecFile;
@@ -96,9 +97,8 @@ void CExternalSrecDlg::OnBnClickedGo()
 
   BinaryData srec;
 	srec.ReadFromFile(externalSrecFile);
-	//if(!DownloadLoader(externalSrecFile, true))
-//	if(!CGPSDlg::gpsDlg->DownloadLoader2(true, false, srec))
-	if(!CGPSDlg::gpsDlg->DownloadLoader2(false, false, srec))
+
+	if(!CGPSDlg::gpsDlg->DownloadLoader3(CGPSDlg::ExternalLoader0x644F, TRUE, srec, NULL))
 	{
 		return;
 	}

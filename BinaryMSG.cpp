@@ -494,7 +494,7 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
   bool hasGa = false;
   bool hasBd = false;
   bool hasGi = false;
-  
+
   if(nmeas != 0)
   {
     ExtMeasChannelData channel = { 0 };
@@ -506,6 +506,7 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
     strBuffer.Format("-----------+----+-----+-----+---+--------------+----------------+-------+------+-------+------+------+");
     DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
     CGPSDlg::gpsDlg->m_psti033B.numCycleSlippedTotal = 0;
+
 	  for (int i = 0; i < nmeas; ++i)
 	  {
 		  ptr = decode_1bytes(ptr, &channel.typeNsingel);
@@ -546,7 +547,8 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
 	    {
 		    continue;
 	    }
-
+      //For multi-Hz raw data output display issue, support 0xE5 will display error in multi-hz
+return;
       U08 sigId;
       NMEA::GNSS_System gs = NMEA::GsUnknown;
       GetGnssTypeAndSignalId(channel.typeNsingel, gs, sigId);
@@ -631,20 +633,31 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
         if(hasGp == false)
         {
           CGPSDlg::gpsDlg->nmea.satellites2_gp.ClearSnr();
+          CGPSDlg::gpsDlg->nmea.satellites2_gp.ClearChannelInd();
           hasGp = true;
         }
         SnrTable snr(sigId, channel.cn0, channel.chInd);
+        if(channel.chInd & 0x08)
+        {
+          CGPSDlg::gpsDlg->nmea.satellites2_gp.AddChannelInd(channel.svid);
+        }
         CGPSDlg::gpsDlg->nmea.satellites2_gp.SetSate2(channel.svid, NonUseValue, NonUseValue, snr);
         CGPSDlg::gpsDlg->nmea.satellites2_gp.AddSnrSigId(sigId);
+
       }
       if(gs == NMEA::Beidou)
       {
         if(hasBd == false)
         {
           CGPSDlg::gpsDlg->nmea.satellites2_bd.ClearSnr();
+          CGPSDlg::gpsDlg->nmea.satellites2_bd.ClearChannelInd();
           hasBd = true;
         }
         SnrTable snr(sigId, channel.cn0, channel.chInd);
+        if(channel.chInd & 0x08)
+        {
+          CGPSDlg::gpsDlg->nmea.satellites2_bd.AddChannelInd(channel.svid);
+        }
         CGPSDlg::gpsDlg->nmea.satellites2_bd.SetSate2(channel.svid, NonUseValue, NonUseValue, snr);
         CGPSDlg::gpsDlg->nmea.satellites2_bd.AddSnrSigId(sigId);
       }
@@ -653,9 +666,14 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
         if(hasGl == false)
         {
           CGPSDlg::gpsDlg->nmea.satellites2_gl.ClearSnr();
+          CGPSDlg::gpsDlg->nmea.satellites2_gl.ClearChannelInd();
           hasGl = true;
         }
         SnrTable snr(sigId, channel.cn0, channel.chInd);
+        if(channel.chInd & 0x08)
+        {
+          CGPSDlg::gpsDlg->nmea.satellites2_gl.AddChannelInd(channel.svid);
+        }
         CGPSDlg::gpsDlg->nmea.satellites2_gl.SetSate2(channel.svid + 64, NonUseValue, NonUseValue, snr);
         CGPSDlg::gpsDlg->nmea.satellites2_gl.AddSnrSigId(sigId);
       }
@@ -664,9 +682,14 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
         if(hasGa == false)
         {
           CGPSDlg::gpsDlg->nmea.satellites2_ga.ClearSnr();
+          CGPSDlg::gpsDlg->nmea.satellites2_ga.ClearChannelInd();
           hasGa = true;
         }
         SnrTable snr(sigId, channel.cn0, channel.chInd);
+        if(channel.chInd & 0x08)
+        {
+          CGPSDlg::gpsDlg->nmea.satellites2_ga.AddChannelInd(channel.svid);
+        }
         CGPSDlg::gpsDlg->nmea.satellites2_ga.SetSate2(channel.svid, NonUseValue, NonUseValue,  snr);
         CGPSDlg::gpsDlg->nmea.satellites2_ga.AddSnrSigId(sigId);
       }
@@ -675,9 +698,14 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
         if(hasGi == false)
         {
           CGPSDlg::gpsDlg->nmea.satellites2_gi.ClearSnr();
+          CGPSDlg::gpsDlg->nmea.satellites2_gi.ClearChannelInd();
           hasGi = true;
         }
         SnrTable snr(sigId, channel.cn0, channel.chInd);
+        if(channel.chInd & 0x08)
+        {
+          CGPSDlg::gpsDlg->nmea.satellites2_gi.AddChannelInd(channel.svid);
+        }
         CGPSDlg::gpsDlg->nmea.satellites2_gi.SetSate2(channel.svid, NonUseValue, NonUseValue,  snr);
         CGPSDlg::gpsDlg->nmea.satellites2_gi.AddSnrSigId(sigId);
       }
@@ -900,6 +928,21 @@ void ShowGeneralSubframe(U08 *src, bool convertOnly, CString* pStr)
  //   tmpBuff.Format("%02X ", src[4+i]);
 	//	strBuffer += tmpBuff;
 	//}
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+}
+
+void ShowBinaryTimeStamp(U08 *src, bool convertOnly, CString* pStr)
+{
+	U08 msgType = src[4];
+	CString subFrameType;
+
+	subFrameType = "TIME_STAMP(0xE9)";
+
+	U08 version = src[5];
+	U16 wn = ConvertLeonU16(src + 6);
+	D64 tow = ConvertLeonDouble(src + 8);
+
+  strBuffer.Format("$%s,VER=%d,WN=%d,TOW=%f", subFrameType, version, wn, tow);
   DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
 }
 
@@ -1554,8 +1597,14 @@ void ShowReceiverNav(U08 *src, bool convertOnly, CString* pStr)
 	pos.py = receiver.ecef_y;
 	pos.pz = receiver.ecef_z;
 
+//Alex Debug
+ // pos.px = -2362161.5270503676;
+	//pos.py = 5376223.183230296;
+	//pos.pz = 2481200.8335405095;
+
 	LLA_T lla;
 	CooCartesianToGeodetic(&pos, &lla);
+  //CooCartesianToGeodetic(pos.px, pos.py, pos.pz, lla.lat, lla.lon, lla.alt);
 
 	lla.lat *= R2D;
 	lla.lon *= R2D;
@@ -2114,383 +2163,110 @@ void ShowRtcm1033(U08* src, bool convertOnly, CString* pStr)
 	}
 }
 
-//typedef int SINT;
-//U32 EBIT_extract_1bit_from_bytes( const U08 bytes[], SINT ndx )
-//{
-//  SINT byte_ndx = ndx>>3;
-//  SINT bit_ndx  = ndx&0x7;
-//  if( bytes[byte_ndx] & (0x1<<(7-bit_ndx)) )
-//    return 1;
-//  return 0;
-//}
-//
-////---------------------------------------------------------
-//U32 EBIT_extract_unsigned_from_bytes( const U08 bytes[], SINT start_ndx, SINT nbits )
-//{
-//  assert( (nbits > 0) && (nbits <= 32) );
-//
-//  SINT start_byte_ndx = start_ndx>>3;
-//  SINT bit_ndx  = start_ndx&0x7;
-//  SINT nbytes_to_proc = (bit_ndx + nbits + 7) >> 3;
-//  SINT the_last_bit_ndx = (start_ndx + nbits - 1)&0x7;
-//
-//  U32 out = 0;
-//  int i;
-//  for( i=0; i<nbytes_to_proc; i++ )
-//  {
-//    if( i == (nbytes_to_proc-1) && the_last_bit_ndx != 7 )
-//    {
-//      out <<= (the_last_bit_ndx+1);
-//      out |= bytes[start_byte_ndx+i] >> (7-the_last_bit_ndx);
-//    }
-//    else
-//    {
-//      out <<= 8;
-//      out |= bytes[start_byte_ndx+i];
-//    }
-//  }
-//  if( nbits < 32 )
-//    out &= 0xFFFFFFFF>>(32-nbits);
-//
-//  return out;
-//}
-//
-////---------------------------------------------------------
-//S32 EBIT_extract_signed_from_bytes( const U08 bytes[], SINT start_ndx, SINT nbits )
-//{
-//  S32 out = (S32) EBIT_extract_unsigned_from_bytes( bytes, start_ndx, nbits );
-//  if( nbits < 32 )
-//  {
-//    out <<= 32-nbits;
-//    out >>= 32-nbits;
-//  }
-//  return out;
-//}
-//
-////---------------------------------------------------------
-//U64 EBIT_extract_unsigned_64bits_from_bytes( const U08 bytes[], SINT start_ndx, SINT nbits )
-//{
-//  assert( (nbits > 0) && (nbits <= 64) );
-//
-//  if( nbits <= 32 )
-//    return (U64)EBIT_extract_unsigned_from_bytes( bytes, start_ndx, nbits );
-//
-//  SINT nbits_word0 = nbits-32;
-//  U32 word0 = EBIT_extract_unsigned_from_bytes( bytes, start_ndx, nbits_word0 );
-//  U32 word1 = EBIT_extract_unsigned_from_bytes( bytes, start_ndx+nbits_word0, 32 );
-//
-//  return ((U64)word0<<32) | word1;
-//}
-//
-////---------------------------------------------------------
-//S64 EBIT_extract_signed_64bits_from_bytes( const U08 bytes[], SINT start_ndx, SINT nbits )
-//{
-//  assert( (nbits > 0) && (nbits <= 64) );
-//
-//  if( nbits <= 32 )
-//    return (S64)EBIT_extract_signed_from_bytes( bytes, start_ndx, nbits );
-//
-//  S64 out = (S64) EBIT_extract_unsigned_64bits_from_bytes( bytes, start_ndx, nbits );
-//  if( nbits < 64 )
-//  {
-//    out <<= 64-nbits;
-//    out >>= 64-nbits;
-//  }
-//  return out;
-//}
-////---------------------------------------------------------
-//// EBIT_WORD_extract_unsigned_bits: input a word (not an array) and get a U32
-////         result.
-//// Input:
-////     word[] - data word array
-////     start_pos - the specified start position in word[].
-////     nbits - amount of get bits
-//// Output: None
-//// Return: U32 data
-//// Notice: check the usage
-////         start_pos nbits
-////              v    v
-////     (word)|--------|
-////---------------------------------------------------------
-//U32 EBIT_WORD_extract_unsigned_bits( const U32 word, SINT start_pos, SINT nbits )
-//{
-//  U32 temp = word;
-//  temp <<= start_pos;
-//  temp >>= 32-nbits;
-//
-//  return temp;
-//}
-//
-////---------------------------------------------------------
-//// EBIT_WORD_extract_signed_bits: input a word (not an array) and get a S32
-////         result.
-////
-//// Input:
-////     word[] - data word array
-////     start_pos - the specified start position in word[].
-////     nbits - amount of get bits
-//// Output: None
-//// Return: S32 data
-//// Notice: check the usage
-////         start_pos nbits
-////              v    v
-////     (word)|--------|
-////--------------------------------------------------------
-//S32 EBIT_WORD_extract_signed_bits( const U32 word, SINT start_pos, SINT nbits )
-//{
-//  S32 temp = (S32)word;
-//  temp <<= start_pos;
-//  temp >>= 32-nbits;
-//
-//  return temp;
-//}
-//
-////---------------------------------------------------------
-//// EBIT_WORD_extract_unsigned_bits_cross_words: input a word array and get a U32
-////         result.
-////
-//// Input:
-////     word[] - data word array
-////     start_pos - the specified start position in word[].
-////     nbits - amount of get bits
-//// Output: None
-//// Return: U32 data
-//// Notice: check the usage
-////         start_pos   nbits
-////             v         v
-////  (word0)|--------|--------|(word1)
-////--------------------------------------------------------
-//U32 EBIT_WORD_extract_unsigned_bits_cross_words( const U32 word[],
-//        SINT start_pos, SINT nbits )
-//{
-//  U32 temp1, temp2 = 0;
-//  SINT nbits_word1 = 32 - start_pos;
-//  SINT nbits_word2 = nbits - nbits_word1;
-//  temp1 = EBIT_WORD_extract_unsigned_bits( *(word), start_pos, nbits_word1 );
-//  temp2 = EBIT_WORD_extract_unsigned_bits( *(word+1), 0, nbits_word2 );
-//
-//  return (temp1 << nbits_word2) | (temp2);
-//}
-//
-////---------------------------------------------------------
-//// EBIT_WORD_extract_signed_bits_cross_words: input a word array and get a S32
-////         result.
-//// Input:
-////     word[] - data word array
-////     start_pos - the specified start position in word[].
-////     nbits - amount of get bits
-//// Output: None
-//// Return: S32 data
-//// Notice: check the usage
-////         start_pos   nbits
-////             v         v
-////  (word0)|--------|--------|(word1)
-////--------------------------------------------------------
-//S32 EBIT_WORD_extract_signed_bits_cross_words( const U32 word[],
-//        SINT start_pos, SINT nbits )
-//{
-//  U32 temp1, temp2 = 0;
-//  SINT nbits_word1 = 32 - start_pos;
-//  SINT nbits_word2 = nbits - nbits_word1;
-//  temp1 = EBIT_WORD_extract_unsigned_bits( *(word), start_pos, nbits_word1 );
-//  temp2 = EBIT_WORD_extract_unsigned_bits( *(word+1), 0, nbits_word2 );
-//  S32 temp = (S32)((temp1 << nbits_word2) | (temp2));
-//  if( nbits < 32 )
-//  {
-//    // signed extend
-//    temp <<= 32-nbits;
-//    temp >>= 32-nbits;
-//  }
-//
-//  return temp;
-//}
-
-//---------------------------------------------------------
-// EBIT_WORD_extract_multi_words: input a word array which start at the
-//     needed position, ex word[1]. And get the following crossed word data
-//     amount in nbits to start at an specified position finally return as an array.
-//
-// Input:
-//     word[] - data word array
-//     start_pos - the specified start position in word[].
-//     nbits - amount of get bits
-// Output: result[]
-// Return: None
-// Notice: check result array is empty before pass in this module.
-//          check the word length is enough to get.
-//         start_pos               nbits
-//             v                     v
-//  (word0)|--------|--------|...|--------|(wordn)
-//---------------------------------------------------------
-//void EBIT_WORD_extract_multi_words( const U32 word[], SINT start_pos, SINT nbits,
-//        U32 result[] )
-//{
-//  SINT total_words = (nbits / 32) + 1;
-//  SINT remind_bits = (nbits % 32);
-//  SINT start_word_ndx = start_pos / 32;
-//  SINT start_bit_ndx = start_pos % 32;
-//  SINT nbits_of_first_word = 32 - (start_pos % 32);
-//  SINT nbits_of_final_word = (32 - nbits_of_first_word);
-//
-//  U32 tempbuf[total_words];
-//  memset( tempbuf, 0, sizeof(tempbuf) );
-//  U32 temp1, temp2;
-//  SINT i = 0, count = 0;
-//
-//  // copy and shift all data in word[] to tempbuf[] from start_word_ndx to total_words
-//  for( i = start_word_ndx; i < (start_word_ndx+total_words); i++ )
-//  {
-//    temp1 = EBIT_WORD_extract_unsigned_bits( *(word+i), start_bit_ndx,
-//            nbits_of_first_word );
-//    temp2 = EBIT_WORD_extract_unsigned_bits( *(word+i+1), 0,
-//            nbits_of_final_word );
-//    tempbuf[count] = (temp1 << nbits_of_final_word) | (temp2);
-//    count++;
-//  }
-//  // get the remind data in final word
-//  tempbuf[total_words-1] = EBIT_WORD_extract_unsigned_bits( tempbuf[total_words-1],
-//          0, remind_bits );
-//  memcpy( result, tempbuf, sizeof(tempbuf) );
-//}
-//
+//#define MAX_NSAT    (64)
+//#define MAX_NSIG    (32)
+//#define MAX_NCELL   (64)
 //typedef struct {
-//  U08 valid;
-//  U16 sta_id;
-//  U32 gnss_epoch_time;
-//
+//  U32 tow_ms;
+//  U32 glo_tk_ms;
+//  U16 msg_id;
+//  U08 glo_dow;
 //  U08 multi_msg_bit;
 //  U08 iods;
-//  U08 div_free_smoothing_ind;
-//  U08 smoothing_interval;
-//  U32 sig_mask;
-//  U08 sig[32];
-//  U64 sat_mask;
-//  U64 cell_mask;
-//} RTCM_MSM_HEADER_T;
+//  U08 clk_steering_ind;
+//  U08 ext_clk_ind;
+//  U08 smooth_ind;
+//  U08 smooth_interval;
+//  U08 n_sat;
+//  U08 n_sig;
+//  U08 n_cell;
+//  U08 sat_mask[MAX_NSAT];
+//  U08 sig_mask[MAX_NSIG];
+//  U08 cell_mask[MAX_NCELL];
+//} RTCM3_MSM_HEADER_T;
 
 //typedef struct {
-//  U08 rough_range_in_ms;
-//  U08 ext_sat_info;   //knum + 7 in glonass, 0 in gps
-//  U16 rough_range_mudulo_1_ms;
-//  S16 rough_phase_range_rate;
-//} RTCM_MSM_5_7_SAT_DATA_T;
+//  D64 rough_range;
+//  U08 ext_sat_info;
+//} RTCM3_MSM_SAT_DATA_T;
 //
 //typedef struct {
-//  S32 fine_pseudorange_ext_resol;
-//  S32 fine_phase_range_ext_resol;
-//
-//  U16 lock_time_ind_ext_resol;
-//  U08 half_cycle_ambiguity_ind;
-//
-//  U16 snr_ext_resol;  //cn0 * 16
-//  S16 fine_phase_range_rate;
-//} RTCM_MSM_7_SIG_DATA_T;
-
-
-#define MAX_NSAT    (64)
-#define MAX_NSIG    (32)
-#define MAX_NCELL   (64)
-typedef struct {
-  U32 tow_ms;
-  U32 glo_tk_ms;
-  U16 msg_id;
-  U08 glo_dow;
-  U08 multi_msg_bit;
-  U08 iods;
-  U08 clk_steering_ind;
-  U08 ext_clk_ind;
-  U08 smooth_ind;
-  U08 smooth_interval;
-  U08 n_sat;
-  U08 n_sig;
-  U08 n_cell;
-  U08 sat_mask[MAX_NSAT];
-  U08 sig_mask[MAX_NSIG];
-  U08 cell_mask[MAX_NCELL];
-} RTCM3_MSM_HEADER_T;
-
-typedef struct {
-  D64 rough_range;
-  U08 ext_sat_info;
-} RTCM3_MSM_SAT_DATA_T;
-
-typedef struct {
-  D64 pr;
-  D64 phase_range;
-  U16 lock_ind;
-  U08 half_cycle_ind;
-  U08 cn0;
-} RTCM3_MSM_SIG_DATA_T;
+//  D64 pr;
+//  D64 phase_range;
+//  U16 lock_ind;
+//  U08 half_cycle_ind;
+//  U08 cn0;
+//} RTCM3_MSM_SIG_DATA_T;
 
 //RTCM3_MSM_HEADER_T msm_header = {0};
 //RTCM3_MSM_SAT_DATA_T satData[MAX_NSAT] = {0};
 //RTCM3_MSM_SIG_DATA_T sigData[MAX_NSIG] = {0};
+//
+//enum GpsSig {
+//  RTCM_MSM_GPS_SIG_L1C = 2,
+//  RTCM_MSM_GPS_SIG_L1P = 3,
+//  RTCM_MSM_GPS_SIG_L1W = 4,
+//  RTCM_MSM_GPS_SIG_L2C = 8,
+//  RTCM_MSM_GPS_SIG_L2P = 9,
+//  RTCM_MSM_GPS_SIG_L2W = 10,
+//  RTCM_MSM_GPS_SIG_L2S = 15,
+//  RTCM_MSM_GPS_SIG_L2L = 16,
+//  RTCM_MSM_GPS_SIG_L2X = 17,
+//  RTCM_MSM_GPS_SIG_L5I = 22,
+//  RTCM_MSM_GPS_SIG_L5Q = 23,
+//  RTCM_MSM_GPS_SIG_L5X = 24
+//};
+//enum {
+//  RTCM_MSM_SBAS_SIG_L1C = 2,
+//  RTCM_MSM_SBAS_SIG_L5I = 22,
+//  RTCM_MSM_SBAS_SIG_L5Q = 23,
+//  RTCM_MSM_SBAS_SIG_L5X = 24,
+//};
+//enum QzssSig {
+//  RTCM_MSM_QZSS_SIG_L1C = 2,
+//  RTCM_MSM_QZSS_SIG_L6S = 9,
+//  RTCM_MSM_QZSS_SIG_L6L = 10,
+//  RTCM_MSM_QZSS_SIG_L6X = 11,
+//  RTCM_MSM_QZSS_SIG_L2S = 15,
+//  RTCM_MSM_QZSS_SIG_L2L = 16,
+//  RTCM_MSM_QZSS_SIG_L2X = 17,
+//  RTCM_MSM_QZSS_SIG_L1S = 30,
+//  RTCM_MSM_QZSS_SIG_L1L = 31,
+//  RTCM_MSM_QZSS_SIG_L1X = 32
+//};
+//enum {
+//  RTCM_MSM_GLO_SIG_G1C = 2,
+//  RTCM_MSM_GLO_SIG_G1P = 3,
+//  RTCM_MSM_GLO_SIG_G2C = 8,
+//  RTCM_MSM_GLO_SIG_G2P = 9,
+//};
+//enum {
+//  RTCM_MSM_BDS_SIG_B1I = 2,
+//  RTCM_MSM_BDS_SIG_B1Q = 3,
+//  RTCM_MSM_BDS_SIG_B1X = 4,
+//  RTCM_MSM_BDS_SIG_B3I = 8,
+//  RTCM_MSM_BDS_SIG_B3Q = 9,
+//  RTCM_MSM_BDS_SIG_B3X = 10,
+//  RTCM_MSM_BDS_SIG_B2I = 14,
+//  RTCM_MSM_BDS_SIG_B2Q = 15,
+//  RTCM_MSM_BDS_SIG_B2X = 16,
+//};
 
-enum GpsSig {
-  RTCM_MSM_GPS_SIG_L1C = 2,
-  RTCM_MSM_GPS_SIG_L1P = 3,
-  RTCM_MSM_GPS_SIG_L1W = 4,
-  RTCM_MSM_GPS_SIG_L2C = 8,
-  RTCM_MSM_GPS_SIG_L2P = 9,
-  RTCM_MSM_GPS_SIG_L2W = 10,
-  RTCM_MSM_GPS_SIG_L2S = 15,
-  RTCM_MSM_GPS_SIG_L2L = 16,
-  RTCM_MSM_GPS_SIG_L2X = 17,
-  RTCM_MSM_GPS_SIG_L5I = 22,
-  RTCM_MSM_GPS_SIG_L5Q = 23,
-  RTCM_MSM_GPS_SIG_L5X = 24
-};
-enum {
-  RTCM_MSM_SBAS_SIG_L1C = 2,
-  RTCM_MSM_SBAS_SIG_L5I = 22,
-  RTCM_MSM_SBAS_SIG_L5Q = 23,
-  RTCM_MSM_SBAS_SIG_L5X = 24,
-};
-enum QzssSig {
-  RTCM_MSM_QZSS_SIG_L1C = 2,
-  RTCM_MSM_QZSS_SIG_L6S = 9,
-  RTCM_MSM_QZSS_SIG_L6L = 10,
-  RTCM_MSM_QZSS_SIG_L6X = 11,
-  RTCM_MSM_QZSS_SIG_L2S = 15,
-  RTCM_MSM_QZSS_SIG_L2L = 16,
-  RTCM_MSM_QZSS_SIG_L2X = 17,
-  RTCM_MSM_QZSS_SIG_L1S = 30,
-  RTCM_MSM_QZSS_SIG_L1L = 31,
-  RTCM_MSM_QZSS_SIG_L1X = 32
-};
-enum {
-  RTCM_MSM_GLO_SIG_G1C = 2,
-  RTCM_MSM_GLO_SIG_G1P = 3,
-  RTCM_MSM_GLO_SIG_G2C = 8,
-  RTCM_MSM_GLO_SIG_G2P = 9,
-};
-enum {
-  RTCM_MSM_BDS_SIG_B1I = 2,
-  RTCM_MSM_BDS_SIG_B1Q = 3,
-  RTCM_MSM_BDS_SIG_B1X = 4,
-  RTCM_MSM_BDS_SIG_B3I = 8,
-  RTCM_MSM_BDS_SIG_B3Q = 9,
-  RTCM_MSM_BDS_SIG_B3X = 10,
-  RTCM_MSM_BDS_SIG_B2I = 14,
-  RTCM_MSM_BDS_SIG_B2Q = 15,
-  RTCM_MSM_BDS_SIG_B2X = 16,
-};
-
-int GetNoneZeroBitPosition(U08* d, int size, int order)
-{
-  int count = 0;
-  for(int i = 0; i < size * 8; ++i)
-  {
-    if((d[size - i / 8 - 1] >> (8 - (i % 8) - 1)) & 0x1)
-    {
-      if(count++ == order)
-      {
-        return i;
-      }
-    }
-  }
-  return -1;
-}
+//int GetNoneZeroBitPosition(U08* d, int size, int order)
+//{
+//  int count = 0;
+//  for(int i = 0; i < size * 8; ++i)
+//  {
+//    if((d[size - i / 8 - 1] >> (8 - (i % 8) - 1)) & 0x1)
+//    {
+//      if(count++ == order)
+//      {
+//        return i;
+//      }
+//    }
+//  }
+//  return -1;
+//}
 
 //
 //#define SPEED_OF_LIGHT  (299792458.0)
@@ -3473,7 +3249,7 @@ static void sigindex(int sys, const unsigned char *code, const int *freq, int n,
 #define MINPRNQZS   193                 /* min satellite PRN number of QZSS */
 #define MAXPRNQZS   199                 /* max satellite PRN number of QZSS */
 
-#define MINPRNCMP   01                   /* min satellite sat number of BeiDou */
+#define MINPRNCMP   1                   /* min satellite sat number of BeiDou */
 #define MAXPRNCMP   42                  /* max satellite sat number of BeiDou */
 
 #define MINPRNGLO   65                   /* min satellite slot number of GLONASS */
@@ -3482,48 +3258,37 @@ static void sigindex(int sys, const unsigned char *code, const int *freq, int n,
 #define MINPRNGAL   1                   /* min satellite slot number of GLONASS */
 #define MAXPRNGAL   42                  /* max satellite slot number of GLONASS */
 
-
 /* max satellite PRN number of GPS */
-extern int satno(int sys, int prn)
+int satno(int sys, int prn)
 {
-    if (prn <= 0)
+    if(prn <= 0)
     {
       return 0;
     }
 
-    switch (sys) 
+    switch(sys) 
     {
         case 0: //SYS_GPS
-            if (prn<MINPRNGPS||MAXPRNGPS<prn) return 0;
-            return prn-MINPRNGPS+1;
+            //if (prn<MINPRNGPS||MAXPRNGPS<prn) return 0;
+            return prn - MINPRNGPS + 1;
         case 1:
-            if (prn<MINPRNSBS||MAXPRNSBS<prn) return 0;
+            //if (prn<MINPRNSBS||MAXPRNSBS<prn) return 0;
             //return NSATGPS+NSATGLO+NSATGAL+NSATQZS+NSATCMP+NSATLEO+prn-MINPRNSBS+1;
-            return prn-MINPRNSBS+1;
+            return prn + MINPRNSBS - 1;
         case 2: //SYS_QZS
             //if (prn<MINPRNQZS||MAXPRNQZS<prn) return 0;
             //return NSATGPS+NSATGLO+NSATGAL+prn-MINPRNQZS+1;
-            return prn+MINPRNQZS-1;
+            return prn + MINPRNQZS - 1;
         case 3: //SYS_CMP
             //if (prn<MINPRNQZS||MAXPRNQZS<prn) return 0;
             //return NSATGPS+NSATGLO+NSATGAL+prn-MINPRNQZS+1;
-            return prn+MINPRNCMP-1;
+            return prn + MINPRNCMP - 1;
         case 4: //SYS_GLO:
             //if (prn<MINPRNGLO||MAXPRNGLO<prn) return 0;
-            return prn+MINPRNGLO-1;
+            return prn + MINPRNGLO - 1;
         case 5:
             //if (prn<MINPRNGAL||MAXPRNGAL<prn) return 0;
-            return prn+MINPRNGAL-1;;
-        default:
-        //case SYS_CMP:
-        //    if (prn<MINPRNCMP||MAXPRNCMP<prn) return 0;
-        //    return NSATGPS+NSATGLO+NSATGAL+NSATQZS+prn-MINPRNCMP+1;
-        //case SYS_LEO:
-        //    if (prn<MINPRNLEO||MAXPRNLEO<prn) return 0;
-        //    return NSATGPS+NSATGLO+NSATGAL+NSATQZS+NSATCMP+prn-MINPRNLEO+1;
-          {
-            int aaa = 0;
-          }
+            return prn + MINPRNGAL - 1;;
     }
     return 0;
 }
@@ -3611,8 +3376,16 @@ static void save_msm_obs(int sys, msm_h_t *h, const double *cnr, Satellites* sat
         prn = h->sats[i];
         //if      (sys==SYS_QZS) prn+=MINPRNQZS-1;
         //else if (sys==SYS_SBS) prn+=MINPRNSBS-1;
-        
+        if(prn == 0)
+        {
+          int aaa = 0;
+        }
+
         sat = satno(sys, prn);
+        if(sat == 0)
+        {
+          int aaa = 0;
+        }
         for (k=0 ;k < h->nsig; k++) 
         {
             if (!h->cellmask[k + i * h->nsig]) 
@@ -3810,6 +3583,30 @@ void ShowRtcm1097(U08* src, int len, bool convertOnly, CString* pStr)
 	CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
 }
 
+void ShowRtcmEphemeris(U08* src, int len, bool convertOnly, CString* pStr)
+{
+  CString strBuffer, strConst;
+  U16 msgType = (src[3] << 4) | (src[4] >> 4);
+
+  switch(msgType)
+  {
+  case 1019:
+    strConst = "GPS Ephemeris";
+    break;
+  case 1020:
+    strConst = "GLONASS Ephemeris";
+    break;
+  case 1042:
+    strConst = "BeiDou Ephemeris";
+    break;
+  case 1046:
+    strConst = "Galileo Ephemeris";
+    break;
+  }
+  strBuffer.Format("$Rtcm%d,%s", msgType, strConst);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+}
+
 void ShowUbxTimTp(U08* src, bool convertOnly, CString* pStr)
 {
   U32 towMs = 0;
@@ -3972,14 +3769,13 @@ void ShowUbxNavSol(U08* src, bool convertOnly, CString* pStr)
   {
     return;
   }
-
-  D64 latitude, longitude, altitude;
-  ConvertEcefToLonLatAlt(ecefX / 100, ecefY / 100, ecefZ / 100, latitude, longitude, altitude);
-	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude = latitude;
-	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude_N_S = (latitude >= 0) ? 'N' : 'S';
-	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude = longitude;
-	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude_E_W = (longitude >= 0) ? 'E' : 'W';
-	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Altitude = (F32)altitude - CGPSDlg::gpsDlg->m_gpggaMsgCopy.GeoidalSeparation;
+ // D64 latitude, longitude, altitude;
+ // ConvertEcefToLonLatAlt(ecefX / 100, ecefY / 100, ecefZ / 100, latitude, longitude, altitude);
+	//CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude = latitude;
+	//CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude_N_S = (latitude >= 0) ? 'N' : 'S';
+	//CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude = longitude;
+	//CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude_E_W = (longitude >= 0) ? 'E' : 'W';
+	//CGPSDlg::gpsDlg->m_gpggaMsgCopy.Altitude = (F32)altitude - CGPSDlg::gpsDlg->m_gpggaMsgCopy.GeoidalSeparation;
 }
 
 void ShowUbxNavPvt(U08* src, bool convertOnly, CString* pStr)
@@ -4020,26 +3816,26 @@ void ShowUbxNavClock(U08* src, bool convertOnly, CString* pStr)
 	}
 }
 
-U08 AdjustUbloxPrn(U08 p)
-{
-    if(p >= 1 && p <= 32)
-    { //GPS
-      return p;
-    }
-    else if(p >= 130 && p <= 148)
-    { //SBAS
-      return p - 97;
-    }
-    else if(p >= 65 && p <= 96)
-    { //GLONASS
-      return p;
-    }
-    else if(p >= 33 && p <= 64)
-    { //Beidou
-      return p + 168;
-    }
-    return p;
-}
+//U08 AdjustUbloxPrn(U08 p)
+//{
+//    if(p >= 1 && p <= 32)
+//    { //GPS
+//      return p;
+//    }
+//    else if(p >= 120 && p <= 148)
+//    { //SBAS
+//      return p - 97;
+//    }
+//    else if(p >= 65 && p <= 96)
+//    { //GLONASS
+//      return p;
+//    }
+//    else if(p >= 33 && p <= 64)
+//    { //Beidou
+//      return p + 168;
+//    }
+//    return p;
+//}
 
 void ShowUbxNavSvInfo(U08* src, bool convertOnly, CString* pStr)
 {
@@ -4086,7 +3882,7 @@ void ShowUbxNavSvInfo(U08* src, bool convertOnly, CString* pStr)
 		memset(CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID, 0, sizeof(CGPSDlg::gpsDlg->m_gpgsaMsgCopy.SatelliteID));
 	}
 
-	for (int i=0; i<numCh; ++i)
+	for (int i = 0; i < numCh; ++i)
 	{
     S32 prRes = 0;
     S08 elev = 0;
@@ -4108,8 +3904,9 @@ void ShowUbxNavSvInfo(U08* src, bool convertOnly, CString* pStr)
 		  continue;
 	  }
 
-    sv.prn = AdjustUbloxPrn(sv.prn);
-    NMEA::GNSS_System gs = NMEA::GetGNSSSystem(sv.prn);
+    //sv.prn = AdjustUbloxPrn(sv.prn);
+    //NMEA::GNSS_System gs = NMEA::GetGNSSSystem(sv.prn);
+    NMEA::GNSS_System gs = NMEA::GetUbloxSystem(sv.prn);
 		if(NMEA::Gps == gs)
 		{
 			if(gps_c == 0)
@@ -4191,7 +3988,6 @@ void ShowUbxNavSvInfo(U08* src, bool convertOnly, CString* pStr)
 			navic_c++;
     }
 
-
 	  CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfSate = gps_c;
 	  CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfMessage = (gps_c + 3) / 4;
 	  CGPSDlg::gpsDlg->m_gpgsvMsgCopy.SequenceNum = (gps_c + 3) / 4;
@@ -4204,6 +4000,14 @@ void ShowUbxNavSvInfo(U08* src, bool convertOnly, CString* pStr)
 	  CGPSDlg::gpsDlg->m_bdgsvMsgCopy.NumOfSate = beidou_c;
 	  CGPSDlg::gpsDlg->m_bdgsvMsgCopy.NumOfMessage = (beidou_c + 3) / 4;
 	  CGPSDlg::gpsDlg->m_bdgsvMsgCopy.SequenceNum = (beidou_c + 3) / 4;
+
+	  CGPSDlg::gpsDlg->m_gagsvMsgCopy.NumOfSate = galileo_c;
+	  CGPSDlg::gpsDlg->m_gagsvMsgCopy.NumOfMessage = (galileo_c + 3) / 4;
+	  CGPSDlg::gpsDlg->m_gagsvMsgCopy.SequenceNum = (galileo_c + 3) / 4;
+
+	  CGPSDlg::gpsDlg->m_gigsvMsgCopy.NumOfSate = navic_c;
+	  CGPSDlg::gpsDlg->m_gigsvMsgCopy.NumOfMessage = (navic_c + 3) / 4;
+	  CGPSDlg::gpsDlg->m_gigsvMsgCopy.SequenceNum = (navic_c + 3) / 4;
   }
 
 }
@@ -4279,6 +4083,21 @@ void ShowUbxNavPosllh(U08* src, bool convertOnly, CString* pStr)
 		return;
 	}
 
+  S16 lat_deg = (S16)(lat / 10000000);
+  S16 lon_deg = (S16)(lon / 10000000);
+  D64 lat_m = (D64)(lat % 10000000) / 10000000 * 60;
+  D64 lon_m = (D64)(lon % 10000000) / 10000000 * 60;;
+
+
+  D64 latitude = lat_deg * 100 + lat_m;
+  D64 longitude = lon_deg * 100 + lon_m;
+  F32 altitude = (F32)((D64)hMSL / 1000);
+
+  CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude = latitude;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude_N_S = (latitude >= 0) ? 'N' : 'S';
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude = longitude;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude_E_W = (longitude >= 0) ? 'E' : 'W';
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Altitude = altitude;
   CGPSDlg::gpsDlg->m_gpggaMsgCopy.GeoidalSeparation = (F32)(height - hMSL) / 1000;
 }
 

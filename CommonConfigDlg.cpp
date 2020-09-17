@@ -8,10 +8,34 @@
 static BinaryCommand configCmd;
 static CString configPrompt;
 
+#define MAX_COMMANDS  5
+static int commandCounts = 0;
+static BinaryCommand configCmds[MAX_COMMANDS];
+static CString configPrompts[MAX_COMMANDS];
+
 UINT AFX_CDECL ConfigThread(LPVOID param)
 {
-	bool restoreConnect = (((int)(param))==0);
+	bool restoreConnect = (((int)(param)) == 0);
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), configPrompt, restoreConnect);
+	return 0;
+}
+
+UINT AFX_CDECL MultiConfigThread(LPVOID param)
+{
+  for(int i = 0; i < commandCounts; ++i)
+  {
+	  bool restoreConnect = (((int)(param)) == 0);
+    CGPSDlg::gpsDlg->ExecuteConfigureCommand(
+      configCmds[i].GetBuffer(), 
+      configCmds[i].Size(), 
+      configPrompts[i], 
+      (i == commandCounts - 1) ? restoreConnect : false);
+    if(i < commandCounts - 1)
+    {
+      Sleep(1000);
+    }
+  }
+  commandCounts = 0;
 	return 0;
 }
 
@@ -1001,11 +1025,12 @@ void CConfigQZSS::OnBnClickedOk()
 	CString txt;
 	GetDlgItem(IDC_NUMBER_CHANNEL)->GetWindowText(txt);
 	m_nTrackingChannel = atoi(txt);
-	if(m_nTrackingChannel < 0 || m_nTrackingChannel > 3)
-	{
-		AfxMessageBox("Number of tracking channels must be between 0 to 3!");
-		return;
-	}
+  //20200608, remove m_nTrackingChannel limit
+	//if(m_nTrackingChannel < 0 || m_nTrackingChannel > 3)
+	//{
+	//	AfxMessageBox("Number of tracking channels must be between 0 to 3!");
+	//	return;
+	//}
 
 	m_bEnable = ((CButton*)GetDlgItem(IDC_ENABLE_QZSS))->GetCheck();
 	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
@@ -1435,13 +1460,13 @@ BOOL ConfigBinaryMeasurementDataOutDlg::OnInitDialog()
 	  ((CButton*)GetDlgItem(IDC_RCV_STATE))->SetCheck(ackCmd[9]);
     ((CButton*)GetDlgItem(IDC_EXT_RAW_MEAS))->SetCheck((m_newCmd) ? ackCmd[11] : 0);
 
-    if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryConstellationCapability(CGPSDlg::Return, &ackCmd))
+    if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryGnssConstellationType(CGPSDlg::Return, &ackCmd))
     {
       U16 mode = MAKEWORD(ackCmd[7], ackCmd[6]);
-      ((CButton*)GetDlgItem(IDC_GPS))->SetCheck((mode & 0x0001));
-      ((CButton*)GetDlgItem(IDC_GLONASS))->SetCheck((mode & 0x0002));
-      ((CButton*)GetDlgItem(IDC_GALILEO))->SetCheck((mode & 0x0004));
-      ((CButton*)GetDlgItem(IDC_BEIDOU))->SetCheck((mode & 0x0008));
+      ((CButton*)GetDlgItem(IDC_GPS))->SetCheck((mode & 0x0001) != 0);
+      ((CButton*)GetDlgItem(IDC_GLONASS))->SetCheck((mode & 0x0002) != 0);
+      ((CButton*)GetDlgItem(IDC_GALILEO))->SetCheck((mode & 0x0004) != 0);
+      ((CButton*)GetDlgItem(IDC_BEIDOU))->SetCheck((mode & 0x0008) != 0);
     }
     else
     {
@@ -2370,30 +2395,29 @@ void ConfigPowerSavingParametersRomDlg::DoCommand()
   AfxBeginThread(ConfigThread, 0);
 }
 
-// CIqPlot 
-IMPLEMENT_DYNAMIC(CIqPlot, CCommonConfigDlg)
+// CIqPlotDlg
+IMPLEMENT_DYNAMIC(CIqPlotDlg, CCommonConfigDlg)
 
-U08 CIqPlot::m_gnssType = 1;
-U08 CIqPlot::m_gnssChannel = 1;
-U16 CIqPlot::m_nmeaSvid = 1;
-U08 CIqPlot::m_rate = 100;
-BOOL CIqPlot::m_bEnable = TRUE;
-
-CIqPlot::CIqPlot(CWnd* pParent /*=NULL*/)
+U08 CIqPlotDlg::m_gnssType = 1;
+U08 CIqPlotDlg::m_gnssChannel = 1;
+U16 CIqPlotDlg::m_nmeaSvid = 1;
+U08 CIqPlotDlg::m_rate = 100;
+BOOL CIqPlotDlg::m_bEnable = TRUE;
+CIqPlotDlg::CIqPlotDlg(CWnd* pParent /*=NULL*/)
 : CCommonConfigDlg(IDD_IQ_PLOT, pParent)
 {
 
 }
 
-BEGIN_MESSAGE_MAP(CIqPlot, CCommonConfigDlg)
-	ON_BN_CLICKED(IDOK, &CIqPlot::OnBnClickedOk)
-	//ON_BN_CLICKED(IDC_SEND, &CIqPlot::OnBnClickedSend)
-  ON_CBN_SELCHANGE(IDC_TYPE, &CIqPlot::OnCbnSelChangeGnssType)
-  ON_CBN_SELCHANGE(IDC_CHANNEL, &CIqPlot::OnCbnSelChangeGnssChannel)
+BEGIN_MESSAGE_MAP(CIqPlotDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CIqPlotDlg::OnBnClickedOk)
+	//ON_BN_CLICKED(IDC_SEND, &CIqPlotDlg::OnBnClickedSend)
+  ON_CBN_SELCHANGE(IDC_TYPE, &CIqPlotDlg::OnCbnSelChangeGnssType)
+  ON_CBN_SELCHANGE(IDC_CHANNEL, &CIqPlotDlg::OnCbnSelChangeGnssChannel)
 END_MESSAGE_MAP()
 
 // CIqPlot 
-BOOL CIqPlot::OnInitDialog()
+BOOL CIqPlotDlg::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
 
@@ -2423,7 +2447,7 @@ BOOL CIqPlot::OnInitDialog()
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
-void CIqPlot::GetGnssTypeAndChannelFromCombo()
+void CIqPlotDlg::GetGnssTypeAndChannelFromCombo()
 {
   int t = ((CComboBox*)GetDlgItem(IDC_TYPE))->GetCurSel();
   int c = ((CComboBox*)GetDlgItem(IDC_CHANNEL))->GetCurSel();
@@ -2431,7 +2455,7 @@ void CIqPlot::GetGnssTypeAndChannelFromCombo()
     { 1, 2, 4, 5, -1, -1, -1 }, //GPS
     { 1, 5, -1, -1, -1, -1, -1 }, //SBAS
     { 1, 2, 3, -1, -1, -1, -1 }, //GLO
-    { 1, 3, 5, 6, -1, -1, -1 }, //GAL
+    { 1, 2, 5, 6, -1, -1, -1 }, //GAL
     { 1, 2, 4, 5, 6, -1, -1 }, //QZSS
     { 1, 2, 3, 4, 5, -1, -1 }, //BD2
     { 5, 7, -1, -1, -1, -1, -1 }, //NAVIC
@@ -2444,13 +2468,13 @@ void CIqPlot::GetGnssTypeAndChannelFromCombo()
   m_gnssType = t + 1;
 }
 
-void CIqPlot::SetComboFromGnssTypeAndChannel(bool setType, bool setChannel)
+void CIqPlotDlg::SetComboFromGnssTypeAndChannel(bool setType, bool setChannel)
 {
    int channelTable[][8]  = {
     { -1,  0,  1, -1,  2,  3, -1, -1 }, //GPS
     { -1,  0, -1, -1, -1,  1, -1, -1 }, //SBAS
     { -1,  0,  1,  2, -1, -1, -1, -1 }, //GLO
-    { -1,  0, -1,  1, -1,  2,  3, -1 }, //GAL
+    { -1,  0,  1, -1, -1,  2,  3, -1 }, //GAL
     { -1,  0,  1, -1,  2,  3,  4, -1 }, //QZSS
     { -1,  0,  1,  2,  3,  4, -1, -1 }, //BD2
     { -1, -1, -1, -1, -1,  0, -1,  1 }, //NAVIC
@@ -2472,7 +2496,7 @@ void CIqPlot::SetComboFromGnssTypeAndChannel(bool setType, bool setChannel)
  
 }
 
-void CIqPlot::OnCbnSelChangeGnssType()
+void CIqPlotDlg::OnCbnSelChangeGnssType()
 {
   CComboBox* type = (CComboBox*)GetDlgItem(IDC_TYPE);
   CComboBox* channel = (CComboBox*)GetDlgItem(IDC_CHANNEL);
@@ -2529,12 +2553,12 @@ void CIqPlot::OnCbnSelChangeGnssType()
   SetComboFromGnssTypeAndChannel(false, true);
 }
 
-void CIqPlot::OnCbnSelChangeGnssChannel()
+void CIqPlotDlg::OnCbnSelChangeGnssChannel()
 {
   GetGnssTypeAndChannelFromCombo();
 }	
 
-void CIqPlot::OnBnClickedOk()
+void CIqPlotDlg::OnBnClickedOk()
 {	
 	CString txt;
 
@@ -2548,7 +2572,7 @@ void CIqPlot::OnBnClickedOk()
 	OnOK();
 }
 
-void CIqPlot::DoCommand()
+void CIqPlotDlg::DoCommand()
 {
 	CWaitCursor wait;
 	BinaryData cmd(8);
@@ -2567,6 +2591,376 @@ void CIqPlot::DoCommand()
   AfxBeginThread(ConfigThread, 0);
 }
 
+// CNtripClientDlg
+IMPLEMENT_DYNAMIC(CNtripClientDlg, CDialog)
+#define UWM_NTRIP_STATUS		    (WM_USER + 0x200)
+
+CString CNtripClientDlg::m_host = "";
+int CNtripClientDlg::m_port = 0;
+CString CNtripClientDlg::m_mountpoint = "";
+CString CNtripClientDlg::m_user = "";
+CString CNtripClientDlg::m_password = "";
+BOOL CNtripClientDlg::m_stopThread = TRUE;
+CString CNtripClientDlg::m_ntripStatusMessage;
+CNtripClientDlg::CNtripClientDlg(CWnd* pParent /*=NULL*/)
+{
+  CRegistry reg;
+	reg.SetRootKey(HKEY_CURRENT_USER);
+	if(reg.SetKey(VIEWER_REG_PATH, true))
+	{
+#if(IS_DEBUG)
+    m_host = reg.ReadString("ntrip_host", "60.250.205.22");
+    m_port = reg.ReadInt("ntrip_port", 5000);
+    m_mountpoint = reg.ReadString("ntrip_mountpoint", "RSV3");
+    m_user = reg.ReadString("ntrip_userid", "rsv3");
+    m_password = reg.ReadString("ntrip_password", "1234");
+#else
+    m_startAddress = reg.ReadString(("ntrip_host", "");
+    m_port = reg.ReadInt("ntrip_port", 0);
+    m_mountpoint = reg.ReadString(("ntrip_mountpoint", "");
+    m_user = reg.ReadString(("ntrip_userid", "");
+    m_password = reg.ReadString(("ntrip_password", "");
+#endif
+	}
+}
+
+BEGIN_MESSAGE_MAP(CNtripClientDlg, CDialog)
+	ON_BN_CLICKED(IDOK, &CNtripClientDlg::OnBnClickedOk)
+	ON_BN_CLICKED(IDC_EXIT, &CNtripClientDlg::OnBnClickedExit)
+  ON_MESSAGE(UWM_NTRIP_STATUS, OnNtripStatus)
+END_MESSAGE_MAP()
+
+// CNtripClientDlg 
+BOOL CNtripClientDlg::OnInitDialog()
+{
+	CDialog::OnInitDialog();
+
+  CString txt;
+	GetDlgItem(IDC_HOST)->SetWindowText(m_host);
+	txt.Format("%d", m_port);
+	GetDlgItem(IDC_PORT)->SetWindowText(txt);
+	GetDlgItem(IDC_MOUNTPOINT)->SetWindowText(m_mountpoint);
+	GetDlgItem(IDC_USER)->SetWindowText(m_user);
+	GetDlgItem(IDC_PASSWORD)->SetWindowText(m_password);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+enum NtripStatus
+{
+  NtripOk,
+  WinSockInitError,
+  WinSockCreationError,
+  HostAddressError,
+  HostNotResponding,
+  NoMountPoint,
+  Unauthorized,
+  HostNoAck
+};
+
+LRESULT CNtripClientDlg::OnNtripStatus(WPARAM wParam, LPARAM lParam)
+{
+  NtripStatus ns = (NtripStatus)wParam;
+  ULONG_PTR bytes = lParam;
+  CString txt;
+  static int pos = 0;
+  switch(ns)
+  {
+  case WinSockInitError:
+  case WinSockCreationError:
+  case HostAddressError:
+  case HostNotResponding:
+  case NoMountPoint:
+  case Unauthorized:
+  case HostNoAck:
+    GetDlgItem(IDC_MSG)->SetWindowText(m_ntripStatusMessage);
+    m_stopThread = TRUE;
+    UpdateStarus(m_stopThread);
+    break;
+  case   NtripOk:
+    if(bytes == 0)
+    {
+      pos = 0;
+    }
+    else
+    {
+      pos += 2;
+      if(pos > 100)
+      {
+        pos = 0;
+      }
+    }
+    txt.Format("%s, %d bytes received", m_ntripStatusMessage, bytes);
+    GetDlgItem(IDC_MSG)->SetWindowText(txt);
+    ((CProgressCtrl*)GetDlgItem(IDC_PROG))->SetPos(pos);
+
+    if(!CGPSDlg::gpsDlg->m_isConnectOn)
+    {
+      GetDlgItem(IDC_MSG)->SetWindowText("Serial port closed!");
+      m_stopThread = TRUE;
+      UpdateStarus(m_stopThread);
+    }
+    break;
+  }
+  return 0;
+}
+
+static U08* base64 = (U08*)"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";  
+CString Base64Encode(const CString& src)  
+{  
+  CString dstSrc = NULL;
+  int n, buflen, i, j;
+  CString buf = src;
+  buflen = n = src.GetLength();
+
+  //dst = (U08*)malloc(buflen / 3 * 4 + 3);
+  U08* dst = (U08*)dstSrc.GetBuffer(buflen / 3 * 4 + 5);
+
+  for(i = 0, j = 0; i <= buflen - 3; i += 3, j += 4) 
+  {  
+     dst[j] = (buf[i] & 0xFC) >> 2;  
+     dst[j+1] = ((buf[i] & 0x03) << 4) + ((buf[i + 1] & 0xF0) >> 4);  
+     dst[j+2] = ((buf[i+1] & 0x0F) << 2) + ((buf[i + 2] & 0xC0) >> 6);  
+     dst[j+3] = buf[i+2] & 0x3F;  
+  }  
+  if(n % 3 == 1) 
+  {  
+     dst[j] = (buf[i] & 0xFC) >> 2;  
+     dst[j + 1] = ((buf[i] & 0x03) << 4);  
+     dst[j + 2] = 64;  
+     dst[j + 3] = 64;  
+     j += 4;  
+  }  
+  else if(n % 3 == 2)
+  {  
+     dst[j] = (buf[i] & 0xFC) >> 2;  
+     dst[j + 1] = ((buf[i] & 0x03) << 4) + ((buf[i + 1] & 0xF0) >> 4);  
+     dst[j + 2] = ((buf[i+1] & 0x0F) << 2);  
+     dst[j + 3] = 64;  
+     j += 4;  
+  }  
+
+  for(i = 0; i < j; ++i) /* map 6 bit value to base64 ASCII character */  
+  {
+     dst[i] = base64[(int)dst[i]];  
+  }
+  dst[j] = 0;  
+
+  dstSrc.ReleaseBuffer();
+  return dstSrc;  
+}  
+
+UINT TestWinSocket(LPVOID pParam)
+{
+  CNtripClientDlg* pDlg = (CNtripClientDlg*)pParam;
+  WSAData wsaData;
+  WORD version = MAKEWORD(2, 2); //version
+  int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData); // successfully return 0
+
+  if(iResult != 0) 
+  {
+    CNtripClientDlg::m_ntripStatusMessage = "Winsock initialization failed";
+    pDlg->PostMessage(UWM_NTRIP_STATUS, WinSockInitError, 0);
+    CGPSDlg::gpsDlg->SetNtripRuning(FALSE);
+    return 0;
+  }
+  SOCKET sck = INVALID_SOCKET;
+  sck = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);\
+  if(sck == INVALID_SOCKET) 
+  {
+    CNtripClientDlg::m_ntripStatusMessage = "Socket creation failed";
+    pDlg->PostMessage(UWM_NTRIP_STATUS, WinSockCreationError, 0);
+    CGPSDlg::gpsDlg->SetNtripRuning(FALSE);
+    return 0;
+  }
+
+  SOCKADDR_IN addr = { 0 };
+#if(1)
+  struct hostent *host = gethostbyname(CNtripClientDlg::m_host);
+  if(host == NULL)
+  {
+    //No IP or Domain name
+    CNtripClientDlg::m_ntripStatusMessage.Format("Host address error (%s)", CNtripClientDlg::m_host);
+    pDlg->PostMessage(UWM_NTRIP_STATUS, HostAddressError, 0);
+    CGPSDlg::gpsDlg->SetNtripRuning(FALSE);
+    return 0;
+  }
+
+  char* ip = inet_ntoa(*(struct in_addr *)*host->h_addr_list);
+  addr.sin_addr.s_addr = inet_addr(ip);
+#else
+  unsigned int ad = inet_addr(CNtripClientDlg::m_host);
+  host = gethostbyaddr((char *)&ad, 4, AF_INET);
+  addr.sin_addr.s_addr = inet_addr(host->h_name);
+#endif
+  // addr.sin_addr.s_addr = INADDR_ANY; // 若設定 INADDR_ANY 表示任何 IP
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(CNtripClientDlg::m_port); // 設定 port,後面解釋 htons()
+
+  int r = connect(sck, (SOCKADDR*)&addr, sizeof(addr));
+  if(r == SOCKET_ERROR)
+  {
+    //Port no response
+    CNtripClientDlg::m_ntripStatusMessage = "Host connecting failed, check the port or host name";
+    pDlg->PostMessage(UWM_NTRIP_STATUS, HostNotResponding, 0);
+    CGPSDlg::gpsDlg->SetNtripRuning(FALSE);
+    return 0;
+  }
+  
+  CString auth;// = ToBase64(username + ":" + password);
+  auth.Format("%s:%s", CNtripClientDlg::m_user, CNtripClientDlg::m_password);
+  
+  CString msg;
+  CString authB64 = Base64Encode(auth);
+  msg.Format("GET /%s HTTP/1.1\r\n" \
+    "User-Agent: NTRIP iter.dk\r\n" \
+    "Authorization: Basic %s\r\n" \
+    "Accept: */*\r\n" \
+    "Connection: close\r\n\r\n",
+    CNtripClientDlg::m_mountpoint, authB64);
+
+  send(sck, msg, msg.GetLength(), 0);
+
+  U08 message[512] = { 0 };
+  int len = 0, count = 0;
+  len = recv(sck, (char*)message, sizeof(message), 0);
+  if(len > 0)
+  {
+    message[len] = 0;
+    CString s = (char*)message;
+    if(s.Find("ICY 200 OK") >= 0)
+    {
+      CNtripClientDlg::m_ntripStatusMessage.Format("%s:%d/%s", CNtripClientDlg::m_host, CNtripClientDlg::m_port, CNtripClientDlg::m_mountpoint);
+      pDlg->PostMessage(UWM_NTRIP_STATUS, NtripOk, 0);
+    }
+    else if(s.Find("SOURCETABLE 200 OK") >= 0)
+    {
+      CNtripClientDlg::m_ntripStatusMessage = "No mountpoint, reconnect...";
+      pDlg->PostMessage(UWM_NTRIP_STATUS, NoMountPoint, 0);
+      CGPSDlg::gpsDlg->SetNtripRuning(FALSE);
+      return 0;
+    }
+    else if(s.Find("HTTP/1.1 401 Unauthorized") >= 0)
+    {
+      CNtripClientDlg::m_ntripStatusMessage = "HTTP/1.1 401 Unauthorized";
+      pDlg->PostMessage(UWM_NTRIP_STATUS, Unauthorized, 0);
+      CGPSDlg::gpsDlg->SetNtripRuning(FALSE);
+      return 0;
+    }
+  }
+  else
+  {
+    CNtripClientDlg::m_ntripStatusMessage = "Host not responding";
+    pDlg->PostMessage(UWM_NTRIP_STATUS, HostNoAck, 0);
+    CGPSDlg::gpsDlg->SetNtripRuning(FALSE);
+    return 0;
+  }
+
+  CGPSDlg::gpsDlg->SetNtripRuning(TRUE);
+  ULONG_PTR bytes = 0;
+  while(!CNtripClientDlg::m_stopThread/*++count < 100*/)
+  {
+    //ZeroMemory(message, 256);
+    len = recv(sck, (char*)message, sizeof(message), 0);
+    if(len > 0)
+    {
+      CGPSDlg::gpsDlg->AddNtripData(message, len);
+      bytes += len;
+      pDlg->PostMessage(UWM_NTRIP_STATUS, NtripOk, bytes);
+    }
+    else
+    {
+      int d = 0;
+    }
+  }
+  //f.Close();
+  WSACleanup();
+  CGPSDlg::gpsDlg->SetNtripRuning(FALSE);
+
+  return 0;
+}
+
+void CNtripClientDlg::UpdateStarus(BOOL isStop)
+{
+  if(!isStop)
+  {
+  	GetDlgItem(IDC_HOST)->EnableWindow(FALSE);
+	  GetDlgItem(IDC_PORT)->EnableWindow(FALSE);
+	  GetDlgItem(IDC_MOUNTPOINT)->EnableWindow(FALSE);
+	  GetDlgItem(IDC_USER)->EnableWindow(FALSE);
+	  GetDlgItem(IDC_PASSWORD)->EnableWindow(FALSE);
+    GetDlgItem(IDOK)->SetWindowText("Stop");
+    GetDlgItem(IDC_MSG)->SetWindowText("Connecting...");
+  }
+  else
+  {
+  	GetDlgItem(IDC_HOST)->EnableWindow(TRUE);
+	  GetDlgItem(IDC_PORT)->EnableWindow(TRUE);
+	  GetDlgItem(IDC_MOUNTPOINT)->EnableWindow(TRUE);
+	  GetDlgItem(IDC_USER)->EnableWindow(TRUE);
+	  GetDlgItem(IDC_PASSWORD)->EnableWindow(TRUE);
+    GetDlgItem(IDOK)->SetWindowText("Start");
+  }
+}
+void CNtripClientDlg::OnBnClickedOk()
+{	
+  if(m_stopThread)
+  {
+	  CString txt;
+	  GetDlgItem(IDC_HOST)->GetWindowText(m_host);
+	  GetDlgItem(IDC_PORT)->GetWindowText(txt);
+	  m_port = atoi(txt);
+	  GetDlgItem(IDC_MOUNTPOINT)->GetWindowText(m_mountpoint);
+	  GetDlgItem(IDC_USER)->GetWindowText(m_user);
+	  GetDlgItem(IDC_PASSWORD)->GetWindowText(m_password);
+
+    m_stopThread = FALSE;
+    ::AfxBeginThread(TestWinSocket, this);
+    UpdateStarus(m_stopThread);
+
+    CRegistry reg;
+	  reg.SetRootKey(HKEY_CURRENT_USER);
+	  if(reg.SetKey(VIEWER_REG_PATH, false))
+	  {
+      reg.WriteString("ntrip_host", m_host);
+      reg.WriteInt("ntrip_port", m_port);
+      reg.WriteString("ntrip_mountpoint", m_mountpoint);
+      reg.WriteString("ntrip_userid", m_user);
+      reg.WriteString("ntrip_password", m_password);
+    }
+  }
+  else
+  {
+    m_stopThread = TRUE;
+    UpdateStarus(m_stopThread);
+  }
+}
+
+void CNtripClientDlg::OnBnClickedExit()
+{	
+  m_stopThread = TRUE;
+	OnOK();
+}
+/*
+void CNtripClientDlg::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(8);
+	//*cmd.GetBuffer(0) = 0x64;
+	//*cmd.GetBuffer(1) = 0x7C;
+	//*cmd.GetBuffer(2) = m_gnssType;
+	//*cmd.GetBuffer(3) = m_gnssChannel;
+	//*cmd.GetBuffer(4) = (U08)HIBYTE(m_nmeaSvid);
+	//*cmd.GetBuffer(5) = (U08)LOBYTE(m_nmeaSvid);
+	//*cmd.GetBuffer(6) = m_rate;
+	//*cmd.GetBuffer(7) = m_bEnable;
+
+
+	//configCmd.SetData(cmd);
+	configPrompt = "Config IQ successfully";
+  AfxBeginThread(ConfigThread, 0);
+}
+*/
 // CConfigGeofencing 
 IMPLEMENT_DYNAMIC(CConfigGeofencing, CCommonConfigDlg)
 
@@ -2677,8 +3071,8 @@ void CConfigGeofencing::OnBnClickedAddPoints()
 
 bool CConfigGeofencing::AddPoint(const CString s)
 {
-	//const int MaxCount = (m_no==0) ? 10 : 16;
-	const int MaxCount = 10;
+	//const int MaxCount = (m_no == 0) ? 10 : 16;
+	const int MaxCount = 16;
 	if(m_points.GetCount() == MaxCount)
 	{
 		CString msg;
@@ -2763,17 +3157,31 @@ void CConfigGeofencing::OnBnClickedOk()
 	OnOK();
 }
 
-void CConfigGeofencing::DoCommand()
+INT_PTR CConfigGeofencing::DoDirect(int type)
 {
+	switch(type)
+	{
+	case 0:
+    lons.clear();
+    m_attribute = 1;
+		break;
+	default:
+		return IDCANCEL;
+	}
+	return IDOK;
+}
+
+void CConfigGeofencing::DoCommand()
+{ //0x64,0x2F is not support now, answer from Andrew 20190611
 	CWaitCursor wait;
 	U08 size = (U08)lons.size();
 	U08 temp[8];
-	BinaryData cmd(((m_no==0) ? 4 : 5) + 16 * size);
+	BinaryData cmd(((m_no == 0) ? 4 : 5) + 16 * size);
 	*cmd.GetBuffer(0) = 0x64;
-	*cmd.GetBuffer(1) = (m_no==0) ? 0x2F : 0x34;
+	*cmd.GetBuffer(1) = (m_no == 0) ? 0x2F : 0x34;
 	*cmd.GetBuffer(2) = m_attribute;
 	int index = 3;
-	if(m_no!=0)	
+	if(m_no != 0)	
 	{
 		*cmd.GetBuffer(3) = m_no;
 		index = 4;
@@ -2854,20 +3262,20 @@ void CConfigRtkMode::OnBnClickedOk()
 UINT AFX_CDECL ConfigRtkThread(LPVOID param)
 {
 	bool restoreConnect = true;
-	CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), configPrompt, false);
+	CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), configPrompt, true);
 	
-  U08 attribute = (U08)(param);
-	//RTK base mode should be in 1 Hz update rate.
-	Sleep(1000);
-	BinaryData cmd(3);
-	*cmd.GetBuffer(0) = 0x0E;
-	*cmd.GetBuffer(1) = (U08)1;
-  //20191007 report from Jim
-	//*cmd.GetBuffer(2) = (U08)configCmd.GetData()[7];
-  *cmd.GetBuffer(2) = (U08)attribute;
-	configCmd.SetData(cmd);
-	configPrompt = "Configure 1Hz update rate successfully";
-	CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), configPrompt, restoreConnect);
+ // U08 attribute = (U08)(param);
+	////RTK base mode should be in 1 Hz update rate.
+	//Sleep(1000);
+	//BinaryData cmd(3);
+	//*cmd.GetBuffer(0) = 0x0E;
+	//*cmd.GetBuffer(1) = (U08)1;
+ // //20191007 report from Jim
+	////*cmd.GetBuffer(2) = (U08)configCmd.GetData()[7];
+ // *cmd.GetBuffer(2) = (U08)attribute;
+	//configCmd.SetData(cmd);
+	//configPrompt = "Configure 1Hz update rate successfully";
+	//CGPSDlg::gpsDlg->ExecuteConfigureCommand(configCmd.GetBuffer(), configCmd.Size(), configPrompt, restoreConnect);
 
 	return 0;
 }
@@ -3224,6 +3632,38 @@ void CConfigRtkMode2::OnBnClickedOk()
 	}
 	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
 	OnOK();
+}
+
+INT_PTR CConfigRtkMode2::DoDirect(int type)
+{
+  //Rover(0)
+  //In: a0 a1 00 25 6a 06 00 00 00 00 07 d0 00 00 00 1e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a5 0d 0a 
+
+  //Base(1)                2  3  4  5  6  7  8  9 10 11 12 13  
+  //In: a0 a1 00 25 6a 06 01 00 00 00 07 d0 00 00 00 1e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a4 0d 0a 
+
+  cmdMode = CfgRtkOprtFctn;
+  cmdMode = CfgRtkOprtFctn;
+	m_attribute = 0;
+  m_srvValue1 = 30;
+  m_srvValue2 = 2000;
+  m_sttValue1 = 0;
+  m_sttValue2 = 0;
+  m_sttValue3 = 0;
+	switch(type)
+	{
+	case 0:
+    m_rtkMode = 0x00;
+    m_roverOpt = 0;
+		break;
+  case 1:
+    m_rtkMode = 0x01;
+    m_baseOpt = 0;
+		break;
+	default:
+		return IDCANCEL;
+	}
+	return IDOK;
 }
 
 void CConfigRtkMode2::DoCommand()
@@ -3586,6 +4026,808 @@ void CConfigRtkMode2::OnCbnSelChangeRoverOpt()
 	UpdateStatus();
 }
 
+// CConfigRtkFunctions 
+IMPLEMENT_DYNAMIC(CConfigRtkFunctions, CCommonConfigDlg)
+
+CConfigRtkFunctions::CConfigRtkFunctions(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_RTK_CFG_FUNCTIONS, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigRtkFunctions, CCommonConfigDlg)
+	ON_CBN_SELCHANGE(IDC_MODE, OnCbnSelChangeRtkMode)
+	ON_CBN_SELCHANGE(IDC_BASE_OPT_FUN, OnCbnSelChangeBaseOpt)
+	ON_CBN_SELCHANGE(IDC_ROVER_OPT_FUN, OnCbnSelChangeRoverOpt)
+	ON_CBN_SELCHANGE(IDC_BINARY_TYPE, OnCbnSelChangeBinaryType)
+	ON_BN_CLICKED(IDC_FIELD11, &CConfigRtkFunctions::OnBnClickedField11)
+	ON_BN_CLICKED(IDC_FIELD12, &CConfigRtkFunctions::OnBnClickedField12)
+	ON_BN_CLICKED(IDC_FIELD13, &CConfigRtkFunctions::OnBnClickedField13)
+	ON_BN_CLICKED(IDC_FIELD14, &CConfigRtkFunctions::OnBnClickedField14)
+	ON_BN_CLICKED(IDOK, &CConfigRtkFunctions::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigRtkFunctions 
+BOOL CConfigRtkFunctions::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+  m_supportEph = TRUE;
+  BinaryData ackCmd1, ackCmd2, ackCmd3, ackCmd4;
+  CString title, txt;
+  this->GetWindowText(title);
+
+  CGPSDlg::CmdErrorCode err1, err2 = CGPSDlg::Timeout, err3 = CGPSDlg::Timeout, err4 = CGPSDlg::Timeout;
+  err1 = CGPSDlg::gpsDlg->QueryRtkMode2(CGPSDlg::Return, &ackCmd1);
+  if(CGPSDlg::Ack == err1)
+  {
+    err2 = CGPSDlg::gpsDlg->QueryRtcmMeasurementDataOut(CGPSDlg::Return, &ackCmd2);
+  }
+  if(CGPSDlg::Ack == err1 && CGPSDlg::Ack == err2)
+  {
+    err3 = CGPSDlg::gpsDlg->QueryBinaryMeasurementDataOut(CGPSDlg::Return, &ackCmd3);
+  }
+  if(CGPSDlg::Ack == err1 && CGPSDlg::Ack == err2 && CGPSDlg::Ack == err3)
+  {
+    err4 = CGPSDlg::gpsDlg->QueryGnssConstellationType(CGPSDlg::Return, &ackCmd4);
+  }
+
+  if(CGPSDlg::Ack == err1 && CGPSDlg::Ack == err2 && CGPSDlg::Ack == err3 && CGPSDlg::Ack == err4)
+  { //Load from device
+    title += " (Query successfully)";
+    ((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(ackCmd1[6]);
+    if(ackCmd1[6] == 0)
+    { //RTK Rover Mode
+      ((CComboBox*)GetDlgItem(IDC_ROVER_OPT_FUN))->SetCurSel(ackCmd1[7]);
+      ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->SetCurSel(0);
+      ((CComboBox*)GetDlgItem(IDC_PKB_OPT_FUN))->SetCurSel(0);
+    }
+    else if(ackCmd1[6] == 1)
+    { //RTK Base Mode
+      ((CComboBox*)GetDlgItem(IDC_ROVER_OPT_FUN))->SetCurSel(0);
+      ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->SetCurSel(ackCmd1[7]);
+      ((CComboBox*)GetDlgItem(IDC_PKB_OPT_FUN))->SetCurSel(0);
+    }
+    else if(ackCmd1[6] == 2)
+    { //RTK precisely kinematic base mode
+      ((CComboBox*)GetDlgItem(IDC_ROVER_OPT_FUN))->SetCurSel(0);
+      ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->SetCurSel(0);
+      ((CComboBox*)GetDlgItem(IDC_PKB_OPT_FUN))->SetCurSel(ackCmd1[7]);
+    }
+
+    DisplayStatic(this, IDC_MVB_EDT1, "%f", ConvertLeonFloat(ackCmd1.Ptr(36)));
+
+    DWORD svyLen = MAKELONG(MAKEWORD(ackCmd1[11], ackCmd1[10]), MAKEWORD(ackCmd1[9], ackCmd1[8]));
+    DWORD stdDev = MAKELONG(MAKEWORD(ackCmd1[15], ackCmd1[14]), MAKEWORD(ackCmd1[13], ackCmd1[12]));
+    if(svyLen == 0 && stdDev == 0)
+    {
+      DisplayStatic(this, IDC_SRV_EDT1, "%u", 2000);
+      DisplayStatic(this, IDC_SRV_EDT2, "%u", 30);
+    }
+    else
+    {
+      DisplayStatic(this, IDC_SRV_EDT1, "%u", svyLen);
+      DisplayStatic(this, IDC_SRV_EDT2, "%u", stdDev);
+    }
+
+    DisplayStatic(this, IDC_STT_EDT1, "%f", ConvertLeonDouble(ackCmd1.Ptr(16)));
+    DisplayStatic(this, IDC_STT_EDT2, "%f", ConvertLeonDouble(ackCmd1.Ptr(24)));
+    DisplayStatic(this, IDC_STT_EDT3, "%f", ConvertLeonFloat(ackCmd1.Ptr(32)));
+
+    ((CComboBox*)GetDlgItem(IDC_BINARY_TYPE))->SetCurSel(ackCmd2[5]);
+    //RTCM
+    ((CComboBox*)GetDlgItem(IDC_FIELD3))->SetCurSel(ackCmd2[6]);
+    ((CButton*)GetDlgItem(IDC_FIELD4))->SetCheck(ackCmd2[7]);
+    ((CButton*)GetDlgItem(IDC_FIELD5))->SetCheck(ackCmd2[8]);
+    ((CButton*)GetDlgItem(IDC_FIELD6))->SetCheck(ackCmd2[9]);
+    ((CButton*)GetDlgItem(IDC_FIELD7))->SetCheck(ackCmd2[10]);
+    ((CButton*)GetDlgItem(IDC_FIELD8))->SetCheck(ackCmd2[11]);
+    ((CButton*)GetDlgItem(IDC_FIELD9))->SetCheck(ackCmd2[12]);
+    ((CButton*)GetDlgItem(IDC_FIELD10))->SetCheck(ackCmd2[13]);
+     m_supportEph = (ackCmd2[19] == 0) ? FALSE : TRUE;
+
+    ((CButton*)GetDlgItem(IDC_FIELD11))->SetCheck(ackCmd2[14] != 0);
+    ((CButton*)GetDlgItem(IDC_FIELD12))->SetCheck(ackCmd2[15] != 0);
+    ((CButton*)GetDlgItem(IDC_FIELD13))->SetCheck(ackCmd2[16] != 0);
+    ((CButton*)GetDlgItem(IDC_FIELD14))->SetCheck(ackCmd2[17] != 0);
+
+    txt.Format("%d", ackCmd2[14]);
+    GetDlgItem(IDC_INTERVAL)->SetWindowText(txt);
+    txt.Format("%d", ackCmd2[15]);
+    GetDlgItem(IDC_INTERVAL2)->SetWindowText(txt);
+    txt.Format("%d", ackCmd2[16]);
+    GetDlgItem(IDC_INTERVAL3)->SetWindowText(txt);
+    txt.Format("%d", ackCmd2[17]);
+    GetDlgItem(IDC_INTERVAL4)->SetWindowText(txt);
+    //STQ RAW
+	  ((CComboBox*)GetDlgItem(IDC_OUTPUT_RATE))->SetCurSel(ackCmd3[5]);
+	  //((CButton*)GetDlgItem(IDC_MEAS_TIME))->SetCheck(ackCmd3[6]);
+	  //((CButton*)GetDlgItem(IDC_RAW_MEAS))->SetCheck(ackCmd3[7]);
+	  ((CButton*)GetDlgItem(IDC_SV_CH))->SetCheck(ackCmd3[8]);
+	  ((CButton*)GetDlgItem(IDC_RCV_STATE))->SetCheck(ackCmd3[9]);
+    ((CButton*)GetDlgItem(IDC_EXT_RAW_MEAS))->SetCheck(ackCmd3[11]);
+    U16 mode = MAKEWORD(ackCmd4[7], ackCmd4[6]);
+    ((CButton*)GetDlgItem(IDC_GPS))->SetCheck((mode & 0x0001) != 0);
+    ((CButton*)GetDlgItem(IDC_GLONASS))->SetCheck((mode & 0x0002) != 0);
+    ((CButton*)GetDlgItem(IDC_GALILEO))->SetCheck((mode & 0x0004) != 0);
+    ((CButton*)GetDlgItem(IDC_BEIDOU))->SetCheck((mode & 0x0008) != 0);
+  } //if(CGPSDlg::Ack == err)
+  else
+  { //Default value
+    title += " (Query failed)";
+    ((CComboBox*)GetDlgItem(IDC_MODE))->SetCurSel(0);
+    ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->SetCurSel(0);
+    ((CComboBox*)GetDlgItem(IDC_ROVER_OPT_FUN))->SetCurSel(0);
+    ((CComboBox*)GetDlgItem(IDC_PKB_OPT_FUN))->SetCurSel(0);
+
+    GetDlgItem(IDC_MVB_EDT1)->SetWindowText("0");
+    GetDlgItem(IDC_SRV_EDT1)->SetWindowText("2000");
+    GetDlgItem(IDC_SRV_EDT2)->SetWindowText("30");
+
+    GetDlgItem(IDC_STT_EDT1)->SetWindowText("");
+    GetDlgItem(IDC_STT_EDT2)->SetWindowText("");
+    GetDlgItem(IDC_STT_EDT3)->SetWindowText("");
+    //Default STQ RAW output
+    ((CComboBox*)GetDlgItem(IDC_BINARY_TYPE))->SetCurSel(0);
+    //RTCM
+    ((CComboBox*)GetDlgItem(IDC_FIELD3))->SetCurSel(0);
+    ((CButton*)GetDlgItem(IDC_FIELD4))->SetCheck(1);
+    ((CButton*)GetDlgItem(IDC_FIELD5))->SetCheck(1);
+    ((CButton*)GetDlgItem(IDC_FIELD6))->SetCheck(1);
+    ((CButton*)GetDlgItem(IDC_FIELD7))->SetCheck(1);
+    ((CButton*)GetDlgItem(IDC_FIELD8))->SetCheck(1);
+    ((CButton*)GetDlgItem(IDC_FIELD9))->SetCheck(1);
+    ((CButton*)GetDlgItem(IDC_FIELD10))->SetCheck(1);
+    //RTCM Ephemeris default disable
+    ((CButton*)GetDlgItem(IDC_FIELD11))->SetCheck(0);
+    ((CButton*)GetDlgItem(IDC_FIELD12))->SetCheck(0);
+    ((CButton*)GetDlgItem(IDC_FIELD13))->SetCheck(0);
+    ((CButton*)GetDlgItem(IDC_FIELD14))->SetCheck(0);
+
+    //STQ RAW
+	  ((CComboBox*)GetDlgItem(IDC_OUTPUT_RATE))->SetCurSel(0);
+	  //((CButton*)GetDlgItem(IDC_MEAS_TIME))->SetCheck(TRUE);
+	  //((CButton*)GetDlgItem(IDC_RAW_MEAS))->SetCheck(TRUE);
+	  ((CButton*)GetDlgItem(IDC_SV_CH))->SetCheck(TRUE);
+	  ((CButton*)GetDlgItem(IDC_RCV_STATE))->SetCheck(TRUE);
+    ((CButton*)GetDlgItem(IDC_EXT_RAW_MEAS))->SetCheck(FALSE);
+    ((CButton*)GetDlgItem(IDC_GPS))->SetCheck(TRUE);
+  } //if(CGPSDlg::Ack == err) else
+
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+  this->SetWindowText(title);
+	UpdateStatus();
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigRtkFunctions::OnBnClickedField11()
+{
+	UpdateStatus();
+}
+
+void CConfigRtkFunctions::OnBnClickedField12()
+{
+	UpdateStatus();
+}
+
+void CConfigRtkFunctions::OnBnClickedField13()
+{
+	UpdateStatus();
+}
+
+void CConfigRtkFunctions::OnBnClickedField14()
+{
+	UpdateStatus();
+}
+
+void CConfigRtkFunctions::OnBnClickedOk()
+{	
+	m_rtkMode = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
+	m_baseOpt = ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->GetCurSel();
+	m_roverOpt = ((CComboBox*)GetDlgItem(IDC_ROVER_OPT_FUN))->GetCurSel();
+	m_pkbOpt = ((CComboBox*)GetDlgItem(IDC_PKB_OPT_FUN))->GetCurSel();
+
+	CString txt;
+	((CEdit*)GetDlgItem(IDC_SRV_EDT1))->GetWindowText(txt);
+	m_srvValue1 = atoi(txt);
+	((CEdit*)GetDlgItem(IDC_SRV_EDT2))->GetWindowText(txt);
+	m_srvValue2 = atoi(txt);
+
+	((CEdit*)GetDlgItem(IDC_STT_EDT1))->GetWindowText(txt);
+	m_sttValue1 = atof(txt);
+	((CEdit*)GetDlgItem(IDC_STT_EDT2))->GetWindowText(txt);
+	m_sttValue2 = atof(txt);
+	((CEdit*)GetDlgItem(IDC_STT_EDT3))->GetWindowText(txt);
+	m_sttValue3 = (float)atof(txt);
+	((CEdit*)GetDlgItem(IDC_MVB_EDT1))->GetWindowText(txt);	
+	m_mvbLength = (float)atof(txt);
+
+  //Binary Type
+	m_field2 = ((CComboBox*)GetDlgItem(IDC_BINARY_TYPE))->GetCurSel();
+
+  //RTCM
+	m_field3 = ((CComboBox*)GetDlgItem(IDC_FIELD3))->GetCurSel();
+	m_field4 = ((CButton*)GetDlgItem(IDC_FIELD4))->GetCheck();
+	m_field5 = ((CButton*)GetDlgItem(IDC_FIELD5))->GetCheck();
+	m_field6 = ((CButton*)GetDlgItem(IDC_FIELD6))->GetCheck();
+	m_field7 = ((CButton*)GetDlgItem(IDC_FIELD7))->GetCheck();
+	m_field8 = ((CButton*)GetDlgItem(IDC_FIELD8))->GetCheck();
+	m_field9 = ((CButton*)GetDlgItem(IDC_FIELD9))->GetCheck();
+	m_field10 = ((CButton*)GetDlgItem(IDC_FIELD10))->GetCheck();
+
+	GetDlgItem(IDC_INTERVAL)->GetWindowText(txt);
+	m_field11 = atoi(txt);
+	GetDlgItem(IDC_INTERVAL2)->GetWindowText(txt);
+	m_field12 = atoi(txt);
+	GetDlgItem(IDC_INTERVAL3)->GetWindowText(txt);
+	m_field13 = atoi(txt);
+	GetDlgItem(IDC_INTERVAL4)->GetWindowText(txt);
+	m_field14 = atoi(txt);
+
+	if(0 == ((CButton*)GetDlgItem(IDC_FIELD11))->GetCheck())
+  {
+    m_field11 = 0;
+  }
+	if(0 == ((CButton*)GetDlgItem(IDC_FIELD12))->GetCheck())
+  {
+    m_field12 = 0;
+  }
+	if(0 == ((CButton*)GetDlgItem(IDC_FIELD13))->GetCheck())
+  {
+    m_field13 = 0;
+  }
+	if(0 == ((CButton*)GetDlgItem(IDC_FIELD14))->GetCheck())
+  {
+    m_field14 = 0;
+  }
+
+  //STQ RAW
+  m_rate = ((CComboBox*)GetDlgItem(IDC_OUTPUT_RATE))->GetCurSel();
+	//m_measTime = ((CButton*)GetDlgItem(IDC_MEAS_TIME))->GetCheck();
+	//m_rawMeas = ((CButton*)GetDlgItem(IDC_RAW_MEAS))->GetCheck();
+	m_svChStatus = ((CButton*)GetDlgItem(IDC_SV_CH))->GetCheck();
+	m_rcvChStatus = ((CButton*)GetDlgItem(IDC_RCV_STATE))->GetCheck();
+	m_extRawMeas = ((CButton*)GetDlgItem(IDC_EXT_RAW_MEAS))->GetCheck();
+
+	m_subFrame = 0;
+	if(((CButton*)GetDlgItem(IDC_GPS))->GetCheck())
+	{
+		m_subFrame |= 0x1;
+	}
+	if(((CButton*)GetDlgItem(IDC_GLONASS))->GetCheck())
+	{
+		m_subFrame |= 0x2;
+	}
+	if(((CButton*)GetDlgItem(IDC_GALILEO))->GetCheck())
+	{
+		m_subFrame |= 0x4;
+	}
+	if(((CButton*)GetDlgItem(IDC_BEIDOU))->GetCheck())
+	{
+		m_subFrame |= 0x8;
+	}
+
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+	OnOK();
+}
+//
+//INT_PTR CConfigRtkFunctions::DoDirect(int type)
+//{
+//  //Rover(0)
+//  //In: a0 a1 00 25 6a 06 00 00 00 00 07 d0 00 00 00 1e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a5 0d 0a 
+//
+//  //Base(1)                2  3  4  5  6  7  8  9 10 11 12 13  
+//  //In: a0 a1 00 25 6a 06 01 00 00 00 07 d0 00 00 00 1e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a4 0d 0a 
+//
+//	m_attribute = 0;
+//  m_srvValue1 = 30;
+//  m_srvValue2 = 2000;
+//  m_sttValue1 = 0;
+//  m_sttValue2 = 0;
+//  m_sttValue3 = 0;
+//	switch(type)
+//	{
+//	case 0:
+//    m_rtkMode = 0x00;
+//    m_roverOpt = 0;
+//		break;
+//  case 1:
+//    m_rtkMode = 0x01;
+//    m_baseOpt = 0;
+//		break;
+//	default:
+//		return IDCANCEL;
+//	}
+//	return IDOK;
+//}
+
+void CConfigRtkFunctions::DoCommand()
+{
+	CWaitCursor wait;
+  commandCounts = 0;
+
+	BinaryData cmd1(37);
+  *cmd1.GetBuffer(0) = 0x6A;
+  *cmd1.GetBuffer(1) = 0x06;
+  *cmd1.GetBuffer(2) = (U08)m_rtkMode;
+  if(m_rtkMode == 0)
+  {
+    *cmd1.GetBuffer(3) = m_roverOpt;
+  }
+  else if(m_rtkMode == 1)
+  {
+    *cmd1.GetBuffer(3) = m_baseOpt;
+  }
+  else if(m_rtkMode == 2)
+  {
+    *cmd1.GetBuffer(3) = m_pkbOpt;
+  }
+  //U32
+  *cmd1.GetBuffer(4) = HIBYTE(HIWORD(m_srvValue1));
+  *cmd1.GetBuffer(5) = LOBYTE(HIWORD(m_srvValue1));
+  *cmd1.GetBuffer(6) = HIBYTE(LOWORD(m_srvValue1));
+  *cmd1.GetBuffer(7) = LOBYTE(LOWORD(m_srvValue1));
+  //U32
+  *cmd1.GetBuffer(8) = HIBYTE(HIWORD(m_srvValue2));
+  *cmd1.GetBuffer(9) = LOBYTE(HIWORD(m_srvValue2));
+  *cmd1.GetBuffer(10) = HIBYTE(LOWORD(m_srvValue2));
+  *cmd1.GetBuffer(11) = LOBYTE(LOWORD(m_srvValue2));
+  //D64
+  *cmd1.GetBuffer(12) = *(((U08*)(&m_sttValue1)) + 7);
+  *cmd1.GetBuffer(13) = *(((U08*)(&m_sttValue1)) + 6);
+  *cmd1.GetBuffer(14) = *(((U08*)(&m_sttValue1)) + 5);
+  *cmd1.GetBuffer(15) = *(((U08*)(&m_sttValue1)) + 4);
+  *cmd1.GetBuffer(16) = *(((U08*)(&m_sttValue1)) + 3);
+  *cmd1.GetBuffer(17) = *(((U08*)(&m_sttValue1)) + 2);
+  *cmd1.GetBuffer(18) = *(((U08*)(&m_sttValue1)) + 1);
+  *cmd1.GetBuffer(19) = *(((U08*)(&m_sttValue1)) + 0);
+  //D64
+  *cmd1.GetBuffer(20) = *(((U08*)(&m_sttValue2)) + 7);
+  *cmd1.GetBuffer(21) = *(((U08*)(&m_sttValue2)) + 6);
+  *cmd1.GetBuffer(22) = *(((U08*)(&m_sttValue2)) + 5);
+  *cmd1.GetBuffer(23) = *(((U08*)(&m_sttValue2)) + 4);
+  *cmd1.GetBuffer(24) = *(((U08*)(&m_sttValue2)) + 3);
+  *cmd1.GetBuffer(25) = *(((U08*)(&m_sttValue2)) + 2);
+  *cmd1.GetBuffer(26) = *(((U08*)(&m_sttValue2)) + 1);
+  *cmd1.GetBuffer(27) = *(((U08*)(&m_sttValue2)) + 0);
+  //F32
+  *cmd1.GetBuffer(28) = *(((U08*)(&m_sttValue3)) + 3);
+  *cmd1.GetBuffer(29) = *(((U08*)(&m_sttValue3)) + 2);
+  *cmd1.GetBuffer(30) = *(((U08*)(&m_sttValue3)) + 1);
+  *cmd1.GetBuffer(31) = *(((U08*)(&m_sttValue3)) + 0);
+  //F32
+  *cmd1.GetBuffer(32) = *(((U08*)(&m_mvbLength)) + 3);
+  *cmd1.GetBuffer(33) = *(((U08*)(&m_mvbLength)) + 2);
+  *cmd1.GetBuffer(34) = *(((U08*)(&m_mvbLength)) + 1);
+  *cmd1.GetBuffer(35) = *(((U08*)(&m_mvbLength)) + 0);
+  //U08
+  *cmd1.GetBuffer(36) = (U08)m_attribute;
+
+  configCmds[commandCounts].SetData(cmd1);
+  configPrompts[commandCounts] = "Configure RTK mode and op function successfully";
+  ++commandCounts;
+
+  if(m_rtkMode > 0) //Not Rover mode
+  {
+    if(m_field2 == 0) //STQRAW output
+    {
+      //STQ RAw
+	    BinaryData cmd3(9);
+	    *cmd3.GetBuffer(0) = 0x1E;
+	    *cmd3.GetBuffer(1) = (U08)m_rate;
+	    //*cmd3.GetBuffer(2) = (U08)m_measTime;
+	    //*cmd3.GetBuffer(3) = (U08)m_rawMeas;
+	    *cmd3.GetBuffer(4) = (U08)m_svChStatus;
+	    *cmd3.GetBuffer(5) = (U08)m_rcvChStatus;
+	    *cmd3.GetBuffer(6) = (U08)m_subFrame;
+      *cmd3.GetBuffer(7) = (U08)m_extRawMeas;
+	    *cmd3.GetBuffer(8) = (U08)m_attribute;
+
+	    configCmds[commandCounts].SetData(cmd3);
+	    configPrompts[commandCounts] = "Configure binary measurement data out successfully";
+      ++commandCounts;
+    }
+    else if(m_field2 == 1) //RTCM output
+    {
+      //RTCM
+	    BinaryData cmd2(17);
+	    *cmd2.GetBuffer(0) = 0x20;
+	    *cmd2.GetBuffer(1) = (U08)m_field2;
+	    *cmd2.GetBuffer(2) = (U08)m_field3;
+	    *cmd2.GetBuffer(3) = (U08)m_field4;
+	    *cmd2.GetBuffer(4) = (U08)m_field5;
+	    *cmd2.GetBuffer(5) = (U08)m_field6;
+	    *cmd2.GetBuffer(6) = (U08)m_field7;
+	    *cmd2.GetBuffer(7) = (U08)m_field8;
+	    *cmd2.GetBuffer(8) = (U08)m_field9;
+	    *cmd2.GetBuffer(9) = (U08)m_field10;
+
+	    *cmd2.GetBuffer(10) = (U08)m_field11;
+	    *cmd2.GetBuffer(11) = (U08)m_field12;
+	    *cmd2.GetBuffer(12) = (U08)m_field13;
+	    *cmd2.GetBuffer(13) = (U08)m_field14;
+
+	    *cmd2.GetBuffer(16) = (U08)m_attribute;
+
+	    configCmds[commandCounts].SetData(cmd2);
+	    configPrompts[commandCounts] = "Configure RtcmMeasurementDataOut successfully";
+      ++commandCounts;
+    }
+  } //if(m_rtkMode > 0) //Not Rover mode
+
+  if(m_rtkMode != 1 && m_roverOpt != 2)
+  {	//Clear PSTI032 information
+	  CGPSDlg::gpsDlg->m_bClearPsti032 = TRUE;
+  }
+  AfxBeginThread(MultiConfigThread, 0);
+}
+
+void CConfigRtkFunctions::AdjustUI()
+{ 
+  //if(cmdMode == CfgBasePosition || cmdMode == CfgTiming)
+  {
+	  //((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->ResetContent();
+   // if(cmdMode == CfgBasePosition)
+   // {
+   //   SetWindowText("Configure Base Position");
+   //   //Kinematic Mode;Survey Mode;Static Mode;
+   //   ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->AddString("Kinematic Mode");
+   //   ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->AddString("Survey Mode");
+   //   ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->AddString("Static Mode");
+   // }
+   // else  //CfgTiming
+   // {
+   //   SetWindowText("Configure Timing");
+	  //  ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->ResetContent();
+   //   //PVT;Survey;Static;
+   //   ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->AddString("PVT");
+   //   ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->AddString("Survey");
+   //   ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->AddString("Static");
+   // }
+
+   // CRect rcTop, rcBottom;
+   // GetDlgItem(IDC_RTK_MODE_TXT)->GetWindowRect(&rcTop);
+   // GetDlgItem(IDC_MODE_TXT)->GetWindowRect(&rcBottom);
+   // int h = rcBottom.top - rcTop.top;
+   // UINT ctrlArray[] = {
+   //   IDC_MODE_TXT, IDC_BASE_OPT_FUN,  //Base Position Mode
+   //   IDC_SRV_SET1, IDC_SRV_EDT1, //Survey Mode Length
+   //   IDC_SRV_SET2, IDC_SRV_EDT2, //Survey Mode Dev
+   //   IDC_STT_SET1, IDC_STT_EDT1, //Static Mode Lat
+   //   IDC_STT_SET2, IDC_STT_EDT2, //Static Mode Lon
+   //   IDC_SRV_SET3, IDC_STT_EDT3, //Static Mode Height
+   //   IDC_ATTR, IDC_ATTR_TXT,  //Attribute
+   //   IDCANCEL, IDOK,
+   // };
+
+   // for(int i = 0; i < Dim(ctrlArray); ++i)
+   // {
+   //   GetDlgItem(ctrlArray[i])->GetWindowRect(&rcTop);
+   //   rcTop.OffsetRect(0, 0 - h);
+   //   ScreenToClient(rcTop);
+   //   GetDlgItem(ctrlArray[i])->MoveWindow(rcTop);
+   // }
+
+   // GetWindowRect(&rcTop);
+   // rcTop.bottom -= h;
+   // MoveWindow(rcTop);
+  }
+}
+
+
+void CConfigRtkFunctions::UpdateStatus()
+{
+	int rtkMode = ((CComboBox*)GetDlgItem(IDC_MODE))->GetCurSel();
+	int baseOpt = ((CComboBox*)GetDlgItem(IDC_BASE_OPT_FUN))->GetCurSel();
+	int roverOpt = ((CComboBox*)GetDlgItem(IDC_ROVER_OPT_FUN))->GetCurSel();
+	int pkbOpt = ((CComboBox*)GetDlgItem(IDC_PKB_OPT_FUN))->GetCurSel();
+	int binType = ((CComboBox*)GetDlgItem(IDC_BINARY_TYPE))->GetCurSel();
+
+	const char *baseDesc1 = "This function can only match below operational function in RTK base position mode:\r\n - Static Mode\r\n - Survey Mode";
+  const char *baseDesc2 = "This function can only match below operational function in RTK base position mode:\r\n - Kinematic Mode\r\nor RTK precisely kinematic base mode:\r\n - Normal, Float";
+	const char *roverDesc1 = "This function can only match below operational function in RTK rover mode:\r\n - Normal, Float";
+	const char *roverDesc2 = "This function can only match below operational function in RTK rover mode:\r\n - Moving base\r\nor RTK precisely kinematic base mode:\r\n - Normal, Float";
+
+	if(rtkMode == 0)	//RTK Rover mode
+	{
+		GetDlgItem(IDC_BASE_OPT_FUN)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_ROVER_OPT_FUN)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_PKB_OPT_FUN)->ShowWindow(SW_HIDE);
+
+		GetDlgItem(IDC_SRV_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET3)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT3)->ShowWindow(SW_HIDE);
+
+		if(roverOpt == 2)	//Moving base
+		{
+			GetDlgItem(IDC_DESC)->SetWindowText(baseDesc2);
+			GetDlgItem(IDC_MVB_SET)->ShowWindow(SW_SHOW);
+			GetDlgItem(IDC_MVB_SET2)->ShowWindow(SW_SHOW);
+			GetDlgItem(IDC_MVB_EDT1)->ShowWindow(SW_SHOW);
+		}
+    //Hide all binary type items
+    //Binary Type
+    GetDlgItem(IDC_STATIC7)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_BINARY_TYPE)->ShowWindow(SW_HIDE);
+    //Rtcm
+    GetDlgItem(IDC_STATIC5)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_FIELD3)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_STATIC6)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_FIELD4)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_FIELD5)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_FIELD6)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_FIELD7)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_FIELD8)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_FIELD9)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_FIELD10)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_FIELD11)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_FIELD12)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_FIELD13)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_FIELD14)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_STATIC1)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_STATIC2)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_STATIC3)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_STATIC4)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_INTERVAL)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_INTERVAL2)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_INTERVAL3)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_INTERVAL4)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_STATIC11)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_STATIC21)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_STATIC31)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_STATIC41)->ShowWindow(SW_HIDE);
+    //Raw
+    GetDlgItem(IDC_STATIC8)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_OUTPUT_RATE)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_STATIC9)->ShowWindow(SW_HIDE);
+    //GetDlgItem(IDC_MEAS_TIME)->ShowWindow(SW_HIDE);
+    //GetDlgItem(IDC_RAW_MEAS)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_SV_CH)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_RCV_STATE)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_EXT_RAW_MEAS)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_GPS)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_GLONASS)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_BEIDOU)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_GALILEO)->ShowWindow(SW_HIDE);
+
+		return;
+	}
+	else if(rtkMode == 1) //RTK Base mode
+	{
+		GetDlgItem(IDC_BASE_OPT_FUN)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_ROVER_OPT_FUN)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_PKB_OPT_FUN)->ShowWindow(SW_HIDE);
+
+		GetDlgItem(IDC_MVB_SET)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_MVB_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_MVB_EDT1)->ShowWindow(SW_HIDE);
+	}
+	else if(rtkMode == 2) //RTK precisely kinematic base mode
+	{
+		GetDlgItem(IDC_BASE_OPT_FUN)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_ROVER_OPT_FUN)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_PKB_OPT_FUN)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_DESC)->SetWindowText(baseDesc1);
+
+		GetDlgItem(IDC_MVB_SET)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_MVB_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_MVB_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET3)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT3)->ShowWindow(SW_HIDE);
+  }
+  if(rtkMode == 1 || rtkMode == 2)
+  { //Base mode need configure binary format
+
+    //Binary Type
+    GetDlgItem(IDC_STATIC7)->ShowWindow(SW_SHOW);
+    GetDlgItem(IDC_BINARY_TYPE)->ShowWindow(SW_SHOW);
+    GetDlgItem(IDC_STATIC5)->ShowWindow(SW_SHOW);
+
+    if(binType == 0)
+    { //STQ RAW format
+      //Hide Rtcm
+      GetDlgItem(IDC_STATIC5)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_FIELD3)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_STATIC6)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_FIELD4)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_FIELD5)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_FIELD6)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_FIELD7)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_FIELD8)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_FIELD9)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_FIELD10)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_FIELD11)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_FIELD12)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_FIELD13)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_FIELD14)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_STATIC1)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_STATIC2)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_STATIC3)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_STATIC4)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_INTERVAL)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_INTERVAL2)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_INTERVAL3)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_INTERVAL4)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_STATIC11)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_STATIC21)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_STATIC31)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_STATIC41)->ShowWindow(SW_HIDE);
+      //Show STQ Raw items
+      GetDlgItem(IDC_STATIC8)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_OUTPUT_RATE)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_STATIC9)->ShowWindow(SW_SHOW);
+      //GetDlgItem(IDC_MEAS_TIME)->ShowWindow(SW_SHOW);
+      //GetDlgItem(IDC_RAW_MEAS)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_SV_CH)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_RCV_STATE)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_EXT_RAW_MEAS)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_GPS)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_GLONASS)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_BEIDOU)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_GALILEO)->ShowWindow(SW_SHOW);
+    }
+    else
+    { //RTCM format
+      //Show Rtcm
+      GetDlgItem(IDC_STATIC5)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_FIELD3)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_STATIC6)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_FIELD4)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_FIELD5)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_FIELD6)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_FIELD7)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_FIELD8)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_FIELD9)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_FIELD10)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_FIELD11)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_FIELD12)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_FIELD13)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_FIELD14)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_STATIC1)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_STATIC2)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_STATIC3)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_STATIC4)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_INTERVAL)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_INTERVAL2)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_INTERVAL3)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_INTERVAL4)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_STATIC11)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_STATIC21)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_STATIC31)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_STATIC41)->ShowWindow(SW_SHOW);
+
+      if(!m_supportEph)
+      {
+	      GetDlgItem(IDC_STATIC1)->ShowWindow(SW_HIDE);
+	      GetDlgItem(IDC_STATIC2)->ShowWindow(SW_HIDE);
+	      GetDlgItem(IDC_STATIC3)->ShowWindow(SW_HIDE);
+	      GetDlgItem(IDC_STATIC4)->ShowWindow(SW_HIDE);
+	      GetDlgItem(IDC_STATIC11)->ShowWindow(SW_HIDE);
+	      GetDlgItem(IDC_STATIC21)->ShowWindow(SW_HIDE);
+	      GetDlgItem(IDC_STATIC31)->ShowWindow(SW_HIDE);
+	      GetDlgItem(IDC_STATIC41)->ShowWindow(SW_HIDE);
+	      GetDlgItem(IDC_INTERVAL)->ShowWindow(SW_HIDE);
+	      GetDlgItem(IDC_INTERVAL2)->ShowWindow(SW_HIDE);
+	      GetDlgItem(IDC_INTERVAL3)->ShowWindow(SW_HIDE);
+	      GetDlgItem(IDC_INTERVAL4)->ShowWindow(SW_HIDE);
+      }
+      else
+      {
+        GetDlgItem(IDC_INTERVAL)->EnableWindow(((CButton*)GetDlgItem(IDC_FIELD11))->GetCheck());
+        GetDlgItem(IDC_INTERVAL2)->EnableWindow(((CButton*)GetDlgItem(IDC_FIELD12))->GetCheck());
+        GetDlgItem(IDC_INTERVAL3)->EnableWindow(((CButton*)GetDlgItem(IDC_FIELD13))->GetCheck());
+        GetDlgItem(IDC_INTERVAL4)->EnableWindow(((CButton*)GetDlgItem(IDC_FIELD14))->GetCheck());
+      }
+      //Show STQ Raw items
+      GetDlgItem(IDC_STATIC8)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_OUTPUT_RATE)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_STATIC9)->ShowWindow(SW_HIDE);
+      //GetDlgItem(IDC_MEAS_TIME)->ShowWindow(SW_HIDE);
+      //GetDlgItem(IDC_RAW_MEAS)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_SV_CH)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_RCV_STATE)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_EXT_RAW_MEAS)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_GPS)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_GLONASS)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_BEIDOU)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_GALILEO)->ShowWindow(SW_HIDE);
+    }
+  }
+  if(rtkMode == 2) 
+  {
+    return;
+  }
+  //if(CfgBasePosition == cmdMode || CfgTiming == cmdMode)
+  //{
+		//  GetDlgItem(IDC_RTK_MODE_TXT)->ShowWindow(SW_HIDE);
+		//  GetDlgItem(IDC_DESC)->ShowWindow(SW_HIDE);
+	 //   GetDlgItem(IDC_MODE)->ShowWindow(SW_HIDE);
+	 //   GetDlgItem(IDC_ROVER_OPT_FUN)->ShowWindow(SW_HIDE);
+  //    GetDlgItem(IDC_MVB_EDT1)->ShowWindow(SW_HIDE);
+  //    GetDlgItem(IDC_DESC2)->ShowWindow(SW_HIDE);
+  //}
+
+	if(baseOpt == 0)	//Kinematic 
+	{
+		GetDlgItem(IDC_SRV_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET3)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT3)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_DESC)->SetWindowText(roverDesc2);
+		return;
+	}
+
+	if(baseOpt == 1)	//Survey
+	{
+		GetDlgItem(IDC_SRV_SET1)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_SRV_SET2)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_SRV_EDT1)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_SRV_EDT2)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET3)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_EDT3)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_DESC)->SetWindowText(roverDesc1);
+		return;
+	}
+
+	if(baseOpt == 2)	//Static
+	{
+		GetDlgItem(IDC_SRV_SET1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_SET2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT1)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_SRV_EDT2)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_STT_SET1)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_SET2)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_SET3)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_EDT1)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_EDT2)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_STT_EDT3)->ShowWindow(SW_SHOW);
+		GetDlgItem(IDC_DESC)->SetWindowText(roverDesc1);
+	}
+}
+
+void CConfigRtkFunctions::OnCbnSelChangeRtkMode()
+{
+	UpdateStatus();
+}
+
+void CConfigRtkFunctions::OnCbnSelChangeBaseOpt()
+{
+	UpdateStatus();
+}
+
+void CConfigRtkFunctions::OnCbnSelChangeRoverOpt()
+{
+	UpdateStatus();
+}
+
+void CConfigRtkFunctions::OnCbnSelChangeBinaryType()
+{
+	UpdateStatus();
+}
 // CConfigMessageOut 
 IMPLEMENT_DYNAMIC(CConfigMessageOut, CCommonConfigDlg)
 
@@ -3871,56 +5113,161 @@ void CConfigTiming::OnCbnSelChangeMode()
 }
 */
 // CConfigTimingCableDelay 
-IMPLEMENT_DYNAMIC(CConfigTimingCableDelay, CCommonConfigDlg)
+IMPLEMENT_DYNAMIC(CConfigTimingCableDelayDlg, CCommonConfigDlg)
 
-CConfigTimingCableDelay::CConfigTimingCableDelay(CWnd* pParent /*=NULL*/)
+CConfigTimingCableDelayDlg::CConfigTimingCableDelayDlg(CWnd* pParent /*=NULL*/)
 : CCommonConfigDlg(IDD_CFG_TIMING_CABLE_DELAY, pParent)
 {
 
 }
 
-BEGIN_MESSAGE_MAP(CConfigTimingCableDelay, CCommonConfigDlg)
-	ON_BN_CLICKED(IDOK, &CConfigTimingCableDelay::OnBnClickedOk)
+BEGIN_MESSAGE_MAP(CConfigTimingCableDelayDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigTimingCableDelayDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
 // CConfigRtkMode 
-BOOL CConfigTimingCableDelay::OnInitDialog()
+BOOL CConfigTimingCableDelayDlg::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
+  CString title;
+  S32 cableDelay;
 
-	GetDlgItem(IDC_1PPS_CABLE)->SetWindowText("0");
+  title = (DEVELOPER_VERSION) ? "Cable Delay (-500000~500000 unit:ns):" : "Cable Delay (-500000~500000 unit:0.01ns):";
+  GetDlgItem(IDC_PROMPT)->SetWindowText(title);
+  this->GetWindowText(title);
+
+  if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryCableDelay(CGPSDlg::Return, &cableDelay))
+  {
+    CString txt;
+    if(DEVELOPER_VERSION) 
+    { //Uint: ns
+      cableDelay /= 100;
+    }
+    txt.Format("%d", cableDelay);
+    GetDlgItem(IDC_CABLE_DELAY)->SetWindowText(txt);
+    title += " (Query successfully)";
+  }
+  else
+  {
+    title += " (Query failed)";
+    GetDlgItem(IDC_CABLE_DELAY)->SetWindowText((DEVELOPER_VERSION) ? "0" : "0");
+  }
 	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+  this->SetWindowText(title);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
 
-void CConfigTimingCableDelay::OnBnClickedOk()
+void CConfigTimingCableDelayDlg::OnBnClickedOk()
 {	
-
 	CString txt;
-	((CEdit*)GetDlgItem(IDC_1PPS_CABLE))->GetWindowText(txt);
-	m_delay = atoi(txt);
+	((CEdit*)GetDlgItem(IDC_CABLE_DELAY))->GetWindowText(txt);
+	m_cableDelay = atoi(txt);
 	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
-
+  if(DEVELOPER_VERSION) 
+  { //Uint: ns
+    m_cableDelay *= 100;
+  }
 	OnOK();
 }
 
-void CConfigTimingCableDelay::DoCommand()
+void CConfigTimingCableDelayDlg::DoCommand()
 {
 	CWaitCursor wait;
 	BinaryData cmd(6);
-
-	*cmd.GetBuffer(0) = 0x45;
+  int idx = 0;
+	
+  *cmd.GetBuffer(idx++) = 0x45;
 	//U32
-	*cmd.GetBuffer(1) = HIBYTE(HIWORD(m_delay));
-	*cmd.GetBuffer(2) = LOBYTE(HIWORD(m_delay));
-	*cmd.GetBuffer(3) = HIBYTE(LOWORD(m_delay));
-	*cmd.GetBuffer(4) = LOBYTE(LOWORD(m_delay));
+	*cmd.GetBuffer(idx++) = HIBYTE(HIWORD(m_cableDelay));
+	*cmd.GetBuffer(idx++) = LOBYTE(HIWORD(m_cableDelay));
+	*cmd.GetBuffer(idx++) = HIBYTE(LOWORD(m_cableDelay));
+	*cmd.GetBuffer(idx++) = LOBYTE(LOWORD(m_cableDelay));
 	//U08
-	*cmd.GetBuffer(5) = (U08)m_attribute;
+	*cmd.GetBuffer(idx++) = (U08)m_attribute;
 
 	configCmd.SetData(cmd);
 	configPrompt = "Configure cable delay successfully";
+	AfxBeginThread(ConfigThread, 0);
+}
+
+// CConfig1PpsPulseWidthDlg 
+IMPLEMENT_DYNAMIC(CConfig1PpsPulseWidthDlg, CCommonConfigDlg)
+
+CConfig1PpsPulseWidthDlg::CConfig1PpsPulseWidthDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CFG_1PPS_PULSE_WIDTH, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfig1PpsPulseWidthDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfig1PpsPulseWidthDlg::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfig1PpsPulseWidthDlg 
+BOOL CConfig1PpsPulseWidthDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+  CString title;
+  U32 pulseWidth;
+
+  title = (DEVELOPER_VERSION) ? "Pulse Width (1~500 unit:ms):" :"Pulse Width (1~100000 unit:us):";
+  GetDlgItem(IDC_PROMPT)->SetWindowText(title);
+  this->GetWindowText(title);
+
+  if(CGPSDlg::Ack == CGPSDlg::gpsDlg->Query1ppsPulseWidth(CGPSDlg::Return, &pulseWidth))
+  {
+    CString txt;
+    if(DEVELOPER_VERSION) 
+    { //Uint: ms
+      pulseWidth /= 1000;
+    }
+    txt.Format("%d", pulseWidth);
+    GetDlgItem(IDC_PULSE_WIDTH)->SetWindowText(txt);
+    title += " (Query successfully)";
+  }
+  else
+  {
+    title += " (Query failed)";
+    GetDlgItem(IDC_VALUE)->SetWindowText((DEVELOPER_VERSION) ? "1" : "1");
+  }
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+  this->SetWindowText(title);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfig1PpsPulseWidthDlg::OnBnClickedOk()
+{	
+	CString txt;
+	((CEdit*)GetDlgItem(IDC_PULSE_WIDTH))->GetWindowText(txt);
+	m_pulseWidth = atoi(txt);
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+  if(DEVELOPER_VERSION) 
+  { //Uint: ms
+    m_pulseWidth *= 1000;
+  }
+	OnOK();
+}
+
+void CConfig1PpsPulseWidthDlg::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(7);
+  int idx = 0;
+
+	*cmd.GetBuffer(idx++) = 0x65;
+	*cmd.GetBuffer(idx++) = 0x01;
+	//U32
+	*cmd.GetBuffer(idx++) = HIBYTE(HIWORD(m_pulseWidth));
+	*cmd.GetBuffer(idx++) = LOBYTE(HIWORD(m_pulseWidth));
+	*cmd.GetBuffer(idx++) = HIBYTE(LOWORD(m_pulseWidth));
+	*cmd.GetBuffer(idx++) = LOBYTE(LOWORD(m_pulseWidth));
+	//U08
+	*cmd.GetBuffer(idx++) = (U08)m_attribute;
+
+	configCmd.SetData(cmd);
+	configPrompt = "Configure 1PPS pulse width successfully";
 	AfxBeginThread(ConfigThread, 0);
 }
 
@@ -4696,13 +6043,17 @@ void CConfigRtkReferencePosition::DoCommand()
 IMPLEMENT_DYNAMIC(ConfigRtcmMeasurementDataOutDlg, CCommonConfigDlg)
 
 ConfigRtcmMeasurementDataOutDlg::ConfigRtcmMeasurementDataOutDlg(CWnd* pParent /*=NULL*/)
-	: CCommonConfigDlg(IDD_CONFIG_RTCM_MEA_DAT_OUT, pParent)
+	: CCommonConfigDlg(IDD_CFG_RTCM_MEA_DAT_OUT, pParent)
 {
 }
 
 BEGIN_MESSAGE_MAP(ConfigRtcmMeasurementDataOutDlg, CCommonConfigDlg)
 	ON_BN_CLICKED(IDC_FIELD2, &ConfigRtcmMeasurementDataOutDlg::OnBnClickedField2)
 	ON_BN_CLICKED(IDOK, &ConfigRtcmMeasurementDataOutDlg::OnBnClickedOk)
+	ON_BN_CLICKED(IDC_FIELD11, &ConfigRtcmMeasurementDataOutDlg::OnBnClickedField11)
+	ON_BN_CLICKED(IDC_FIELD12, &ConfigRtcmMeasurementDataOutDlg::OnBnClickedField12)
+	ON_BN_CLICKED(IDC_FIELD13, &ConfigRtcmMeasurementDataOutDlg::OnBnClickedField13)
+	ON_BN_CLICKED(IDC_FIELD14, &ConfigRtcmMeasurementDataOutDlg::OnBnClickedField14)
 END_MESSAGE_MAP()
 
 // ConfigBinaryMeasurementDataOutDlg
@@ -4712,7 +6063,7 @@ BOOL ConfigRtcmMeasurementDataOutDlg::OnInitDialog()
   CString title;
   BinaryData ackCmd;
   this->GetWindowText(title);
-
+  m_supportEph = TRUE;
   if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryRtcmMeasurementDataOut(CGPSDlg::Return, &ackCmd))
   {
     title += " (Query successfully)";
@@ -4725,6 +6076,23 @@ BOOL ConfigRtcmMeasurementDataOutDlg::OnInitDialog()
     ((CButton*)GetDlgItem(IDC_FIELD8))->SetCheck(ackCmd[11]);
     ((CButton*)GetDlgItem(IDC_FIELD9))->SetCheck(ackCmd[12]);
     ((CButton*)GetDlgItem(IDC_FIELD10))->SetCheck(ackCmd[13]);
+     m_supportEph = (ackCmd[19] == 0) ? FALSE : TRUE;
+
+    ((CButton*)GetDlgItem(IDC_FIELD11))->SetCheck(ackCmd[14] != 0);
+    ((CButton*)GetDlgItem(IDC_FIELD12))->SetCheck(ackCmd[15] != 0);
+    ((CButton*)GetDlgItem(IDC_FIELD13))->SetCheck(ackCmd[16] != 0);
+    ((CButton*)GetDlgItem(IDC_FIELD14))->SetCheck(ackCmd[17] != 0);
+
+    CString txt;
+    txt.Format("%d", ackCmd[14]);
+    GetDlgItem(IDC_INTERVAL)->SetWindowText(txt);
+    txt.Format("%d", ackCmd[15]);
+    GetDlgItem(IDC_INTERVAL2)->SetWindowText(txt);
+    txt.Format("%d", ackCmd[16]);
+    GetDlgItem(IDC_INTERVAL3)->SetWindowText(txt);
+    txt.Format("%d", ackCmd[17]);
+    GetDlgItem(IDC_INTERVAL4)->SetWindowText(txt);
+
     ((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
   }
   else
@@ -4739,10 +6107,18 @@ BOOL ConfigRtcmMeasurementDataOutDlg::OnInitDialog()
     ((CButton*)GetDlgItem(IDC_FIELD8))->SetCheck(1);
     ((CButton*)GetDlgItem(IDC_FIELD9))->SetCheck(1);
     ((CButton*)GetDlgItem(IDC_FIELD10))->SetCheck(1);
+    //RTCM Ephemeris default disable
+    ((CButton*)GetDlgItem(IDC_FIELD11))->SetCheck(0);
+    ((CButton*)GetDlgItem(IDC_FIELD12))->SetCheck(0);
+    ((CButton*)GetDlgItem(IDC_FIELD13))->SetCheck(0);
+    ((CButton*)GetDlgItem(IDC_FIELD14))->SetCheck(0);
+
     ((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
   }
 
-  if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryConstellationCapability(CGPSDlg::Return, &ackCmd))
+  //20200620-Bug fix for GP/BD/GA fw
+  //if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryConstellationCapability(CGPSDlg::Return, &ackCmd))
+  if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryGnssConstellationType(CGPSDlg::Return, &ackCmd))
   {
     cnstMode = MAKEWORD(ackCmd[7], ackCmd[6]);
   }
@@ -4760,7 +6136,27 @@ void ConfigRtcmMeasurementDataOutDlg::OnBnClickedField2()
 	UpdateStatus();
 }
 
-void ConfigRtcmMeasurementDataOutDlg::OnBnClickedOk()
+void ConfigRtcmMeasurementDataOutDlg::OnBnClickedField11()
+{
+	UpdateStatus();
+}
+
+void ConfigRtcmMeasurementDataOutDlg::OnBnClickedField12()
+{
+	UpdateStatus();
+}
+
+void ConfigRtcmMeasurementDataOutDlg::OnBnClickedField13()
+{
+	UpdateStatus();
+}
+
+void ConfigRtcmMeasurementDataOutDlg::OnBnClickedField14()
+{
+	UpdateStatus();
+}
+
+ void ConfigRtcmMeasurementDataOutDlg::OnBnClickedOk()
 {
 	m_field2 = ((CButton*)GetDlgItem(IDC_FIELD2))->GetCheck();
 	m_field3 = ((CComboBox*)GetDlgItem(IDC_FIELD3))->GetCurSel();
@@ -4771,9 +6167,53 @@ void ConfigRtcmMeasurementDataOutDlg::OnBnClickedOk()
 	m_field8 = ((CButton*)GetDlgItem(IDC_FIELD8))->GetCheck();
 	m_field9 = ((CButton*)GetDlgItem(IDC_FIELD9))->GetCheck();
 	m_field10 = ((CButton*)GetDlgItem(IDC_FIELD10))->GetCheck();
+
+  CString txt;
+	GetDlgItem(IDC_INTERVAL)->GetWindowText(txt);
+	m_field11 = atoi(txt);
+	GetDlgItem(IDC_INTERVAL2)->GetWindowText(txt);
+	m_field12 = atoi(txt);
+	GetDlgItem(IDC_INTERVAL3)->GetWindowText(txt);
+	m_field13 = atoi(txt);
+	GetDlgItem(IDC_INTERVAL4)->GetWindowText(txt);
+	m_field14 = atoi(txt);
+
+	if(0 == ((CButton*)GetDlgItem(IDC_FIELD11))->GetCheck())
+  {
+    m_field11 = 0;
+  }
+	if(0 == ((CButton*)GetDlgItem(IDC_FIELD12))->GetCheck())
+  {
+    m_field12 = 0;
+  }
+	if(0 == ((CButton*)GetDlgItem(IDC_FIELD13))->GetCheck())
+  {
+    m_field13 = 0;
+  }
+	if(0 == ((CButton*)GetDlgItem(IDC_FIELD14))->GetCheck())
+  {
+    m_field14 = 0;
+  }
+
 	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
 
 	OnOK();
+}
+
+void ConfigRtcmMeasurementDataOutDlg::UpdateUiByNumber(UINT txtId, UINT checkId)
+{
+  CString txt;
+    GetDlgItem(txtId)->GetWindowText(txt);
+    if(0 == atoi(txt))
+    {
+      GetDlgItem(txtId)->EnableWindow(FALSE);
+      ((CButton*)GetDlgItem(checkId))->SetCheck(FALSE);
+    }
+    else
+    {
+      GetDlgItem(txtId)->EnableWindow(TRUE);
+      ((CButton*)GetDlgItem(checkId))->SetCheck(TRUE);
+    }
 }
 
 void ConfigRtcmMeasurementDataOutDlg::UpdateStatus()
@@ -4798,6 +6238,33 @@ void ConfigRtcmMeasurementDataOutDlg::UpdateStatus()
     GetDlgItem(IDC_FIELD10)->EnableWindow(FALSE);
     ((CButton*)GetDlgItem(IDC_FIELD10))->SetCheck(0);
   } 
+	GetDlgItem(IDC_FIELD11)->EnableWindow(enable);
+	GetDlgItem(IDC_FIELD12)->EnableWindow(enable);
+	GetDlgItem(IDC_FIELD13)->EnableWindow(enable);
+	GetDlgItem(IDC_FIELD14)->EnableWindow(enable);
+
+  if(!m_supportEph)
+  {
+	  GetDlgItem(IDC_STATIC1)->ShowWindow(SW_HIDE);
+	  GetDlgItem(IDC_STATIC2)->ShowWindow(SW_HIDE);
+	  GetDlgItem(IDC_STATIC3)->ShowWindow(SW_HIDE);
+	  GetDlgItem(IDC_STATIC4)->ShowWindow(SW_HIDE);
+	  GetDlgItem(IDC_STATIC11)->ShowWindow(SW_HIDE);
+	  GetDlgItem(IDC_STATIC21)->ShowWindow(SW_HIDE);
+	  GetDlgItem(IDC_STATIC31)->ShowWindow(SW_HIDE);
+	  GetDlgItem(IDC_STATIC41)->ShowWindow(SW_HIDE);
+	  GetDlgItem(IDC_INTERVAL)->ShowWindow(SW_HIDE);
+	  GetDlgItem(IDC_INTERVAL2)->ShowWindow(SW_HIDE);
+	  GetDlgItem(IDC_INTERVAL3)->ShowWindow(SW_HIDE);
+	  GetDlgItem(IDC_INTERVAL4)->ShowWindow(SW_HIDE);
+  }
+  else
+  {
+    GetDlgItem(IDC_INTERVAL)->EnableWindow(((CButton*)GetDlgItem(IDC_FIELD11))->GetCheck());
+    GetDlgItem(IDC_INTERVAL2)->EnableWindow(((CButton*)GetDlgItem(IDC_FIELD12))->GetCheck());
+    GetDlgItem(IDC_INTERVAL3)->EnableWindow(((CButton*)GetDlgItem(IDC_FIELD13))->GetCheck());
+    GetDlgItem(IDC_INTERVAL4)->EnableWindow(((CButton*)GetDlgItem(IDC_FIELD14))->GetCheck());
+  }
 }
 
 void ConfigRtcmMeasurementDataOutDlg::DoCommand()
@@ -4813,6 +6280,12 @@ void ConfigRtcmMeasurementDataOutDlg::DoCommand()
 	*cmd.GetBuffer(7) = (U08)m_field8;
 	*cmd.GetBuffer(8) = (U08)m_field9;
 	*cmd.GetBuffer(9) = (U08)m_field10;
+
+	*cmd.GetBuffer(10) = (U08)m_field11;
+	*cmd.GetBuffer(11) = (U08)m_field12;
+	*cmd.GetBuffer(12) = (U08)m_field13;
+	*cmd.GetBuffer(13) = (U08)m_field14;
+
 	*cmd.GetBuffer(16) = (U08)m_attribute;
 
 	configCmd.SetData(cmd);
@@ -5502,6 +6975,70 @@ void CConfigRtkSlaveBaud::DoCommand()
   AfxBeginThread(ConfigThread, 0);
 }
 
+// CConfigRtkKinematicBaud 
+IMPLEMENT_DYNAMIC(CConfigRtkKinematicBaud, CCommonConfigDlg)
+
+CConfigRtkKinematicBaud::CConfigRtkKinematicBaud(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_RTK_KINEMATIC_BAUD, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigRtkKinematicBaud, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigRtkKinematicBaud::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CConfigRtkSlaveBaud 
+BOOL CConfigRtkKinematicBaud::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+  CString title;
+  BinaryData ackCmd;
+
+  CComboBox* pBox = (CComboBox*)GetDlgItem(IDC_BAUD_RATE);
+  g_setting.InitBaudrateCombo(pBox);
+
+  this->GetWindowText(title);
+  CGPSDlg::CmdErrorCode ack = CGPSDlg::Timeout;
+  ack = CGPSDlg::gpsDlg->QueryRtkKinematicBaud(CGPSDlg::Return, &ackCmd);
+
+  if(CGPSDlg::Ack == ack)
+  {
+    title += " (Query successfully)";
+    pBox->SetCurSel(ackCmd[6]);
+  }
+  else
+  {
+    title += " (Query failed)";
+    pBox->SetCurSel(5);
+  }
+	this->SetWindowText(title);
+	((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigRtkKinematicBaud::OnBnClickedOk()
+{	
+	CString txt;
+	m_rate = ((CComboBox*)GetDlgItem(IDC_BAUD_RATE))->GetCurSel();
+	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+	OnOK();
+}
+
+void CConfigRtkKinematicBaud::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(4);
+	*cmd.GetBuffer(0) = 0x6A;
+	*cmd.GetBuffer(1) = 0x13;
+	*cmd.GetBuffer(2) = m_rate;
+	*cmd.GetBuffer(3) = (U08)m_nAttribute;
+
+  configCmd.SetData(cmd);
+	configPrompt = "Configure RTK precisely kinematic base serial port baud rate successfully";
+  AfxBeginThread(ConfigThread, 0);
+}
+
 // C1ppsOutputModeDlg 
 IMPLEMENT_DYNAMIC(C1ppsOutputModeDlg, CCommonConfigDlg)
 
@@ -6031,6 +7568,102 @@ void CConfigureAlphaKeyDlg::DoCommand()
 	configPrompt = (m_cmdType == AlphaKey) ?
     "Configure Alpha RTK Key successfully" : "Configure Phoenix Tag successfully";
   AfxBeginThread(ConfigThread, 0);
+}
+
+// CTrackingModuleParameterSettingDlg 
+IMPLEMENT_DYNAMIC(CTrackingModuleParameterSettingDlg, CCommonConfigDlg)
+
+CTrackingModuleParameterSettingDlg::CTrackingModuleParameterSettingDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CFG_TM_PM_SETTING, pParent)
+{
+}
+
+BEGIN_MESSAGE_MAP(CTrackingModuleParameterSettingDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CTrackingModuleParameterSettingDlg::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// CTrackingModuleParameterSettingDlg 
+BOOL CTrackingModuleParameterSettingDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+
+  ((CComboBox*)GetDlgItem(IDC_TYPE))->SetCurSel(0);
+  ((CComboBox*)GetDlgItem(IDC_CHANNEL))->SetCurSel(0);
+  (GetDlgItem(IDC_SVID))->SetWindowText("0");
+  ((CComboBox*)GetDlgItem(IDC_DLL_GAIN))->SetCurSel(0);
+  ((CComboBox*)GetDlgItem(IDC_FLL_GAIN))->SetCurSel(0);
+  ((CComboBox*)GetDlgItem(IDC_PLL_C1_GAIN))->SetCurSel(0);
+  ((CComboBox*)GetDlgItem(IDC_PLL_C2_GAIN))->SetCurSel(0);
+  ((CButton*)GetDlgItem(IDC_CHECK1))->SetCheck(0);
+  ((CButton*)GetDlgItem(IDC_CHECK2))->SetCheck(0);
+  (GetDlgItem(IDC_DIVIDER))->SetWindowText("0");
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CTrackingModuleParameterSettingDlg::OnBnClickedOk()
+{
+  CString txt;
+
+  m_type = ((CComboBox*)GetDlgItem(IDC_TYPE))->GetCurSel() + 1;
+  m_channel = ((CComboBox*)GetDlgItem(IDC_CHANNEL))->GetCurSel() + 1;
+  GetDlgItem(IDC_SVID)->GetWindowText(txt);
+  int tmp = atoi(txt);
+  if(tmp < 0 || tmp > 255)
+  {
+    ::AfxMessageBox("The valid value of GNSS SVID is between 0~255!");
+    return;
+  }
+  m_svid = tmp;
+  GetDlgItem(IDC_DLL_GAIN)->GetWindowText(txt);
+  //m_dll_gain = (U08)ConvertCharToU32(txt);
+  m_dll_gain = (U08)atoi(txt.Left(txt.Find(' ')));
+  GetDlgItem(IDC_FLL_GAIN)->GetWindowText(txt);
+  m_fll_gain = (U16)atoi(txt.Left(txt.Find(' ')));
+  GetDlgItem(IDC_PLL_C1_GAIN)->GetWindowText(txt);
+  m_pll_c1_gain = (U16)atoi(txt.Left(txt.Find(' ')));
+  GetDlgItem(IDC_PLL_C2_GAIN)->GetWindowText(txt);
+  m_pll_c2_gain = (U08)atoi(txt.Left(txt.Find(' ')));
+  m_fll_mode = (((CButton*)GetDlgItem(IDC_CHECK1))->GetCheck()) ? 1 : 0;
+  m_fll_mode |= (((CButton*)GetDlgItem(IDC_CHECK2))->GetCheck()) ? 2 : 0;
+  GetDlgItem(IDC_DIVIDER)->GetWindowText(txt);
+  tmp = atoi(txt);
+  if(tmp < 0 || tmp > 48)
+  {
+    ::AfxMessageBox("The valid value of Integration/Divider is between 0~48!");
+    return;
+  }
+  m_divider = (U08)tmp;
+
+  CGPSDlg::gpsDlg->CheckConnect();
+  CGPSDlg::gpsDlg->SetInputMode(CGPSDlg::NoOutputMode);
+
+  this->DoCommand();
+	//OnOK();
+}
+
+void CTrackingModuleParameterSettingDlg::DoCommand()
+{
+	CWaitCursor wait;
+  BinaryData cmd(13);
+  int idx = 0;
+  *cmd.GetBuffer(idx++) = 0x64;
+  *cmd.GetBuffer(idx++) = 0x7F;
+  *cmd.GetBuffer(idx++) = m_type;
+  *cmd.GetBuffer(idx++) = m_channel;
+  *cmd.GetBuffer(idx++) = m_svid;
+  *cmd.GetBuffer(idx++) = m_dll_gain;
+  *cmd.GetBuffer(idx++) = (U08)HIBYTE(m_fll_gain);
+  *cmd.GetBuffer(idx++) = (U08)LOBYTE(m_fll_gain);
+  *cmd.GetBuffer(idx++) = (U08)HIBYTE(m_pll_c1_gain);
+  *cmd.GetBuffer(idx++) = (U08)LOBYTE(m_pll_c1_gain);
+  *cmd.GetBuffer(idx++) = m_pll_c2_gain;
+  *cmd.GetBuffer(idx++) = m_fll_mode;
+  *cmd.GetBuffer(idx++) = m_divider;
+
+	configCmd.SetData(cmd);
+	configPrompt = "Configure TM parameter setting successfully";
+  AfxBeginThread(ConfigThread, (LPVOID)0);
 }
 
 // CDumpMemoryDlg 
@@ -6904,5 +8537,80 @@ void CConfigCustomStringIntervalDlg::DoCommand()
 	configCmd.SetData(cmd);
 
 	configPrompt.Format("Configure NMEA String Interval successfully");
-  AfxBeginThread(ConfigThread, (LPVOID)1);  //do nte restore connection
+  AfxBeginThread(ConfigThread, (LPVOID)1);  //do not restore connection
+}
+
+// ConfigureNmeaTalkerIdDlg 
+IMPLEMENT_DYNAMIC(ConfigureNmeaTalkerIdDlg, CCommonConfigDlg)
+
+ConfigureNmeaTalkerIdDlg::ConfigureNmeaTalkerIdDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CFG_NMEA_TALKER, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(ConfigureNmeaTalkerIdDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &ConfigureNmeaTalkerIdDlg::OnBnClickedOk)
+END_MESSAGE_MAP()
+
+// ConfigureNmeaTalkerIdDlg 
+BOOL ConfigureNmeaTalkerIdDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+  CString txt, title;
+  this->GetWindowText(title);
+
+  if(IS_DEBUG)
+  {
+    ((CComboBox*)GetDlgItem(IDC_TALKER))->AddString("Auto Mode");
+  }
+
+	if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryGnssNmeaTalkId(CGPSDlg::Return, &m_talker))
+	{
+    title += " (Query successfully)";
+    if(m_talker > 1 && IS_DEBUG == 0)
+    {
+      ((CComboBox*)GetDlgItem(IDC_TALKER))->SetCurSel(-1);
+    }
+    else
+    {
+	    ((CComboBox*)GetDlgItem(IDC_TALKER))->SetCurSel(m_talker);
+    }
+  }
+  else
+  {
+	  ((CComboBox*)GetDlgItem(IDC_TALKER))->SetCurSel(-1);
+    title += " (Query failed)";
+  }
+
+  this->SetWindowText(title);
+  ((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void ConfigureNmeaTalkerIdDlg::OnBnClickedOk()
+{	
+	m_talker = ((CComboBox*)GetDlgItem(IDC_TALKER))->GetCurSel();
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+  
+  if(m_talker < 0)
+  {
+    ::AfxMessageBox("Please select a Taker ID!");
+    return;
+  }
+
+	OnOK();
+}
+
+void ConfigureNmeaTalkerIdDlg::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(3);
+	*cmd.GetBuffer(0) = 0x4B;
+	*cmd.GetBuffer(1) = m_talker;
+	*cmd.GetBuffer(2) = (U08)m_attribute;
+	configCmd.SetData(cmd);
+
+	configPrompt.Format("Configure NMEA Talker Id successfully");
+  AfxBeginThread(ConfigThread, 0); 
 }

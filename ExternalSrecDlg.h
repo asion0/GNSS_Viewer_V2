@@ -30,4 +30,5 @@ public:
 protected:
 	virtual void OnOK();
   bool m_isV6;
+  bool m_isUseBin;
 };

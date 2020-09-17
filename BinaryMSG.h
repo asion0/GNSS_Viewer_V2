@@ -12,6 +12,7 @@
 void ShowMeasurementChannel(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowSubframe(U08*src, bool convertOnly = false, CString* pStr = NULL);
 void ShowGeneralSubframe(U08*src, bool convertOnly = false, CString* pStr = NULL);
+void ShowBinaryTimeStamp(U08*src, bool convertOnly = false, CString* pStr = NULL);
 void ShowMeasurementTime(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowMeasurementSv(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowMeasurementSvEleAzi(U08* src, bool convertOnly = false, CString* pStr = NULL);
@@ -29,6 +30,7 @@ void ShowRtcm1117(U08* src, int len, bool convertOnly = false, CString* pStr = N
 void ShowRtcm1127(U08* src, int len, bool convertOnly = false, CString* pStr = NULL);
 void ShowRtcm1087(U08* src, int len, bool convertOnly = false, CString* pStr = NULL);
 void ShowRtcm1097(U08* src, int len, bool convertOnly = false, CString* pStr = NULL);
+void ShowRtcmEphemeris(U08* src, int len, bool convertOnly = false, CString* pStr = NULL);
 void ShowUbxTimTp(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowUbxNavSol(U08* src, bool convertOnly = false, CString* pStr = NULL);
 void ShowUbxNavPvt(U08* src, bool convertOnly = false, CString* pStr = NULL);

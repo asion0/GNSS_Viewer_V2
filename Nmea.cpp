@@ -371,20 +371,38 @@ bool NMEA::GSVProc(GPGSV& rgsv, LPCSTR pt, int len)
       ParamFloatOrInt(pt, dot[i+3], dot[i+4], NonUseValue));
 #ifdef _DEBUG
     if(pt[2] == 'B' && rgsv.signalId == 1 && groupIdx == 1)
-      break;
+    {
+      int a = 0;
+      //break;
+    }
 #endif
 	}
   return true;
 }
 
-bool NMEA::GSAProc(GPGSA& rgsa, LPCSTR pt, int len)
+bool NMEA::GSAProc(GPGSA& rgsa, LPCSTR pt, int len, bool& continuousGsa)
 {	
+  static int lastSystem = 0;
 	int dot[MaxNmeaParam] = {0};	    
 	int dotPos = ScanDot(pt, len, dot);
+  continuousGsa = false;
 	if(dot[0] != 6 || pt[len - 3] != '*')
 	{
 		return false;
 	}
+  if(dotPos >= 18)
+  {
+	  rgsa.SystemId = ParamInt(pt, dot[17], dot[18], 0);
+    if(lastSystem == rgsa.SystemId)
+    {
+      continuousGsa = true;
+    }
+    lastSystem = rgsa.SystemId;
+  }
+  else
+  {  
+    rgsa.SystemId = 0;
+  }
 
 	rgsa.Auto_Manu_Mode = ParamChar(pt, dot[0], dot[1], 0);
 	rgsa.Mode = ParamInt(pt, dot[1], dot[2], 0);
@@ -400,14 +418,7 @@ bool NMEA::GSAProc(GPGSA& rgsa, LPCSTR pt, int len)
 	rgsa.PDOP = ParamFloat(pt, dot[14], dot[15], 0.0F);
 	rgsa.HDOP = ParamFloat(pt, dot[15], dot[16], 0.0F);
 	rgsa.VDOP = ParamFloat(pt, dot[16], dot[17], 0.0F);
-  if(dotPos >= 18)
-  {
-	  rgsa.SystemId = ParamInt(pt, dot[17], dot[18], 0);
-  }
-  else
-  {  
-    rgsa.SystemId = 0;
-  }
+
 	return true;
 }
 
@@ -561,6 +572,36 @@ NMEA::GNSS_System NMEA::GetGNSSSystem(int prn)
 		return GetGNSSSystem3(prn);
 	}
 }
+
+NMEA::GNSS_System NMEA::GetUbloxSystem(int p)
+{
+    if(p >= 1 && p <= 32)
+    { //GPS
+      return Gps;
+    }
+    else if(p >= 120 && p <= 158)
+    { //SBAS
+      return Gps;
+    }
+    else if(p >= 193 && p <= 201)
+    { //SBAS
+      return Gps;
+    }
+    else if(p >= 65 && p <= 96)
+    { //GLONASS
+      return Glonass;
+    }
+    else if((p >= 33 && p <= 64) || (p >= 159 && p <= 163))
+    { //Beidou
+      return Beidou;
+    }
+    else if(p >= 211 && p <= 236)
+    { //Galileo
+      return Galileo;
+    }
+    return GsUnknown;
+}
+
 //GL: 65~96; GP: 1~64, 183~188, 193~197; BD: others
 NMEA::GNSS_System NMEA::GetGNSSSystem0(int prn)
 {
@@ -709,6 +750,7 @@ NmeaType NMEA::MessageType(LPCSTR pt, int len)
 	};
 	NmeaTypeEntry nmeaTable[] = {
 		{ "$GPGGA,", MSG_GGA },
+		{ "$GLGGA,", MSG_GGA },
 		{ "$GNGGA,", MSG_GGA },
 		{ "$GIGGA,", MSG_GGA },
 		{ "$BDGGA,", MSG_GGA },
@@ -739,6 +781,7 @@ NmeaType NMEA::MessageType(LPCSTR pt, int len)
 
 		{ "$GPRMC,", MSG_RMC },
 		{ "$GNRMC,", MSG_RMC },
+		{ "$GLRMC,", MSG_RMC },
 		{ "$GIRMC,", MSG_RMC },
 		{ "$BDRMC,", MSG_RMC },
 		{ "$GBRMC,", MSG_RMC },
@@ -800,9 +843,18 @@ void NMEA::ShowGPGLLmsg(GPGLL& rGll, LPCSTR pt, int len)
 
 void NMEA::ShowGPGSAmsg(GPGSA& gpGsa, LPCSTR pt, int len)
 {
-	GSAProc(gpGsa, pt, len);
+  bool continuousGsa = false;
+	GSAProc(gpGsa, pt, len, continuousGsa);
 }
-///*
+
+int GetZeroStartIndex(U16* ar, int maxSize)
+{
+  int i = 0;
+  for(; i < maxSize && ar[i] != 0; ++i)
+  {}
+  return i;
+}
+
 void NMEA::ShowGNGSAmsg(GPGSA& rgpgsa, GPGSA& rglgsa, GPGSA& rbdgsa, GPGSA& rgagsa, GPGSA& rgigsa, LPCSTR pt, int len)
 {
 	if(firstGsaIn == false)
@@ -818,13 +870,39 @@ void NMEA::ShowGNGSAmsg(GPGSA& rgpgsa, GPGSA& rglgsa, GPGSA& rbdgsa, GPGSA& rgag
 		}
 	}
 	GPGSA tmpGsa;
-	GSAProc(tmpGsa, pt, len);
+  bool continuousGsa = false;
+	GSAProc(tmpGsa, pt, len, continuousGsa);
 
 	int gpIndex = 0;
 	int glIndex = 0;
 	int bdIndex = 0;
 	int gaIndex = 0;
 	int giIndex = 0;
+
+  if(tmpGsa.SystemId != 0 && continuousGsa)
+  { //NMEA 4.11 supports continuous GSA
+    switch(tmpGsa.SystemId)
+    {
+    case 1:
+      gpIndex = GetZeroStartIndex(rgpgsa.SatelliteID, MAX_SATELLITE);
+      break;
+    case 2:
+      glIndex = GetZeroStartIndex(rglgsa.SatelliteID, MAX_SATELLITE);;
+      break;
+    case 3:
+      gaIndex = GetZeroStartIndex(rgagsa.SatelliteID, MAX_SATELLITE);;
+      break;
+    case 4:
+      bdIndex = GetZeroStartIndex(rbdgsa.SatelliteID, MAX_SATELLITE);;
+      break;
+    case 5: //NMEA 4.11 Id 5 is GQ Qzss system
+      giIndex = GetZeroStartIndex(rgigsa.SatelliteID, MAX_SATELLITE);;
+      break;
+    case 6: //NMEA 4.11 Standard
+      giIndex = GetZeroStartIndex(rgigsa.SatelliteID, MAX_SATELLITE);;
+      break;
+    }
+  }
 
 	bool hasGpGsa = false;
 	bool hasGlGsa = false;
@@ -836,32 +914,32 @@ void NMEA::ShowGNGSAmsg(GPGSA& rgpgsa, GPGSA& rglgsa, GPGSA& rbdgsa, GPGSA& rgag
   {
     if(tmpGsa.SystemId == 0)
     {
-	      GNSS_System g = GetGNSSSystem(tmpGsa.SatelliteID[i]);
-	      switch(g)
-	      {
-	      case Gps:
-		      rgpgsa.SatelliteID[gpIndex++] = tmpGsa.SatelliteID[i];
-		      hasGpGsa = true;
-		      break;
-	      case Glonass:
-		      rglgsa.SatelliteID[glIndex++] = tmpGsa.SatelliteID[i];
-		      hasGlGsa = true;
-		      break;
-	      case Beidou:
-		      rbdgsa.SatelliteID[bdIndex++] = tmpGsa.SatelliteID[i];
-		      hasBdGsa = true;
-		      break;
-	      case Galileo:
-		      rgagsa.SatelliteID[gaIndex++] = tmpGsa.SatelliteID[i];
-		      hasGaGsa = true;
-		      break;
-	      case Navic:
-		      rgigsa.SatelliteID[giIndex++] = tmpGsa.SatelliteID[i];
-		      hasGiGsa = true;
-		      break;
-        default:
-		      break;
-	      }
+      GNSS_System g = GetGNSSSystem(tmpGsa.SatelliteID[i]);
+      switch(g)
+      {
+      case Gps:
+	      rgpgsa.SatelliteID[gpIndex++] = tmpGsa.SatelliteID[i];
+	      hasGpGsa = true;
+	      break;
+      case Glonass:
+	      rglgsa.SatelliteID[glIndex++] = tmpGsa.SatelliteID[i];
+	      hasGlGsa = true;
+	      break;
+      case Beidou:
+	      rbdgsa.SatelliteID[bdIndex++] = tmpGsa.SatelliteID[i];
+	      hasBdGsa = true;
+	      break;
+      case Galileo:
+	      rgagsa.SatelliteID[gaIndex++] = tmpGsa.SatelliteID[i];
+	      hasGaGsa = true;
+	      break;
+      case Navic:
+	      rgigsa.SatelliteID[giIndex++] = tmpGsa.SatelliteID[i];
+	      hasGiGsa = true;
+	      break;
+      default:
+	      break;
+      }
     }
     else
     {
@@ -870,34 +948,53 @@ void NMEA::ShowGNGSAmsg(GPGSA& rgpgsa, GPGSA& rglgsa, GPGSA& rbdgsa, GPGSA& rgag
       case 1:
 	      rgpgsa.SatelliteID[gpIndex++] = tmpGsa.SatelliteID[i];
 	      hasGpGsa = true;
+        if(gpIndex == MAX_SATELLITE)
+        {
+          i = MAX_SATELLITE;
+        }
 	      break;
       case 2:
 	      rglgsa.SatelliteID[glIndex++] = tmpGsa.SatelliteID[i];
 	      hasGlGsa = true;
+        if(glIndex == MAX_SATELLITE)
+        {
+          i = MAX_SATELLITE;
+        }
 	      break;
       case 3:
 	      rgagsa.SatelliteID[gaIndex++] = tmpGsa.SatelliteID[i];
 	      hasGaGsa = true;
-	      break;
+        if(gaIndex == MAX_SATELLITE)
+        {
+          i = MAX_SATELLITE;
+        }
+        break;
       case 4:
 	      rbdgsa.SatelliteID[bdIndex++] = tmpGsa.SatelliteID[i];
 	      hasBdGsa = true;
-	      //rgigsa.SatelliteID[bdIndex++] = tmpGsa.SatelliteID[i];
-	      //hasGiGsa = true;
+        if(bdIndex == MAX_SATELLITE)
+        {
+          i = MAX_SATELLITE;
+        }
+	      break;
       case 5: //NMEA 4.11 Id 5 is GQ Qzss system
 	      rgigsa.SatelliteID[giIndex++] = tmpGsa.SatelliteID[i];
 	      hasGiGsa = true;
+        if(giIndex == MAX_SATELLITE)
+        {
+          i = MAX_SATELLITE;
+        }
 	      break;
       case 6: //NMEA 4.11 Standard
 	      rgigsa.SatelliteID[giIndex++] = tmpGsa.SatelliteID[i];
 	      hasGiGsa = true;
+        if(giIndex == MAX_SATELLITE)
+        {
+          i = MAX_SATELLITE;
+        }
 	      break;      
-      default:
-	      //rbdgsa.SatelliteID[bdIndex++] = tmpGsa.SatelliteID[i];
-	      //hasBdGsa = true;
-        break;
       }
-    }
+    } ///if(tmpGsa.SystemId == 0) else
   } //for(int i=0; i<MAX_SATELLITE; ++i)
 
   if(hasGpGsa)
@@ -945,25 +1042,29 @@ void NMEA::ShowGNGSAmsg(GPGSA& rgpgsa, GPGSA& rglgsa, GPGSA& rbdgsa, GPGSA& rgag
 
 void NMEA::ShowGLGSAmsg(GPGSA& rglgsa, LPCSTR pt, int len)
 {
-	GSAProc(rglgsa, pt, len);
+  bool continuousGsa = false;
+	GSAProc(rglgsa, pt, len, continuousGsa);
   currentGsv = GsUnknown;
 }
 
 void NMEA::ShowGIGSAmsg(GPGSA& rgigsa, LPCSTR pt, int len)
 {
-	GSAProc(rgigsa, pt, len);
+  bool continuousGsa = false;
+	GSAProc(rgigsa, pt, len, continuousGsa);
   currentGsv = GsUnknown;
 }
 
 void NMEA::ShowBDGSAmsg(GPGSA& rbdgsa, LPCSTR pt, int len)
 {
-	GSAProc(rbdgsa, pt, len);
+  bool continuousGsa = false;
+	GSAProc(rbdgsa, pt, len, continuousGsa);
   currentGsv = GsUnknown;
 }
 
 void NMEA::ShowGAGSAmsg(GPGSA& rgagsa, LPCSTR pt, int len)
 {
-	GSAProc(rgagsa, pt, len);
+  bool continuousGsa = false;
+	GSAProc(rgagsa, pt, len, continuousGsa);
   currentGsv = GsUnknown;
 }
 

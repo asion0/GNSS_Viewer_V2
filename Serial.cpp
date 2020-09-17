@@ -831,9 +831,8 @@ DWORD CSerial::GetZenlaneResponse1(void *buffer, DWORD bufferSize, DWORD timeout
 
 DWORD CSerial::GetBinaryAck(void *buffer, DWORD bufferSize, DWORD timeout)
 {	
-
 #if _DEBUG
-timeout = 300000;
+//timeout = 300000;
 #endif
 	U08* bufferIter = (U08*)buffer;
 	DWORD totalSize = 0;
@@ -903,7 +902,6 @@ timeout = 300000;
 				else if(*bufferIter == 0x0a && *(bufferIter - 1) == 0x0d)
 				{
 					U08 *chk_ptr = bufferIter - totalSize;
-					
 					if (*chk_ptr == 0xa0)
 					{
 						int tmp_len = *(chk_ptr + 2);

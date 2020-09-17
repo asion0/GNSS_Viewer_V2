@@ -19,6 +19,7 @@ using namespace std;
  #pragma comment( lib, "CxImage/ReleaseLib/png.lib" )
  #pragma comment( lib, "CxImage/ReleaseLib/zlib.lib" )
 #endif
+#pragma comment( lib, "Ws2_32.lib" )
 
 class CWaitReadLog;
 class CSerial;
@@ -462,6 +463,7 @@ void GetByteDataFromLE(U08 buff[], int pos, int len, U08* data, int dataLen);
 void GetByteDataFromBE(U08 buff[], int pos, int len, U08* data, int dataLen);
 void ConvertInt38Sign(S64* d);
 int GetBitFlagCounts(U08* d, int size);
+void CooCartesianToGeodetic(const double x, const double y, const double z, double &lat, double &lon, float &alt);
 void CooCartesianToGeodetic(const POS_T* xyz_p, LLA_T* lla_p);
 void ConvertEcefToLonLatAlt(D64 ecefX, D64 ecefY, D64 ecefZ, D64& latitude, D64& longitude, D64& altitude);
 

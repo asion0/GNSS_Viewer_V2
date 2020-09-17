@@ -40,11 +40,11 @@ void CConfig1ppsPulseWidthDlg::OnBnClickedOk()
 
 	GetDlgItem(IDC_PULSE_WIDTH)->GetWindowText(txt);
 	m_nPulseWidth = atoi(txt);
-	if(m_nPulseWidth<1 || m_nPulseWidth>100000)
-	{
-		AfxMessageBox("Number of Pulse Width must be between 1 and 100000.");
-		return;
-	}
+	//if(m_nPulseWidth < 1000 || m_nPulseWidth > 500000)
+	//{
+	//	AfxMessageBox("Number of Pulse Width must be between 1000 and 500000.");
+	//	return;
+	//}
 	m_nAttribute = ((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->GetCurSel();;
 
 	OnOK();
@@ -54,7 +54,7 @@ BOOL CConfig1ppsPulseWidthDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	GetDlgItem(IDC_PULSE_WIDTH)->SetWindowText("1");
+	GetDlgItem(IDC_PULSE_WIDTH)->SetWindowText("1000");
 	((CComboBox*)GetDlgItem(IDC_BINARY_ATTRI))->SetCurSel(0);
 
 	return TRUE;  // return TRUE unless you set the focus to a control

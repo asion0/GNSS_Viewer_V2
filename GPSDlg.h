@@ -174,6 +174,7 @@ class BinaryData;
 class CPanelBackground;
 class CCommonConfigDlg;
 class CCommonQueryDlg;
+class CNtripClientDlg;
 
 class CGPSDlg : public CDialog
 {
@@ -424,6 +425,7 @@ protected:
 	void ClearInformation(bool onlyQueryInfo = false);
 	bool DoDownload(int dlBaudIdx);
 	bool DoDownload(int dlBaudIdx, UINT rid);
+
 public:
 	static CFont m_textFont;
 	static CFont m_infoFontS;
@@ -531,6 +533,25 @@ public:
 	//void LogConfigure();
 	//void MSG_PROC();
   void DoFlag();
+
+protected:
+  BOOL m_ntripRunning;
+  CList<BinaryData, BinaryData&> m_ntripData;
+  CNtripClientDlg* m_ntripClientDlg;
+
+public:
+  void SetNtripRuning(BOOL b) { m_ntripRunning = b; }
+  BOOL GetNtripRunning() { return m_ntripRunning; }
+  BOOL HasNtripData() { return (m_ntripData.GetCount() > 0); }
+  U08* GetNtripData() { return m_ntripData.GetHead().GetBuffer(); }
+  int GetNtripDataSize() { return m_ntripData.GetHead().Size(); }
+  void RemoveNtripData() { m_ntripData.RemoveHead(); }
+  void AddNtripData(U08* data, int size) 
+  { 
+    BinaryData d(data, size);
+    m_ntripData.AddTail(d);
+  }
+
   void ParsingMessage(BOOL isPlayer = FALSE);
 	void QueryMsg(unsigned char*);
 	void Restart(U08* messages, BOOL restoreConnection = TRUE);
@@ -540,6 +561,7 @@ public:
 	void ScatterPlot(CDC *dc);
 	//void SetEphms(U08 continues);
 	bool SetPort(U08, int mode);
+	bool SetPort(U08, int mode, int timeout);
   CmdErrorCode SetPort0Baud(U08 baudIdx, U08 mode);
 #if(MODULE_SUP_800)
 	void ShowPsti004001();
@@ -581,8 +603,10 @@ public:
 	void Terminate(void);
 	void TerminateGPSThread();
 	void SetFacMsg(unsigned char*);	
-	void continue_write_nmea();
+	//void continue_write_nmea();
+
 protected:
+
   void InitDownloadBaudRate();
   void Initialization();
 
@@ -808,6 +832,7 @@ public:
 	CmdErrorCode GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U08 cAckSub, DWORD timeOut, bool silent, bool noWaitAck = false, int cmdSize = -1, int cmdLen = 0);
 	CmdErrorCode QueryRtkMode2(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryRtkSlaveBaud(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryRtkKinematicBaud(CmdExeMode nMode, void* outputData);
 	CmdErrorCode ClearRtkSlaveData(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryRtkCpifBias(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryRtkElevationAndCnrMask(CmdExeMode nMode, void* outputData);
@@ -862,6 +887,9 @@ public:
 	CmdErrorCode QuerySecurityTag(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySecurityTagOnly(CmdExeMode nMode, void* outputData);
   CmdErrorCode QueryNmeaStringX(CmdExeMode nMode, LPCSTR nmeaStr, void* outputData);
+	CmdErrorCode Query1ppsPulseWidth(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryCableDelay(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryGnssNmeaTalkId(CmdExeMode nMode, void* outputData);
 
   U08 m_nGeofecingNo;
 
@@ -933,7 +961,6 @@ protected:
 	CmdErrorCode QueryGnssBootStatus(CmdExeMode nMode, void* outputData);
 	//CmdErrorCode QueryDrMultiHz(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGnssKnumberSlotCnr2(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryGnssNmeaTalkId(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryCustomerID(CmdExeMode nMode, void* outputData);
 	CmdErrorCode Query1ppsFreqencyOutput(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySerialNumber(CmdExeMode nMode, void* outputData);
@@ -944,7 +971,6 @@ protected:
 	CmdErrorCode QuerySignalDisturbanceStatus(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QuerySignalDisturbanceData(CmdExeMode nMode, void* outputData);
 	CmdErrorCode ResetOdometer(CmdExeMode nMode, void* outputData);
-	CmdErrorCode QueryCableDelay(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGeofenceResult(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGeofenceResultEx(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryRtkMode(CmdExeMode nMode, void* outputData);
@@ -953,7 +979,6 @@ protected:
 	CmdErrorCode QueryPstnLatLonDigits(CmdExeMode nMode, void* outputData);
 	CmdErrorCode EnterRtkDebugMode(CmdExeMode nMode, void* outputData);
 	CmdErrorCode BackRtkDebugMode(CmdExeMode nMode, void* outputData);
-	CmdErrorCode Query1ppsPulseWidth(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryAlphaUniqueId(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryAlphaKey(CmdExeMode nMode, void* outputData);
 	CmdErrorCode TmpActiveLicense(CmdExeMode nMode, void* outputData);
@@ -967,6 +992,8 @@ protected:
 	CmdErrorCode QueryV9PromAesTag(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryV9ExternalAesTag(CmdExeMode nMode, void* outputData);
 	CmdErrorCode ResetV9AesTag(CmdExeMode nMode, void* outputData);
+	CmdErrorCode HostDataDumpOn(CmdExeMode nMode, void* outputData);
+	CmdErrorCode HostDataDumpOff(CmdExeMode nMode, void* outputData);
 
 protected:
   int m_nHotKeyID[2];
@@ -1185,6 +1212,7 @@ protected:
 	afx_msg void OnHostLog();
 	afx_msg void OnTestExternalSrec();
 	afx_msg void OnIqPlot();
+	afx_msg void OnNtripClient();
   afx_msg void OnTestAlphaIo();
   afx_msg void OnTestAlphaPlusIo();
   //afx_msg void OnTmpActiveLicense();
@@ -1195,6 +1223,7 @@ protected:
 	afx_msg void OnIoTester();
 	afx_msg void OnConfigDcdc();
 	afx_msg void OnConfigRfIc();
+	afx_msg void OnQueryRtc();
   afx_msg void OnConfigMultiRfIc();
 	afx_msg void OnConfigIir();
 	afx_msg void OnConfigV9PowerSaveByRtc30();
@@ -1233,9 +1262,18 @@ protected:
 	afx_msg void OnConfigGeofence2();
 	afx_msg void OnConfigGeofence3();
 	afx_msg void OnConfigGeofence4();
+
+	afx_msg void OnClearGeofenceAll();
+	afx_msg void OnClearGeofence1();
+	afx_msg void OnClearGeofence2();
+	afx_msg void OnClearGeofence3();
+	afx_msg void OnClearGeofence4();
+
 	afx_msg void OnConfigRtkMode();
 	afx_msg void OnConfigRtkMode2();
+	afx_msg void OnConfigRtkFunctions();
 	afx_msg void OnConfigRtkSlaveBaud();
+	afx_msg void OnConfigRtkKinematicBaud();
 	afx_msg void OnConfigBasePosition();
 	afx_msg void OnConfigRtkParameters();
   afx_msg void OnConfigRtkCpifBias();
@@ -1263,6 +1301,7 @@ protected:
 	afx_msg void OnConfigPsti068();
 	afx_msg void OnConfigPsti070();
 	afx_msg void OnConfigPsti004();
+	afx_msg void OnConfigPsti007();
 	afx_msg void OnConfigNavicMessageInterval();
 
 	afx_msg void OnRtkOnOffGpsSv();
@@ -1288,6 +1327,7 @@ protected:
   afx_msg void OnConfigCustomStringInterval();
   afx_msg void OnQueryCustomStringInterval();
   afx_msg void OnQueryStringInterval(UINT id);
+	afx_msg void OnConfigTrackingModuleParameterSetting();
 
 	//afx_msg void OnAgepTest()
 	//{ GenericQuery(&CGPSDlg::AgepTest); }
@@ -1481,6 +1521,8 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryRtkMode2); }
 	afx_msg void OnQueryRtkSlaveBaud()
 	{ GenericQuery(&CGPSDlg::QueryRtkSlaveBaud); }	
+	afx_msg void OnQueryRtkKinematicBaud()
+	{ GenericQuery(&CGPSDlg::QueryRtkKinematicBaud); }	
 	afx_msg void OnQueryRtkCpifBias()
 	{ GenericQuery(&CGPSDlg::QueryRtkCpifBias); }	
 	afx_msg void OnQueryRtkElevationAndCnrMask()
@@ -1516,6 +1558,8 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryPsti); }
   afx_msg void OnQueryPsti004()
 	{ m_nPstiNo = 4; GenericQuery(&CGPSDlg::QueryPsti); }
+  afx_msg void OnQueryPsti007()
+	{ m_nPstiNo = 7; GenericQuery(&CGPSDlg::QueryPsti); }
 	afx_msg void OnReCalcuteGlonassIfb()
 	{ GenericQuery(&CGPSDlg::ReCalcuteGlonassIfb); }
 	afx_msg void OnBinaryQueryClockOffset()
@@ -1586,6 +1630,10 @@ protected:
 	{ GenericQuery(&CGPSDlg::ResetV9AesTag); }
   //afx_msg void OnQueryCustomStringInterval()
 	//{ GenericQuery(&CGPSDlg::QueryCustomStringInterval); }
+  afx_msg void OnHostDataDumpOn()
+	{ GenericQuery(&CGPSDlg::HostDataDumpOn); }
+  afx_msg void OnHostDataDumpOff()
+  { GenericQuery(&CGPSDlg::HostDataDumpOff); }
 
 	struct MenuItemEntry {
 		BOOL showOption;

@@ -10,18 +10,22 @@ static const int GpsIdStart = 1;
 static const int GpsIdEnd = 51;
 
 static const int GpsQZSSIdStart = 193;
-static const int GpsQZSSIdEnd = 197;
+static const int GpsQZSSIdEnd = 199;
 
 static const int GnssIdStart = 65;
 static const int GnssIdEnd = 88;
 
+#if(EXTRA_WIDE)
+static const int MaxCountInRaw = 33;
+#else
 static const int MaxCountInRaw = 31;
+#endif
 static const int MaxLevelLineCount = 6;
 static const int LevelLineStartY = 50;	//70
 static const int LevelLineGapY = 10;
 //static const int SecondLineStartY = 74;
 //static const char* IdFontName = "Impact";
-static const int BarChartIdGap = 2;
+static const int BarChartIdGap = 1;
 //static const CSize SnrBar(18, 50);
 static const CSize SnrBar(18, 50);
 static const CPoint StartGnssBarChart(7, 52);
@@ -180,6 +184,7 @@ void CSnrBarChart::DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGS
 		else
 		{
 			ASSERT(FALSE);
+      continue;
 		}
 		dx += cellOffset;
 
@@ -221,7 +226,9 @@ void CSnrBarChart::DrawSnr(CDC *dc, int& startId, UISetting* s, GPGSV* gsv, GPGS
 
     //Draw snr bar.
     dc->SelectObject((isInUse) ? &(s->inUseSnrBarBrush) : &(s->noUseSnrBarBrush));
-    if(IS_DEBUG && (pSate->GetSnrTable().GetChInd(sig) & 0x08))
+
+    if(IS_DEBUG && sate->HasChannelInd(id))
+    //if(IS_DEBUG && (pSate->GetSnrTable().GetChInd(sig) & 0x08))
     {
       dc->SelectObject(&(s->faultSnrBarPen));
     }
@@ -525,6 +532,7 @@ void CSnrBarChartL2::DrawSnr(CDC *dc, int& startId, UISetting* s, UISetting* sSu
 		else
 		{
 			ASSERT(FALSE);
+      continue;
 		}
 		dx += cellOffset;
 

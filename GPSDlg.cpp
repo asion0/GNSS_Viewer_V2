@@ -627,6 +627,9 @@ if(!m_isConnectOn)
 	//case 0xE8:		// sub frame data
     ShowGeneralSubframe(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
     break;
+	case 0xE9:		// Time stamp
+    ShowBinaryTimeStamp(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
+    break;
 	case BINMSG_ECEF_USER_PVT:		//0xA8
 		ShowBinaryOutput(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
 		ShowTime();
@@ -864,8 +867,8 @@ U32 CRC24Q_get_for_rtcm_3_x(const U08 *dws_p, S32 n_byte)
 
 U16 CGPSDlg::RtcmProc(U08* buffer, int len)
 {
-	int packetLen = MAKEWORD(buffer[2], buffer[1] & 0xFC);
-	if(packetLen + 6 > len)
+	U16 packetLen = MAKEWORD(buffer[2], (buffer[1] & 0x03));
+	if((packetLen + 6) > len)
 	{
 		return FALSE;
 	}
@@ -875,21 +878,25 @@ U16 CGPSDlg::RtcmProc(U08* buffer, int len)
   buffer[packetLen + 4] = 0;
   buffer[packetLen + 5] = 0;
   U32 crc24Check = CRC24Q_get_for_rtcm_3_x(buffer, packetLen + 6);
-	if(crc24 != crc24Check)
-	{
-		//return FALSE;
-	}
 
 	U16 msgType = (buffer[3] << 4) | (buffer[4] >> 4);
+	if(crc24 != crc24Check)
+	{
+    int bbb = 1234;
+    ::OutputDebugString("1234");
+		//return FALSE;
+	}
   int aa = 0;
 	switch(msgType)
 	{
   case 1005:
     ShowRtcm1005(buffer);
 		break;
+#if IS_DEBUG
   case 1033:
     ShowRtcm1033(buffer);
 		break;
+#endif
   case 1077:
     ShowRtcm1077(buffer, packetLen + 3);
 		break;
@@ -905,19 +912,37 @@ U16 CGPSDlg::RtcmProc(U08* buffer, int len)
   case 1087:
     ShowRtcm1087(buffer, packetLen + 3);
 		break;
-  case 1088:
-    ShowRtcm1097(buffer, packetLen + 3);
-    aa = 1;
-		break;
+  //case 1088:
+  //  ShowRtcm1088(buffer, packetLen + 3);
+  //  aa = 1;
+		//break;
   case 1097:
     ShowRtcm1097(buffer, packetLen + 3);
     aa = 2;
 		break;
+  case 1019:
+    ShowRtcmEphemeris(buffer, packetLen + 3);
+		break;
+  case 1020:
+    ShowRtcmEphemeris(buffer, packetLen + 3);
+		break;
+  case 1042:
+    ShowRtcmEphemeris(buffer, packetLen + 3);
+		break;
+  case 1046:
+    ShowRtcmEphemeris(buffer, packetLen + 3);
+		break;
+  case 0:
+    break;
 	default:
     {
+#if IS_DEBUG
       CString txt;
       txt.Format("UnknownRTCM(%d):%02X %02X %02X %02X %02X %02X %02X", msgType, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], buffer[6]);
-      add2message(txt, txt.GetLength());
+      //add2message(txt, txt.GetLength());
+      add_msgtolist(txt);
+#endif
+      aa = 3;
     }
 		break;
 	}
@@ -1195,11 +1220,11 @@ CTime GetPlayTime()
 		m = CGPSDlg::gpsDlg->m_gpzdaMsg.Month;
 		d = CGPSDlg::gpsDlg->m_gpzdaMsg.Day;
 	}
-	else if(CGPSDlg::gpsDlg->m_gprmcMsg.Year && CGPSDlg::gpsDlg->m_gprmcMsg.Month && CGPSDlg::gpsDlg->m_gprmcMsg.Day)
+	else if(CGPSDlg::gpsDlg->m_gprmcMsgCopy.Year && CGPSDlg::gpsDlg->m_gprmcMsgCopy.Month && CGPSDlg::gpsDlg->m_gprmcMsgCopy.Day)
 	{
-		y = CGPSDlg::gpsDlg->m_gprmcMsg.Year;
-		m = CGPSDlg::gpsDlg->m_gprmcMsg.Month;
-		d = CGPSDlg::gpsDlg->m_gprmcMsg.Day;
+		y = CGPSDlg::gpsDlg->m_gprmcMsgCopy.Year;
+		m = CGPSDlg::gpsDlg->m_gprmcMsgCopy.Month;
+		d = CGPSDlg::gpsDlg->m_gprmcMsgCopy.Day;
 	}
 	else
 	{
@@ -1548,6 +1573,7 @@ CGPSDlg::CGPSDlg(CWnd* pParent /*=NULL*/)
   uniqueTag = false;
   m_becomeRtkFloat = 0;
   m_becomeGnssFixed = 0;
+  m_ntripClientDlg = NULL;
 }
 
 void CGPSDlg::DoDataExchange(CDataExchange* pDX)
@@ -1759,6 +1785,9 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_CFG_CUSTOM_STR_INTVAL, OnConfigCustomStringInterval)
 	ON_COMMAND(ID_QRY_CUSTOM_STR_INTVAL, OnQueryCustomStringInterval)
   ON_COMMAND_RANGE(ID_QRY_GGA_STR_INTVAL, ID_QRY_HDT_STR_INTVAL, OnQueryStringInterval)
+	ON_COMMAND(ID_HOST_DATA_DUMP_ON, OnHostDataDumpOn)
+	ON_COMMAND(ID_HOST_DATA_DUMP_OFF, OnHostDataDumpOff)
+  ON_COMMAND(ID_CFG_TM_PARAM_SETTING, OnConfigTrackingModuleParameterSetting)
 
 	ON_COMMAND(ID_NMEA_CHECKSUM_CAL, OnNmeaChecksumCalculator)
 	ON_COMMAND(ID_BIN_CHECKSUM_CAL, OnBinaryChecksumCalculator)
@@ -1768,6 +1797,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_HOSTLOG, OnHostLog)
 	ON_COMMAND(ID_TEST_EXTERNAL_SREC, OnTestExternalSrec)
 	ON_COMMAND(ID_IQ_PLOT, OnIqPlot)
+	ON_COMMAND(ID_NTRIP_CLIENT, OnNtripClient)
 	ON_COMMAND(ID_READ_MEM_TO_FILE, OnReadMemToFile)
 	ON_COMMAND(ID_READ_MEM_TO_FILE2, OnReadMemToFile2)
 	ON_COMMAND(ID_READ_MEM_TO_FILE3, OnReadMemToFile3)
@@ -1775,6 +1805,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_IO_TESTER, OnIoTester)
 	ON_COMMAND(ID_CFG_DCDC, OnConfigDcdc)
 	ON_COMMAND(ID_CFG_RFIC, OnConfigRfIc)
+	ON_COMMAND(ID_QUERY_RTC, OnQueryRtc) 
 	ON_COMMAND(ID_CFG_MULTI_RFIC, OnConfigMultiRfIc)  
 	ON_COMMAND(ID_CFG_IIR, OnConfigIir)
 	ON_COMMAND(ID_DUMP_MEMORY, OnDumpMemory)
@@ -1994,12 +2025,21 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_QUERY_GEOFENCE_RESULT, OnQueryGeofenceResult)
 	ON_COMMAND(ID_QUERY_GEOFENCE_RESULTEX, OnQueryGeofenceResultEx)
 
+	ON_COMMAND(ID_CLEAR_GEOFENCE_ALL, OnClearGeofenceAll)
+	ON_COMMAND(ID_CLEAR_GEOFENCE1, OnClearGeofence1)
+	ON_COMMAND(ID_CLEAR_GEOFENCE2, OnClearGeofence2)
+	ON_COMMAND(ID_CLEAR_GEOFENCE3, OnClearGeofence3)
+	ON_COMMAND(ID_CLEAR_GEOFENCE4, OnClearGeofence4)
+
 	ON_COMMAND(ID_ENTER_RTK_DEBUG_MODE, OnEnterRtkDebugMode)
 	ON_COMMAND(ID_BACK_RTK_DEBUG_MODE, OnBackRtkDebugMode)
 
 	ON_COMMAND(ID_QUERY_RTK_MODE, OnQueryRtkMode)
 	ON_COMMAND(ID_QUERY_RTK_MODE2, OnQueryRtkMode2)
 	ON_COMMAND(ID_QUERY_RTK_SLAVE_BAUD, OnQueryRtkSlaveBaud)
+	ON_COMMAND(ID_QRY_RTK_PKB_BAUD, OnQueryRtkKinematicBaud)
+
+  
 	ON_COMMAND(ID_CLEAR_RTK_SLAVE_DATA, OnClearRtkSlaveData)
 	ON_COMMAND(ID_QUERY_RTK_GL_CPIF_BIAS, OnQueryRtkCpifBias)
 	ON_COMMAND(ID_CFG_RTK_GL_CPIF_BIAS, OnConfigRtkCpifBias)
@@ -2009,7 +2049,10 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_QUERY_BASE_POSITION, OnQueryBasePosition)
 	ON_COMMAND(ID_CONFIG_RTK_MODE, OnConfigRtkMode)
 	ON_COMMAND(ID_CONFIG_RTK_MODE2, OnConfigRtkMode2)
+	ON_COMMAND(ID_CONFIG_RTK_FUNCTIONS, OnConfigRtkFunctions)
 	ON_COMMAND(ID_CFG_RTK_SLAVE_BAUD, OnConfigRtkSlaveBaud)
+	ON_COMMAND(ID_CFG_RTK_PKB_BAUD, OnConfigRtkKinematicBaud)
+  
   ON_COMMAND(ID_CONFIG_BASE_POSITION, OnConfigBasePosition)
   
 	ON_COMMAND(ID_QUERY_RTK_PARAM, OnQueryRtkParameters)
@@ -2088,6 +2131,9 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_RECALC_GLONASS_IFB, OnReCalcuteGlonassIfb)
 	//20180918 Added
 	ON_COMMAND(ID_CFG_NAVIC_MSG, OnConfigNavicMessageInterval)
+	//20200611 Added
+	ON_COMMAND(ID_QUERY_PSTI007, OnQueryPsti007)
+	ON_COMMAND(ID_CONFIG_PSTI007, OnConfigPsti007)
 
 END_MESSAGE_MAP()
 
@@ -4555,7 +4601,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::SetPort0Baud(U08 baudIdx, U08 mode)
 	return (r) ? Ack : Timeout;
 }
 
-bool CGPSDlg::SetPort(U08 port, int mode)
+bool CGPSDlg::SetPort(U08 port, int mode, int timeout)
 {
 	U08 messages[11] = {0};
 
@@ -4576,14 +4622,8 @@ bool CGPSDlg::SetPort(U08 port, int mode)
 	messages[8] = checksum;
 	messages[9] = 0x0d;
 	messages[10] = 0x0a;
-//	for(int i=0; i<10; ++i)
-//	{
-		//if(SendToTarget(messages, 11, "", true))
-		//{
-		//	break;
-		//}
-//	}
-  bool r = SendToTarget(messages, 11, "", true);
+
+  bool r = SendToTarget(messages, 11, "", timeout);
   if(!r)
   {
 	  CloseOpenUart();
@@ -4596,6 +4636,11 @@ bool CGPSDlg::SetPort(U08 port, int mode)
 	m_BaudRateCombo.SetCurSel(port);
 	Sleep(100);
   return r;
+}
+
+bool CGPSDlg::SetPort(U08 port, int mode)
+{
+  return SetPort(port, mode, 1);
 }
 
 void CGPSDlg::OnBinaryGetrgister()
@@ -5920,6 +5965,9 @@ void CGPSDlg::LoadMenu()
 		{ NMEA_INPUT, MF_STRING, ID_FILE_PLAYNMEA, "&Play NMEA", NULL },
 		//{ IS_DEBUG, MF_STRING, ID_VERIFY_FIRMWARE, "&Verify Firmware", NULL },
 		{ 1, MF_SEPARATOR, 0, NULL, NULL },
+		//{ !NMEA_INPUT && !SHOW_PATCH_MENU, MF_STRING, ID_NTRIP_CLIENT, "NTRIP Client", NULL },
+		{ !NMEA_INPUT && !SHOW_PATCH_MENU && IS_DEBUG, MF_STRING, ID_NTRIP_CLIENT, "NTRIP Client", NULL },
+
 		{ UPGRADE_DOWNLOAD, MF_STRING, ID_UPGRADE_DOWNLOAD, "Upgrade", NULL },
 		{ SHOW_PATCH_MENU, MF_STRING, ID_PATCH, "Patch!", NULL },
 
@@ -6083,6 +6131,17 @@ void CGPSDlg::LoadMenu()
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
 
+	static MenuItemEntry GeoFencingClearMenu[] =
+	{
+    //{ 1, MF_STRING, ID_CLEAR_GEOFENCE_ALL, "All", NULL },
+    //{ 1, MF_SEPARATOR, 0, NULL, NULL },
+		{ 1, MF_STRING, ID_CLEAR_GEOFENCE1, "Geo-fencing data NO.1", NULL },
+		{ 1, MF_STRING, ID_CLEAR_GEOFENCE2, "Geo-fencing data NO.2", NULL },
+		{ 1, MF_STRING, ID_CLEAR_GEOFENCE3, "Geo-fencing data NO.3", NULL },
+		{ 1, MF_STRING, ID_CLEAR_GEOFENCE4, "Geo-fencing data NO.4", NULL },
+		{ 0, 0, 0, NULL, NULL }	//End of table
+	};
+
 	static MenuItemEntry GeoFencingMenu[] =
 	{
 #if (GEO_FENCING_CMD==0)
@@ -6093,6 +6152,8 @@ void CGPSDlg::LoadMenu()
 		{ 1, MF_POPUP, 0, "Configure geo-fencing data", GeoFencingConfigureMenu },
 		{ 1, MF_POPUP, 0, "Query geo-fencing data", GeoFencingQueryMenu },
 		{ 1, MF_STRING, ID_QUERY_GEOFENCE_RESULTEX, "Query geo-fencing result ", NULL },
+		{ 1, MF_POPUP, 0, "Clear geo-fencing data", GeoFencingClearMenu },
+
 #endif
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
@@ -6108,6 +6169,7 @@ void CGPSDlg::LoadMenu()
 	static MenuItemEntry QueryPstiInterval[] =
 	{
 		{ 1, MF_STRING, ID_QUERY_PSTI004, "Query PSTI004 Interval", NULL },
+		{ 1, MF_STRING, ID_QUERY_PSTI007, "Query PSTI007 Interval", NULL },
 		{ 1, MF_STRING, ID_QUERY_PSTI030, "Query PSTI030 Interval", NULL },
 		{ 1, MF_STRING, ID_QUERY_PSTI032, "Query PSTI032 Interval", NULL },
 		{ 1, MF_STRING, ID_QUERY_PSTI033, "Query PSTI033 Interval", NULL },
@@ -6122,6 +6184,7 @@ void CGPSDlg::LoadMenu()
 	static MenuItemEntry ConfigPstiInterval[] =
 	{
 		{ 1, MF_STRING, ID_CONFIG_PSTI004, "Configure PSTI004 Interval", NULL },
+		{ 1, MF_STRING, ID_CONFIG_PSTI007, "Configure PSTI007 Interval", NULL },
   	{ 1, MF_STRING, ID_CONFIG_PSTI030, "Configure PSTI030 Interval", NULL },
 		{ 1, MF_STRING, ID_CONFIG_PSTI032, "Configure PSTI032 Interval", NULL },
 		{ 1, MF_STRING, ID_CONFIG_PSTI033, "Configure PSTI033 Interval", NULL },
@@ -6142,7 +6205,7 @@ void CGPSDlg::LoadMenu()
 		//20160408 Add GPSDO menu to customer release version for Patrick's customer.
 		//{ !LITEON_CUSTOMIZE, MF_POPUP, 0, "GPSDO Control", GpsdoControlMenu },
 		//{ !LITEON_CUSTOMIZE, MF_POPUP, 0, "SUP800 User Data Storage", Sup800Menu },
-		{ IS_DEBUG && !LITEON_CUSTOMIZE, MF_POPUP, 0, "Geofencing", GeoFencingMenu },
+		{ 1 && !LITEON_CUSTOMIZE, MF_POPUP, 0, "Geofencing", GeoFencingMenu },
 		//{ IS_DEBUG , MF_POPUP, 0, "Signal Disturbance Test", SignalDisturbanceMenu },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_SBAS_DEFAULT, "Query SBAS Default", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CFG_QRY_PSTI_INTERVAL, "Configure / Query PSTI Message Interval", NULL },
@@ -6236,6 +6299,13 @@ void CGPSDlg::LoadMenu()
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
 
+	static MenuItemEntry HostDataDumpMenu[] =
+	{
+		{ 1, MF_STRING, ID_HOST_DATA_DUMP_ON, "Turn On", NULL },
+		{ 1, MF_STRING, ID_HOST_DATA_DUMP_OFF, "Turn Off", NULL },
+		{ 0, 0, 0, NULL, NULL }	//End of table
+	};
+
 	//Venus 9 Menu
 	static MenuItemEntry menuItemVenus9[] =
 	{
@@ -6245,13 +6315,15 @@ void CGPSDlg::LoadMenu()
 		{ 1, MF_STRING, ID_QUERY_V9_TAG, "Query Phoenix Tag", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_PROM_AES_TAG, "Query Phoenix PROM Tag", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_EXT_AES_TAG, "Query Phoenix External Tag", NULL },
-		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_SW_FEATURE, "Query Phoenix Sofeware Feature", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_SW_FEATURE, "Query Phoenix Software Feature", NULL },
     
 		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		{ IS_DEBUG, MF_STRING, ID_RESET_V9_AES_TAG, "Reset Phoenix Tag", NULL },
 		{ 1, MF_STRING, ID_CFG_V9_AES_TAG, "Configure Phoenix Tag", NULL },
 		{ IS_DEBUG, MF_SEPARATOR, 0, NULL, NULL },
 		{ IS_DEBUG, MF_POPUP, 0, "NMEA String Interval", NmeaStringIntervaMenu },
+		{ IS_DEBUG, MF_POPUP, 0, "Host Data Dump", HostDataDumpMenu },
+		{ IS_DEBUG, MF_STRING, ID_CFG_TM_PARAM_SETTING, "Configure Tracking Module Parameter Setting", NULL },
 
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
@@ -6313,13 +6385,15 @@ void CGPSDlg::LoadMenu()
 		{ IS_DEBUG || DEVELOPER_VERSION, MF_STRING, ID_RTK_ONOFF_GA_SV, "Enable/Disable Galileo SV mechanism", NULL },
 		{ 1, MF_STRING, ID_QUERY_RTK_REF_POSITION, "Configure RTK Reference Static Started Position", NULL },
 		{ 1, MF_STRING, ID_CLEAR_RTK_SLAVE_DATA, "Clear RTK Slave Backup Data", NULL },
-
+		{ IS_DEBUG, MF_STRING, ID_CONFIG_RTK_FUNCTIONS, "Configure RTK Functions", NULL },
 		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		//{ 1, MF_STRING, ID_QUERY_RTK_MODE, "Query RTK Mode", NULL },
 		{ 1, MF_STRING, ID_QUERY_RTK_MODE2, "Query RTK Mode And Operational Function", NULL },
 		{ 1, MF_STRING, ID_QUERY_RTK_SLAVE_BAUD, "Query RTK Slave Serial Port Baud Rate", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_GL_CPIF_BIAS, "Query RTK GLONASS Carrier-Phase Inter-Frequency Bias", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_ELE_CNR_MSK, "Query RTK Elevation and CNR Mask", NULL },
+		{ 1, MF_STRING, ID_QRY_RTK_PKB_BAUD, "Query  RTK Precisely Kinematic Base Serial Port Baud Rate", NULL },
+
 		//{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_PARAM, "Query RTK Parameters", NULL },
 		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		//{ 1, MF_STRING, ID_CONFIG_RTK_MODE, "Configure RTK Mode", NULL },
@@ -6329,6 +6403,7 @@ void CGPSDlg::LoadMenu()
     //20200408 Oliver wants this function in Customer Release
 		{ 1, MF_STRING, ID_CFG_RTK_GL_CPIF_BIAS, "Configure RTK GLONASS Carrier-Phase Inter-Frequency Bias", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CFG_RTK_ELE_CNR_MSK, "Configure RTK Elevation and CNR Mask", NULL },
+		{ 1, MF_STRING, ID_CFG_RTK_PKB_BAUD, "Configure RTK Precisely Kinematic Base Serial Port Baud Rate", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
 	if(!NMEA_INPUT && RTK_MENU && !SHOW_PATCH_MENU)
@@ -6627,6 +6702,8 @@ void CGPSDlg::LoadMenu()
 		{ IS_DEBUG || DEVELOPER_VERSION, MF_POPUP, 0, "Power Save By RTC Timer", ConfigV9PowerSave },
 		{ IS_DEBUG || DEVELOPER_VERSION, MF_POPUP, 0, "Configure RF Clock to GPIO0", ConfigV9RfClockToGpio0 },
 		{ IS_DEBUG || DEVELOPER_VERSION, MF_POPUP, 0, "Configure RF Clock Out", ConfigV9RfClockOut },
+    { IS_DEBUG || DEVELOPER_VERSION, MF_STRING, ID_QUERY_RTC, "Query RTC", NULL },
+
 		{ IS_DEBUG, MF_POPUP, 0, "Production Test", ProductionTest },
 		{ 0, 0, 0, NULL, NULL },
 	};
@@ -8168,7 +8245,7 @@ void CGPSDlg::OnConfigNmeaOutputComPort()
 		CreateGPSThread();
 	}
 }
-
+/*
 int nmea_talker;
 int nmea_talker_attr;
 UINT config_NMEA_TalkerID_thread(LPVOID param)
@@ -8185,27 +8262,7 @@ UINT config_NMEA_TalkerID_thread(LPVOID param)
 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(CGPSDlg::m_inputMsg, len, "Configure NMEA Talker ID successfully");
 	return 0;
 }
-
-void CGPSDlg::OnBinaryConfigurenmeatalkerid()
-{
-	if(!CheckConnect())
-	{
-    return;
-  }
-
-	CCon_NMEA_TalkerID dlg;
-	if(dlg.DoModal()==IDOK)
-	{
-		nmea_talker = dlg.talkerid;
-		nmea_talker_attr = dlg.attr;
-		::AfxBeginThread(config_NMEA_TalkerID_thread, 0);
-	}
-  else
-	{
-		SetMode();
-		CreateGPSThread();
-	}
-}
+*/
 
 void CGPSDlg::OnEphemerisGetephemeris()
 {
@@ -9176,7 +9233,8 @@ bool CGPSDlg::BoostBaudrate(BOOL bRestore, BoostMode mode, bool isForce)
 	{
 		if(g_setting.GetBaudrateIndex() != m_nDownloadBaudIdx)
 		{
-			r = SetPort(m_nDownloadBaudIdx, (int)mode);
+      int timeout = (g_setting.GetBaudrateIndex() > 2) ? 3000 : 9000;
+			r = SetPort(m_nDownloadBaudIdx, (int)mode, timeout);
 			Sleep(1000);
 		}
 	}
@@ -9197,6 +9255,7 @@ void CGPSDlg::TempBoostBaudrate(BOOL bRestore, int boostBaudIndex, int timeout)
 	{
 		if(g_setting.GetBaudrateIndex() != boostBaudIndex)
 		{
+      int timeout = (g_setting.GetBaudrateIndex() < 2) ? 8000 : 3000;
 			SetPort(boostBaudIndex, (int)ChangeToTemp);
 			Sleep(1000);
 		}
@@ -9410,66 +9469,64 @@ void CGPSDlg::RescaleDialog()
 	const UiLocationEntry UiTable[] =
 	{
 		//Left Panel
-		TRUE, 0, IDC_COMPORT_T, {6, 3, 80, 14},
-		TRUE, 0, IDC_BAUDRATE_T, {98, 3, 80, 14},
-		TRUE, 0, IDC_COMPORT, {6, 20, 80, 13},
-		TRUE, 0, IDC_BAUDRATE_IDX, {98, 20, 80, 13},
-		(!NMEA_INPUT), 0, IDC_OPEN_CLOSE_T, {235, 3, 51, 14},
-		(!NMEA_INPUT), 0, IDC_CONNECT, {254, 20, 32, 24},
-		(!NMEA_INPUT), 0, IDC_CLOSE, {254, 20, 32, 24},
-		NMEA_INPUT, 0, IDC_PLAY, {182, 20, 32, 24},
-		NMEA_INPUT, 0, IDC_RECORD, {218, 20, 32, 24},
-		NMEA_INPUT, 0, IDC_STOP, {254, 20, 32, 24},
-		NMEA_INPUT, 0, IDC_PLAY_T, {180, 3, 32, 14},
-		NMEA_INPUT, 0, IDC_RECORD_T, {216, 3, 32, 14},
-		NMEA_INPUT, 0, IDC_STOP_T, {252, 3, 32, 14},
+		TRUE, 0, IDC_COMPORT_T, {10, 3, 80, 14},
+		TRUE, 0, IDC_BAUDRATE_T, {102, 3, 80, 14},
+		TRUE, 0, IDC_COMPORT, {10, 20, 80, 13},
+		TRUE, 0, IDC_BAUDRATE_IDX, {102, 20, 80, 13},
+		(!NMEA_INPUT), 0, IDC_OPEN_CLOSE_T, {239, 3, 51, 14},
+		(!NMEA_INPUT), 0, IDC_CONNECT, {258, 20, 32, 24},
+		(!NMEA_INPUT), 0, IDC_CLOSE, {258, 20, 32, 24},
+		NMEA_INPUT, 0, IDC_PLAY, {186, 20, 32, 24},
+		NMEA_INPUT, 0, IDC_RECORD, {222, 20, 32, 24},
+		NMEA_INPUT, 0, IDC_STOP, {258, 20, 32, 24},
+		NMEA_INPUT, 0, IDC_PLAY_T, {184, 3, 32, 14},
+		NMEA_INPUT, 0, IDC_RECORD_T, {220, 3, 32, 14},
+		NMEA_INPUT, 0, IDC_STOP_T, {256, 3, 32, 14},
 
-		TRUE, 0, IDC_MESSAGE_T, {6, 48, 280, 29},
-		TRUE, 0, IDC_FIXED_STATUS, {138, 50, 144, 29},
-		//TRUE, 0, IDC_MESSAGE, {6, 89, 280, 158},
-		//TRUE, 0, IDC_MESSAGE, {6, 82, 280, 162},
-		TRUE, 0, IDC_MESSAGE, {6, 78, 280, 173},
+		TRUE, 0, IDC_MESSAGE_T, {10, 48, 280, 29},
+		TRUE, 0, IDC_FIXED_STATUS, {142, 50, 144, 29},
+		TRUE, 0, IDC_MESSAGE, {10, 78, 280, 173},
 
-		TRUE, 0, IDC_RESPONSE_T, {6, 253, 280, 29},
-		TRUE, 0, IDC_RESPONSE, {6, 283, 280, 116},
+		TRUE, 0, IDC_RESPONSE_T, {10, 253, 280, 29},
+		TRUE, 0, IDC_RESPONSE, {10, 283, 280, 116},
 
-		TRUE, 0, IDC_COORDINATE_T, {6, 402, 280, 29},
-		TRUE, 0, IDC_COORDINATE_F, {6, 432, 280, 126},
-		TRUE, 0, IDC_WGS84_X_T, {22, 438, 110, 18},
-		TRUE, 0, IDC_WGS84_X, {22, 456, 110, 18},
-		TRUE, 0, IDC_WGS84_Y_T, {22, 477, 110, 18},
-		TRUE, 0, IDC_WGS84_Y, {22, 495, 110, 18},
-		TRUE, 0, IDC_WGS84_Z_T, {22, 516, 110, 18},
-		TRUE, 0, IDC_WGS84_Z, {22, 534, 110, 18},
-		TRUE, 0, IDC_ENU_E_T, {160, 438, 110, 18},
-		TRUE, 0, IDC_ENU_E, {160, 456, 110, 18},
-		TRUE, 0, IDC_ENU_N_T, {160, 477, 110, 18},
-		TRUE, 0, IDC_ENU_N, {160, 495, 110, 18},
-		TRUE, 0, IDC_ENU_U_T, {160, 516, 110, 18},
-		TRUE, 0, IDC_ENU_U, {160, 534, 110, 18},
+		TRUE, 0, IDC_COORDINATE_T, {10, 402, 280, 29},
+		TRUE, 0, IDC_COORDINATE_F, {10, 432, 280, 126},
+		TRUE, 0, IDC_WGS84_X_T, {26, 438, 110, 18},
+		TRUE, 0, IDC_WGS84_X, {26, 456, 110, 18},
+		TRUE, 0, IDC_WGS84_Y_T, {26, 477, 110, 18},
+		TRUE, 0, IDC_WGS84_Y, {26, 495, 110, 18},
+		TRUE, 0, IDC_WGS84_Z_T, {26, 516, 110, 18},
+		TRUE, 0, IDC_WGS84_Z, {26, 534, 110, 18},
+		TRUE, 0, IDC_ENU_E_T, {164, 438, 110, 18},
+		TRUE, 0, IDC_ENU_E, {164, 456, 110, 18},
+		TRUE, 0, IDC_ENU_N_T, {164, 477, 110, 18},
+		TRUE, 0, IDC_ENU_N, {164, 495, 110, 18},
+		TRUE, 0, IDC_ENU_U_T, {164, 516, 110, 18},
+		TRUE, 0, IDC_ENU_U, {164, 534, 110, 18},
 
-		TRUE, 0, IDC_COMMAND_T, {6, 560, 280, 29},
-		TRUE, 0, IDC_COMMAND_F, {6, 590, 280, 81},
+		TRUE, 0, IDC_COMMAND_T, {10, 560, 280, 29},
+		TRUE, 0, IDC_COMMAND_F, {10, 590, 280, 81},
 #if defined(CUSTOMIZE_COSDSTART_BUTTON)
-		FALSE, 0, IDC_HOTSTART, {15, 593, 82, 24},
-		FALSE, 0, IDC_WARMSTART, {105, 593, 82, 24},
-		TRUE, 0, IDC_COLDSTART, {15, 593, 262, 74},
-		FALSE, 0, IDC_NO_OUTPUT, {15, 618, 82, 24},
-		FALSE, 0, IDC_NMEA_OUTPUT, {105, 618, 82, 24},
-		FALSE, 0, IDC_BIN_OUTPUT, {195, 618, 82, 24},
-		FALSE, 0, IDC_SCANALL, {15, 643, 82, 24},
-		FALSE, 0, IDC_SCANPORT, {105, 643, 82, 24},
-		FALSE, 0, IDC_SCANBAUDRATE, {195, 643, 82, 24},
+		FALSE, 0, IDC_HOTSTART, {19, 593, 82, 24},
+		FALSE, 0, IDC_WARMSTART, {109, 593, 82, 24},
+		TRUE, 0, IDC_COLDSTART, {19, 593, 262, 74},
+		FALSE, 0, IDC_NO_OUTPUT, {19, 618, 82, 24},
+		FALSE, 0, IDC_NMEA_OUTPUT, {109, 618, 82, 24},
+		FALSE, 0, IDC_BIN_OUTPUT, {199, 618, 82, 24},
+		FALSE, 0, IDC_SCANALL, {19, 643, 82, 24},
+		FALSE, 0, IDC_SCANPORT, {109, 643, 82, 24},
+		FALSE, 0, IDC_SCANBAUDRATE, {199, 643, 82, 24},
 #else
-		TRUE, 0, IDC_HOTSTART, {15, 593, 82, 24},
-		TRUE, 0, IDC_WARMSTART, {105, 593, 82, 24},
-		TRUE, 0, IDC_COLDSTART, {195, 593, 82, 24},
-		TRUE, 0, IDC_NO_OUTPUT, {15, 618, 82, 24},
-		TRUE, 0, IDC_NMEA_OUTPUT, {105, 618, 82, 24},
-		TRUE, 0, IDC_BIN_OUTPUT, {195, 618, 82, 24},
-		TRUE, 0, IDC_SCANALL, {15, 643, 82, 24},
-		TRUE, 0, IDC_SCANPORT, {105, 643, 82, 24},
-		TRUE, 0, IDC_SCANBAUDRATE, {195, 643, 82, 24},
+		TRUE, 0, IDC_HOTSTART, {19, 593, 82, 24},
+		TRUE, 0, IDC_WARMSTART, {109, 593, 82, 24},
+		TRUE, 0, IDC_COLDSTART, {199, 593, 82, 24},
+		TRUE, 0, IDC_NO_OUTPUT, {19, 618, 82, 24},
+		TRUE, 0, IDC_NMEA_OUTPUT, {109, 618, 82, 24},
+		TRUE, 0, IDC_BIN_OUTPUT, {199, 618, 82, 24},
+		TRUE, 0, IDC_SCANALL, {19, 643, 82, 24},
+		TRUE, 0, IDC_SCANPORT, {109, 643, 82, 24},
+		TRUE, 0, IDC_SCANBAUDRATE, {199, 643, 82, 24},
 #endif
 		//Earth View
 		TRUE, 0, IDC_EARTH_PANEL, {301, 346, 343, 253},
@@ -9697,8 +9754,8 @@ void CGPSDlg::RescaleDialog()
 
 		//SNR Chart
 #if (EXTRA_WIDE)
-		TRUE, 0, IDC_GP_BAR, {301, 151, 798, 75},
-		TRUE, 0, IDC_BD_BAR, {301, 248, 798, 75},
+		TRUE, 0, IDC_GP_BAR, {301, 151, 698 + EXTRAS_WIDE_SIZE, 75},
+		TRUE, 0, IDC_BD_BAR, {301, 248, 698 + EXTRAS_WIDE_SIZE, 75},
 #else
 		TRUE, 0, IDC_GP_BAR, {301, 151, 698, 75},
 		TRUE, 0, IDC_BD_BAR, {301, 248, 698, 75},
@@ -9835,6 +9892,11 @@ void CGPSDlg::RescaleDialog()
 		GetDlgItem(IDC_DOWNLOAD_PANEL)->ShowWindow(SW_HIDE);
 		GetDlgItem(IDC_DOWNLOAD_T)->ShowWindow(SW_HIDE);
 	}
+
+#if (PROUCTION_TEST_200611)
+  GetDlgItem(IDC_NMEA_OUTPUT)->SetWindowText("RTK Rover");
+  GetDlgItem(IDC_BIN_OUTPUT)->SetWindowText("RTK Base");
+#endif
 }
 
 void CGPSDlg::SwitchToConnectedStatus(BOOL bSwitch)
@@ -9855,7 +9917,7 @@ bool CGPSDlg::CheckTimeOut(DWORD duration, DWORD timeOut, bool silent)
 	{
 		if(!silent)
 		{
-			AfxMessageBox("Timeout5: GPS device no response.");
+			AfxMessageBox("Timeout: Device no response.");
 		}
 		return true;
 	}
@@ -11026,7 +11088,6 @@ void CGPSDlg::MSG_PROC()
 	CloseIQNamedPipe();
 	m_isConnectOn = false;
 }
-
 */
 
 void CGPSDlg::DoFlag()
@@ -11151,6 +11212,15 @@ void CGPSDlg::ParsingMessage(BOOL isPlayer)
     {
       break;
     }
+
+    if(m_ntripRunning)
+    {
+      if(HasNtripData())
+      {
+        m_serial->SendData(GetNtripData(), GetNtripDataSize());	
+        RemoveNtripData();
+      }
+    }
 		if(0 == length)
 		{
 			Sleep(10);
@@ -11220,13 +11290,13 @@ void CGPSDlg::ParsingMessage(BOOL isPlayer)
 			      SetNmeaUpdated(true);
             break;
           default:
-            //if(g_setting.showAllUnknownBinary)
-            //{
-		          //if(m_bShowBinaryCmdData)
-		          //{
-			         // add_msgtolist("Unknown : " + theApp.GetHexString(buffer, length));
-		          //}
-            //}
+            if(g_setting.showAllUnknownBinary)
+            {
+		          if(m_bShowBinaryCmdData)
+		          {
+			          add_msgtolist("Unknown : " + theApp.GetHexString(buffer, length));
+		          }
+            }
             break;
           }
         }

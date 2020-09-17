@@ -31,7 +31,7 @@ public:
 	CString GetCurrrentDir() { return m_currentDir; };
 	CString GetPathName() { return m_modulePathName; };
 	int GetIntSetting(LPCSTR key, int defaultValue);
-	CString GetStringSetting(LPCSTR key, LPCSTR defaultValue);
+//	CString GetStringSetting(LPCSTR key, LPCSTR defaultValue);
 	bool SetIntSetting(LPCSTR key, int data);
 //	bool SetStringSetting(LPCSTR key, LPCSTR data);
 // Implementation

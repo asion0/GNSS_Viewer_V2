@@ -508,7 +508,8 @@ const char* DatumList[] = {
 	"Yacare, Uruguay",
 	"Zanderij, Suriname",
 	"Pulkovo 1995, Russia",
-	"PZ-90, Global"
+	"PZ-90, Global",
+  "CGCS2000, China"
 };
 const int DatumListSize = sizeof(DatumList) / sizeof(DatumList[0]);
 
@@ -1106,37 +1107,57 @@ int GetBitFlagCounts(U08* d, int size)
   return count;
 }
 
+//For customer reference
+void CooCartesianToGeodetic(const double x, const double y, const double z, double &lat, double &lon, float &alt)
+{
+	double p = sqrt(x * x + y * y);
+	if(p <= 0.01)
+	{
+		lat = (z >= 0) ? (PI / 2.0) : (-PI / 2.0);
+		lon = 0.0;
+		alt = (float)(fabs(z) - WGS84_RB);
+		return;
+	}
+
+	double theta = atan2(z * WGS84_RA, p * WGS84_RB);
+	double s_theta = sin(theta);
+	double c_theta = cos(theta);    
+
+	double temp = (z + WGS84_E2P * WGS84_RB * s_theta * s_theta * s_theta); 
+	double phi = atan2(temp, p - WGS84_E2 * WGS84_RA * c_theta * c_theta * c_theta);
+
+	double s_phi = sin(phi);
+	double c_phi = cos(phi);
+
+	lat = phi;    
+	lon = atan2(y, x);
+	alt = (float)(p / c_phi - (WGS84_RA / sqrt(1.0 - WGS84_E2 * s_phi * s_phi)));
+}
+
 void CooCartesianToGeodetic(const POS_T* xyz_p, LLA_T* lla_p)
 {
-	D64 p;
-	D64 theta;
-	D64 temp;
-	D64 s_theta, c_theta, s_phi, c_phi;
-	D64 phi; // latitude
-
-	p = sqrt( (xyz_p->px)*(xyz_p->px) + (xyz_p->py)*(xyz_p->py) );
-
-	if( p <= 0.01f )
+	D64 p = sqrt(xyz_p->px * xyz_p->px + xyz_p->py * xyz_p->py);
+	if(p <= 0.01f)
 	{
-		lla_p->lat = (xyz_p->pz >= 0)?(PI/2.0):(-PI/2.0);
+		lla_p->lat = (xyz_p->pz >= 0) ? (PI / 2.0) : (-PI / 2.0);
 		lla_p->lon = 0.0;
 		lla_p->alt = (F32)(fabs(xyz_p->pz) - WGS84_RB);
 		return;
 	}
 
-	theta = atan2( ( xyz_p->pz*WGS84_RA ), ( p*WGS84_RB ) );
-	s_theta = sin(theta);
-	c_theta = cos(theta);    
+	D64 theta = atan2(xyz_p->pz * WGS84_RA, p*WGS84_RB);
+	D64 s_theta = sin(theta);
+	D64 c_theta = cos(theta);    
 
-	temp = ( xyz_p->pz + WGS84_E2P*WGS84_RB*s_theta*s_theta*s_theta ); 
-	phi = atan2( temp, ( p - WGS84_E2*WGS84_RA*c_theta*c_theta*c_theta ) );
+	D64 temp = (xyz_p->pz + WGS84_E2P * WGS84_RB * s_theta * s_theta * s_theta); 
+	D64 phi = atan2(temp, p - WGS84_E2 * WGS84_RA * c_theta * c_theta * c_theta);
 
-	s_phi = sin(phi);
-	c_phi = cos(phi);
+	D64 s_phi = sin(phi);
+	D64 c_phi = cos(phi);
 
 	lla_p->lat = phi;    
-	lla_p->lon = atan2( xyz_p->py, xyz_p->px );
-	lla_p->alt = (F32)( (p / c_phi) - ( WGS84_RA / sqrt(1.0 - WGS84_E2*s_phi*s_phi ) ) );
+	lla_p->lon = atan2(xyz_p->py, xyz_p->px);
+	lla_p->alt = (F32)(p / c_phi - (WGS84_RA / sqrt(1.0 - WGS84_E2 * s_phi * s_phi)));
 }
 
 void ConvertEcefToLonLatAlt(D64 ecefX, D64 ecefY, D64 ecefZ, D64& latitude, D64& longitude, D64& altitude)

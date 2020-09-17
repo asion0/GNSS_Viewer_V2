@@ -170,7 +170,9 @@ static CommandEntry cmdTable[] =
 	{ 0x64, 0x76, 2, 0x64, 0xF9 },
 	//QueryCpuBoostModeCmd,
 	{ 0x64, 0x78, 2, 0x64, 0xFA },
-	//QuerySha1StringCmd
+	//HostDataDumpOnCmd,
+	{ 0x64, 0x7A, 4, 0x00, 0x00 },
+  	//QuerySha1StringCmd
 	{ 0x64, 0x7E, 2, 0x64, 0xFF },
 	//QueryVersionExtensionCmd
 	{ 0x64, 0x7D, 2, 0x64, 0xFE },
@@ -200,6 +202,8 @@ static CommandEntry cmdTable[] =
 	{ 0x6A, 0x12, 2, 0x6A, 0x87 },
 	//ClearRtkSlaveDataCmd,
 	{ 0x6A, 0x0E, 2, 0x6A, 0x85 },
+	//QueryRtkKinematicBaudCmd,
+	{ 0x6A, 0x14, 2, 0x6A, 0x88 },
 	//QueryDrRateCmd,
 	{ 0x6C, 0x01, 2, 0x6C, 0x80 },
 	//QueryDrRawRateCmd,
@@ -332,6 +336,7 @@ enum SqBinaryCmd
   QueryRfIcCmd,
   QueryAlphaUniqueIdCmd,
   QueryCpuBoostModeCmd,
+  HostDataDumpOnCmd,
 	QuerySha1StringCmd,
 	QueryVersionExtensionCmd,
   Query1ppsPulseWidthCmd,
@@ -347,6 +352,7 @@ enum SqBinaryCmd
   QueryRtkCpifBiasCmd,
   OnQueryRtkElevationAndCnrMaskCmd,
   ClearRtkSlaveDataCmd,
+  QueryRtkKinematicBaudCmd,
   QueryDrRateCmd,
   QueryDrRawRateCmd,
   QueryAdrOdometerScalingFactorCmd,
@@ -2004,36 +2010,37 @@ UINT AFX_CDECL Configure1ppsPulseWidthThread(LPVOID param)
 	return 0;
 }
 
-void CGPSDlg::OnConfigure1PpsPulseWidth()
-{
-	if(!CheckConnect())
-	{
-		return;
-	}
+//void CGPSDlg::OnConfigure1PpsPulseWidth()
+//{
 
-	SetInputMode(NoOutputMode);
-	CConfig1ppsPulseWidthDlg dlg;
-	INT_PTR nResult = dlg.DoModal();
-	if(nResult == IDOK) 
-	{
-    U08 msg[7] = {0};
-		msg[0] = 0x65;
-		msg[1] = 0x01;
-		msg[2] = dlg.m_nPulseWidth >> 24 & 0xFF;
-		msg[3] = dlg.m_nPulseWidth >> 16 & 0xFF;
-		msg[4] = dlg.m_nPulseWidth >> 8 & 0xFF;
-		msg[5] = dlg.m_nPulseWidth & 0xFF;
-		msg[6] = (U08)dlg.m_nAttribute;
+	//if(!CheckConnect())
+	//{
+	//	return;
+	//}
 
-		int len = SetMessage(msg, sizeof(msg));
-    AfxBeginThread(Configure1ppsPulseWidthThread, 0);
-	}
-	else
-	{
-		SetMode();  
-		CreateGPSThread();
-	}
-}
+	//SetInputMode(NoOutputMode);
+	//CConfig1ppsPulseWidthDlg dlg;
+	//INT_PTR nResult = dlg.DoModal();
+	//if(nResult == IDOK) 
+	//{
+ //   U08 msg[7] = {0};
+	//	msg[0] = 0x65;
+	//	msg[1] = 0x01;
+	//	msg[2] = dlg.m_nPulseWidth >> 24 & 0xFF;
+	//	msg[3] = dlg.m_nPulseWidth >> 16 & 0xFF;
+	//	msg[4] = dlg.m_nPulseWidth >> 8 & 0xFF;
+	//	msg[5] = dlg.m_nPulseWidth & 0xFF;
+	//	msg[6] = (U08)dlg.m_nAttribute;
+
+	//	int len = SetMessage(msg, sizeof(msg));
+ //   AfxBeginThread(Configure1ppsPulseWidthThread, 0);
+	//}
+	//else
+	//{
+	//	SetMode();  
+	//	CreateGPSThread();
+	//}
+//}
 
 long int g_1ppsFrequencyOutput = 0;
 U08 g_1ppsFrequencyOutputAttr = 0;
@@ -2259,18 +2266,22 @@ CGPSDlg::CmdErrorCode CGPSDlg::GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U
 	bool alreadyAck = noWaitAck;
 	while(NULL != m_serial)
 	{
-		ackCmd->Clear();
 		if(CGPSDlg::gpsDlg->CheckTimeOut(t.GetDuration(), timeOut, silent))
-		{	//Time Out
+		{	//Time out
 			return Timeout;
 		}
 
+		ackCmd->Clear();
     DWORD len = m_serial->GetBinaryAck(ackCmd->GetBuffer(), ackCmd->Size(), timeOut - t.GetDuration());
 		if(!ReadOK(len))
 		{	
 			continue;
 		}
 
+    if((*ackCmd)[0] != 0xA0 || (*ackCmd)[1] != 0xA1)
+    { //Not binary response
+      continue;
+    }
 		int cmdSize = MAKEWORD((*ackCmd)[3], (*ackCmd)[2]);
 		if(cmdSize != len - 7)
 		{	//Packet Size Error
@@ -2998,7 +3009,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareCrc32SystemCode(CmdExeMode nMode, vo
 	cmd.SetU08(2, 0x03);
 
 	BinaryData ackCmd;
-  CmdErrorCode err = ExcuteBinaryCommand(QuerySwCrcSysCmd, &cmd, &ackCmd, 2000);
+  CmdErrorCode err = ExcuteBinaryCommand(QuerySwCrcSysCmd, &cmd, &ackCmd, 5000);
 	if(err != Ack)
 	{
 		return err;
@@ -4358,23 +4369,37 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGnssNmeaTalkId(CmdExeMode nMode, void* outpu
 	cmd.SetU08(1, cmdTable[QueryGnssNmeaTalkIdCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(Ack == ExcuteBinaryCommand(QueryGnssNmeaTalkIdCmd, &cmd, &ackCmd))
+  CmdErrorCode err = ExcuteBinaryCommand(QueryGnssNmeaTalkIdCmd, &cmd, &ackCmd);
+	if(err != Ack)
 	{
-		CString strMsg = "Query Gnss NMEA Talk ID successfully";
-		add_msgtolist(strMsg);
-		strMsg = "NMEA Talk ID: ";
-
-		if(ackCmd[5]==0)
-		{
-			strMsg.Append("GP Mode");
-		}
-		else if(ackCmd[5]==1)
-		{
-			strMsg.Append("GN Mode");
-		}
-		add_msgtolist(strMsg);
+		return err;
 	}
-	return Timeout;
+
+	if(Return == nMode)
+	{
+    *((int*)outputData) = ackCmd[5];
+		return err;
+	}
+
+	CString strMsg = "Query Gnss NMEA Talk ID successfully";
+	add_msgtolist(strMsg);
+	strMsg = "NMEA Talk ID: ";
+
+	if(ackCmd[5] == 0)
+	{
+		strMsg.Append("GP Mode");
+	}
+	else if(ackCmd[5] == 1)
+	{
+		strMsg.Append("GN Mode");
+	}
+	else if(ackCmd[5] == 2)
+	{
+		strMsg.Append("Auto Mode");
+	}
+	add_msgtolist(strMsg);
+
+	return err;
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::QueryDataLogStatus(CmdExeMode nMode, void* outputData)
@@ -5316,7 +5341,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryGeofenceEx(CmdExeMode nMode, void* outputDat
 	cmd.SetU08(3, m_nGeofecingNo);
 
 	BinaryData ackCmd;
-  CmdErrorCode err = ExcuteBinaryCommand(QueryGeofenceCmdEx, &cmd, &ackCmd, 800);
+  CmdErrorCode err = ExcuteBinaryCommand(QueryGeofenceCmdEx, &cmd, &ackCmd, 2000);
 	if(err != Ack)
 	{
 		return err;
@@ -5444,7 +5469,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(3, (U08)m_nPstiNo);
 
 	BinaryData ackCmd;
-  CmdErrorCode err = ExcuteBinaryCommand(QueryPstiCmd, &cmd, &ackCmd, 800);
+  CmdErrorCode err = ExcuteBinaryCommand(QueryPstiCmd, &cmd, &ackCmd, 2000);
 	if(err != Ack)
 	{
 		return err;
@@ -5473,7 +5498,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti032(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(3, 32);
 
 	BinaryData ackCmd;
-  CmdErrorCode err = ExcuteBinaryCommand(QueryPstiCmd, &cmd, &ackCmd, 800);
+  CmdErrorCode err = ExcuteBinaryCommand(QueryPstiCmd, &cmd, &ackCmd, 2000);
 	if(err != Ack)
 	{
 		return err;
@@ -5502,7 +5527,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti033(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(3, 33);
 
 	BinaryData ackCmd;
-  CmdErrorCode err = ExcuteBinaryCommand(QueryPstiCmd, &cmd, &ackCmd, 800);
+  CmdErrorCode err = ExcuteBinaryCommand(QueryPstiCmd, &cmd, &ackCmd, 2000);
 	if(err != Ack)
 	{
 		return err;
@@ -5531,7 +5556,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(3, (U08)m_nPstiNo);
 
 	BinaryData ackCmd;
-  CmdErrorCode err = ExcuteBinaryCommand(QueryPstiCmd, &cmd, &ackCmd, 800);
+  CmdErrorCode err = ExcuteBinaryCommand(QueryPstiCmd, &cmd, &ackCmd, 2000);
 	if(err != Ack)
 	{
 		return err;
@@ -5560,7 +5585,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPsti004(CmdExeMode nMode, void* outputData)
 	cmd.SetU08(3, 4);
 
 	BinaryData ackCmd;
-  CmdErrorCode err = ExcuteBinaryCommand(QueryPstiCmd, &cmd, &ackCmd, 800);
+  CmdErrorCode err = ExcuteBinaryCommand(QueryPstiCmd, &cmd, &ackCmd, 2000);
 	if(err != Ack)
 	{
 		return err;
@@ -5753,6 +5778,34 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkSlaveBaud(CmdExeMode nMode, void* outputD
 	strMsg = "Query RTK slave serial port baud rate successfully";
 	add_msgtolist(strMsg);
   strMsg.Format("Slave baud rate: %d", g_setting.BaudrateValue(ackCmd[6]));
+	add_msgtolist(strMsg);
+
+	return Ack;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::QueryRtkKinematicBaud(CmdExeMode nMode, void* outputData)
+{ 
+	BinaryCommand cmd(cmdTable[QueryRtkKinematicBaudCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryRtkKinematicBaudCmd].cmdId);
+	cmd.SetU08(2, cmdTable[QueryRtkKinematicBaudCmd].cmdSubId);
+
+	BinaryData ackCmd;
+	CmdErrorCode err = ExcuteBinaryCommand(QueryRtkKinematicBaudCmd, &cmd, &ackCmd, (nMode == Display) ? g_setting.GetLongTimeout() : g_setting.GetShortTimeout());
+	if(err != Ack)
+	{
+		return err;
+	}
+
+	if(Return == nMode)
+	{	//Return command data
+    *((BinaryData*)outputData) = ackCmd;
+		return err;
+	}
+
+	CString strMsg;
+	strMsg = "Query RTK precisely kinematic base  serial port baud rate successfully";
+	add_msgtolist(strMsg);
+  strMsg.Format("baud rate: %d", g_setting.BaudrateValue(ackCmd[6]));
 	add_msgtolist(strMsg);
 
 	return Ack;
@@ -6481,15 +6534,25 @@ CGPSDlg::CmdErrorCode CGPSDlg::Query1ppsPulseWidth(CmdExeMode nMode, void* outpu
 	cmd.SetU08(2, cmdTable[Query1ppsPulseWidthCmd].cmdSubId);
 
 	BinaryData ackCmd;
-	if(Ack == ExcuteBinaryCommand(Query1ppsPulseWidthCmd, &cmd, &ackCmd))
+  CmdErrorCode err = ExcuteBinaryCommand(Query1ppsPulseWidthCmd, &cmd, &ackCmd);
+	if(err != Ack)
 	{
-		CString strMsg = "Query 1PPS pulse width successfully";
-		add_msgtolist(strMsg);
-		strMsg.Format("1PPS Pulse Width: %dus",
-			MAKELONG(MAKEWORD(ackCmd[9], ackCmd[8]),MAKEWORD(ackCmd[7], ackCmd[6])));
-		add_msgtolist(strMsg);
-	}
-	return Timeout;
+    return err;
+  }
+
+  if(Return == nMode)
+	{	//Return command length
+    *((U32*)outputData) = MAKELONG(MAKEWORD(ackCmd[9], ackCmd[8]),MAKEWORD(ackCmd[7], ackCmd[6]));
+		return err;
+  }
+
+	CString strMsg = "Query 1PPS pulse width successfully";
+	add_msgtolist(strMsg);
+	strMsg.Format("1PPS Pulse Width: %dus",
+		MAKELONG(MAKEWORD(ackCmd[9], ackCmd[8]),MAKEWORD(ackCmd[7], ackCmd[6])));
+	add_msgtolist(strMsg);
+
+	return Ack;
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::Query1ppsFreqencyOutput(CmdExeMode nMode, void* outputData)
@@ -6667,27 +6730,69 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRtcmMeasurementDataOut(CmdExeMode nMode, voi
 	}
 	add_msgtolist(strMsg);
 
-	strMsg.Format("Message Type 1005: %s", (ackCmd[7]) ? "Enable" : "Disable");
+	strMsg.Format("Message 1005: %s", (ackCmd[7]) ? "Enable" : "Disable");
 	add_msgtolist(strMsg);
 
-	strMsg.Format("Message Type 1077: %s", (ackCmd[8]) ? "Enable" : "Disable");
+	strMsg.Format("Message 1077: %s", (ackCmd[8]) ? "Enable" : "Disable");
 	add_msgtolist(strMsg);
 
-	strMsg.Format("Message Type 1087: %s", (ackCmd[9]) ? "Enable" : "Disable");
+	strMsg.Format("Message 1087: %s", (ackCmd[9]) ? "Enable" : "Disable");
 	add_msgtolist(strMsg);
   //Add in 20200205, request from Neil
-	strMsg.Format("Message Type 1097: %s", (ackCmd[10]) ? "Enable" : "Disable");
+	strMsg.Format("Message 1097: %s", (ackCmd[10]) ? "Enable" : "Disable");
 	add_msgtolist(strMsg);
 
-	strMsg.Format("Message Type 1107: %s", (ackCmd[11]) ? "Enable" : "Disable");
+	strMsg.Format("Message 1107: %s", (ackCmd[11]) ? "Enable" : "Disable");
 	add_msgtolist(strMsg);
 
-	strMsg.Format("Message Type 1117: %s", (ackCmd[12]) ? "Enable" : "Disable");
+	strMsg.Format("Message 1117: %s", (ackCmd[12]) ? "Enable" : "Disable");
 	add_msgtolist(strMsg);
 
-	strMsg.Format("Message Type 1127: %s", (ackCmd[13]) ? "Enable" : "Disable");
+	strMsg.Format("Message 1127: %s", (ackCmd[13]) ? "Enable" : "Disable");
 	add_msgtolist(strMsg);
 
+  if(ackCmd[19] != 0)
+  {
+    if(ackCmd[14] == 0)
+    {
+      strMsg = "Message 1019: Disable";
+    }
+    else
+    {
+	    strMsg.Format("Message 1019 interval: %d seconds", ackCmd[14]);
+    }
+	  add_msgtolist(strMsg);
+	  
+    if(ackCmd[14] == 0)
+    {
+      strMsg = "Message 1019: Disable";
+    }
+    else
+    {
+      strMsg.Format("Message 1020 interval: %d seconds", ackCmd[15]);
+    }
+	  add_msgtolist(strMsg);
+
+    if(ackCmd[14] == 0)
+    {
+      strMsg = "Message 1019: Disable";
+    }
+    else
+    {
+	    strMsg.Format("Message 1042 interval: %d seconds", ackCmd[16]);
+    }
+	  add_msgtolist(strMsg);
+
+    if(ackCmd[14] == 0)
+    {
+      strMsg = "Message 1019: Disable";
+    }
+    else
+    {
+	    strMsg.Format("Message 1046 interval: %d seconds", ackCmd[17]);
+    }
+	  add_msgtolist(strMsg);
+  }
 	return Ack;
 }
 
@@ -6697,17 +6802,25 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryCableDelay(CmdExeMode nMode, void* outputDat
 	cmd.SetU08(1, cmdTable[QueryCableDelayCmd].cmdId);
 
 	BinaryData ackCmd;
-	if(Ack == ExcuteBinaryCommand(QueryCableDelayCmd, &cmd, &ackCmd))
+  CmdErrorCode err = ExcuteBinaryCommand(QueryCableDelayCmd, &cmd, &ackCmd);
+	if(err != Ack)
 	{
-		CString strMsg;
-		strMsg = "Query 1PPS Cable Delay successfully";
-		add_msgtolist(strMsg);
+    return err;
+  }
+  if(Return == nMode)
+	{	//Return command length
+    *((S32*)outputData) = (S32)MAKELONG(MAKEWORD(ackCmd[8], ackCmd[7]),MAKEWORD(ackCmd[6], ackCmd[5]));
+		return err;
+  }
 
-		S32 data = ackCmd[5]<<24 | ackCmd[6]<<16 | ackCmd[7]<<8 | ackCmd[8];
-		strMsg.Format("Cable delay: %0.2fns", data / 100.0);
-		add_msgtolist(strMsg);
-	}
-	return Timeout;
+	CString strMsg = "Query 1PPS Cable Delay successfully";
+	add_msgtolist(strMsg);
+
+	S32 data = (S32)MAKELONG(MAKEWORD(ackCmd[8], ackCmd[7]),MAKEWORD(ackCmd[6], ackCmd[5]));
+	strMsg.Format("Cable delay: %0.2fns", data / 100.0);
+	add_msgtolist(strMsg);
+
+	return Ack;
 }
 
 UINT SetFacMsgThread(LPVOID pParam)
@@ -7922,8 +8035,24 @@ void CGPSDlg::OnConfigPowerSavingParameters()
 
 void CGPSDlg::OnIqPlot()
 {
-	CIqPlot dlg;
+	CIqPlotDlg dlg;
 	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnNtripClient()
+{
+	if(!m_isConnectOn)
+	{
+		AfxMessageBox("Please connect to GNSS device");
+		return;
+	}
+
+  if(m_ntripClientDlg == NULL)
+  {
+    m_ntripClientDlg = new CNtripClientDlg(this);
+    m_ntripClientDlg->Create(IDD_NTRIP_CLIENT);
+  }
+  m_ntripClientDlg->ShowWindow(SW_SHOW);
 }
 
 void CGPSDlg::OnConfigGeofence()
@@ -7974,6 +8103,55 @@ void CGPSDlg::OnConfigGeofence4()
 	DoCommonConfig(&dlg);
 }
 
+void CGPSDlg::OnClearGeofenceAll()
+{
+	CConfigGeofencing dlg;
+  dlg.SetDataNo(1);
+	DoCommonConfigDirect(&dlg, 0);
+
+  dlg.SetDataNo(2);
+	DoCommonConfigDirect(&dlg, 0);
+
+  dlg.SetDataNo(3);
+	DoCommonConfigDirect(&dlg, 0);
+
+  dlg.SetDataNo(4);
+	DoCommonConfigDirect(&dlg, 0);
+	return;
+}
+
+void CGPSDlg::OnClearGeofence1()
+{
+	CConfigGeofencing dlg;
+  dlg.SetDataNo(1);
+	DoCommonConfigDirect(&dlg, 0);
+	return;
+}
+
+void CGPSDlg::OnClearGeofence2()
+{
+	CConfigGeofencing dlg;
+  dlg.SetDataNo(2);
+	DoCommonConfigDirect(&dlg, 0);
+	return;
+}
+
+void CGPSDlg::OnClearGeofence3()
+{
+	CConfigGeofencing dlg;
+  dlg.SetDataNo(3);
+	DoCommonConfigDirect(&dlg, 0);
+	return;
+}
+
+void CGPSDlg::OnClearGeofence4()
+{
+	CConfigGeofencing dlg;
+  dlg.SetDataNo(4);
+	DoCommonConfigDirect(&dlg, 0);
+	return;
+}
+
 void CGPSDlg::OnConfigRtkMode()
 {
 	CConfigRtkMode dlg;
@@ -8016,9 +8194,21 @@ void CGPSDlg::OnConfigRtkMode2()
 	DoCommonConfig(&dlg);
 }
 
+void CGPSDlg::OnConfigRtkFunctions()
+{
+	CConfigRtkFunctions dlg;
+	DoCommonConfig(&dlg);
+}
+
 void CGPSDlg::OnConfigRtkSlaveBaud()
 {
 	CConfigRtkSlaveBaud dlg;
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigRtkKinematicBaud()
+{
+	CConfigRtkKinematicBaud dlg;
 	DoCommonConfig(&dlg);
 }
 
@@ -8051,7 +8241,7 @@ void CGPSDlg::OnConfigTiming()
 
 void CGPSDlg::OnConfigTimingCableDelay()
 {
-	CConfigTimingCableDelay dlg;
+	CConfigTimingCableDelayDlg dlg;
 	DoCommonConfig(&dlg);
 }
 
@@ -8133,6 +8323,13 @@ void CGPSDlg::OnConfigPsti004()
 {
 	CConfigPstiInterval dlg;
   dlg.SetPsti(04);
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigPsti007()
+{
+	CConfigPstiInterval dlg;
+  dlg.SetPsti(07);
 	DoCommonConfig(&dlg);
 }
 
@@ -8221,6 +8418,16 @@ void CGPSDlg::OnConfigV9AesTag()
   DoCommonConfig(&dlg);
 }
 
+void CGPSDlg::OnConfigTrackingModuleParameterSetting()
+{
+  CTrackingModuleParameterSettingDlg dlg;
+  //DoCommonConfig(&dlg);
+  INT_PTR ret = dlg.DoModal();
+	//BinaryChecksumCalDlg dlg;
+ // dlg.SetMode(BinaryChecksumCalDlg::RawData);
+	//INT_PTR ret = dlg.DoModal();
+}
+
 void CGPSDlg::OnConfigCustomStringInterval()
 {
   CConfigCustomStringIntervalDlg dlg;
@@ -8231,6 +8438,12 @@ void CGPSDlg::OnQueryCustomStringInterval()
 {
   CQueryCustomStringIntervalDlg dlg;
   DoCommonQuery(&dlg);
+}
+
+void CGPSDlg::OnConfigure1PpsPulseWidth()
+{
+  CConfig1PpsPulseWidthDlg dlg;
+  DoCommonConfig(&dlg);
 }
 
 void CGPSDlg::OnQueryStringInterval(UINT id)
@@ -8303,15 +8516,25 @@ void CGPSDlg::OnBnClickedNoOutput()
 
 void CGPSDlg::OnBnClickedNmeaOutput()
 {
+#if(PROUCTION_TEST_200611)
+	CConfigRtkMode2 dlg;
+	DoCommonConfigDirect(&dlg, 0);
+#else
 	CConfigMessageOut dlg;
 	DoCommonConfigDirect(&dlg, 1);
+#endif
 	return;
 }
 
 void CGPSDlg::OnBnClickedBinaryOutput()
 {
+#if(PROUCTION_TEST_200611)
+	CConfigRtkMode2 dlg;
+	DoCommonConfigDirect(&dlg, 1);
+#else
 	CConfigMessageOut dlg;
 	DoCommonConfigDirect(&dlg, 2);
+#endif
 	return;
 }
 
@@ -9805,6 +10028,31 @@ void CGPSDlg::OnConfigure1PpsOutputMode()
 	DoCommonConfig(&dlg);
 }
 
+void CGPSDlg::OnBinaryConfigurenmeatalkerid()
+{
+  ConfigureNmeaTalkerIdDlg dlg;
+  DoCommonConfig(&dlg);
+  /*
+	if(!CheckConnect())
+	{
+    return;
+  }
+
+	CCon_NMEA_TalkerID dlg;
+	if(dlg.DoModal()==IDOK)
+	{
+		nmea_talker = dlg.talkerid;
+		nmea_talker_attr = dlg.attr;
+		::AfxBeginThread(config_NMEA_TalkerID_thread, 0);
+	}
+  else
+	{
+		SetMode();
+		CreateGPSThread();
+	}
+  */
+}
+
 CGPSDlg::CmdErrorCode CGPSDlg::QueryPpsOutputMode(CmdExeMode nMode, void* outputData)
 {
 	BinaryCommand cmd(cmdTable[GetPpsOutputModeCmd].cmdSize);
@@ -9854,4 +10102,56 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPpsOutputMode(CmdExeMode nMode, void* output
   }
 
   return err;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::HostDataDumpOn(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(cmdTable[HostDataDumpOnCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[HostDataDumpOnCmd].cmdId);
+	cmd.SetU08(2, cmdTable[HostDataDumpOnCmd].cmdSubId);
+	cmd.SetU08(3, 0x01);
+	cmd.SetU08(4, 0x01);
+
+	//BinaryData ackCmd;
+ 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(cmd.GetBuffer(), cmd.Size(), "Host Data Dump On successfully", false);
+	return Ack;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::HostDataDumpOff(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(cmdTable[HostDataDumpOnCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[HostDataDumpOnCmd].cmdId);
+	cmd.SetU08(2, cmdTable[HostDataDumpOnCmd].cmdSubId);
+	cmd.SetU08(3, 0x00);
+	cmd.SetU08(4, 0x01);
+
+	//BinaryData ackCmd;
+ 	CGPSDlg::gpsDlg->ExecuteConfigureCommand(cmd.GetBuffer(), cmd.Size(), "Host Data Dump Off successfully", false);
+	return Ack;
+}
+
+
+void CGPSDlg::OnQueryRtc()
+{
+	if(!CheckConnect())
+	{
+		return;
+	}
+
+  const U32 rtcRegAddr = 0x20014C34;
+  U32 regData = 0;
+  CmdErrorCode ack = CGPSDlg::gpsDlg->QueryRegisterx(CGPSDlg::Return, rtcRegAddr, &regData);
+  if(ack != Ack) 
+  {
+		SetMode();
+		CreateGPSThread();
+    return;
+  }
+
+	CString strMsg;
+  strMsg.Format("RTC:0x%08X (%d)", regData, regData);
+	add_msgtolist(strMsg);
+
+	SetMode();
+	CreateGPSThread();
 }

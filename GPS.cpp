@@ -152,16 +152,16 @@ int CGPSApp::GetIntSetting(LPCSTR key, int defaultValue)
 	return defaultValue;
 }
 
-CString CGPSApp::GetStringSetting(LPCSTR key, LPCSTR defaultValue)
-{
-	CRegistry reg;
-	reg.SetRootKey(HKEY_CURRENT_USER);
-	if(reg.SetKey(VIEWER_REG_PATH, true))
-	{
-		return reg.ReadString(key, defaultValue);
-	}
-	return defaultValue;
-}
+//CString CGPSApp::GetStringSetting(LPCSTR key, LPCSTR defaultValue)
+//{
+//	CRegistry reg;
+//	reg.SetRootKey(HKEY_CURRENT_USER);
+//	if(reg.SetKey(VIEWER_REG_PATH, true))
+//	{
+//		return reg.ReadString(key, defaultValue);
+//	}
+//	return defaultValue;
+//}
 
 bool CGPSApp::SetIntSetting(LPCSTR key, int data)
 {

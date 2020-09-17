@@ -2188,6 +2188,10 @@ bool CGPSDlg::NewDownload(DownloadMode dm, int baufIdx, const CString& image)
 	  ClearQue();
 	  SendToTarget(cmd.GetBuffer(), cmd.Size(), "", 10000);	
   }
+  else if(g_setting.GetBaudrateIndex() == 1)
+  {
+    BoostBaudrate(FALSE);
+  }
   
   CmdErrorCode err;
   DownloadCmdType type = ExternalLoader0x644F;
@@ -2209,7 +2213,7 @@ bool CGPSDlg::NewDownload(DownloadMode dm, int baufIdx, const CString& image)
   err = QueryGnssBootStatus(Return, &boot);
   if(Ack != err)
 	{
-    ::AfxMessageBox("Device no response2!");
+    ::AfxMessageBox("Device no response(2)!");
 	}
 
   if((boot & 0x0100) != 0 || (boot & 0x00FF) == 0)
@@ -2222,9 +2226,10 @@ bool CGPSDlg::NewDownload(DownloadMode dm, int baufIdx, const CString& image)
     err = QuerySoftwareVersionSystemCode(Return, &ackVer);
     if(Ack != err)
 	  {
-      ::AfxMessageBox("Device no response3!");
+      ::AfxMessageBox("Device no response(3)!");
+      type = DirectlyDownload0x0B;
 	  }
-    if(GetMinorSoftwareVer(ackVer) >= 31)
+    else if(GetMinorSoftwareVer(ackVer) >= 31)
     {
       type = ExternalLoader0x644F;
     }

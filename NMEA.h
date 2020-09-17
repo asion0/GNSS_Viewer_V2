@@ -310,10 +310,10 @@ public:
     snr.Merge(s); 
   }
 
-  void MergeSnr(const SnrTable& s) 
-  { 
-    snr.Merge(s); 
-  }
+  //void MergeSnr(const SnrTable& s) 
+  //{ 
+  //  snr.Merge(s); 
+  //}
 
   void Clear()
   {
@@ -353,6 +353,7 @@ public:
     inOrder = ss.inOrder; 
     inOrder = ss.inOrder; 
     signal = ss.signal; 
+    channelInd = ss.channelInd;
     for(int i = 0; i < MAX_SATELLITE; ++i)
     {
       sate[i] = ss.sate[i];
@@ -362,15 +363,17 @@ public:
   Satellites& operator = (const Satellites &ss)
   {
     index = ss.index;
-    inOrder= ss.inOrder;
-    inOrder= ss.inOrder;
-    signal= ss.signal;
+    inOrder = ss.inOrder;
+    inOrder = ss.inOrder;
+    signal = ss.signal;
+    channelInd = ss.channelInd;
     for(int i = 0; i < MAX_SATELLITE; ++i)
     {
       sate[i] = ss.sate[i];
     }
     return *this;
   }
+
   virtual ~Satellites(void) {}
 
   void Clear() 
@@ -516,11 +519,33 @@ public:
     }
     return false;
   }
+
+  void AddChannelInd(int prn)
+  {
+    channelInd.push_back(prn);
+  }
+  void ClearChannelInd()
+  {
+    channelInd.clear();
+  }
+  bool HasChannelInd(int prn)
+  {
+    for(std::vector<int>::iterator i = channelInd.begin(); i != channelInd.end(); ++i)
+    {
+      if(*i == prn)
+      {
+        return true;
+      }
+    }
+    return false;
+  }
 protected:
   Satellite sate[MAX_SATELLITE];
   std::vector<int> signal;
   int index;
   bool inOrder;
+
+  std::vector<int> channelInd;
 
   void Init() 
   { 
@@ -531,6 +556,7 @@ protected:
     signal.clear();
     index = 0; 
     inOrder = true; 
+    channelInd.clear();
   }
   int GetPrnIndex(int prn)
   {
@@ -892,7 +918,7 @@ protected:
 	static bool GGAProc(GPGGA& rgga, LPCSTR pt, int len);
 	static bool GNSProc(GPGGA& rgga, LPCSTR pt, int len);
 	static bool GSVProc(GPGSV& rgsv, LPCSTR pt, int len);
-	static bool GSAProc(GPGSA& rgsa, LPCSTR pt, int len);
+	static bool GSAProc(GPGSA& rgsa, LPCSTR pt, int len, bool& continuousGsa);
 	static bool RMCProc(GPRMC& rrmc, LPCSTR pt, int len);
 	static bool ZDAProc(GPZDA& rzda, LPCSTR pt, int len);
 	static bool VTGProc(GPVTG& rvtg, LPCSTR pt, int len);
@@ -905,8 +931,10 @@ public:
 	static NMEA_Type nmeaType;
 
   static void SetCurrentGsv(GNSS_System gs);
+
   static GNSS_System GetCurrentGsv() { return currentGsv; };
 	static GNSS_System GetGNSSSystem(int prn);
+  static GNSS_System GetUbloxSystem(int prn);
 	static GNSS_System GetGNSSSystem0(int prn);
 	static GNSS_System GetGNSSSystem1(int prn);
 	static GNSS_System GetGNSSSystem2(int prn);
