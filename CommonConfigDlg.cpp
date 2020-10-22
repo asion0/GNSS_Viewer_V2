@@ -2615,11 +2615,11 @@ CNtripClientDlg::CNtripClientDlg(CWnd* pParent /*=NULL*/)
     m_user = reg.ReadString("ntrip_userid", "rsv3");
     m_password = reg.ReadString("ntrip_password", "1234");
 #else
-    m_startAddress = reg.ReadString(("ntrip_host", "");
+    m_host = reg.ReadString("ntrip_host", "");
     m_port = reg.ReadInt("ntrip_port", 0);
-    m_mountpoint = reg.ReadString(("ntrip_mountpoint", "");
-    m_user = reg.ReadString(("ntrip_userid", "");
-    m_password = reg.ReadString(("ntrip_password", "");
+    m_mountpoint = reg.ReadString("ntrip_mountpoint", "");
+    m_user = reg.ReadString("ntrip_userid", "");
+    m_password = reg.ReadString("ntrip_password", "");
 #endif
 	}
 }
@@ -8325,9 +8325,17 @@ INT_PTR CConfigV9PowerSave::DoDirect(int t)
 
   U32 timerReg = ((U32)(((1000000.0 / 30.5) * m_timeout + 0.5)) & 0x1FFFFFFF) | 0xE0000000;
   vector< pair<U32, U32> > regData;
+
+#if(0)  //Ming-Jen request on 20201007
+  regData.push_back(make_pair(0x20014C2C, 0x006FFAFF));
+  regData.push_back(make_pair(0x20014C38, timerReg));
+  regData.push_back(make_pair(0x20014C2C, 0x806FFAFF));
+#else
+  //In: a0 a1 00 09 72 20 01 4c 2c 00 6f ff ff 5c 0d 0a 
   regData.push_back(make_pair(0x20014C2C, 0x006FFFFF));
   regData.push_back(make_pair(0x20014C38, timerReg));
   regData.push_back(make_pair(0x20014C2C, 0x806FFFFF));
+#endif
   bool allOk = CConfigRegisterDlg::SetRegisters(CConfigRegisterDlg::Register, regData);
   if(allOk)
   {
@@ -8613,4 +8621,119 @@ void ConfigureNmeaTalkerIdDlg::DoCommand()
 
 	configPrompt.Format("Configure NMEA Talker Id successfully");
   AfxBeginThread(ConfigThread, 0); 
+}
+
+// CConfigIfreeModeDlg 
+IMPLEMENT_DYNAMIC(CConfigIfreeModeDlg, CCommonConfigDlg)
+
+CConfigIfreeModeDlg::CConfigIfreeModeDlg(CWnd* pParent /*=NULL*/)
+: CCommonConfigDlg(IDD_CFG_IFREE_MODE, pParent)
+{
+
+}
+
+BEGIN_MESSAGE_MAP(CConfigIfreeModeDlg, CCommonConfigDlg)
+	ON_BN_CLICKED(IDOK, &CConfigIfreeModeDlg::OnBnClickedOk)
+  ON_BN_CLICKED(IDC_MODE1, &CConfigIfreeModeDlg::OnBnClickedMode1)
+  ON_BN_CLICKED(IDC_MODE2, &CConfigIfreeModeDlg::OnBnClickedMode2)
+  ON_BN_CLICKED(IDC_MODE3, &CConfigIfreeModeDlg::OnBnClickedMode3)
+END_MESSAGE_MAP()
+
+// CConfigIfreeModeDlg 
+BOOL CConfigIfreeModeDlg::OnInitDialog()
+{
+	CCommonConfigDlg::OnInitDialog();
+  CString txt, title;
+  BinaryData ackCmd;
+  this->GetWindowText(title);
+
+	if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryIfreeMode(CGPSDlg::Return, &ackCmd))
+	{
+    title += " (Query successfully)";
+    m_mode = ackCmd[6];
+    if(m_mode == 0)
+    {
+      ((CButton*)GetDlgItem(IDC_MODE1))->SetCheck(TRUE);
+      OnBnClickedMode1();
+    }
+    else if(m_mode == 1)
+    {
+      ((CButton*)GetDlgItem(IDC_MODE2))->SetCheck(TRUE);
+      OnBnClickedMode2();
+    }
+    else if(m_mode == 2)
+    {
+      ((CButton*)GetDlgItem(IDC_MODE3))->SetCheck(TRUE);
+      OnBnClickedMode3();
+    }
+
+    txt.Format("%d", ackCmd[7]);
+    GetDlgItem(IDC_SV)->SetWindowText(txt);
+    txt.Format("%d", ackCmd[8]);
+    GetDlgItem(IDC_DIV)->SetWindowText(txt);
+  }
+  else
+  {
+    title += " (Query failed)";
+    ((CButton*)GetDlgItem(IDC_MODE1))->SetCheck(TRUE);
+    GetDlgItem(IDC_SV)->SetWindowText("5");
+    GetDlgItem(IDC_DIV)->SetWindowText("10");
+
+    OnBnClickedMode1();
+  }
+  ((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
+  this->SetWindowText(title);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+}
+
+void CConfigIfreeModeDlg::OnBnClickedOk()
+{
+  CString txt;
+
+  GetDlgItem(IDC_SV)->GetWindowText(txt);
+	m_sv = atoi(txt);
+
+  GetDlgItem(IDC_DIV)->GetWindowText(txt);
+	m_div = atoi(txt);
+	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+
+	OnOK();
+}
+
+void CConfigIfreeModeDlg::DoCommand()
+{
+	CWaitCursor wait;
+	BinaryData cmd(6);
+	*cmd.GetBuffer(0) = 0x64;
+	*cmd.GetBuffer(1) = 0x6C;
+	*cmd.GetBuffer(2) = (U08)m_mode;
+	*cmd.GetBuffer(3) = (U08)m_sv;
+	*cmd.GetBuffer(4) = (U08)m_div;
+	*cmd.GetBuffer(5) = (U08)m_attribute;;
+	configCmd.SetData(cmd);
+
+	configPrompt.Format("Configure Ifree Mode successfully");
+  AfxBeginThread(ConfigThread, 0); 
+}
+
+void CConfigIfreeModeDlg::OnBnClickedMode1()
+{
+  m_mode = 0;
+  GetDlgItem(IDC_SV)->EnableWindow(FALSE);
+  GetDlgItem(IDC_DIV)->EnableWindow(FALSE);
+}
+
+void CConfigIfreeModeDlg::OnBnClickedMode2()
+{
+  m_mode = 1;
+  GetDlgItem(IDC_SV)->EnableWindow(TRUE);
+  GetDlgItem(IDC_DIV)->EnableWindow(FALSE);
+}
+
+void CConfigIfreeModeDlg::OnBnClickedMode3()
+{
+  m_mode = 2;
+  GetDlgItem(IDC_SV)->EnableWindow(TRUE);
+  GetDlgItem(IDC_DIV)->EnableWindow(TRUE);
 }

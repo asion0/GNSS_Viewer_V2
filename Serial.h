@@ -3,19 +3,13 @@
 
 #define ASCII_CR        0x0D
 #define ASCII_LF        0x0A
-
 #define BINARY_HD1      0xA0
 #define BINARY_HD2      0xA1
 
-#define READ_ERROR		((DWORD)(-1))
-#define ReadOK(len)			((len==READ_ERROR) ?0 :len)
+#define READ_ERROR		  ((DWORD)(-1))
+#define ReadOK(len)			((len == READ_ERROR) ? 0 : len)
 
-//enum MessageType {
-//  MtUnknown = 0,
-//  StqBinary,
-//  NmeaMessage,
-//  RtcmMessage,
-//};
+class CMySocket;
 
 class CSerial
 {
@@ -40,6 +34,8 @@ public:
 	void SetLogStatus(DWORD s) { m_logStatus = s; };
 
 	//Flow control
+  bool OpenTcp(int type, LPCSTR host, int port);
+  bool OpenTcp(CMySocket* soc);
 	bool Open(int port = 2, int baudIndex = 5);
 #if(SPECIAL_BAUD_RATE)
 	bool OpenByBaudrate(LPCSTR comPort, int baudrate = 172800);
@@ -99,13 +95,13 @@ protected:
 	OVERLAPPED m_OverlappedWrite;
 	DWORD m_sendUnit;
 	DWORD m_logStatus;
+	CMySocket* m_psocket;
 
 
 	int ComInitial();
 	int WaitingDataIn();
 	bool WriteCommBytes(char* buffer, int bufferSize);
 	bool ResetPortNoDelay(int baud);
-
 public:
   static DWORD GetComBinaryAck(HANDLE com, void *buffer, DWORD bufferSize, DWORD timeout);
 

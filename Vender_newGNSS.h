@@ -502,6 +502,10 @@
 // .033 20200903 Modify [Configure Tracking Module Parameter Setting] UI, request from Iyan
 // .034 20200908 Fixed Configure Mode to base mode, parser will stop issue, request from Ken
 // .035 20200909 Add NTRIP function, request from Oliver
+// .036 20200929 Add TCPIP Server and TCPIP connection, request from Oliver / Andrew
+// .036 20200929 Add [Configure / Query Ifree Mode] in Phoenix menu, request from Jason
+// .037 20200930 Release for TCPIP / NTRIP functions, request from Oliver
+// .038 20201006 Fixed COM port adding bug and show all unknowk message bug, report from Ken and Andrew
 
 #define SW_FUN_DATALOG		        0x0001
 #define SW_FUN_AGPS				        0x0002
@@ -512,7 +516,7 @@
 //title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 #define APP_CAPTION				        "GNSS Viewer"
 #define APP_TITLE				          ""              //Internal Use, Customer Release, NMEA Player...
-#define APP_VERSION				        "2.1.035"
+#define APP_VERSION				        "2.1.038"
 #define APP_MODULE				        "Phoenix"
 
 #define	Sktyraq					          0x0000
@@ -1675,4 +1679,3 @@
 #else
  #error Unknow SWCFG_VENDER_TYPE!!!
 #endif
-

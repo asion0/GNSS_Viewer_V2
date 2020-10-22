@@ -1768,3 +1768,29 @@ protected:
   U08 m_attribute;
 	DECLARE_MESSAGE_MAP()
 };
+
+class CConfigIfreeModeDlg : public CCommonConfigDlg
+{
+	DECLARE_DYNAMIC(CConfigIfreeModeDlg)
+public:
+  enum { NmeaStringSize = 3 };
+
+	CConfigIfreeModeDlg(CWnd* pParent = NULL);   
+	virtual ~CConfigIfreeModeDlg() {};
+
+	virtual void DoCommand();
+	virtual BOOL OnInitDialog();
+
+	afx_msg void OnBnClickedOk();
+
+protected:
+	U08 m_mode; // 0, 1, 2
+	U08 m_sv;   // > 5
+	U08 m_div;  // > 1
+  U08 m_attribute;
+	DECLARE_MESSAGE_MAP()
+
+  afx_msg void OnBnClickedMode1();
+  afx_msg void OnBnClickedMode2();
+  afx_msg void OnBnClickedMode3();
+};

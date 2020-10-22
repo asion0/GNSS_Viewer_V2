@@ -18,6 +18,70 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
+// 中性 resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+#pragma code_page(950)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_TCPIP_CONNECT DIALOGEX 0, 0, 276, 120
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "TCP/IP Connection"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Connect",IDOK,102,96,72,17
+    COMBOBOX        IDC_WORK_TYPE,106,7,96,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_PORT,106,47,40,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Device Work Mode:",IDC_STATIC,7,10,96,10,0,WS_EX_RIGHT
+    LTEXT           "Device IP:",IDC_STATIC,7,30,96,10,0,WS_EX_RIGHT
+    LTEXT           "Port (0 ~ 65535):",IDC_STATIC,7,50,96,10,0,WS_EX_RIGHT
+    EDITTEXT        IDC_IP_ADDR,106,27,96,14,ES_AUTOHSCROLL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_TCPIP_CONNECT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 269
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 113
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_TCPIP_CONNECT DLGINIT
+BEGIN
+    IDC_WORK_TYPE, 0x403, 11, 0
+0x4354, 0x2050, 0x6553, 0x7672, 0x7265, "\000" 
+    0
+END
+
+#endif    // 中性 resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // 中文 (台灣) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHT)
@@ -25,58 +89,6 @@
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 #pragma code_page(950)
 #endif //_WIN32
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE 
-BEGIN
-    "resource.h\0"
-END
-
-2 TEXTINCLUDE 
-BEGIN
-    "#include ""afxres.h""\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE 
-BEGIN
-    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
-    "#define _AFX_NO_OLE_RESOURCES\r\n"
-    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
-    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
-    "\r\n"
-    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
-    "LANGUAGE 9, 1\r\n"
-    "#pragma code_page(1252)\r\n"
-    "#include ""res\\NewGNSS_Viewer.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
-    "#include ""afxres.rc""         // Standard components\r\n"
-    "#endif\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_MAINFRAME           ICON                    "res\\NewGNSS_Viewer.ico"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// PNG
-//
-
-IDB_ICON256             PNG                     "res\\Icon256.png"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -144,15 +156,6 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// EXEC
-//
-
-IDR_IQPLOT              EXEC                    "res\\IQPlot.exe"
-IDR_FTPCHECK            EXEC                    "res\\FtpCheck.exe"
-IDR_LZMA                EXEC                    "res\\lzma.exe"
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Dialog Info
 //
 
@@ -197,6 +200,69 @@ BEGIN
     0
 END
 
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#include ""res\\NewGNSS_Viewer.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAINFRAME           ICON                    "res\\NewGNSS_Viewer.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// PNG
+//
+
+IDB_ICON256             PNG                     "res\\Icon256.png"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// EXEC
+//
+
+IDR_TCPIP_SERVER        EXEC                    "res\\ViewerTcpipServer.exe"
+IDR_COMM_DLL            EXEC                    "res\\CommunicationBase.dll"
+IDR_IQPLOT              EXEC                    "res\\IQPlot.exe"
+IDR_FTPCHECK            EXEC                    "res\\FtpCheck.exe"
+IDR_LZMA                EXEC                    "res\\lzma.exe"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3003,6 +3069,23 @@ BEGIN
     LTEXT           "Talker ID:",IDC_STATIC,11,17,120,8,0,WS_EX_RIGHT
 END
 
+IDD_CFG_IFREE_MODE DIALOGEX 0, 0, 321, 164
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Configure Ifree Mode"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "None",IDC_MODE1,"Button",BS_AUTORADIOBUTTON,135,25,33,10
+    CONTROL         "Strict",IDC_MODE2,"Button",BS_AUTORADIOBUTTON,177,25,33,10
+    CONTROL         "Broad",IDC_MODE3,"Button",BS_AUTORADIOBUTTON,226,25,35,10
+    RTEXT           "Ifree Mode:",IDC_STATIC,7,25,120,8
+    EDITTEXT        IDC_SV,135,47,40,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_DIV,135,67,40,14,ES_AUTOHSCROLL | ES_NUMBER
+    RTEXT           "Minimum SV ( > 5):",IDC_STATIC,7,49,120,8
+    RTEXT           "Weighting Div ( > 1):",IDC_STATIC,7,68,120,8
+    COMBOBOX        IDC_ATTR,135,90,100,95,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Attributes:",IDC_STATIC,7,93,120,8,0,WS_EX_RIGHT
+END
+
 IDD_TIMING_START DIALOGEX 0, 0, 328, 170
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Timing"
@@ -4671,6 +4754,14 @@ BEGIN
         BOTTOMMARGIN, 113
     END
 
+    IDD_CFG_IFREE_MODE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 314
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 157
+    END
+
     IDD_CFG_REFTIME2GPSTIME, DIALOG
     BEGIN
         LEFTMARGIN, 7
@@ -4955,206 +5046,6 @@ END
 
 IDD_DEVICE_ADDING DLGINIT
 BEGIN
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x314d, "\000" 
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x324d, "\000" 
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x334d, "\000" 
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x344d, "\000" 
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x354d, "\000" 
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x364d, "\000" 
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x374d, "\000" 
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x384d, "\000" 
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x394d, "\000" 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0039, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0039, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0039, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0039, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0039, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0039, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0039, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0039, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0039, 
-    IDC_COMPORT, 0x403, 7, 0
-0x4f43, 0x314d, 0x3030, "\000" 
     IDC_BAUDRATE, 0x403, 5, 0
 0x3834, 0x3030, "\000" 
     IDC_BAUDRATE, 0x403, 5, 0
@@ -5682,206 +5573,6 @@ END
 
 IDD_GPS_DIALOG DLGINIT
 BEGIN
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x314d, "\000" 
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x324d, "\000" 
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x334d, "\000" 
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x344d, "\000" 
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x354d, "\000" 
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x364d, "\000" 
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x374d, "\000" 
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x384d, "\000" 
-    IDC_COMPORT, 0x403, 5, 0
-0x4f43, 0x394d, "\000" 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x314d, 0x0039, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x324d, 0x0039, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x334d, 0x0039, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x344d, 0x0039, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x354d, 0x0039, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x364d, 0x0039, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x374d, 0x0039, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x384d, 0x0039, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0030, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0031, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0032, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0033, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0034, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0035, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0036, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0037, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0038, 
-    IDC_COMPORT, 0x403, 6, 0
-0x4f43, 0x394d, 0x0039, 
-    IDC_COMPORT, 0x403, 7, 0
-0x4f43, 0x314d, 0x3030, "\000" 
     IDC_BAUDRATE_IDX, 0x403, 5, 0
 0x3834, 0x3030, "\000" 
     IDC_BAUDRATE_IDX, 0x403, 5, 0
@@ -7482,6 +7173,16 @@ BEGIN
     IDC_MODE, 0x403, 32, 0
 0x6e65, 0x6261, 0x696c, 0x676e, 0x4320, 0x5550, 0x6320, 0x6f6c, 0x6b63, 
 0x6220, 0x6f6f, 0x7473, 0x6920, 0x206e, 0x5349, 0x0052, 
+    0
+END
+
+IDD_CFG_IFREE_MODE DLGINIT
+BEGIN
+    IDC_ATTR, 0x403, 15, 0
+0x7055, 0x6164, 0x6574, 0x7420, 0x206f, 0x5253, 0x4d41, "\000" 
+    IDC_ATTR, 0x403, 21, 0
+0x7055, 0x6164, 0x6574, 0x7420, 0x206f, 0x5253, 0x4d41, 0x462b, 0x414c, 
+0x4853, "\000" 
     0
 END
 

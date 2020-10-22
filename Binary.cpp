@@ -107,7 +107,7 @@ static CommandEntry cmdTable[] =
 	//QueryNoisePowerControlCmd,
 	{ 0x64, 0x09, 2, 0x64, 0x84 },
 	//QueryParameterSearchEngineNumberCmd,
-	{ 0x64, 0x0b, 2, 0x64, 0x85 },
+	{ 0x64, 0x0B, 2, 0x64, 0x85 },
 	//QueryV8PowerSaveParameters,
 	{ 0x64, 0x0D, 2, 0x64, 0x86 },
 	//QueryPositionFixNavigationMaskCmd,
@@ -152,6 +152,8 @@ static CommandEntry cmdTable[] =
 	{ 0x64, 0x49, 2, 0x00, 0x00 },
 	//DatalogRead2Cmd,
 	{ 0x64, 0x4A, 6, 0x00, 0x00 },
+  //QueryIfreeModeCmd
+	{ 0x64, 0x6B, 2, 0x64, 0xF2 },
   //QuerySecurityTagCmd
 	{ 0x64, 0x6C, 31, 0x64, 0xF2 },
   //QueryPhoenixSoftwareFeatureCmd
@@ -327,6 +329,7 @@ enum SqBinaryCmd
   QueryDataLogStatus2Cmd,
   DatalogClear2Cmd,
   DatalogRead2Cmd,
+  QueryIfreeModeCmd,
   QuerySecurityTagCmd,
   QueryPhoenixSoftwareFeatureCmd,
   QueryExtendedIdCmd,
@@ -6938,6 +6941,11 @@ void CGPSDlg::OnBinaryConfiguredatum()
 */
 void CGPSDlg::OnConfigureSerialPort()
 {
+  if(g_setting.GetComPortIndex() == -1 && m_isConnectOn)
+  {
+    ::AfxMessageBox("TCP/IP connection doesn't support this function!");
+    return;
+  }
 	if(!CheckConnect())
 	{
 		return;
@@ -8055,6 +8063,21 @@ void CGPSDlg::OnNtripClient()
   m_ntripClientDlg->ShowWindow(SW_SHOW);
 }
 
+void CGPSDlg::OnTcpipServer()
+{
+  CString txt, file;
+	txt = Utility::GetSpecialFolder(CSIDL_APPDATA);
+	txt += "\\GNSS_Viewer_V2";
+	::CreateDirectory(txt, NULL);
+
+	file = txt + "\\CommunicationBase.dll";
+	Utility::CopyResToFile(file, IDR_COMM_DLL, "EXEC");
+
+	file = txt + "\\ViewerTcpipServer.exe";
+	Utility::CopyResToFile(file, IDR_TCPIP_SERVER, "EXEC");
+	Utility::ExecuteExeNoWait(file);
+}
+
 void CGPSDlg::OnConfigGeofence()
 {
 	CConfigGeofencing dlg;
@@ -8426,6 +8449,12 @@ void CGPSDlg::OnConfigTrackingModuleParameterSetting()
 	//BinaryChecksumCalDlg dlg;
  // dlg.SetMode(BinaryChecksumCalDlg::RawData);
 	//INT_PTR ret = dlg.DoModal();
+}
+
+void CGPSDlg::OnConfigIfreeMode()
+{
+  CConfigIfreeModeDlg dlg;
+	DoCommonConfig(&dlg);
 }
 
 void CGPSDlg::OnConfigCustomStringInterval()
@@ -10130,6 +10159,51 @@ CGPSDlg::CmdErrorCode CGPSDlg::HostDataDumpOff(CmdExeMode nMode, void* outputDat
 	return Ack;
 }
 
+CGPSDlg::CmdErrorCode CGPSDlg::QueryIfreeMode(CmdExeMode nMode, void* outputData)
+{	    
+	BinaryCommand cmd(cmdTable[QueryIfreeModeCmd].cmdSize);
+	cmd.SetU08(1, cmdTable[QueryIfreeModeCmd].cmdId);
+	cmd.SetU08(2, cmdTable[QueryIfreeModeCmd].cmdSubId);
+
+	BinaryData ackCmd;
+  CmdErrorCode err = ExcuteBinaryCommand(QueryIfreeModeCmd, &cmd, &ackCmd, (nMode == Display) ? 3000 : 1000);
+	if(err != Ack)
+	{
+    return err;
+  }
+
+  if(Return == nMode)
+	{	
+    *((BinaryData*)outputData) = ackCmd;
+		return err;
+  }
+
+  CString txt;
+  CString strMsg = "Query Ifree mode successfully";
+	add_msgtolist(strMsg);
+  if(ackCmd[6] == 0)
+  {
+    txt = "None";
+  }
+  else if(ackCmd[6] == 1)
+  {
+    txt = "Strict";
+  }
+  else if(ackCmd[6] == 2)
+  {
+    txt = "Broad";
+  }
+  strMsg.Format("Ifree Mode: %s", txt);
+  add_msgtolist(strMsg);
+
+  strMsg.Format("Minimum SV: %d", ackCmd[7]);
+  add_msgtolist(strMsg);
+
+  strMsg.Format("Weighting Div: %d", ackCmd[8]);
+  add_msgtolist(strMsg);
+
+	return Ack;
+}
 
 void CGPSDlg::OnQueryRtc()
 {

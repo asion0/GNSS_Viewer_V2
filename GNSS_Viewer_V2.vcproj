@@ -2699,6 +2699,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MySockey.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\NmeaChecksumCalDlg.cpp"
 				>
 			</File>
@@ -2963,6 +2967,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\TcpipConnectionDlg.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\VerifyFwDlg.cpp"
 				>
 			</File>
@@ -3101,6 +3109,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MySockey.h"
+				>
+			</File>
+			<File
 				RelativePath=".\NMEA.h"
 				>
 			</File>
@@ -3146,6 +3158,10 @@
 			</File>
 			<File
 				RelativePath=".\SkyTraqKml.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TcpipConnectionDlg.h"
 				>
 			</File>
 			<File
@@ -3636,6 +3652,10 @@
 			</File>
 		</Filter>
 		<File
+			RelativePath=".\res\CommunicationBase.dll"
+			>
+		</File>
+		<File
 			RelativePath=".\res\Eph_Old.dat"
 			>
 		</File>
@@ -3661,6 +3681,10 @@
 		</File>
 		<File
 			RelativePath=".\res\NewGNSS_Viewer.manifest"
+			>
+		</File>
+		<File
+			RelativePath=".\res\ViewerTcpipServer.exe"
 			>
 		</File>
 	</Files>

@@ -100,6 +100,9 @@ struct Setting
 		{
 			reg.WriteInt("comport", comPort);
 			reg.WriteInt("baudrate", baudrate);
+			reg.WriteInt("tcpip_type", tcpType);
+			reg.WriteString("tcpip_host", tcpHost);
+			reg.WriteInt("tcpip_port", tcpPort);
 			reg.WriteString("firmware", mainFwPath);
 			reg.WriteInt("setting_earthBitmap", earthBitmap);
 			reg.WriteInt("configrfic_type", configRfIcType);
@@ -225,6 +228,9 @@ struct Setting
 		{
 			comPort = reg.ReadInt("comport", 0);
 			baudrate = reg.ReadInt("baudrate", 1);
+			tcpType = reg.ReadInt("tcpip_type", 0);
+			tcpHost = reg.ReadString("tcpip_host", "");
+			tcpPort = reg.ReadInt("tcpip_port", 20000);
 			mainFwPath = reg.ReadString("firmware", "");
 			earthBitmap = reg.ReadInt("setting_earthBitmap", 0);
 			configRfIcType = reg.ReadInt("configrfic_type", 2);
@@ -240,6 +246,9 @@ struct Setting
 		{
 			comPort = 0;
 			baudrate = 1;
+      tcpType = 0;
+			tcpHost = "";
+			tcpPort = 20000;
 			mainFwPath = "";
 			earthBitmap = 0;
       configRfIcType = 0;
@@ -282,8 +291,14 @@ struct Setting
 	int SetBaudrateByValue(int b);
 	int GetComPortIndex() { return comPort - 1; }
 	int GetComPort() { return comPort; }
+  int GetTcpipType() { return tcpType; }
+	LPCSTR GetTcpipHost() { return tcpHost; }	
+  int GetTcpipPort() { return tcpPort; }
 	void SetComPortIndex(int c) { comPort = c + 1; }
 	void SetComPort(int c) { comPort = c; }
+	void SetTcpipType(int p) { tcpType = p; }
+	void SetTcpipHost(LPCSTR h) { tcpHost = h; }
+	void SetTcpipPort(int p) { tcpPort = p; }
   void InitBaudrateCombo(CComboBox* c, bool addSPI = false, bool addI2C = false);
 	int GetBaudrateTableSize();
   bool IsValidBaudrateIndex(int i) { return (i >= GetBaudrateTableSize()) ? false : (0 != BaudrateTable[i]); };
@@ -324,6 +339,9 @@ protected:
 	//General use
 	int comPort;
 	int baudrate;
+  int tcpType;
+  CString tcpHost;
+  int tcpPort;
 };
 
 typedef struct UTC_TIME_T {

@@ -3,13 +3,11 @@
 
 #include "stdafx.h"
 #include "FirmwareDownloadDlg.h"
-//#include "resource.h"
 #include "Registry.h"
 #include "GPS.h"
 #include "Serial.h"
 
 extern CGPSApp theApp;
-// CFirmwareDownloadDlg 
 
 IMPLEMENT_DYNAMIC(CFirmwareDownloadDlg, CDialog)
 

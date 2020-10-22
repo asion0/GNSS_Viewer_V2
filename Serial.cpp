@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "Serial.h"
 #include "Utility.h"
+#include "MySockey.h"
 
 const DWORD defaultSendUnit = 512;
 
@@ -64,6 +65,7 @@ CSerial::CSerial()
 	m_isOpened = false;
 	m_sendUnit = defaultSendUnit;
 	m_logStatus = 0;
+  m_psocket = NULL;
 } 
 
 CSerial::~CSerial()
@@ -153,7 +155,7 @@ int CSerial::ComInitial()
 
 void CSerial::Close()
 {
-	if(!m_isOpened || m_comDeviceHandle == NULL) 
+	if(!m_isOpened || (m_comDeviceHandle == NULL && m_psocket == NULL)) 
 	{
 		return;
 	}
@@ -170,8 +172,17 @@ void CSerial::Close()
 		m_OverlappedWrite.hEvent = NULL;
 	}
 
-	CloseHandle(m_comDeviceHandle);
-	m_comDeviceHandle = NULL;
+  if(m_psocket == NULL)
+  {
+	  CloseHandle(m_comDeviceHandle);
+	  m_comDeviceHandle = NULL;
+  }
+  else
+  {
+    m_psocket->Close();
+    delete m_psocket;
+    m_psocket = NULL;
+  }
 	m_isOpened = false;
 	return;
 }
@@ -257,40 +268,47 @@ DWORD CSerial::ReadData(void* buffer, DWORD bufferSize, bool once)
 
 DWORD CSerial::SendData(const void* buffer, DWORD bufferSize, bool blockTransfer, int delayDuration)
 {
-	if(!m_isOpened || m_comDeviceHandle == NULL) 
+	if(!m_isOpened || (m_comDeviceHandle == NULL && m_psocket == NULL)) 
 	{
 		return 0;
 	}
 
-	DWORD sentBytes = 0;
-	DWORD leftSize = bufferSize;
-	char* bufferIter = (char*)buffer;
+  if(m_comPort >= 0)
+  {
+	  DWORD sentBytes = 0;
+	  DWORD leftSize = bufferSize;
+	  char* bufferIter = (char*)buffer;
 
-	while(leftSize > 0)
-	{
-		sentBytes = (leftSize >= m_sendUnit) ? m_sendUnit : leftSize;
+	  while(leftSize > 0)
+	  {
+		  sentBytes = (leftSize >= m_sendUnit) ? m_sendUnit : leftSize;
 
-		if(blockTransfer)
-		{
-			WriteCommBytes(bufferIter, sentBytes);
-		}
-		else
-		{
-			for(DWORD i=0; i<sentBytes; ++i)
-			{
-				WriteCommBytes(bufferIter + i, 1);
-			}
-		}
+		  if(blockTransfer)
+		  {
+			  WriteCommBytes(bufferIter, sentBytes);
+		  }
+		  else
+		  {
+			  for(DWORD i = 0; i < sentBytes; ++i)
+			  {
+				  WriteCommBytes(bufferIter + i, 1);
+			  }
+		  }
 
-		if(delayDuration)
-		{
-			Sleep(delayDuration);
-		}
+		  if(delayDuration)
+		  {
+			  Sleep(delayDuration);
+		  }
 
-		bufferIter += sentBytes;
-		leftSize -= sentBytes;
-	}
-	return bufferSize;	
+		  bufferIter += sentBytes;
+		  leftSize -= sentBytes;
+	  }
+	  return bufferSize;
+  }
+  else
+  {
+    return m_psocket->Send(buffer, bufferSize);
+  }
 }
 
 bool CSerial::WriteCommBytes(char* buffer, int bufferSize)
@@ -366,12 +384,15 @@ void CSerial::ClearQueue()
 //Read until eos or empty.
 DWORD CSerial::GetString(void* buffer, DWORD bufferSize, DWORD timeOut)
 {
-	char* bufferIter = (char*)buffer;
+	U08* bufferIter = (U08*)buffer;
 	DWORD totalSize = 0;
 	ScopeTimer t;
 	do
 	{ 
-		DWORD nBytesRead = ReadData(bufferIter, 1);
+    DWORD dwBytesRead = 1;
+		//DWORD nBytesRead = ReadData(bufferIter, 1);
+    DWORD nBytesRead = this->GetOneChar(bufferIter, &dwBytesRead, t.GetDuration() - timeOut);
+
 		if(nBytesRead == 0)
 		{
 			if(t.GetDuration() > timeOut)
@@ -398,12 +419,16 @@ DWORD CSerial::GetString(void* buffer, DWORD bufferSize, DWORD timeOut)
 //Read until \r\n.
 DWORD CSerial::GetOneLine(void* buffer, DWORD bufferSize, DWORD timeOut)
 {
-	char* bufferIter = (char*)buffer;
+	U08* bufferIter = (U08*)buffer;
 	DWORD totalSize = 0;
 	ScopeTimer t;
 	do
 	{ 
-		DWORD nBytesRead = ReadData(bufferIter, 1);
+    DWORD dwBytesRead = 1;
+		//DWORD nBytesRead = ReadData(bufferIter, 1);
+    DWORD nBytesRead = this->GetOneChar(bufferIter, &dwBytesRead, t.GetDuration() - timeOut);
+
+
 		if(nBytesRead == 0)
 		{
 			if(t.GetDuration() > timeOut)
@@ -431,13 +456,33 @@ DWORD CSerial::GetOneLine(void* buffer, DWORD bufferSize, DWORD timeOut)
 BOOL CSerial::GetOneChar(U08 *c, DWORD* dwBytesDoRead, DWORD timeout)
 {	
   ScopeTimer s;
-  while(s.GetDuration() < timeout)
+  if(m_psocket == NULL)
   {
-    if (::ReadFile(m_comDeviceHandle, c, 1, dwBytesDoRead, NULL))
+    while(s.GetDuration() < timeout)
     {
-      return ((*dwBytesDoRead) == 1);
+      if (::ReadFile(m_comDeviceHandle, c, 1, dwBytesDoRead, NULL))
+      {
+        return ((*dwBytesDoRead) == 1);
+      }
+      Sleep(10);
     }
-    Sleep(10);
+  }
+  else
+  {
+    //MSG_PEEK 
+    while(s.GetDuration() < timeout)
+    {
+      int len = m_psocket->Receive(c, 1, 0);
+      if(len == 1)
+      {
+        *dwBytesDoRead = 1;
+        return TRUE;
+      }
+      else
+      {
+        Sleep(10);
+      }
+    }
   }
   return FALSE;
 }
@@ -832,7 +877,7 @@ DWORD CSerial::GetZenlaneResponse1(void *buffer, DWORD bufferSize, DWORD timeout
 DWORD CSerial::GetBinaryAck(void *buffer, DWORD bufferSize, DWORD timeout)
 {	
 #if _DEBUG
-//timeout = 300000;
+timeout = 100000;
 #endif
 	U08* bufferIter = (U08*)buffer;
 	DWORD totalSize = 0;
@@ -854,20 +899,24 @@ DWORD CSerial::GetBinaryAck(void *buffer, DWORD bufferSize, DWORD timeout)
 		DWORD dwBytesDoRead = 0;
 		DWORD dwErrorFlags = 0;
 		COMSTAT comStat;
-		BOOL b2 = ClearCommError(m_comDeviceHandle, &dwErrorFlags, &comStat);
-		if(!b2)
-		{
-			DWORD err = ::GetLastError();
-			return -1;
-		}
-		if(comStat.cbInQue == 0) 
-		{
-			Sleep(2);
-			continue;
-		}
 
-		DWORD bytesinbuff = comStat.cbInQue;
-		while(bytesinbuff)
+    if(m_psocket == NULL)
+    {
+      BOOL b2 = ::ClearCommError(m_comDeviceHandle, &dwErrorFlags, &comStat);
+		  if(!b2)
+		  {
+			  DWORD err = ::GetLastError();
+			  return -1;
+		  }
+		  if(comStat.cbInQue == 0) 
+		  {
+			  Sleep(2);
+			  continue;
+		  }
+    }
+		//DWORD bytesinbuff = comStat.cbInQue;
+		//while(bytesinbuff)
+		while(t.GetDuration() < timeout)
 		{
 			if(t.GetDuration() > timeout)
 			{
@@ -878,7 +927,9 @@ DWORD CSerial::GetBinaryAck(void *buffer, DWORD bufferSize, DWORD timeout)
 				m_cancelTransmission = false;
 				return READ_ERROR;
 			}
-			BOOL bb = ReadFile(m_comDeviceHandle, bufferIter, 1, &dwBytesDoRead, 0);
+			//BOOL bb = ReadFile(m_comDeviceHandle, bufferIter, 1, &dwBytesDoRead, 0);
+      BOOL bb = this->GetOneChar(bufferIter, &dwBytesDoRead, t.GetDuration() - timeout);
+
 			if(dwBytesDoRead == 0)
 			{	//Read fail.
 				DWORD dwErr = ::GetLastError();
@@ -927,7 +978,7 @@ DWORD CSerial::GetBinaryAck(void *buffer, DWORD bufferSize, DWORD timeout)
 			}
 				
 			++bufferIter;
-			--bytesinbuff;
+			//--bytesinbuff;
 		} //while(bytesinbuff)
 	} //while(total < size - 1)
 	return totalSize;
@@ -980,6 +1031,8 @@ DWORD CSerial::GetComBinaryAck(HANDLE com, void *buffer, DWORD bufferSize, DWORD
 			}
 
 			BOOL bb = ReadFile(com, bufferIter, 1, &dwBytesDoRead, 0);
+      //BOOL bb = this->GetOneChar(bufferIter, &dwBytesDoRead, t.GetDuration() - timeout);
+
 			if(dwBytesDoRead == 0)
 			{	//Read fail.
 				DWORD dwErr = ::GetLastError();
@@ -1041,7 +1094,9 @@ DWORD CSerial::GetBinaryBlock(void* buffer, DWORD bufferSize, DWORD blockSize)
 	DWORD totalSize = 0;
 	do
 	{ 
-		DWORD nBytesRead = ReadData(bufferIter, 1);
+    DWORD dwBytesRead = 1;
+		//DWORD nBytesRead = ReadData(bufferIter, 1);
+    DWORD nBytesRead = this->GetOneChar(bufferIter, &dwBytesRead, 2000);
 		if(nBytesRead <= 0)
 		{
 			continue;
@@ -1067,7 +1122,9 @@ DWORD CSerial::GetBinaryBlockInSize(void* buffer, DWORD bufferSize, DWORD blockS
 	DWORD totalSize = 0;
 	do
 	{ 
-		DWORD nBytesRead = ReadData(bufferIter, 1);
+    DWORD dwBytesRead = 1;
+		//DWORD nBytesRead = ReadData(bufferIter, 1);
+    DWORD nBytesRead = this->GetOneChar(bufferIter, &dwBytesRead, 2000);
 		if(nBytesRead <= 0)
 		{
 			continue;
@@ -1084,4 +1141,39 @@ DWORD CSerial::GetBinaryBlockInSize(void* buffer, DWORD bufferSize, DWORD blockS
 		bufferIter++;
 	} while(totalSize < bufferSize);
 	return totalSize;
+}
+
+bool CSerial::OpenTcp(int type, LPCSTR host, int port)
+{
+  if(m_psocket == NULL)
+  {
+    m_psocket = new CMySocket();
+  }
+	
+  m_psocket->Create();
+  if(!m_psocket->Connect(host, port))
+  {
+    m_psocket->Close();
+    delete m_psocket;
+    m_psocket = NULL;
+    return false;
+  }
+
+	m_isOpened = true;
+	m_comPort = -1;
+  return true;
+}
+
+
+bool CSerial::OpenTcp(CMySocket* soc)
+{
+  if(m_psocket != NULL)
+  {
+    delete m_psocket;
+  }
+	m_psocket = soc;
+
+	m_isOpened = true;
+	m_comPort = -1;
+  return true;
 }

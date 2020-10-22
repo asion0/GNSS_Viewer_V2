@@ -6,7 +6,7 @@
 #include "Resource.h"
 #include "GPSDlg.h"
 #include "Serial.h"
-
+#include "Gps.h"
 
 // BinaryChecksumCalDlg 
 IMPLEMENT_DYNAMIC(BinaryChecksumCalDlg, CDialog)
@@ -115,5 +115,10 @@ void BinaryChecksumCalDlg::OnBnClickedSend()
 	BinaryCommand cmd(binData);
 	U08* pCmd = cmd.GetBuffer();
 	int inSize = cmd.Size();
+
+  if(CGPSDlg::gpsDlg->GetShowBinaryCmdData())
+	{
+		CGPSDlg::gpsDlg->add_msgtolist("Out: "  + theApp.GetHexString(pCmd, inSize));	
+	}
 	CGPSDlg::gpsDlg->m_serial->SendData(pCmd, inSize);
 }

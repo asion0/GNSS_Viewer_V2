@@ -334,7 +334,7 @@ protected:
 	PSTI033_Data m_psti033R;
 	F32 m_fTrueHeading;
 
-	CComboBox m_ComPortCombo;
+	//CComboBox m_ComPortCombo;
 	CComboBox m_BaudRateCombo;	
 	CComboBox m_coordinate;
 	CComboBox m_scale;
@@ -392,9 +392,6 @@ public:
 	PSTI033_Data m_psti033B;
 
 protected:
-  DWORD m_mouseMouingTick;
-  BOOL  m_mouseNoMoving;
-
   CBitmapButton m_SetOriginBtn;	
 	CBitmapButton m_ClearBtn;		
 	CBitmapButton m_DownloadBtn;
@@ -420,7 +417,6 @@ protected:
 	void UpdateCooridate();
 	void DisplayComportError(int com, DWORD errorCode);
 	bool NmeaInput();
-  int GetSelectComNumber();
 	bool ComPortInput();
 	void ClearInformation(bool onlyQueryInfo = false);
 	bool DoDownload(int dlBaudIdx);
@@ -545,11 +541,16 @@ public:
   BOOL HasNtripData() { return (m_ntripData.GetCount() > 0); }
   U08* GetNtripData() { return m_ntripData.GetHead().GetBuffer(); }
   int GetNtripDataSize() { return m_ntripData.GetHead().Size(); }
-  void RemoveNtripData() { m_ntripData.RemoveHead(); }
+  void RemoveNtripData() 
+  { 
+    m_ntripData.RemoveHead(); 
+  }
   void AddNtripData(U08* data, int size) 
   { 
     BinaryData d(data, size);
+    EnterCriticalSection(&m_cs_ntrip);
     m_ntripData.AddTail(d);
+    LeaveCriticalSection(&m_cs_ntrip);
   }
 
   void ParsingMessage(BOOL isPlayer = FALSE);
@@ -679,7 +680,7 @@ public:
 	//void activate_minihomer();
 	//void set_minihomerkey(U08* key,int len);
 	//void set_minihomerid(U08* id,int len);
-	void Close_Open_Port(WPARAM wParam,CString port_name);
+	void CloseOpenPort(WPARAM wParam,CString port_name);
 	//U08 MinihomerQuerytag();
 	//void MinihomerSettagecco();
 	void query_dr_info();
@@ -709,8 +710,6 @@ public:
 
 	//For Common Download Clasases
 public:
-
-
   U32 tagPos;
   bool emptyTag;
   bool uniqueTag;
@@ -890,9 +889,9 @@ public:
 	CmdErrorCode Query1ppsPulseWidth(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryCableDelay(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryGnssNmeaTalkId(CmdExeMode nMode, void* outputData);
+	CmdErrorCode QueryIfreeMode(CmdExeMode nMode, void* outputData);
 
   U08 m_nGeofecingNo;
-
 	//Query Functions
 	int m_nDefaultTimeout;
 	BOOL m_bClearPsti032;
@@ -1213,6 +1212,7 @@ protected:
 	afx_msg void OnTestExternalSrec();
 	afx_msg void OnIqPlot();
 	afx_msg void OnNtripClient();
+	afx_msg void OnTcpipServer();
   afx_msg void OnTestAlphaIo();
   afx_msg void OnTestAlphaPlusIo();
   //afx_msg void OnTmpActiveLicense();
@@ -1328,6 +1328,14 @@ protected:
   afx_msg void OnQueryCustomStringInterval();
   afx_msg void OnQueryStringInterval(UINT id);
 	afx_msg void OnConfigTrackingModuleParameterSetting();
+  afx_msg void OnCbnSelchangeComPort();
+	afx_msg void OnConfigIfreeMode();
+  
+  void InitComPort(int sel);
+  int GetSelectedComNumber();
+  BOOL SetSelectedComNumber(int sel);
+  BOOL SetSelectedComName(LPCSTR com);
+  BOOL IsSetSelectPortName(LPCSTR com);
 
 	//afx_msg void OnAgepTest()
 	//{ GenericQuery(&CGPSDlg::AgepTest); }
@@ -1634,6 +1642,8 @@ protected:
 	{ GenericQuery(&CGPSDlg::HostDataDumpOn); }
   afx_msg void OnHostDataDumpOff()
   { GenericQuery(&CGPSDlg::HostDataDumpOff); }
+  afx_msg void OnQueryIfreeMode()
+  { GenericQuery(&CGPSDlg::QueryIfreeMode); }
 
 	struct MenuItemEntry {
 		BOOL showOption;
@@ -1809,4 +1819,5 @@ protected:
   int m_becomeRtkFloat;
   int m_becomeGnssFixed;
   void OutputRtkStatusChangedMessage(RtkStatusChanged type);
+  CRITICAL_SECTION m_cs_ntrip;
 };

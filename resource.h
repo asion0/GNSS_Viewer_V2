@@ -230,6 +230,7 @@
 #define IDR_EXEC2                       484
 #define IDB_RTK_INFO_B                  485
 #define IDB_EAST_PROJECTION             486
+#define IDD_TCPIP_CONNECT               486
 #define IDB_BASELINE_LENGTH             487
 #define IDB_NORTH_PROJECTION            488
 #define IDB_BASELINE_COURSE             489
@@ -278,6 +279,9 @@
 #define IDB_TRUE_HEADING                530
 #define IDD_CFG_TM_PM_SETTING           531
 #define IDD_NTRIP_CLIENT                532
+#define IDD_CFG_IFREE_MODE              533
+#define IDR_TCPIP_SERVER                534
+#define IDR_COMM_DLL                    535
 #define IDC_CONNECT                     1000
 #define IDC_CLOSE                       1001
 #define IDC_SETORIGIN                   1002
@@ -477,6 +481,8 @@
 #define IDC_COMBO_STATUS                1083
 #define IDC_CHECK106                    1083
 #define IDC_PWD2                        1083
+#define IDC_PORT2                       1083
+#define IDC_IP_ADDR                     1083
 #define IDC_ABOUT_VERSION               1084
 #define IDC_CHECK15                     1084
 #define IDC_CHECK16                     1085
@@ -889,6 +895,7 @@
 #define IDC_BUILD_IN                    1233
 #define IDC_ALIGN_TO_GPS                1233
 #define IDC_CHECK250                    1233
+#define IDC_MODE1                       1233
 #define IDC_1PPS_PULSE_CLK_SRC_ATTR     1234
 #define IDC_RADIO2                      1234
 #define IDC_RADIO_PPS_ALIGN_TO_UTC      1234
@@ -899,6 +906,8 @@
 #define IDC_ALIGN_TO_UTC2               1235
 #define IDC_ALIGN_TO_NAVIC              1235
 #define IDC_CHECK252                    1235
+#define IDC_RADIO3                      1235
+#define IDC_MODE3                       1235
 #define IDC_1PPS_PULSE_CLK_SRC_ATTR_SEL 1236
 #define IDC_PROGRESS                    1236
 #define IDC_CHECK253                    1236
@@ -1726,6 +1735,8 @@
 #define IDC_EXIT                        1670
 #define IDC_MSG                         1671
 #define IDC_PROG                        1672
+#define IDC_WORK_TYPE                   1674
+#define IDC_DIV                         1675
 #define IDC_CHECK_M3_00                 1710
 #define IDC_CHECK_M3_01                 1711
 #define IDC_CHECK_M3_02                 1712
@@ -2486,14 +2497,16 @@
 #define ID_CFG_TM_PARAM_SETTING         33308
 #define ID_CONFIG_RTK_FUNCTIONS         33309
 #define ID_NTRIP_CLIENT                 33310
-
+#define ID_CFG_IFREE_MODE               33311
+#define ID_QRY_IFREE_MODE               33312
+#define ID_TCPIP_SERVER                 33313
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        486
+#define _APS_NEXT_RESOURCE_VALUE        488
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1673
+#define _APS_NEXT_CONTROL_VALUE         1676
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

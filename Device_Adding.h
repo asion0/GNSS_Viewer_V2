@@ -1,30 +1,28 @@
 #pragma once
 
-
-// CDevice_Adding
-
-class CDevice_Adding : public CDialog
+// CDeviceAddingDlg
+class CDeviceAddingDlg : public CDialog
 {
-	DECLARE_DYNAMIC(CDevice_Adding)
+	DECLARE_DYNAMIC(CDeviceAddingDlg)
 
 public:
-	CDevice_Adding(CWnd* pParent = NULL);
-	virtual ~CDevice_Adding();
+	CDeviceAddingDlg(LPCSTR port, int baudrate, CWnd* pParent = NULL);
+	virtual ~CDeviceAddingDlg();
 
+
+	//CComboBox m_cbo_com,m_cbo_baudrate;
+  int GetBaudrate() { return m_baudrate; }
+	enum { IDD = IDD_DEVICE_ADDING };
+
+public:
 	CString m_comport;
 	int m_baudrate;
 
-	CComboBox m_cbo_com,m_cbo_baudrate;
-
-	enum { IDD = IDD_DEVICE_ADDING };
-
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
+ 	afx_msg void OnBnClickedOk();
+	
+	virtual BOOL OnInitDialog();
+  virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 
 
 	DECLARE_MESSAGE_MAP()
-	
-public:
-	afx_msg void OnBnClickedOk();
-	void setPort_Baudrate(CString port,int baudrate);
-	virtual BOOL OnInitDialog();
+
 };

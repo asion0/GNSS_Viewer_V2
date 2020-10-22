@@ -51,6 +51,7 @@
 
 #include <conio.h>
 #include <afxinet.h>
+#include <afxsock.h>		// MFC socket extensions
 
 #include "StBaseType.h"
 #include "Vender_newGNSS.h"
