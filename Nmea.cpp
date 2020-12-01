@@ -325,9 +325,9 @@ bool NMEA::GNSProc(GPGGA& rgga, LPCSTR pt, int len)
 	return true;
 }
 
-bool NMEA::GSVProc(GPGSV& rgsv, LPCSTR pt, int len)
+bool NMEA::GSVProc(GPGSV& rgsv, LPCSTR pt, int len, bool& differentSignalId)
 {
-  static bool noSigId = false;
+  static int lastSignalId = 0;
 	int dot[MaxNmeaParam] = {0};	    
 	int dotPos = ScanDot(pt, len, dot);
 
@@ -344,23 +344,30 @@ bool NMEA::GSVProc(GPGSV& rgsv, LPCSTR pt, int len)
 	{
 		return 0;
 	}
-
+  differentSignalId = false;
   if((dotPos + 1) == 9 || (dotPos + 1) == 13 ||  //NMEA 183 V4.1 Spec
 		(dotPos + 1) == 17 || (dotPos + 1) == 21) 
 	{
 		dotPos -= 1;
     rgsv.signalId = (U08)ParamHexInt(pt, dot[dotPos], dot[dotPos + 1], 0);
+    if(lastSignalId != rgsv.signalId)
+    {
+      differentSignalId = true;
+    }
 	}
   else
   { //Old style
     rgsv.signalId = NoSingalId;
   }
-
+  lastSignalId = rgsv.signalId;
 	rgsv.NumOfMessage = ParamInt(pt, dot[0], dot[1], 0);
 	rgsv.SequenceNum = ParamInt(pt, dot[1], dot[2], 0);
 	rgsv.NumOfSate = ParamInt(pt, dot[2], dot[3], 0);
   int i = 3;
-
+  if(rgsv.SequenceNum == 1)
+  {
+    differentSignalId = false;
+  }
   for(int groupIdx = 0; i < dotPos; i += 4, ++groupIdx)
 	{
     rgsv.sates[groupIdx].Set(
@@ -458,6 +465,10 @@ bool NMEA::RMCProc(GPRMC& rrmc, LPCSTR pt, int len)
 	  rrmc.Day = ParamInt(pt, dot[8], dot[8]+3, 0);
 	  rrmc.Month = ParamInt(pt, dot[8]+2, dot[8]+5, 0);
 	  rrmc.Year = ParamInt(pt, dot[8]+4, dot[9], 0) + 2000;
+  }
+  if(rrmc.Year == 2080)
+  {
+    rrmc.Year = 1980;
   }
 	rrmc.MagVar = ParamFloat(pt, dot[9], dot[10], 0.0F);
 	rrmc.MagVarDir = (U08)ParamChar(pt, dot[10], dot[11], 0);
@@ -824,13 +835,16 @@ NmeaType NMEA::MessageType(LPCSTR pt, int len)
 		}
 		++i;
 	}
-	if(!VarifyNmeaChecksum(pt, len))
-	{
-		if(MSG_REBOOT==returnType)
-			return MSG_REBOOT;
-		else
-			return MSG_ERROR;
-	}
+  if(!g_setting.ignoreNmeaChecksum)
+  {
+	  if(!VarifyNmeaChecksum(pt, len))
+	  {
+		  if(MSG_REBOOT==returnType)
+			  return MSG_REBOOT;
+		  else
+			  return MSG_ERROR;
+	  }
+  }
 	return returnType;
 }
 
@@ -1124,13 +1138,24 @@ static bool gpgsvHasGps = false;
 
 void NMEA::ShowGPGSVmsg2(GPGSV& rgpgsv, GPGSV& rglgsv, GPGSV& rbdgsv, GPGSV& rgagsv, GPGSV& rgigsv, LPCSTR pt, int len)
 {
+  static int lastSigId = 0;
 	firstGsaIn = false;
 	GPGSV tmpGsv;
-	GSVProc(tmpGsv, pt, len);
-  
+  bool diffSigId = false;
+	GSVProc(tmpGsv, pt, len, diffSigId);
+  if(diffSigId)
+  {
+    if(lastSigId != 0)
+    {
+      gpgsv_counter = 0;
+      satellites_gp.AddSnrSigId(lastSigId);
+    }
+  }
+
   if(tmpGsv.signalId != NoSingalId)
   { //NMEA 4.11
     rgpgsv = tmpGsv;
+    lastSigId = tmpGsv.signalId;
 	  if(1 == tmpGsv.SequenceNum && currentGsv != Gps)
 	  {
       currentGsv = Gps;
@@ -1148,7 +1173,7 @@ void NMEA::ShowGPGSVmsg2(GPGSV& rgpgsv, GPGSV& rglgsv, GPGSV& rbdgsv, GPGSV& rga
       ++gpgsv_counter;
 		  if(gpgsv_counter >= MAX_SATELLITE)
 		  {
-			  gpgsv_counter=0;
+			  gpgsv_counter = 0;
 		  }
 	  }
 
@@ -1327,11 +1352,22 @@ void NMEA::ShowGPGSV2msg(GPGSV& gpgsv, LPCSTR pt, int len)
 
 void NMEA::ShowGLGSVmsg(GPGSV& glgsv, LPCSTR pt, int len)
 {
+  static int lastSigId = 0;
 	firstGsaIn = false;
 	GPGSV tmpGsv;
-	GSVProc(tmpGsv, pt, len);
-  glgsv = tmpGsv;
+  bool diffSigId = false;
+	GSVProc(tmpGsv, pt, len, diffSigId);
+ if(diffSigId)
+  {
+    if(lastSigId != 0)
+    {
+      glgsv_counter = 0;
+      satellites_gl.AddSnrSigId(lastSigId);
+    }
+  }
 
+  glgsv = tmpGsv;
+  lastSigId = tmpGsv.signalId;
   //Old style NMEA
   if(tmpGsv.signalId == NoSingalId)
   {
@@ -1370,7 +1406,8 @@ void NMEA::ShowGIGSVmsg(GPGSV& gigsv, LPCSTR pt, int len)
 {
 	firstGsaIn = false;
 	GPGSV tmpGsv;
-	GSVProc(tmpGsv, pt, len);
+  bool diffSigId = false;
+	GSVProc(tmpGsv, pt, len, diffSigId);
   gigsv = tmpGsv;
   //Old style NMEA
   if(tmpGsv.signalId == NoSingalId)
@@ -1448,10 +1485,22 @@ void NMEA::ShowQZGSVmsg(GPGSV& gpgsv, LPCSTR pt, int len)
 
 void NMEA::ShowBDGSVmsg(GPGSV& bdgsv, LPCSTR pt, int len)
 {
+  static int lastSigId = 0;
 	firstGsaIn = false;
 	GPGSV tmpGsv;
-	GSVProc(tmpGsv, pt, len);
+  bool diffSigId = false;
+	GSVProc(tmpGsv, pt, len, diffSigId);
+  if(diffSigId)
+  {
+    if(lastSigId != 0)
+    {
+      bdgsv_counter = 0;
+      satellites_bd.AddSnrSigId(lastSigId);
+    }
+  }
+
   bdgsv = tmpGsv;
+  lastSigId = tmpGsv.signalId;
   //Old style NMEA
   if(tmpGsv.signalId == NoSingalId)
   {
@@ -1526,10 +1575,21 @@ void NMEA::ShowBDGSV2msg(GPGSV& bdgsv, LPCSTR pt, int len)
 
 void NMEA::ShowGAGSVmsg(GPGSV& gagsv, LPCSTR pt, int len)
 {
+  static int lastSigId = 0;
 	firstGsaIn = false;
 	GPGSV tmpGsv;
-	GSVProc(tmpGsv, pt, len);
+  bool diffSigId = false;
+	GSVProc(tmpGsv, pt, len, diffSigId);
+  if(diffSigId)
+  {
+    if(lastSigId != 0)
+    {
+      gagsv_counter = 0;
+      satellites_ga.AddSnrSigId(lastSigId);
+    }
+  }
 	gagsv = tmpGsv;
+  lastSigId = tmpGsv.signalId;
   //Old style NMEA
   if(tmpGsv.signalId == NoSingalId)
   {
@@ -1566,9 +1626,21 @@ void NMEA::ShowGAGSVmsg(GPGSV& gagsv, LPCSTR pt, int len)
 
 void NMEA::ShowGNGSVmsg(GPGSV& gpgsv, GPGSV& glgsv, GPGSV& bdgsv, GPGSV& gagsv, GPGSV& gigsv, LPCSTR pt, int len)
 {
+  static int lastSigId = 0;
 	firstGsaIn = false;
 	GPGSV tmpGsv;
-	GSVProc(tmpGsv, pt, len);
+  bool diffSigId = false;
+	GSVProc(tmpGsv, pt, len, diffSigId);
+  if(diffSigId)
+  {
+    if(lastSigId != 0)
+    {
+      bdgsv_counter = 0;
+      satellites_bd.AddSnrSigId(lastSigId);
+    }
+  }
+  lastSigId = tmpGsv.signalId;
+
   //Old style NMEA
   if(tmpGsv.signalId == NoSingalId)
   {

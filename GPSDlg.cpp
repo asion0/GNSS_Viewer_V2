@@ -498,6 +498,11 @@ bool CGPSDlg::NmeaProc(const char* buffer, int offset, NmeaType& nmeaType)
 		break;
 	case MSG_GIGSV:
 		nmea.ShowGIGSVmsg(m_gigsvMsgCopy, buffer, offset);
+    if(m_bdgsaMsgCopy.SatelliteID[0] != 0 && m_gigsaMsgCopy.SatelliteID[0] == 0 && m_bdgsvMsgCopy.signalId != 4)
+    { //Some NAVIC firmware still use 4 for NAVIC system ID in GSA( now 4 is for BDS)
+      memcpy(m_gigsaMsgCopy.SatelliteID, m_bdgsaMsgCopy.SatelliteID, sizeof(m_bdgsaMsgCopy.SatelliteID));
+    }
+
 		break;
 	//case MSG_QZGSV:
 	//	nmea.ShowQZGSVmsg(m_gpgsvMsgCopy, buffer, offset);
@@ -851,54 +856,65 @@ U16 CGPSDlg::RtcmProc(U08* buffer, int len)
 	U16 msgType = (buffer[3] << 4) | (buffer[4] >> 4);
 	if(crc24 != crc24Check)
 	{
-    int bbb = 1234;
-    ::OutputDebugString("1234");
+    ::OutputDebugString("Error RTCM CRC");
 		//return FALSE;
 	}
-  int aa = 0;
 	switch(msgType)
 	{
-  case 1005:
+  case 1005:  //Stationary RTK Reference Station ARP
     ShowRtcm1005(buffer);
 		break;
 #if IS_DEBUG
-  case 1033:
+  case 1033:  //Receiver and Antenna Descriptors
     ShowRtcm1033(buffer);
 		break;
 #endif
-  case 1077:
+  case 1074:  //GPS MSM4
+    ShowRtcm1074(buffer, packetLen + 3);
+		break;
+  case 1084:  //GLONASS MSM4
+    ShowRtcm1084(buffer, packetLen + 3);
+		break;
+  case 1094:  //Galileo MSM4
+    ShowRtcm1094(buffer, packetLen + 3);
+		break;
+  case 1104:  //SBAS MSM4
+    ShowRtcm1104(buffer, packetLen + 3);
+		break;
+  case 1114:  //QZSS MSM4
+    ShowRtcm1114(buffer, packetLen + 3);
+		break;
+  case 1124:  //BeiDou MSM4
+    ShowRtcm1124(buffer, packetLen + 3);
+		break;
+  case 1077:  //GPS MSM7
     ShowRtcm1077(buffer, packetLen + 3);
 		break;
-  case 1107:
-    ShowRtcm1107(buffer, packetLen + 3);
-		break;
-  case 1117:  //QZSS
-    ShowRtcm1117(buffer, packetLen + 3);
-		break;
-  case 1127:
-    ShowRtcm1127(buffer, packetLen + 3);
-		break;
-  case 1087:
+  case 1087:  //GLONASS MSM7
     ShowRtcm1087(buffer, packetLen + 3);
 		break;
-  //case 1088:
-  //  ShowRtcm1088(buffer, packetLen + 3);
-  //  aa = 1;
-		//break;
-  case 1097:
+  case 1097:  //GALILEO MSM7
     ShowRtcm1097(buffer, packetLen + 3);
-    aa = 2;
 		break;
-  case 1019:
+  case 1107:  //SBAS MSM7
+    ShowRtcm1107(buffer, packetLen + 3);
+		break;
+  case 1117:  //QZSS MSM7
+    ShowRtcm1117(buffer, packetLen + 3);
+		break;
+  case 1127:  //BEIDOU MSM7
+    ShowRtcm1127(buffer, packetLen + 3);
+		break;
+  case 1019:  //GPS Ephemerides
     ShowRtcmEphemeris(buffer, packetLen + 3);
 		break;
-  case 1020:
+  case 1020:  //GLONASS Ephemerides
     ShowRtcmEphemeris(buffer, packetLen + 3);
 		break;
-  case 1042:
+  case 1042:  //BDS Satellite Ephemeris Data
     ShowRtcmEphemeris(buffer, packetLen + 3);
 		break;
-  case 1046:
+  case 1046:  //Galileo I/NAV Satellite Ephemeris Data
     ShowRtcmEphemeris(buffer, packetLen + 3);
 		break;
   case 0:
@@ -911,7 +927,6 @@ U16 CGPSDlg::RtcmProc(U08* buffer, int len)
       //add2message(txt, txt.GetLength());
       add_msgtolist(txt);
 #endif
-      aa = 3;
     }
 		break;
 	}
@@ -936,12 +951,13 @@ U16 CGPSDlg::UbloxProc(U08* buffer, int len, CFile* fo)
 		break;
   case 0x0107:
     ShowUbxNavPvt(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
+    ShowTime();
 		break;
   case 0x0130:
     ShowUbxNavSvInfo(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
 		break;
   case 0x0103:
-    ShowUbxNavSvStatus(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
+    ShowUbxNavStatus(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
 		break;
   case 0x0102:
     ShowUbxNavPosllh(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
@@ -1580,9 +1596,10 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_ALPHA_AG_CALIB_DN, OnAlphaAgCalibrationDown)
 	ON_COMMAND(ID_ALPHA_ECOMPASS_CALIB, OnAlphaEcompassCalibration)
 
-  ON_COMMAND(ID_QUERY_ALPHA_UNIQUE_ID, OnQueryAlphaUniqueId)
+  //ON_COMMAND(ID_QUERY_ALPHA_UNIQUE_ID, OnQueryAlphaUniqueId)
 	ON_COMMAND(ID_QUERY_ALPHA_KEY, OnQueryAlphaKey)
 	ON_COMMAND(ID_CFG_ALPHA_KEY, OnConfigAlphaKey)
+	ON_COMMAND(ID_AUTO_ACT_ALPHA_KEY, OnAutoActiveAlphaKey)
 
 	ON_COMMAND(ID_QUERY_V9_TAG_ADDR, OnQueryV9TagAddress)
 	ON_COMMAND(ID_QUERY_V9_UNQ_ID, OnQueryV9UniqueId)
@@ -1596,6 +1613,8 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_QUERY_V9_PROM_AES_TAG, OnQueryV9PromAesTag)
 	ON_COMMAND(ID_QUERY_V9_EXT_AES_TAG, OnQueryV9ExternalAesTag)
 	ON_COMMAND(ID_CFG_V9_AES_TAG, OnConfigV9AesTag)
+	ON_COMMAND(ID_AUTO_ACT_V9_AES_TAG, OnAutoActiveV9AesTag)
+
 	ON_COMMAND(ID_RESET_V9_AES_TAG, OnResetV9AesTag)
 	ON_COMMAND(ID_CFG_CUSTOM_STR_INTVAL, OnConfigCustomStringInterval)
 	ON_COMMAND(ID_QRY_CUSTOM_STR_INTVAL, OnQueryCustomStringInterval)
@@ -1924,18 +1943,22 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_BN_CLICKED(IDC_COOR_SWITCH2, OnBnClickedCoorSwitch)
 	ON_BN_CLICKED(IDC_ALT_SWITCH, OnBnClickedAltitudeSwitch)
 
+	ON_COMMAND(ID_QUERY_PSTI020, OnQueryPsti020)
 	ON_COMMAND(ID_QUERY_PSTI030, OnQueryPsti030)
 	ON_COMMAND(ID_QUERY_PSTI032, OnQueryPsti032)
 	ON_COMMAND(ID_QUERY_PSTI033, OnQueryPsti033)
+	ON_COMMAND(ID_QUERY_PSTI060, OnQueryPsti060)
 	ON_COMMAND(ID_QUERY_PSTI063, OnQueryPsti063)
 	ON_COMMAND(ID_QUERY_PSTI065, OnQueryPsti065)
 	ON_COMMAND(ID_QUERY_PSTI067, OnQueryPsti067)
 	ON_COMMAND(ID_QUERY_PSTI068, OnQueryPsti068)
 	ON_COMMAND(ID_QUERY_PSTI070, OnQueryPsti070)
 
+	ON_COMMAND(ID_CONFIG_PSTI020, OnConfigPsti020)
 	ON_COMMAND(ID_CONFIG_PSTI030, OnConfigPsti030)
 	ON_COMMAND(ID_CONFIG_PSTI032, OnConfigPsti032)
 	ON_COMMAND(ID_CONFIG_PSTI033, OnConfigPsti033)
+	ON_COMMAND(ID_CONFIG_PSTI060, OnConfigPsti060)
 	ON_COMMAND(ID_CONFIG_PSTI063, OnConfigPsti063)
 	ON_COMMAND(ID_CONFIG_PSTI065, OnConfigPsti065)
 	ON_COMMAND(ID_CONFIG_PSTI067, OnConfigPsti067)
@@ -2001,6 +2024,7 @@ BOOL CGPSDlg::OnInitDialog()
   {
     ::AfxBeginThread(AutoAgpsAfterColdStart, 0);
   }
+
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -2066,6 +2090,16 @@ void CGPSDlg::InitDownloadBaudRate()
   else
   {
 	  pDownloadBaudCombo->SetCurSel(dlBaudIdx);
+  }
+}
+
+void CGPSDlg::ShowAltSwitch(bool b)
+{
+  GetDlgItem(IDC_ALT_SWITCH)->ShowWindow((b) ? SW_SHOW : SW_HIDE);
+  if(!b)
+  {
+    m_altFormat = Altitude;
+    OnBnClickedAltitudeSwitch();
   }
 }
 
@@ -2431,8 +2465,7 @@ void CGPSDlg::Initialization()
 	m_BaudRateCombo.SetCurSel(g_setting.GetBaudrateIndex());
 	//((CButton*)GetDlgItem(IDC_IN_LOADER))->SetCheck(TRUE);
 
-	m_altFormat = EllipsoidHeight;
-  OnBnClickedAltitudeSwitch();
+  ShowAltSwitch(false);
 
 	m_CoorSwitch1Btn.Invalidate();
 	m_CoorSwitch2Btn.Invalidate();
@@ -2554,7 +2587,7 @@ void CGPSDlg::ClearInformation(bool onlyQueryInfo)
 
 bool CGPSDlg::NmeaInput()
 {
-	CFileDialog fd(true, NULL, NULL, OFN_FILEMUSTEXIST| OFN_HIDEREADONLY, "All Suppored Files (*.txt;*.out;*.dat)|*.txt; *.out; *.dat|NMEA Files (*.txt)|*.txt|Binary Files (*.out)|*.out|Data Files (*.dat)|*.dat||");
+	CFileDialog fd(true, NULL, NULL, OFN_FILEMUSTEXIST| OFN_HIDEREADONLY, "All Suppored Files (*.txt;*.nmea;*.out;*.dat;*.bin)|*.txt; *.nmea; *.out; *.dat; *.bin|TEXT Files (*.txt)|*.txt|NMEA Files (*.nmea)|*.nmea|Output Files (*.out)|*.out|Binary Files (*.bin)|*.bin|Data Files (*.dat)|*.dat||");
 	if(fd.DoModal() != IDOK)
 	{
 		return false;
@@ -3025,10 +3058,11 @@ void CGPSDlg::OnBnClickedClose()
 	m_playNmea->ShowWindow(SW_HIDE);
 	::WaitForSingleObject(m_nmeaPlayThread, INFINITE);
 
-	m_BaudRateCombo.EnableWindow(1);
-	m_ComPortCombo.EnableWindow(1);
-	GetDlgItem(IDC_CONNECT)->ShowWindow(1);
-	m_CloseBtn.ShowWindow(0);
+	m_BaudRateCombo.EnableWindow(TRUE);
+	//m_ComPortCombo.EnableWindow(1);
+  GetDlgItem(IDC_COMPORT)->EnableWindow(TRUE);
+	GetDlgItem(IDC_CONNECT)->ShowWindow(SW_SHOW);
+	m_CloseBtn.ShowWindow(SW_HIDE);
 #else
 	Terminate();
 	m_CloseBtn.EnableWindow(FALSE);
@@ -3597,7 +3631,15 @@ void CGPSDlg::ShowAltitude(bool reset)
 	if(reset)
 	{
 		lastAlt = -99999.0F;
+    ShowAltSwitch(false);
 	}
+  else
+  {
+    if(m_gpggaMsg.GeoidalSeparation != 0)
+    {
+      ShowAltSwitch(true);
+    }
+  }
 
 	F32 alt = m_gpggaMsg.Altitude;
 	switch(m_altFormat)
@@ -3765,6 +3807,73 @@ void CGPSDlg::ShowStatus()
 	}
 }
 
+#pragma comment(lib,"iphlpapi.lib")
+CString GetMACAddress()
+{
+	CString strGateWay = _T("");
+	CString strMACAddress = _T("");
+	IP_ADAPTER_INFO ipAdapterInfo[5];
+	DWORD dwBuflen = sizeof(ipAdapterInfo);
+
+	DWORD dwStatus = GetAdaptersInfo(ipAdapterInfo, &dwBuflen);
+	if (dwStatus != ERROR_SUCCESS)
+	{
+		strMACAddress.Format(_T("Error for GetAdaptersInfo : %d"), dwStatus);
+		AfxMessageBox(strMACAddress);
+		return _T("");
+	}
+	PIP_ADAPTER_INFO pIpAdapterInfo = ipAdapterInfo;
+	do{
+		strGateWay = (CString)pIpAdapterInfo->GatewayList.IpAddress.String;
+		if (strGateWay[0] == '0')
+		{
+			pIpAdapterInfo = pIpAdapterInfo->Next;
+		}
+		else
+		{
+			strMACAddress.Format(_T("%02X-%02X-%02X-%02X-%02X-%02X"),
+				pIpAdapterInfo->Address[0],
+				pIpAdapterInfo->Address[1],
+				pIpAdapterInfo->Address[2],
+				pIpAdapterInfo->Address[3],
+				pIpAdapterInfo->Address[4],
+				pIpAdapterInfo->Address[5]
+				);
+
+			break;
+		}
+	} while (pIpAdapterInfo);
+
+	return strMACAddress;
+}
+
+CString GetIPAdd()
+{
+	WORD wVersionRequested;
+	WSADATA wsaData;
+	char Name[255];
+	PHOSTENT HostInfo;
+	wVersionRequested = MAKEWORD( 1, 1 );
+	char *IPAdd;
+	if ( WSAStartup( wVersionRequested, &wsaData ) == 0 )
+	{
+		if( gethostname ( Name, sizeof(Name)) == 0)
+		{
+			//printf("Host name: %s\n", name);
+			if((HostInfo = gethostbyname(Name)) != NULL)
+			{
+				int nCount = 0;
+				while(HostInfo->h_addr_list[nCount])
+				{
+					IPAdd = inet_ntoa(*(struct in_addr *)HostInfo->h_addr_list[nCount]);
+ 
+					++nCount;
+				}
+			}
+		}
+	}
+  return CString(IPAdd);
+}
 #include "SetupDialog.h"
 void CGPSDlg::OnFileSetup()
 {
@@ -3773,6 +3882,22 @@ void CGPSDlg::OnFileSetup()
 #else
 	CSetupDialog2 setupDlg;
 #endif
+
+  CString host;
+  DWORD len = 128;
+  BOOL ret = GetComputerName(host.GetBuffer(len), &len);
+    host.ReleaseBuffer();
+CString mac = GetMACAddress();
+CString ip = GetIPAdd();
+  //"{ \"id\": \"657F5D444135825554742065\", \"data\":\"01000000000D0001\" }"
+  string strResponse;
+  CHttpClient hc;
+  int nres = hc.HttpPost(
+    "http://localhost:8000/e", 
+    "{ \"id\": \"657F5D444135825554742065\", \"data\":\"01000000000D0001\" }",
+    strResponse);
+
+
 
 	setupDlg.SetSetting(&g_setting);
 	if(setupDlg.DoModal() == IDOK)
@@ -5379,9 +5504,11 @@ void CGPSDlg::LoadMenu()
 	{
 		{ 1, MF_STRING, ID_QUERY_PSTI004, "Query PSTI004 Interval", NULL },
 		{ 1, MF_STRING, ID_QUERY_PSTI007, "Query PSTI007 Interval", NULL },
+		{ 1, MF_STRING, ID_QUERY_PSTI020, "Query PSTI020 Interval", NULL },
 		{ 1, MF_STRING, ID_QUERY_PSTI030, "Query PSTI030 Interval", NULL },
 		{ 1, MF_STRING, ID_QUERY_PSTI032, "Query PSTI032 Interval", NULL },
 		{ 1, MF_STRING, ID_QUERY_PSTI033, "Query PSTI033 Interval", NULL },
+		{ 1, MF_STRING, ID_QUERY_PSTI060, "Query PSTI060 Interval", NULL },
 		{ 1, MF_STRING, ID_QUERY_PSTI063, "Query PSTI063 Interval", NULL },
 		{ 1, MF_STRING, ID_QUERY_PSTI065, "Query PSTI065 Interval", NULL },
 		{ 1, MF_STRING, ID_QUERY_PSTI067, "Query PSTI067 Interval", NULL },
@@ -5394,9 +5521,11 @@ void CGPSDlg::LoadMenu()
 	{
 		{ 1, MF_STRING, ID_CONFIG_PSTI004, "Configure PSTI004 Interval", NULL },
 		{ 1, MF_STRING, ID_CONFIG_PSTI007, "Configure PSTI007 Interval", NULL },
+  	{ 1, MF_STRING, ID_CONFIG_PSTI020, "Configure PSTI020 Interval", NULL },
   	{ 1, MF_STRING, ID_CONFIG_PSTI030, "Configure PSTI030 Interval", NULL },
 		{ 1, MF_STRING, ID_CONFIG_PSTI032, "Configure PSTI032 Interval", NULL },
 		{ 1, MF_STRING, ID_CONFIG_PSTI033, "Configure PSTI033 Interval", NULL },
+		{ 1, MF_STRING, ID_CONFIG_PSTI060, "Configure PSTI060 Interval", NULL },
 		{ 1, MF_STRING, ID_CONFIG_PSTI063, "Configure PSTI063 Interval", NULL },
 		{ 1, MF_STRING, ID_CONFIG_PSTI065, "Configure PSTI065 Interval", NULL },
 		{ 1, MF_STRING, ID_CONFIG_PSTI067, "Configure PSTI067 Interval", NULL },
@@ -5527,8 +5656,10 @@ void CGPSDlg::LoadMenu()
 		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_SW_FEATURE, "Query Phoenix Software Feature", NULL },
     { IS_DEBUG, MF_STRING, ID_RESET_V9_AES_TAG, "Reset Phoenix Tag", NULL },
 		{ 1, MF_STRING, ID_CFG_V9_AES_TAG, "Configure Phoenix Tag", NULL },
+    { IS_DEBUG && AUTO_ACTIVATE_AES_KEY, MF_STRING, ID_AUTO_ACT_V9_AES_TAG, "Auto Activating Phoenix Tag(Only in SkyTraq intranet)", NULL },
+
 		{ IS_DEBUG || DEVELOPER_VERSION, MF_SEPARATOR, 0, NULL, NULL },
-		{ IS_DEBUG, MF_POPUP, 0, "NMEA String Interval", NmeaStringIntervaMenu },
+		{ 1, MF_POPUP, 0, "NMEA String Interval", NmeaStringIntervaMenu },
 		{ IS_DEBUG, MF_POPUP, 0, "Host Data Dump", HostDataDumpMenu },
 		{ IS_DEBUG || DEVELOPER_VERSION, MF_STRING, ID_QRY_IFREE_MODE, "Query Ifree Mode", NULL },
 
@@ -5816,7 +5947,7 @@ void CGPSDlg::LoadMenu()
 	}
   */
 
-	static MenuItemEntry menuItemWatchDataLog[] =
+	static MenuItemEntry menuItemAlphaRtk[] =
 	{
 		{ IS_DEBUG, MF_STRING, ID_TEST_ALPHA_IO, "Test Alpha RTK GPIO", NULL },
 		{ IS_DEBUG, MF_STRING, ID_TEST_ALPHA_PLUS_IO, "Test Alpha+ RTK GPIO", NULL },
@@ -5825,14 +5956,15 @@ void CGPSDlg::LoadMenu()
 		{ 1, MF_STRING, ID_ALPHA_AG_CALIB_DN, "A/G Calibration Down", NULL },
 		{ 1, MF_STRING, ID_ALPHA_ECOMPASS_CALIB, "E-Compass Calibration", NULL },
     { 1, MF_SEPARATOR, 0, NULL, NULL },
-		{ 1, MF_STRING, ID_QUERY_ALPHA_UNIQUE_ID, "Query Alpha RTK Unique ID", NULL },
+		//{ 1, MF_STRING, ID_QUERY_ALPHA_UNIQUE_ID, "Query Alpha RTK Unique ID", NULL },
 		{ 1, MF_STRING, ID_QUERY_ALPHA_KEY, "Query Alpha RTK License Key", NULL },
-		{ 1, MF_STRING, ID_CFG_ALPHA_KEY, "Set Alpha RTK License Key", NULL },
+		{ 1, MF_STRING, ID_AUTO_ACT_ALPHA_KEY, "Set Alpha RTK License Key", NULL },
+		{ IS_DEBUG && AUTO_ACTIVATE_AES_KEY, MF_STRING, ID_AUTO_ACT_ALPHA_KEY, "Auto Activating Alpha License(Only in SkyTraq intranet)", NULL },
 		{ 0, 0, 0, NULL, NULL },
 	};
 	if(!NMEA_INPUT && !SHOW_PATCH_MENU && IS_DEBUG)
 	{
-		CreateSubMenu(hMenu, menuItemWatchDataLog, "&Alpha RTK");
+		CreateSubMenu(hMenu, menuItemAlphaRtk, "&Alpha RTK");
 	}
 
 	//Converter Menu
@@ -10421,3 +10553,240 @@ BOOL CGPSDlg::IsSetSelectPortName(LPCSTR com)
 
   return (txt.Compare(com) == 0);
 }
+
+//#define FAILURE (-1)
+//#define SUCCESS (0)
+//#define  BUFFER_SIZE 256
+//
+#define  BUFFER_SIZE       1024  
+
+//strMethod:POST/GET ,strUrl:URL for request, strPostData:post data for server,strResponse:reponse string
+int CGPSDlg::ExecuteRequest(
+  LPCTSTR strMethod, 
+  LPCTSTR strUrl, 
+  CString strPostData, 
+  CString &strResponse)  
+{
+  CString strServer;  
+  CString strObject;  
+  DWORD dwServiceType;  
+  INTERNET_PORT nPort;  
+  strResponse = _T("");  
+
+  CInternetSession sess;//Create session  
+  AfxParseURL(strUrl, dwServiceType, strServer, strObject, nPort);  //parse url
+  
+  //Is http or https?
+  if(AFX_INET_SERVICE_HTTP != dwServiceType && AFX_INET_SERVICE_HTTPS != dwServiceType)  
+  {  
+    //LoggerCio::notice(LoggerCio::LOG_URL,"*** url Not http or https protocol!");//log output
+    return FAILURE;
+  }    
+  try  
+  { //CHttpConnection *m_pConnection;//defined in header file
+    //got CHttpConnection*
+    //m_pConnection = sess.GetHttpConnection(strServer, dwServiceType == AFX_INET_SERVICE_HTTP ? NORMAL_CONNECT : SECURE_CONNECT,nPort);  
+    m_pConnection = sess.GetHttpConnection(strServer, nPort);  
+    //got CHttpFile*
+    m_pFile = m_pConnection->OpenRequest(
+      strMethod, 
+      strObject, 
+      NULL, 
+      1, 
+      NULL, 
+      NULL, INTERNET_FLAG_RAW_DATA);
+//      (dwServiceType == AFX_INET_SERVICE_HTTP ? NORMAL_REQUEST : SECURE_REQUEST));  
+
+    m_pFile -> AddRequestHeaders( _T("Accept:application/json;"));
+    m_pFile -> AddRequestHeaders( _T("Content-Type:text/html; charset=utf-8;"));
+    //m_pFile -> AddRequestHeaders( _T("Content-Type:multipart/form-data;"));		
+
+    USES_CONVERSION;
+    const char *pData = (LPCTSTR)strPostData;
+    if (NULL == m_pFile)
+    {
+	    //LOG_FUNC_QUIT_DEBUG(LOG_SYS);
+      return FAILURE;  
+    }
+    //send request
+    if(m_pFile->SendRequest(NULL, 0, (LPVOID)pData, strlen(pData)))
+    {
+	    char szChars[BUFFER_SIZE + 1] = {0};
+	    string strRawResponse = "";
+	    UINT nReaded = 0;  
+	    while ((nReaded = m_pFile->Read((void*)szChars, BUFFER_SIZE)) > 0)
+	    { //receive ack
+		    szChars[nReaded] = '\0';
+		    strRawResponse += szChars;
+		    memset(szChars, 0, BUFFER_SIZE + 1);
+	    }
+
+	    //convert to CString
+	    int unicodeLen = MultiByteToWideChar(CP_UTF8, 0, strRawResponse.c_str(), -1, NULL, 0);
+	    WCHAR *pUnicode = new WCHAR[unicodeLen + 1];  
+	    memset(pUnicode,0,(unicodeLen+1)*sizeof(wchar_t));    
+	    MultiByteToWideChar(CP_UTF8,0,strRawResponse.c_str(),-1, pUnicode,unicodeLen);  
+	    CString cs(pUnicode);
+	    delete []pUnicode;
+	    pUnicode = NULL;
+
+	    strResponse = cs;
+    }
+    else
+    { //output error code when request failed
+	    DWORD dwError = GetLastError();  
+	    //LoggerCio::notice(LoggerCio::LOG_URL,"*** m_pFile->SendRequest failed, GetLastError=%d",dwError);
+    }
+    //Clear();
+  }  
+  catch (CInternetException* e)  
+  { //got CInternetException exception
+    //Clear();  
+    DWORD dwErrorCode = e->m_dwError;  
+    e->Delete();  
+    e = NULL;
+    DWORD dwError = GetLastError();  
+    //LoggerCio::notice(LoggerCio::LOG_URL,
+    //  "*** CHttpData Network error, Error code[CInternetException::m_dwError:%d][GetLastError:%d] ***",dwErrorCode,dwError);
+
+    if (ERROR_INTERNET_TIMEOUT == dwErrorCode)  
+      return FAILURE; //timeout
+    else  
+      return FAILURE;  //error
+  }  
+  return SUCCESS;  //OK
+}  
+
+// HttpClient.cpp  
+  
+#define  NORMAL_CONNECT   INTERNET_FLAG_KEEP_CONNECTION  
+#define  SECURE_CONNECT   NORMAL_CONNECT | INTERNET_FLAG_SECURE  
+#define  NORMAL_REQUEST   INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE   
+#define  SECURE_REQUEST   NORMAL_REQUEST | INTERNET_FLAG_SECURE | INTERNET_FLAG_IGNORE_CERT_CN_INVALID  
+  
+CHttpClient::CHttpClient(LPCTSTR strAgent)  
+{  
+  m_pSession = new CInternetSession(strAgent);  
+  m_pConnection = NULL;  
+  m_pFile = NULL;  
+}  
+
+CHttpClient::~CHttpClient(void)  
+{  
+  Clear();  
+  if(NULL != m_pSession)  
+  {  
+    m_pSession->Close();  
+    delete m_pSession;  
+    m_pSession = NULL;  
+  }  
+}  
+  
+void CHttpClient::Clear()  
+{
+  if(NULL != m_pFile)  
+  {
+    m_pFile->Close();  
+    delete m_pFile;  
+    m_pFile = NULL;  
+  }
+
+  if(NULL != m_pConnection)  
+  {
+    m_pConnection->Close();  
+    delete m_pConnection;  
+    m_pConnection = NULL;  
+  }
+}
+
+int CHttpClient::ExecuteRequest(LPCTSTR strMethod, LPCTSTR strUrl, LPCTSTR strPostData, string &strResponse)  
+{  
+  CString strServer;  
+  CString strObject;  
+  DWORD dwServiceType;  
+  INTERNET_PORT nPort;  
+  strResponse = "";  
+
+  AfxParseURL(strUrl, dwServiceType, strServer, strObject, nPort);  
+
+  if(AFX_INET_SERVICE_HTTP != dwServiceType && AFX_INET_SERVICE_HTTPS != dwServiceType)  
+  {  
+    return FAILURE;  
+  }  
+
+  try  
+  {  
+    m_pConnection = m_pSession->GetHttpConnection(strServer,  
+      dwServiceType == AFX_INET_SERVICE_HTTP ? NORMAL_CONNECT : SECURE_CONNECT,  
+      nPort);  
+    m_pFile = m_pConnection->OpenRequest(strMethod, strObject,   
+      NULL, 1, NULL, NULL,   
+      (dwServiceType == AFX_INET_SERVICE_HTTP ? NORMAL_REQUEST : SECURE_REQUEST));  
+
+    //DWORD dwFlags;  
+    //m_pFile->QueryOption(INTERNET_OPTION_SECURITY_FLAGS, dwFlags);  
+    //dwFlags |= SECURITY_FLAG_IGNORE_UNKNOWN_CA;  
+    //set web server option  
+    //m_pFile->SetOption(INTERNET_OPTION_SECURITY_FLAGS, dwFlags);  
+
+    m_pFile->AddRequestHeaders("Accept: *,*/*");  
+    //m_pFile->AddRequestHeaders("Accept-Language: zh-cn");  
+    m_pFile->AddRequestHeaders("Content-Type: application/json");  
+    //m_pFile->AddRequestHeaders("Accept-Encoding: gzip, deflate");  
+
+    m_pFile->SendRequest(NULL, 0, (LPVOID)(LPCTSTR)strPostData, strPostData == NULL ? 0 : _tcslen(strPostData));  
+
+    char szChars[BUFFER_SIZE + 1] = {0};  
+    string strRawResponse = "";  
+    UINT nReaded = 0;  
+    while ((nReaded = m_pFile->Read((void*)szChars, BUFFER_SIZE)) > 0)  
+    {  
+      szChars[nReaded] = '\0';  
+      strRawResponse += szChars;  
+      memset(szChars, 0, BUFFER_SIZE + 1);  
+    }  
+
+    int unicodeLen = MultiByteToWideChar(CP_UTF8, 0, strRawResponse.c_str(), -1, NULL, 0);  
+    WCHAR *pUnicode = new WCHAR[unicodeLen + 1];  
+    memset(pUnicode,0,(unicodeLen+1)*sizeof(wchar_t));  
+
+    MultiByteToWideChar(CP_UTF8,0,strRawResponse.c_str(),-1, pUnicode,unicodeLen);  
+    CString cs(pUnicode);  
+    delete []pUnicode;   
+    pUnicode = NULL;  
+
+    strResponse = cs;  
+
+    Clear();  
+  }  
+  catch (CInternetException* e)  
+  {  
+    Clear();  
+    DWORD dwErrorCode = e->m_dwError;  
+    e->Delete();  
+
+    DWORD dwError = GetLastError();  
+
+    //PRINT_LOG("dwError = %d", dwError, 0);  
+
+    if (ERROR_INTERNET_TIMEOUT == dwErrorCode)  
+    {  
+      return OUTTIME;  
+    }  
+    else  
+    {  
+      return FAILURE;  
+    }  
+  }  
+  return SUCCESS;  
+}  
+
+int CHttpClient::HttpGet(LPCTSTR strUrl, LPCTSTR strPostData, string &strResponse)  
+{  
+  return ExecuteRequest("GET", strUrl, strPostData, strResponse);  
+}  
+
+int CHttpClient::HttpPost(LPCTSTR strUrl, LPCTSTR strPostData, string &strResponse)  
+{  
+  return ExecuteRequest("POST", strUrl, strPostData, strResponse);  
+}  

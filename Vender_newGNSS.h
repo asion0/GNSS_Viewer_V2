@@ -506,6 +506,15 @@
 // .036 20200929 Add [Configure / Query Ifree Mode] in Phoenix menu, request from Jason
 // .037 20200930 Release for TCPIP / NTRIP functions, request from Oliver
 // .038 20201006 Fixed COM port adding bug and show all unknowk message bug, report from Ken and Andrew
+// .039 20201022 NMEA parser support allystar style, request from Ken
+// .040 20201027 Support RTCM MSM4 1074, 1084, 1094, 1104, 1114, 1124, request from Ken
+// .041 20201105 Support UBX NAV-PVT decode, request from Alex
+// .041 20201106 Support GI system ID 4 in GSA, request from Angus and Andrew
+// .042 20201113 Modify "Configure NMEA Interval V8" title, request from Oliver
+// .042 20201120 Support MSM Type in [Configure / Query RTCM Measurement Data Out] and [Configure RTK Functions], request from Ken
+// .042 20201120 Add [Query / Config PSTI020 / 060 interval] in Venus 8 menu, request from Roger
+// .043 20201127 Add [Automatically Activate Phoenix Tag] in Phoenix menu, request from Alex, Andrew
+// .044 20201201 Auto disable Alt switch button when no geoid data, request from Austin, Oliver
 
 #define SW_FUN_DATALOG		        0x0001
 #define SW_FUN_AGPS				        0x0002
@@ -516,7 +525,7 @@
 //title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 #define APP_CAPTION				        "GNSS Viewer"
 #define APP_TITLE				          ""              //Internal Use, Customer Release, NMEA Player...
-#define APP_VERSION				        "2.1.038"
+#define APP_VERSION				        "2.1.044"
 #define APP_MODULE				        "Phoenix"
 
 #define	Sktyraq					          0x0000
@@ -626,6 +635,7 @@
 #define SHOW_RF_CONFIG            0   //For SWID show RF Configuration
 #define NO_PHOENIX_MENU           0   //For SWID 
 #define PROUCTION_TEST_200611     0   //For Angus production test in 2020/06/11 
+#define AUTO_ACTIVATE_AES_KEY     1   //Turn On / Off Auto Activation Tag function in menu
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////

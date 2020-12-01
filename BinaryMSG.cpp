@@ -532,7 +532,7 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
       GetGnssTypeSignalTypeString(channel.typeNsingel, typeTxt);
     //strBuffer.Format("Gnss Signal|SVID|FrqID|LTInd|CN0|   PseudoRange|       AccCrrCyc|DopFreq|PRSdDv|ACCSdDv|DFSdDv| ChInd|");
     //strBuffer.Format("-----------+----+-----+-----+---+--------------+----------------+-------+------+-------+------+------+");
-      strBuffer.Format("%11s|  %2d|%5d|%5d|%3d| %13.3lf| % 15.3lf| % 6.0f|%6d|%7d|%6d|0x%04X|",
+      strBuffer.Format("%11s| %3d|%5d|%5d|%3d| %13.3lf| % 15.3lf| % 6.0f|%6d|%7d|%6d|0x%04X|",
           typeTxt, channel.svid, channel.freqIdNlockTimeInd & 0x0f, channel.freqIdNlockTimeInd >> 4, 
           channel.cn0, channel.pseduRange, channel.accCarrierCycle, channel.dopplerFreq, 
           channel.prStdDeviation, channel.accStdDeviation, channel.dfDeviation, channel.chInd);
@@ -547,8 +547,9 @@ void ExtRawMeas(U08* src, bool convertOnly, CString* pStr)
 	    {
 		    continue;
 	    }
+      //Doesn't support draw Satellite Chart from 0xE5, Use 0xE8 and 0xE7 now
+      continue;
       //For multi-Hz raw data output display issue, support 0xE5 will display error in multi-hz
-return;
       U08 sigId;
       NMEA::GNSS_System gs = NMEA::GsUnknown;
       GetGnssTypeAndSignalId(channel.typeNsingel, gs, sigId);
@@ -2953,6 +2954,70 @@ typedef struct {                    // multi-signal-message header type
 static msm_h_t msm_header = { 0 };
 double msm_cnr[64];
 
+void ShowRtcmMsm4Data(int satNum, const char* title, U08* src, bool convertOnly, CString* pStr)
+{
+  //return;
+  
+  strBuffer.Format("$%s,sta_id=0x%04X,multi_msg_bit=0x%02X,iods=0x%02X,div_free_smoothing_ind=0x%02X,smoothing_interval=0x%02X,sig_mask=0x%08X,sat_mask=0x%016llX,cell_mask=0x%016llX",
+    title,
+    msm_header.staid,
+    //msm_header.tow_ms,-
+    msm_header.sync,
+    msm_header.iod,
+    msm_header.smooth,
+    msm_header.tint_s,
+    msm_header.nsat,
+    msm_header.nsig,
+    msm_header.ncell);
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+  
+  if(satNum == 0)
+  {
+    return;
+  }
+/*
+  strBuffer.Format("Content of Satellite Data for MSM5 and MSM7");
+  strBuffer.Format("    |Rough Range|Ext. Sat.|Rough Range|Rough Phase|");
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+  strBuffer.Format(" NO.|      In ms|     Info|Mudulo 1 ms| Range Rate|");
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+  strBuffer.Format(" ---+-----------+---------+-----------+-----------+");
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+  for (int i = 0; i < satNum; ++i)
+	{
+    strBuffer.Format("  %02d|       0x%02X|     0x%02X|     0x%04X|     0x%04X|",
+      i,
+      satData[i].rough_range_in_ms,
+      satData[i].ext_sat_info,
+      satData[i].rough_range_mudulo_1_ms,
+      satData[i].rough_phase_range_rate);
+    DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+	}
+
+  strBuffer.Format("Content of Signal Data for MSM7");
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+  strBuffer.Format("    |    Fine Psedudo |Fine Phase Range|  Time Ind.|    Half Cycle|SNR Ext.|Fine Phase|");
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+  strBuffer.Format(" NO.|Range Ext. Resol.|     Ext. Resol.|Ext. Resol.|Ambiguity Ind.|  Resol.|Range Rate|");
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+  strBuffer.Format(" ---+-----------------+----------------+-----------+--------------+--------+----------+");
+  DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+  for (int i = 0; i < satNum; ++i)
+	{
+    strBuffer.Format("  %02d|       0x%08X|      0x%08X|     0x%04X|          0x%02X|  0x%04X|    0x%04X|",
+      i,
+      sigData[i].fine_pseudorange_ext_resol,
+      sigData[i].fine_phase_range_ext_resol,
+      sigData[i].lock_time_ind_ext_resol,
+      sigData[i].half_cycle_ambiguity_ind,
+      sigData[i].snr_ext_resol,
+      sigData[i].fine_phase_range_rate);
+    DisplayAndSave(convertOnly, pStr, strBuffer, strBuffer.GetLength());
+	}
+  //SetListCtrlRedraw(TRUE);
+  */
+}
+
 void ShowRtcmMsm7Data(int satNum, const char* title, U08* src, bool convertOnly, CString* pStr)
 {
   //return;
@@ -3403,6 +3468,37 @@ static void save_msm_obs(int sys, msm_h_t *h, const double *cnr, Satellites* sat
     }
 }
 
+static int decode_msm4(U08 *buff, int len)
+{
+  int i, j;
+  if (decode_msm_head(buff, len, &msm_header, &i) < 0) 
+  {
+    return -1;
+  }
+  
+  if (i + msm_header.nsat * 18 + msm_header.ncell * 48 > len * 8) 
+  {
+      return -1;
+  }
+
+  //Table 3.5-80
+  i += msm_header.nsat * 8; //DF397
+  i += msm_header.nsat * 10;  //DF398
+  //Table 3.5-85
+  i += msm_header.ncell * 15; //DF400
+  i += msm_header.ncell * 22; //DF401
+  i += msm_header.ncell * 4; //DF402
+  i += msm_header.ncell * 1;  //DF420
+  
+  //DF403, GNSS signal CNRs
+  for (j = 0; j < msm_header.ncell; ++j) 
+  { 
+      msm_cnr[j] = getbitu(buff, i, 6) * 1; 
+      i += 6;
+  }
+  return msm_header.sync ? 0 : 1;
+}
+
 static int decode_msm7(U08 *buff, int len)
 {
   int i, j;
@@ -3415,27 +3511,172 @@ static int decode_msm7(U08 *buff, int len)
   {
       return -1;
   }
-
-  i += msm_header.nsat * 8;
-  i += msm_header.nsat * 4;
-  i += msm_header.nsat * 10;
-  i += msm_header.nsat * 14;
-  i += msm_header.ncell * 20;
-  i += msm_header.ncell * 24;
-  i += msm_header.ncell * 10;
-  i += msm_header.ncell * 1;
-
+  //Table 3.5-81
+  i += msm_header.nsat * 8; //DF397
+  i += msm_header.nsat * 4; //Specific for each GNSS
+  i += msm_header.nsat * 10;  //DF398
+  i += msm_header.nsat * 14;  //DF399
+  //Table 3.5-88
+  i += msm_header.ncell * 20; //DF405
+  i += msm_header.ncell * 24; //DF406
+  i += msm_header.ncell * 10; //DF407
+  i += msm_header.ncell * 1;  //DF420
+  //DF408, GNSS signal CNRs with extended resolution
   for (j = 0; j < msm_header.ncell; ++j) 
   { // cnr 
       msm_cnr[j] = getbitu(buff, i, 10) * 0.0625; 
       i += 10;
   }
 
-  i += msm_header.ncell * 15;
+  i += msm_header.ncell * 15; //DF404
   return msm_header.sync ? 0 : 1;
 }
 
-//static int decode_msm7(rtcm_t *rtcm, int sys)
+void ShowRtcm1074(U08* src, int len, bool convertOnly, CString* pStr)
+{
+  decode_msm4(src, len);
+  int satNum = msm_header.nsat;
+  ShowRtcmMsm4Data(satNum, "Rtcm1074", src, convertOnly, pStr);
+
+  if(convertOnly)
+	{
+		return;
+	}
+
+  int pos = CGPSDlg::gpsDlg->nmea.ClearSatellitesInRange(NMEA::Gps, 1, 32);
+  save_msm_obs(0, &msm_header, msm_cnr, &(CGPSDlg::gpsDlg->nmea.satellites_gp));
+
+	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfSate = satNum;
+	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfMessage = 1;
+	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.SequenceNum = 1;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.NumsOfSatellites = 0;
+
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
+	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
+}
+
+void ShowRtcm1084(U08* src, int len, bool convertOnly, CString* pStr)
+{
+  decode_msm4(src, len);
+  int satNum = msm_header.nsat;
+  ShowRtcmMsm4Data(satNum, "Rtcm1084", src, convertOnly, pStr);
+
+  if(convertOnly)
+	{
+		return;
+	}
+
+  int pos = CGPSDlg::gpsDlg->nmea.ClearSatellitesInRange(NMEA::Glonass, 65, 100);
+  save_msm_obs(4, &msm_header, msm_cnr, &(CGPSDlg::gpsDlg->nmea.satellites_gl));
+              
+	CGPSDlg::gpsDlg->m_glgsvMsgCopy.NumOfSate = satNum;
+	CGPSDlg::gpsDlg->m_glgsvMsgCopy.NumOfMessage = 1;
+	CGPSDlg::gpsDlg->m_glgsvMsgCopy.SequenceNum = 1;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.NumsOfSatellites = 0;
+
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
+	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
+}
+
+void ShowRtcm1094(U08* src, int len, bool convertOnly, CString* pStr)
+{
+  decode_msm4(src, len);
+  int satNum = msm_header.nsat;
+  ShowRtcmMsm4Data(satNum, "Rtcm1094", src, convertOnly, pStr);
+//return;
+  if(convertOnly)
+	{
+		return;
+	}
+
+  int pos = CGPSDlg::gpsDlg->nmea.ClearSatellitesInRange(NMEA::Galileo, 1, 36);
+  save_msm_obs(5, &msm_header, msm_cnr, &(CGPSDlg::gpsDlg->nmea.satellites_ga));
+              
+	CGPSDlg::gpsDlg->m_gagsvMsgCopy.NumOfSate = satNum;
+	CGPSDlg::gpsDlg->m_gagsvMsgCopy.NumOfMessage = 1;
+	CGPSDlg::gpsDlg->m_gagsvMsgCopy.SequenceNum = 1;
+
+  CGPSDlg::gpsDlg->m_gpggaMsgCopy.NumsOfSatellites = 0;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
+	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
+}
+
+void ShowRtcm1104(U08* src, int len, bool convertOnly, CString* pStr)
+{
+  decode_msm4(src, len);
+  int satNum = msm_header.nsat;
+  ShowRtcmMsm4Data(satNum, "Rtcm1104", src, convertOnly, pStr);
+
+  if(convertOnly)
+	{
+		return;
+	}
+
+  int pos = CGPSDlg::gpsDlg->nmea.ClearSatellitesInRange(NMEA::Gps, 33, 64);
+  save_msm_obs(1, &msm_header, msm_cnr, &(CGPSDlg::gpsDlg->nmea.satellites_gp));
+
+	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfSate = satNum;
+	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfMessage = 1;
+	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.SequenceNum = 1;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.NumsOfSatellites = 0;
+
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
+	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
+}
+
+void ShowRtcm1114(U08* src, int len, bool convertOnly, CString* pStr)
+{
+  decode_msm4(src, len);
+  int satNum = msm_header.nsat;
+  ShowRtcmMsm4Data(satNum, "Rtcm1114", src, convertOnly, pStr);
+
+  if(convertOnly)
+	{
+		return;
+	}
+
+  int pos = CGPSDlg::gpsDlg->nmea.ClearSatellitesInRange(NMEA::Gps, 193, 199);
+  save_msm_obs(2, &msm_header, msm_cnr, &(CGPSDlg::gpsDlg->nmea.satellites_gp));
+
+	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfSate = satNum;
+	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.NumOfMessage = 1;
+	CGPSDlg::gpsDlg->m_gpgsvMsgCopy.SequenceNum = 1;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.NumsOfSatellites = 0;
+
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
+	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
+}
+
+void ShowRtcm1124(U08* src, int len, bool convertOnly, CString* pStr)
+{
+  decode_msm4(src, len);
+  int satNum = msm_header.nsat;
+  ShowRtcmMsm4Data(satNum, "Rtcm1124", src, convertOnly, pStr);
+
+  if(convertOnly)
+	{
+		return;
+	}
+
+  int pos = CGPSDlg::gpsDlg->nmea.ClearSatellitesInRange(NMEA::Beidou, 1, 64);
+  save_msm_obs(3, &msm_header, msm_cnr, &(CGPSDlg::gpsDlg->nmea.satellites_bd));
+               
+	CGPSDlg::gpsDlg->m_bdgsvMsgCopy.NumOfSate = satNum;
+	CGPSDlg::gpsDlg->m_bdgsvMsgCopy.NumOfMessage = 1;
+	CGPSDlg::gpsDlg->m_bdgsvMsgCopy.SequenceNum = 1;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.NumsOfSatellites = 0;
+
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
+	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
+  //*/
+}
 
 void ShowRtcm1077(U08* src, int len, bool convertOnly, CString* pStr)
 {
@@ -3458,6 +3699,55 @@ void ShowRtcm1077(U08* src, int len, bool convertOnly, CString* pStr)
 
 	CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
 	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
+}
+
+void ShowRtcm1087(U08* src, int len, bool convertOnly, CString* pStr)
+{
+  decode_msm7(src, len);
+  int satNum = msm_header.nsat;
+  ShowRtcmMsm7Data(satNum, "Rtcm1087", src, convertOnly, pStr);
+
+  if(convertOnly)
+	{
+		return;
+	}
+
+  int pos = CGPSDlg::gpsDlg->nmea.ClearSatellitesInRange(NMEA::Glonass, 65, 100);
+  save_msm_obs(4, &msm_header, msm_cnr, &(CGPSDlg::gpsDlg->nmea.satellites_gl));
+              
+	CGPSDlg::gpsDlg->m_glgsvMsgCopy.NumOfSate = satNum;
+	CGPSDlg::gpsDlg->m_glgsvMsgCopy.NumOfMessage = 1;
+	CGPSDlg::gpsDlg->m_glgsvMsgCopy.SequenceNum = 1;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.NumsOfSatellites = 0;
+
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
+	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
+}
+
+void ShowRtcm1097(U08* src, int len, bool convertOnly, CString* pStr)
+{
+  decode_msm7(src, len);
+  int satNum = msm_header.nsat;
+  ShowRtcmMsm7Data(satNum, "Rtcm1097", src, convertOnly, pStr);
+//return;
+  if(convertOnly)
+	{
+		return;
+	}
+
+  int pos = CGPSDlg::gpsDlg->nmea.ClearSatellitesInRange(NMEA::Galileo, 1, 36);
+  save_msm_obs(5, &msm_header, msm_cnr, &(CGPSDlg::gpsDlg->nmea.satellites_ga));
+              
+	CGPSDlg::gpsDlg->m_gagsvMsgCopy.NumOfSate = satNum;
+	CGPSDlg::gpsDlg->m_gagsvMsgCopy.NumOfMessage = 1;
+	CGPSDlg::gpsDlg->m_gagsvMsgCopy.SequenceNum = 1;
+
+  CGPSDlg::gpsDlg->m_gpggaMsgCopy.NumsOfSatellites = 0;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
+	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+
 	CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
 }
 
@@ -3520,7 +3810,7 @@ void ShowRtcm1127(U08* src, int len, bool convertOnly, CString* pStr)
 		return;
 	}
 
-  int pos = CGPSDlg::gpsDlg->nmea.ClearSatellitesInRange(NMEA::Beidou, 1, 48);
+  int pos = CGPSDlg::gpsDlg->nmea.ClearSatellitesInRange(NMEA::Beidou, 1, 64);
   save_msm_obs(3, &msm_header, msm_cnr, &(CGPSDlg::gpsDlg->nmea.satellites_bd));
                
 	CGPSDlg::gpsDlg->m_bdgsvMsgCopy.NumOfSate = satNum;
@@ -3532,55 +3822,6 @@ void ShowRtcm1127(U08* src, int len, bool convertOnly, CString* pStr)
 	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
 	CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
   //*/
-}
-
-void ShowRtcm1087(U08* src, int len, bool convertOnly, CString* pStr)
-{
-  decode_msm7(src, len);
-  int satNum = msm_header.nsat;
-  ShowRtcmMsm7Data(satNum, "Rtcm1087", src, convertOnly, pStr);
-
-  if(convertOnly)
-	{
-		return;
-	}
-
-  int pos = CGPSDlg::gpsDlg->nmea.ClearSatellitesInRange(NMEA::Glonass, 65, 100);
-  save_msm_obs(4, &msm_header, msm_cnr, &(CGPSDlg::gpsDlg->nmea.satellites_gl));
-              
-	CGPSDlg::gpsDlg->m_glgsvMsgCopy.NumOfSate = satNum;
-	CGPSDlg::gpsDlg->m_glgsvMsgCopy.NumOfMessage = 1;
-	CGPSDlg::gpsDlg->m_glgsvMsgCopy.SequenceNum = 1;
-	CGPSDlg::gpsDlg->m_gpggaMsgCopy.NumsOfSatellites = 0;
-
-	CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
-	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
-	CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
-}
-
-void ShowRtcm1097(U08* src, int len, bool convertOnly, CString* pStr)
-{
-  decode_msm7(src, len);
-  int satNum = msm_header.nsat;
-  ShowRtcmMsm7Data(satNum, "Rtcm1097", src, convertOnly, pStr);
-//return;
-  if(convertOnly)
-	{
-		return;
-	}
-
-  int pos = CGPSDlg::gpsDlg->nmea.ClearSatellitesInRange(NMEA::Galileo, 1, 36);
-  save_msm_obs(5, &msm_header, msm_cnr, &(CGPSDlg::gpsDlg->nmea.satellites_ga));
-              
-	CGPSDlg::gpsDlg->m_gagsvMsgCopy.NumOfSate = satNum;
-	CGPSDlg::gpsDlg->m_gagsvMsgCopy.NumOfMessage = 1;
-	CGPSDlg::gpsDlg->m_gagsvMsgCopy.SequenceNum = 1;
-
-  CGPSDlg::gpsDlg->m_gpggaMsgCopy.NumsOfSatellites = 0;
-	CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
-	CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
-
-	CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
 }
 
 void ShowRtcmEphemeris(U08* src, int len, bool convertOnly, CString* pStr)
@@ -3780,6 +4021,39 @@ void ShowUbxNavSol(U08* src, bool convertOnly, CString* pStr)
 
 void ShowUbxNavPvt(U08* src, bool convertOnly, CString* pStr)
 {
+  U32 towMs = 0;
+  U16 year = 0;
+  U08 month = 0;
+  U08 day = 0;
+  U08 hour = 0;
+  U08 minute = 0;
+  U08 second = 0;
+  U08 fixMode = 0, flags = 0;
+  S32 lon = 0;
+  S32 lat = 0;
+  S32 height = 0;
+  S32 hMSL = 0;
+  U32 hAcc = 0;
+  U32 vAcc = 0;
+
+  GetByteDataFromLE(&src[6], 0, 4, (U08*)(&towMs), sizeof(towMs));
+  GetByteDataFromLE(&src[6], 4, 2, (U08*)(&year), sizeof(year));
+  GetByteDataFromLE(&src[6], 6, 1, (U08*)(&month), sizeof(month));
+  GetByteDataFromLE(&src[6], 7, 1, (U08*)(&day), sizeof(day));
+  GetByteDataFromLE(&src[6], 8, 1, (U08*)(&hour), sizeof(hour));
+  GetByteDataFromLE(&src[6], 9, 1, (U08*)(&minute), sizeof(minute));
+  GetByteDataFromLE(&src[6], 10, 1, (U08*)(&second), sizeof(second));
+
+  GetByteDataFromLE(&src[6], 20, 1, (U08*)(&fixMode), sizeof(fixMode));
+  GetByteDataFromLE(&src[6], 21, 1, (U08*)(&flags), sizeof(flags));
+
+  GetByteDataFromLE(&src[6], 24, 4, (U08*)(&lon), sizeof(lon));
+  GetByteDataFromLE(&src[6], 28, 4, (U08*)(&lat), sizeof(lat));
+  GetByteDataFromLE(&src[6], 32, 4, (U08*)(&height), sizeof(height));
+  GetByteDataFromLE(&src[6], 36, 4, (U08*)(&hMSL), sizeof(hMSL));
+  GetByteDataFromLE(&src[6], 40, 4, (U08*)(&hAcc), sizeof(hAcc));
+  GetByteDataFromLE(&src[6], 44, 4, (U08*)(&vAcc), sizeof(vAcc));
+
   if(convertOnly)
   {
     strBuffer.Format("$UBX-NAV-PVT");
@@ -3795,6 +4069,71 @@ void ShowUbxNavPvt(U08* src, bool convertOnly, CString* pStr)
 	{
 		return;
 	}
+
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Hour = hour;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Min = minute;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Sec = second;
+
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Year = year;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Month = month;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Day = day;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Hour = hour;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Min = minute;
+	CGPSDlg::gpsDlg->m_gprmcMsgCopy.Sec = second;
+
+  if(fixMode == 0)
+  {
+		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '0';
+		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 1;
+		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'V';
+    //return;
+  }
+	else if(fixMode == 2 || fixMode == 3)
+	{
+		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
+		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = fixMode;
+		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
+	}
+	else if(fixMode == 4 || fixMode == 5)
+	{
+		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '1';
+		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'A';
+	}
+	else if(fixMode == 6)
+	{
+		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '2';
+		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'D';
+	}
+	else if(fixMode == 7 || (flags & 0x82) == 0x82)
+	{
+		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '5';
+		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'F';
+	}
+	else if(fixMode == 8 || (flags & 0x42) == 0x42)
+	{
+		CGPSDlg::gpsDlg->m_gpggaMsgCopy.GPSQualityIndicator = '4';
+		CGPSDlg::gpsDlg->m_gpgsaMsgCopy.Mode = 3;
+		CGPSDlg::gpsDlg->m_gprmcMsgCopy.ModeIndicator = 'R';
+	}
+
+  S16 lat_deg = (S16)(lat / 10000000);
+  S16 lon_deg = (S16)(lon / 10000000);
+  D64 lat_m = (D64)(lat % 10000000) / 10000000 * 60;
+  D64 lon_m = (D64)(lon % 10000000) / 10000000 * 60;;
+
+  D64 latitude = lat_deg * 100 + lat_m;
+  D64 longitude = lon_deg * 100 + lon_m;
+  F32 altitude = (F32)((D64)hMSL / 1000);
+
+  CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude = latitude;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Latitude_N_S = (latitude >= 0) ? 'N' : 'S';
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude = longitude;
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Longitude_E_W = (longitude >= 0) ? 'E' : 'W';
+	CGPSDlg::gpsDlg->m_gpggaMsgCopy.Altitude = altitude;
+  CGPSDlg::gpsDlg->m_gpggaMsgCopy.GeoidalSeparation = (F32)(height - hMSL) / 1000;
 }
 
 void ShowUbxNavClock(U08* src, bool convertOnly, CString* pStr)
@@ -4012,7 +4351,7 @@ void ShowUbxNavSvInfo(U08* src, bool convertOnly, CString* pStr)
 
 }
 
-void ShowUbxNavSvStatus(U08* src, bool convertOnly, CString* pStr)
+void ShowUbxNavStatus(U08* src, bool convertOnly, CString* pStr)
 {
   U32 towMs = 0;
   U08 gpsFix = 0;
@@ -4087,7 +4426,6 @@ void ShowUbxNavPosllh(U08* src, bool convertOnly, CString* pStr)
   S16 lon_deg = (S16)(lon / 10000000);
   D64 lat_m = (D64)(lat % 10000000) / 10000000 * 60;
   D64 lon_m = (D64)(lon % 10000000) / 10000000 * 60;;
-
 
   D64 latitude = lat_deg * 100 + lat_m;
   D64 longitude = lon_deg * 100 + lon_m;

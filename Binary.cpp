@@ -6736,23 +6736,46 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRtcmMeasurementDataOut(CmdExeMode nMode, voi
 	strMsg.Format("Message 1005: %s", (ackCmd[7]) ? "Enable" : "Disable");
 	add_msgtolist(strMsg);
 
-	strMsg.Format("Message 1077: %s", (ackCmd[8]) ? "Enable" : "Disable");
-	add_msgtolist(strMsg);
+  if(ackCmd[18] == 0)
+  {
+	  strMsg.Format("Message 1077: %s", (ackCmd[8]) ? "Enable" : "Disable");
+	  add_msgtolist(strMsg);
 
-	strMsg.Format("Message 1087: %s", (ackCmd[9]) ? "Enable" : "Disable");
-	add_msgtolist(strMsg);
-  //Add in 20200205, request from Neil
-	strMsg.Format("Message 1097: %s", (ackCmd[10]) ? "Enable" : "Disable");
-	add_msgtolist(strMsg);
+	  strMsg.Format("Message 1087: %s", (ackCmd[9]) ? "Enable" : "Disable");
+	  add_msgtolist(strMsg);
+    //Add in 20200205, request from Neil
+	  strMsg.Format("Message 1097: %s", (ackCmd[10]) ? "Enable" : "Disable");
+	  add_msgtolist(strMsg);
 
-	strMsg.Format("Message 1107: %s", (ackCmd[11]) ? "Enable" : "Disable");
-	add_msgtolist(strMsg);
+	  strMsg.Format("Message 1107: %s", (ackCmd[11]) ? "Enable" : "Disable");
+	  add_msgtolist(strMsg);
 
-	strMsg.Format("Message 1117: %s", (ackCmd[12]) ? "Enable" : "Disable");
-	add_msgtolist(strMsg);
+	  strMsg.Format("Message 1117: %s", (ackCmd[12]) ? "Enable" : "Disable");
+	  add_msgtolist(strMsg);
 
-	strMsg.Format("Message 1127: %s", (ackCmd[13]) ? "Enable" : "Disable");
-	add_msgtolist(strMsg);
+	  strMsg.Format("Message 1127: %s", (ackCmd[13]) ? "Enable" : "Disable");
+	  add_msgtolist(strMsg);
+  }
+  else if(ackCmd[18] == 1)
+  {
+	  strMsg.Format("Message 1074: %s", (ackCmd[8]) ? "Enable" : "Disable");
+	  add_msgtolist(strMsg);
+
+	  strMsg.Format("Message 1084: %s", (ackCmd[9]) ? "Enable" : "Disable");
+	  add_msgtolist(strMsg);
+
+	  strMsg.Format("Message 1094: %s", (ackCmd[10]) ? "Enable" : "Disable");
+	  add_msgtolist(strMsg);
+
+	  strMsg.Format("Message 1104: %s", (ackCmd[11]) ? "Enable" : "Disable");
+	  add_msgtolist(strMsg);
+
+	  strMsg.Format("Message 1114: %s", (ackCmd[12]) ? "Enable" : "Disable");
+	  add_msgtolist(strMsg);
+
+	  strMsg.Format("Message 1124: %s", (ackCmd[13]) ? "Enable" : "Disable");
+	  add_msgtolist(strMsg);
+  }
 
   if(ackCmd[19] != 0)
   {
@@ -6766,9 +6789,9 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRtcmMeasurementDataOut(CmdExeMode nMode, voi
     }
 	  add_msgtolist(strMsg);
 	  
-    if(ackCmd[14] == 0)
+    if(ackCmd[15] == 0)
     {
-      strMsg = "Message 1019: Disable";
+      strMsg = "Message 1020: Disable";
     }
     else
     {
@@ -6776,9 +6799,9 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRtcmMeasurementDataOut(CmdExeMode nMode, voi
     }
 	  add_msgtolist(strMsg);
 
-    if(ackCmd[14] == 0)
+    if(ackCmd[16] == 0)
     {
-      strMsg = "Message 1019: Disable";
+      strMsg = "Message 1042: Disable";
     }
     else
     {
@@ -6786,14 +6809,19 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryRtcmMeasurementDataOut(CmdExeMode nMode, voi
     }
 	  add_msgtolist(strMsg);
 
-    if(ackCmd[14] == 0)
+    if(ackCmd[17] == 0)
     {
-      strMsg = "Message 1019: Disable";
+      strMsg = "Message 1046: Disable";
     }
     else
     {
 	    strMsg.Format("Message 1046 interval: %d seconds", ackCmd[17]);
     }
+	  add_msgtolist(strMsg);
+  }
+  if(ackCmd[19] > 1)
+  {
+    strMsg.Format("MSM Type: %s", (ackCmd[18]) ? "MSM4" : "MSM7");
 	  add_msgtolist(strMsg);
   }
 	return Ack;
@@ -8027,14 +8055,7 @@ void CGPSDlg::OnConfigureNoisePowerControl()
 	CConfigNoisePowerControlDlg dlg;
 	DoCommonConfig(&dlg);
 }
-/*
-void CGPSDlg::OnConfigPowerSavingParametersRom()
-{
-	ConfigPowerSavingParametersRomDlg dlg;
-	dlg.SetRomMode(true);
-	DoCommonConfig(&dlg);
-}
-*/
+
 void CGPSDlg::OnConfigPowerSavingParameters()
 {
 	ConfigPowerSavingParametersRomDlg dlg;
@@ -8286,6 +8307,13 @@ void CGPSDlg::OnConfigPstmLatLonDigits()
 	DoCommonConfig(&dlg);
 }
 
+void CGPSDlg::OnConfigPsti020()
+{
+	CConfigPstiInterval dlg;
+  dlg.SetPsti(20);
+	DoCommonConfig(&dlg);
+}
+
 void CGPSDlg::OnConfigPsti030()
 {
 	CConfigPstiInterval dlg;
@@ -8304,6 +8332,13 @@ void CGPSDlg::OnConfigPsti033()
 {
 	CConfigPstiInterval dlg;
   dlg.SetPsti(33);
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigPsti060()
+{
+	CConfigPstiInterval dlg;
+  dlg.SetPsti(60);
 	DoCommonConfig(&dlg);
 }
 
@@ -9212,40 +9247,45 @@ CGPSDlg::CmdErrorCode CGPSDlg::QuerySecurityTagOnly(CmdExeMode nMode, void* outp
 CGPSDlg::CmdErrorCode CGPSDlg::QueryV9PromAesTag(CmdExeMode nMode, void* outputData)
 {
   BinaryData ackCmd;
-  CmdErrorCode ack = QueryV9TagAddress(Return, &ackCmd);
-  if(Ack != ack)
+  CmdErrorCode err = QueryV9TagAddress(Return, &ackCmd);
+  if(Ack != err)
   {
-    return ack;
+    return err;
   }
 
   U32 tagAddr = ConvertLeonU32(ackCmd.Ptr(6));
-
   U32 addBackup = m_regAddress;
   U08 aesTag[16] = { 0 };
   m_regAddress = tagAddr;
-  ack = QueryRegister(Return, &aesTag[0]);
+  err = QueryRegister(Return, &aesTag[0]);
   m_regAddress = addBackup;
-  if(ack != Ack) return ack;
+  if(err != Ack) return err;
 
   m_regAddress = tagAddr + 4;
-  ack = QueryRegister(Return, &aesTag[4]);
+  err = QueryRegister(Return, &aesTag[4]);
   m_regAddress = addBackup;
-  if(ack != Ack) return ack;
+  if(err != Ack) return err;
 
   m_regAddress = tagAddr + 8;
-  ack = QueryRegister(Return, &aesTag[8]);
+  err = QueryRegister(Return, &aesTag[8]);
   m_regAddress = addBackup;
-  if(ack != Ack) return ack;
+  if(err != Ack) return err;
 
   m_regAddress = tagAddr + 12;
-  ack = QueryRegister(Return, &aesTag[12]);
+  err = QueryRegister(Return, &aesTag[12]);
   m_regAddress = addBackup;
-  if(ack != Ack) return ack;
+  if(err != Ack) return err;
 
 	if(Return == nMode)
 	{	//Return command data
     memcpy(outputData, aesTag, sizeof(aesTag));
-		return ack;
+		return err;
+	}
+
+	if(Return == nMode)
+	{	//Return command data
+    memcpy(outputData, aesTag, sizeof(aesTag[16]));
+		return err;
 	}
 
 	CString strMsg = "Query Phoenix PROM Tag successfully";
@@ -9265,7 +9305,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryV9PromAesTag(CmdExeMode nMode, void* outputD
   }
 	add_msgtolist(strMsg);
 
-	return ack;
+	return err;
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::QueryV9ExternalAesTag(CmdExeMode nMode, void* outputData)
@@ -9352,6 +9392,289 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryV9ExternalAesTag(CmdExeMode nMode, void* out
 	strMsg = "Query Phoenix External Tag failed!";
 	add_msgtolist(strMsg);
 	return ack;
+}
+
+CGPSDlg::CmdErrorCode CGPSDlg::AutoActiveAlphaKey(CmdExeMode nMode, void* outputData)
+{
+  BinaryData ackCmd;
+  CmdErrorCode err = QueryV9ExtendedId(Return, &ackCmd);
+	if(err != Ack)
+	{
+    add_msgtolist("Query Extended ID failed!");
+    return err;
+  }
+
+  int len = ackCmd[6];
+  CString strExtId;
+  for(int i = 0; i < len; ++i)
+  {
+    CString tmp;
+    tmp.Format("%02X", ackCmd[7 + i]);
+    strExtId += tmp;
+  }
+  add_msgtolist("Extended ID:");
+  add_msgtolist(strExtId);
+
+  err = QueryAlphaKey(Return, &ackCmd);
+	if(err == NACK)
+	{
+    add_msgtolist("Query Alpha Key NACK");
+    ::AfxMessageBox("The firmware doesn't need activation Alpha License!");
+    return err;
+  }
+  else if(err != Ack)
+  {
+    add_msgtolist("Failed to activate Alpha License");
+    return err;
+  }
+  
+  CString txt, file;
+	txt = Utility::GetSpecialFolder(CSIDL_APPDATA);
+	txt += "\\GNSS_Viewer_V2";
+	::CreateDirectory(txt, NULL);
+
+	file = txt + "\\BouncyCastle.Crypto.dll";
+	Utility::CopyResToFile(file, IDR_TAG_SERVER_DLL, "EXEC");
+
+	file = txt + "\\TagServer.exe";
+	Utility::CopyResToFile(file, IDR_TAG_SERVER, "EXEC");
+
+  file.Format("%s %s %s %s", txt + "\\TagServer.exe", strExtId, "000000", "000000");
+	CString activeKey;
+  CStringW fileW(file);
+  Utility::ExecuteExternalFileW(fileW, activeKey);
+  //add_msgtolist(activeKey);
+  if(activeKey.Left(5).CompareNoCase("error") == 0)
+  {
+    int n = activeKey.ReverseFind('.');
+    activeKey = activeKey.Left(n);
+    n = activeKey.ReverseFind('.');
+    activeKey = activeKey.Left(n);
+    n = activeKey.ReverseFind('.');
+    activeKey = activeKey.Left(n - 3);
+
+    //activeKey.Replace("210.65.10.238:8000", "")
+    ::AfxMessageBox(activeKey);
+    add_msgtolist("Failed to activate TAG");
+    return Timeout;
+  }
+
+  int pos = 0;
+  const int tagSize = 20;
+  U08 tag[tagSize] = { 0 };
+  int index = 0;
+  while(1)
+  {
+    CString token = activeKey.Tokenize(_T(","), pos);
+    if(token.IsEmpty() || index >= tagSize)
+    { 
+      break;
+    }
+    tag[index++] = atoi(token);
+  }
+
+  pos = tag[0] % 10;
+  if(pos >= 5)
+  {
+    pos -= 5;
+  }
+
+  if(pos == 0)
+  {
+    ::AfxMessageBox("The server doesn't support, please contact the engineer of Viewer.");
+    add_msgtolist("Failed to activate Alpha license");
+    return Timeout;
+  }
+  
+  int pattern = 0x55;
+  for(int i = pos; i < pos + 16; ++i)
+  {
+    tag[i] ^= pattern;
+    pattern = (pattern == 0x55) ? 0xAA : 0x55;
+  }
+
+  activeKey = "";
+  for(int i = pos; i < pos + 16; ++i)
+  {
+    CString txt;
+    txt.Format("%02X ", tag[i]);
+    activeKey += txt;
+  }
+  //add_msgtolist(activeKey);
+
+  int ndx = 1;
+	BinaryCommand cmd(19);
+	cmd.SetU08(ndx++, 0x7A);
+	cmd.SetU08(ndx++, 0x08);
+	cmd.SetU08(ndx++, 0x7D);
+  for(int i = pos; i < pos + 16; ++i)
+  {
+	  cmd.SetU08(ndx++, tag[i]);
+  }
+  CGPSDlg::gpsDlg->ExecuteConfigureCommand(cmd.GetBuffer(), cmd.Size(), "Auto activate Alpha License successfully", FALSE);
+  return err;
+}
+
+
+CGPSDlg::CmdErrorCode CGPSDlg::AutoActiveV9AesTag(CmdExeMode nMode, void* outputData)
+{
+  BinaryData ackCmd;
+  CmdErrorCode err = QueryV9ExtendedId(Return, &ackCmd);
+	if(err != Ack)
+	{
+    add_msgtolist("Query Extended ID failed!");
+    return err;
+  }
+
+  int len = ackCmd[6];
+  CString strExtId;
+  for(int i = 0; i < len; ++i)
+  {
+    CString tmp;
+    tmp.Format("%02X", ackCmd[7 + i]);
+    strExtId += tmp;
+  }
+  add_msgtolist("Extended ID:");
+  add_msgtolist(strExtId);
+
+  err = QueryV9Tag(Return, &ackCmd);
+	if(err == NACK)
+	{
+    add_msgtolist("Query Phoenix tag NACK");
+    ::AfxMessageBox("The firmware doesn't need activation tag!");
+    return err;
+  }
+  else if(err != Ack)
+  {
+    add_msgtolist("Failed to activate tag");
+    return err;
+  }
+  
+  U08 aesTag[16] = { 0 };
+  err = QueryV9PromAesTag(Return, aesTag);
+  if(err != Ack)
+  {
+    add_msgtolist("Failed to query PROM tag");
+    return err;
+  }
+
+  int countFF = 0, count00 = 0;
+  for(int i = 0; i < 16; ++i)
+  {
+    if(0xFF == aesTag[i])
+    {
+      ++countFF;
+    }
+    if(0x00 == aesTag[i])
+    {
+      ++count00;
+    }
+  }
+
+	if(count00 == 16)
+	{
+    add_msgtolist("Failed to activate tag");
+    ::AfxMessageBox("PROM tag is not empty, please download firmware again!");
+    return err;
+  }
+
+	if(countFF != 16)
+	{
+    add_msgtolist("Failed to activate tag");
+    ::AfxMessageBox("Another tag exists, please [Reset Pheonix Tag] and download firmware again!");
+    return err;
+  }
+
+  CString strTag;
+  strTag.Format("%02X%02X%02X%02X%02X%02X%02X%02X", 
+    ackCmd[6], ackCmd[7], ackCmd[8], ackCmd[9], 
+    ackCmd[10], ackCmd[11], ackCmd[12], ackCmd[13] );
+
+  add_msgtolist("Phoenix Tag:");
+  add_msgtolist(strTag);
+
+
+  CString txt, file;
+	txt = Utility::GetSpecialFolder(CSIDL_APPDATA);
+	txt += "\\GNSS_Viewer_V2";
+	::CreateDirectory(txt, NULL);
+
+	file = txt + "\\BouncyCastle.Crypto.dll";
+	Utility::CopyResToFile(file, IDR_TAG_SERVER_DLL, "EXEC");
+
+	file = txt + "\\TagServer.exe";
+	Utility::CopyResToFile(file, IDR_TAG_SERVER, "EXEC");
+
+  file.Format("%s %s %s", txt + "\\TagServer.exe", strExtId, strTag);
+	CString activeKey;
+  CStringW fileW(file);
+  Utility::ExecuteExternalFileW(fileW, activeKey);
+  if(activeKey.Left(5).CompareNoCase("error") == 0)
+  {
+    int n = activeKey.ReverseFind('.');
+    activeKey = activeKey.Left(n);
+    n = activeKey.ReverseFind('.');
+    activeKey = activeKey.Left(n);
+    n = activeKey.ReverseFind('.');
+    activeKey = activeKey.Left(n - 3);
+    ::AfxMessageBox(activeKey);
+    add_msgtolist("Failed to activate TAG");
+    return Timeout;
+  }
+
+  int pos = 0;
+  const int tagSize = 20;
+  U08 tag[tagSize] = { 0 };
+  int index = 0;
+  while(1)
+  {
+    CString token = activeKey.Tokenize(_T(","), pos);
+    if(token.IsEmpty() || index >= tagSize)
+    { 
+      break;
+    }
+    tag[index++] = atoi(token);
+  }
+
+  pos = tag[0] % 10;
+  if(pos >= 5)
+  {
+    pos -= 5;
+  }
+
+  if(pos == 0)
+  {
+    ::AfxMessageBox("The server doesn't support, please contact the engineer of Viewer.");
+    add_msgtolist("Failed to activate TAG");
+    return Timeout;
+  }
+  
+  int pattern = 0x55;
+  for(int i = pos; i < pos + 16; ++i)
+  {
+    tag[i] ^= pattern;
+    pattern = (pattern == 0x55) ? 0xAA : 0x55;
+  }
+
+  activeKey = "";
+  for(int i = pos; i < pos + 16; ++i)
+  {
+    CString txt;
+    txt.Format("%02X ", tag[i]);
+    activeKey += txt;
+  }
+  //add_msgtolist(activeKey);
+
+  int ndx = 1;
+	BinaryCommand cmd(18);
+	cmd.SetU08(ndx++, 0x64);
+	cmd.SetU08(ndx++, 0x73);
+  for(int i = pos; i < pos + 16; ++i)
+  {
+	  cmd.SetU08(ndx++, tag[i]);
+  }
+  CGPSDlg::gpsDlg->ExecuteConfigureCommand(cmd.GetBuffer(), cmd.Size(), "Auto activate tag successfully", FALSE);
+  return err;
 }
 
 CGPSDlg::CmdErrorCode CGPSDlg::ResetV9AesTag(CmdExeMode nMode, void* outputData)
@@ -9641,7 +9964,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::BinaryQueryClockOffset(CmdExeMode nMode, void* ou
 	add_msgtolist(strMsg);
 	strMsg.Format("SRAM Clock Offset: %d", (S32)sramClkOft);
 	add_msgtolist(strMsg);
-	strMsg.Format("FALSH Clock Offset: %d", (S32)flashClkOst);
+	strMsg.Format("Flash Clock Offset: %d", (S32)flashClkOst);
 	add_msgtolist(strMsg);
 
 	return Ack;

@@ -127,6 +127,7 @@ void CSetupDialog::OnBnClickedOk()
 	setting->showAllUnknownBinary = ((CButton*)GetDlgItem(IDC_SHOW_UNKNOWN_BIN))->GetCheck();
 	setting->autoAgpsAfterColdStart = ((CButton*)GetDlgItem(IDC_AUTO_AGPS))->GetCheck();
 	setting->rtkStatusChanged = ((CButton*)GetDlgItem(IDC_RTK_STATUS_CHANGED))->GetCheck();
+  setting->ignoreNmeaChecksum = ((CButton*)GetDlgItem(IDC_IGNORE_NMEA_ERROR))->GetCheck();
 
 	GetDlgItem(IDC_WN_ROLLOVER_CYCLE)->GetWindowText(s);
   setting->weekNumberCycle = (s.IsEmpty()) ? 2 : atoi(s);
@@ -197,6 +198,7 @@ BOOL CSetupDialog::OnInitDialog()
 	((CButton*)GetDlgItem(IDC_SHOW_UNKNOWN_BIN))->SetCheck(setting->showAllUnknownBinary);
 	((CButton*)GetDlgItem(IDC_AUTO_AGPS))->SetCheck(setting->autoAgpsAfterColdStart);
 	((CButton*)GetDlgItem(IDC_RTK_STATUS_CHANGED))->SetCheck(setting->rtkStatusChanged);
+  ((CButton*)GetDlgItem(IDC_IGNORE_NMEA_ERROR))->SetCheck(setting->ignoreNmeaChecksum);
 
 	s.Format("%d", setting->weekNumberCycle);
 	GetDlgItem(IDC_WN_ROLLOVER_CYCLE)->SetWindowText(s);
@@ -293,6 +295,7 @@ void CSetupDialog2::OnBnClickedOk()
 	((CEdit*)GetDlgItem(IDC_LOG_PATH))->GetWindowText(setting->responseLogPath);
 	setting->specifyCenter = ((CButton*)GetDlgItem(IDC_SPY_CENTER))->GetCheck();
 	setting->specifyCenterAlt = ((CButton*)GetDlgItem(IDC_SPY_ALT))->GetCheck();
+  setting->ignoreNmeaChecksum = ((CButton*)GetDlgItem(IDC_IGNORE_NMEA_ERROR))->GetCheck();
 
 	GetDlgItem(IDC_ALT)->GetWindowText(s);
 	setting->scatterCenterAlt = atof(s);
@@ -359,6 +362,7 @@ BOOL CSetupDialog2::OnInitDialog()
 	((CEdit*)GetDlgItem(IDC_LOG_PATH))->SetWindowText(setting->responseLogPath);
 	((CButton*)GetDlgItem(IDC_SPY_CENTER))->SetCheck(setting->specifyCenter);
 	((CButton*)GetDlgItem(IDC_SPY_ALT))->SetCheck(setting->specifyCenterAlt);
+  ((CButton*)GetDlgItem(IDC_IGNORE_NMEA_ERROR))->SetCheck(setting->ignoreNmeaChecksum);
 
 	s.Format("%12.9lf", setting->scatterCenterLon);
 	GetDlgItem(IDC_LON)->SetWindowText(s);

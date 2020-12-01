@@ -418,7 +418,6 @@ protected:
 	void DisplayComportError(int com, DWORD errorCode);
 	bool NmeaInput();
 	bool ComPortInput();
-	void ClearInformation(bool onlyQueryInfo = false);
 	bool DoDownload(int dlBaudIdx);
 	bool DoDownload(int dlBaudIdx, UINT rid);
 
@@ -494,6 +493,7 @@ public:
 	CmdErrorCode GetCommandReturnType(U08* buff, int tail, bool showMsg = true);
 	//CmdErrorCode GetCommandReturnTypeWithoutMsg(U08* buff, int tail, bool showMsg = true);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	void ClearInformation(bool onlyQueryInfo = false);
 
 	//bool IsEphmsEmpty(const BYTE* buffer, int size, int throughold);
 	bool CeheckOrigin(CString,int);	
@@ -609,6 +609,7 @@ public:
 protected:
 
   void InitDownloadBaudRate();
+  void ShowAltSwitch(bool b);
   void Initialization();
 
 private:
@@ -990,6 +991,8 @@ protected:
 	CmdErrorCode QueryV9ExtendedId(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryV9PromAesTag(CmdExeMode nMode, void* outputData);
 	CmdErrorCode QueryV9ExternalAesTag(CmdExeMode nMode, void* outputData);
+	CmdErrorCode AutoActiveV9AesTag(CmdExeMode nMode, void* outputData);
+	CmdErrorCode AutoActiveAlphaKey(CmdExeMode nMode, void* outputData);
 	CmdErrorCode ResetV9AesTag(CmdExeMode nMode, void* outputData);
 	CmdErrorCode HostDataDumpOn(CmdExeMode nMode, void* outputData);
 	CmdErrorCode HostDataDumpOff(CmdExeMode nMode, void* outputData);
@@ -1292,9 +1295,11 @@ protected:
 	afx_msg void OnStnClickedRtkInfo2B();
 	afx_msg void OnBnClickedCoorSwitch();
 	afx_msg void OnBnClickedAltitudeSwitch();
+	afx_msg void OnConfigPsti020();
 	afx_msg void OnConfigPsti030();
 	afx_msg void OnConfigPsti032();
 	afx_msg void OnConfigPsti033();
+	afx_msg void OnConfigPsti060();
 	afx_msg void OnConfigPsti063();
 	afx_msg void OnConfigPsti065();
 	afx_msg void OnConfigPsti067();
@@ -1545,12 +1550,16 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryPstmDeviceAddress); }
 	afx_msg void OnQueryPstnLatLonDigits()
 	{ GenericQuery(&CGPSDlg::QueryPstnLatLonDigits); }
+	afx_msg void OnQueryPsti020()
+	{ m_nPstiNo = 20; GenericQuery(&CGPSDlg::QueryPsti); }
 	afx_msg void OnQueryPsti030()
 	{ m_nPstiNo = 30; GenericQuery(&CGPSDlg::QueryPsti); }
 	afx_msg void OnQueryPsti032()
 	{ m_nPstiNo = 32; GenericQuery(&CGPSDlg::QueryPsti); }
 	afx_msg void OnQueryPsti033()
 	{ m_nPstiNo = 33; GenericQuery(&CGPSDlg::QueryPsti); }
+	afx_msg void OnQueryPsti060()
+	{ m_nPstiNo = 60; GenericQuery(&CGPSDlg::QueryPsti); }
 	afx_msg void OnQueryPsti063()
 	{ m_nPstiNo = 63; GenericQuery(&CGPSDlg::QueryPsti); }
 	afx_msg void OnQueryPsti065()
@@ -1634,6 +1643,10 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryV9PromAesTag); }
   afx_msg void OnQueryV9ExternalAesTag()
 	{ GenericQuery(&CGPSDlg::QueryV9ExternalAesTag); }
+  afx_msg void OnAutoActiveV9AesTag()
+	{ GenericQuery(&CGPSDlg::AutoActiveV9AesTag); }  
+  afx_msg void OnAutoActiveAlphaKey()
+	{ GenericQuery(&CGPSDlg::AutoActiveAlphaKey); }  
   afx_msg void OnResetV9AesTag()
 	{ GenericQuery(&CGPSDlg::ResetV9AesTag); }
   //afx_msg void OnQueryCustomStringInterval()
@@ -1819,5 +1832,42 @@ protected:
   int m_becomeRtkFloat;
   int m_becomeGnssFixed;
   void OutputRtkStatusChangedMessage(RtkStatusChanged type);
+  int CGPSDlg::ExecuteRequest(
+    LPCTSTR strMethod, 
+    LPCTSTR strUrl, 
+    CString strPostData, 
+    CString &strResponse);
+  CHttpConnection *m_pConnection;
+  CHttpFile* m_pFile;
+
   CRITICAL_SECTION m_cs_ntrip;
+};
+
+  
+#include <afxinet.h>  
+#include <string>  
+  
+#define  IE_AGENT  _T("Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 2.0.50727)")  
+
+#define SUCCESS        0  
+#define FAILURE        1  
+#define OUTTIME        2  
+  
+class CHttpClient  
+{  
+public:  
+    CHttpClient(LPCTSTR strAgent = IE_AGENT);  
+    virtual ~CHttpClient(void);  
+  
+    int HttpGet(LPCTSTR strUrl, LPCTSTR strPostData, string &strResponse);  
+    int HttpPost(LPCTSTR strUrl, LPCTSTR strPostData, string &strResponse);  
+  
+private:  
+    int ExecuteRequest(LPCTSTR strMethod, LPCTSTR strUrl, LPCTSTR strPostData, string &strResponse);  
+    void Clear();  
+  
+private:  
+    CInternetSession *m_pSession;  
+    CHttpConnection *m_pConnection;  
+    CHttpFile *m_pFile;  
 };

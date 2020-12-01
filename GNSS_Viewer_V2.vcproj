@@ -3652,6 +3652,10 @@
 			</File>
 		</Filter>
 		<File
+			RelativePath=".\res\BouncyCastle.Crypto.dll"
+			>
+		</File>
+		<File
 			RelativePath=".\res\CommunicationBase.dll"
 			>
 		</File>
@@ -3681,6 +3685,10 @@
 		</File>
 		<File
 			RelativePath=".\res\NewGNSS_Viewer.manifest"
+			>
+		</File>
+		<File
+			RelativePath=".\res\TagServer.exe"
 			>
 		</File>
 		<File

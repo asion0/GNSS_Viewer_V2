@@ -167,25 +167,17 @@ void BinaryProc(U08* buffer, int len, CFile& f)
 		break;
 	case 0xDD:		// raw measurement
 		ShowMeasurementChannel(buffer, true, &strOutput);
-		//Show_Message(buffer,len);
 		break;
 	case 0xDE:		// SV_CH status New
 		ShowMeasurementSv(buffer, true, &strOutput);
-		//Show_Message(buffer,len);
 		break;
-	//case 0xE7:		// SV_CH status
-	//	ShowMeasurementSv(buffer, true, &strOutput);
-	//	//Show_Message(buffer,len);
-	//	break;
 	case 0xDF:		// receiver state
 		ShowReceiverNav(buffer, true, &strOutput);
-		//Show_Message(buffer,len);
 		break;
 	case 0xE0:		// sub frame data
 	case 0xE1:		// sub frame data
 	case 0xE2:		// sub frame data
 	case 0xE3:		// sub frame data
-		//Show_Message(buffer,len);
 		ShowSubframe(buffer, true, &strOutput);
 		break;
 	case 0xE4:		// sub frame data
@@ -197,6 +189,18 @@ void BinaryProc(U08* buffer, int len, CFile& f)
 	case 0xE5:		// EXT_RAW_MEAS Extended Raw Measurement Data v.1 (0xE5) (Periodic)
 		ExtRawMeas(buffer, true, &strOutput);
 		break;
+	case 0xE6:		// sub frame data
+    ShowGeneralSubframe(buffer, true, &strOutput);
+    break;
+	case 0xE7:  // GNSS SV_CH_STATUS¡V GNSS SV and channel status (0xE7) (Periodic) 
+		ShowMeasurementGnssSv(buffer, true, &strOutput);
+		break;
+	case 0xE8:  // GNSS SV_CH_STATUS¡V GNSS SV and channel status (0xE7) (Periodic) 
+		ShowMeasurementSvEleAzi(buffer, true, &strOutput);
+		break;
+	case 0xE9:		// Time stamp
+    ShowBinaryTimeStamp(buffer, true, &strOutput);
+    break;
 	case BINMSG_ECEF_USER_PVT:
 		ShowBinaryOutput(buffer, true, &strOutput);
 		break;
@@ -204,7 +208,6 @@ void BinaryProc(U08* buffer, int len, CFile& f)
 		ExtRawMeasEf(buffer, true, &strOutput);
 		break;
 	default:
-//		add_msgtolist("Unknown: " + theApp.GetHexString(buffer, len));	
 		break;
 	}
 	if(strOutput.GetLength() > 0)

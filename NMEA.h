@@ -917,7 +917,7 @@ protected:
 	static bool GLLProc(GPGLL& rgll, LPCSTR pt, int len);
 	static bool GGAProc(GPGGA& rgga, LPCSTR pt, int len);
 	static bool GNSProc(GPGGA& rgga, LPCSTR pt, int len);
-	static bool GSVProc(GPGSV& rgsv, LPCSTR pt, int len);
+	static bool GSVProc(GPGSV& rgsv, LPCSTR pt, int len, bool& differentSignalId);
 	static bool GSAProc(GPGSA& rgsa, LPCSTR pt, int len, bool& continuousGsa);
 	static bool RMCProc(GPRMC& rrmc, LPCSTR pt, int len);
 	static bool ZDAProc(GPZDA& rzda, LPCSTR pt, int len);

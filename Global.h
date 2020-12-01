@@ -139,6 +139,7 @@ struct Setting
 			reg.WriteInt("setting_autoAgpsAfterColdStart", autoAgpsAfterColdStart);
 			reg.WriteInt("setting_rtkStatusChanged", rtkStatusChanged);
 			reg.WriteInt("setting_weekNumberCycle", weekNumberCycle);
+			reg.WriteInt("setting_ignoreNmeaChecksum", ignoreNmeaChecksum);
       
 			reg.WriteInt("recentScatterCenterCount", recentScatterCenter.GetCount());
 			for(int i = 0; i < recentScatterCenter.GetCount(); ++i)
@@ -181,6 +182,7 @@ struct Setting
 			autoAgpsAfterColdStart = reg.ReadInt("setting_autoAgpsAfterColdStart", FALSE);
 			rtkStatusChanged = reg.ReadInt("setting_rtkStatusChanged", FALSE);
 			weekNumberCycle = reg.ReadInt("setting_weekNumberCycle", 2);
+			ignoreNmeaChecksum = reg.ReadInt("setting_ignoreNmeaChecksum", FALSE);
 
 			int recentCount = reg.ReadInt("recentScatterCenterCount", 0);
 			for(int i = 0; i < recentCount; ++i)
@@ -222,6 +224,7 @@ struct Setting
       autoAgpsAfterColdStart = FALSE;
       rtkStatusChanged = FALSE;
 			weekNumberCycle = 2;
+      ignoreNmeaChecksum = FALSE;
 		}
 
 		if(reg.SetKey(VIEWER_REG_PATH, true))
@@ -320,6 +323,7 @@ struct Setting
   BOOL autoAgpsAfterColdStart;
   BOOL rtkStatusChanged;
 	int weekNumberCycle;
+  BOOL ignoreNmeaChecksum;
 
 	BOOL responseLog;
 	CString responseLogPath;
@@ -418,7 +422,7 @@ enum WlfResult {
 
 extern Setting g_setting;
 
-#define MAX_SATELLITE				32
+#define MAX_SATELLITE				64
 #define MyMaxPath		(MAX_PATH * 8)
 #define BINMSG_ERROR                0
 

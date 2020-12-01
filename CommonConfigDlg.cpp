@@ -3631,6 +3631,7 @@ void CConfigRtkMode2::OnBnClickedOk()
 		((CEdit*)GetDlgItem(IDC_MVB_EDT1))->ShowWindow(FALSE);	
 	}
 	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
+  CGPSDlg::gpsDlg->ClearInformation();
 	OnOK();
 }
 
@@ -4040,6 +4041,8 @@ BEGIN_MESSAGE_MAP(CConfigRtkFunctions, CCommonConfigDlg)
 	ON_CBN_SELCHANGE(IDC_BASE_OPT_FUN, OnCbnSelChangeBaseOpt)
 	ON_CBN_SELCHANGE(IDC_ROVER_OPT_FUN, OnCbnSelChangeRoverOpt)
 	ON_CBN_SELCHANGE(IDC_BINARY_TYPE, OnCbnSelChangeBinaryType)
+	ON_CBN_SELCHANGE(IDC_MSM_TYPE, OnCbnSelChangeMsmType)
+
 	ON_BN_CLICKED(IDC_FIELD11, &CConfigRtkFunctions::OnBnClickedField11)
 	ON_BN_CLICKED(IDC_FIELD12, &CConfigRtkFunctions::OnBnClickedField12)
 	ON_BN_CLICKED(IDC_FIELD13, &CConfigRtkFunctions::OnBnClickedField13)
@@ -4052,6 +4055,7 @@ BOOL CConfigRtkFunctions::OnInitDialog()
 {
 	CCommonConfigDlg::OnInitDialog();
   m_supportEph = TRUE;
+  m_supportMSM4 = TRUE;
   BinaryData ackCmd1, ackCmd2, ackCmd3, ackCmd4;
   CString title, txt;
   this->GetWindowText(title);
@@ -4124,7 +4128,9 @@ BOOL CConfigRtkFunctions::OnInitDialog()
     ((CButton*)GetDlgItem(IDC_FIELD9))->SetCheck(ackCmd2[12]);
     ((CButton*)GetDlgItem(IDC_FIELD10))->SetCheck(ackCmd2[13]);
      m_supportEph = (ackCmd2[19] == 0) ? FALSE : TRUE;
-
+     m_supportMSM4 = (ackCmd2[19] >= 2) ? TRUE : FALSE;
+     ((CComboBox*)GetDlgItem(IDC_MSM_TYPE))->SetCurSel((m_supportMSM4) ? ackCmd2[18] : 0);
+int a = ((CComboBox*)GetDlgItem(IDC_MSM_TYPE))->GetCurSel();
     ((CButton*)GetDlgItem(IDC_FIELD11))->SetCheck(ackCmd2[14] != 0);
     ((CButton*)GetDlgItem(IDC_FIELD12))->SetCheck(ackCmd2[15] != 0);
     ((CButton*)GetDlgItem(IDC_FIELD13))->SetCheck(ackCmd2[16] != 0);
@@ -4182,6 +4188,7 @@ BOOL CConfigRtkFunctions::OnInitDialog()
     ((CButton*)GetDlgItem(IDC_FIELD12))->SetCheck(0);
     ((CButton*)GetDlgItem(IDC_FIELD13))->SetCheck(0);
     ((CButton*)GetDlgItem(IDC_FIELD14))->SetCheck(0);
+    ((CComboBox*)GetDlgItem(IDC_MSM_TYPE))->SetCurSel(0);
 
     //STQ RAW
 	  ((CComboBox*)GetDlgItem(IDC_OUTPUT_RATE))->SetCurSel(0);
@@ -4253,6 +4260,14 @@ void CConfigRtkFunctions::OnBnClickedOk()
 	m_field8 = ((CButton*)GetDlgItem(IDC_FIELD8))->GetCheck();
 	m_field9 = ((CButton*)GetDlgItem(IDC_FIELD9))->GetCheck();
 	m_field10 = ((CButton*)GetDlgItem(IDC_FIELD10))->GetCheck();
+  if(!m_supportMSM4)
+  {
+    m_msmType = 0;
+  }
+  else
+  {
+    m_msmType = ((CComboBox*)GetDlgItem(IDC_MSM_TYPE))->GetCurSel();
+  }
 
 	GetDlgItem(IDC_INTERVAL)->GetWindowText(txt);
 	m_field11 = atoi(txt);
@@ -4445,7 +4460,8 @@ void CConfigRtkFunctions::DoCommand()
 	    *cmd2.GetBuffer(11) = (U08)m_field12;
 	    *cmd2.GetBuffer(12) = (U08)m_field13;
 	    *cmd2.GetBuffer(13) = (U08)m_field14;
-
+      *cmd2.GetBuffer(14) = (U08)m_msmType;
+      *cmd2.GetBuffer(15) = (U08)2; //Version
 	    *cmd2.GetBuffer(16) = (U08)m_attribute;
 
 	    configCmds[commandCounts].SetData(cmd2);
@@ -4557,7 +4573,9 @@ void CConfigRtkFunctions::UpdateStatus()
     GetDlgItem(IDC_BINARY_TYPE)->ShowWindow(SW_HIDE);
     //Rtcm
     GetDlgItem(IDC_STATIC5)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_STATIC10)->ShowWindow(SW_HIDE);
     GetDlgItem(IDC_FIELD3)->ShowWindow(SW_HIDE);
+    GetDlgItem(IDC_MSM_TYPE)->ShowWindow(SW_HIDE);
     GetDlgItem(IDC_STATIC6)->ShowWindow(SW_HIDE);
     GetDlgItem(IDC_FIELD4)->ShowWindow(SW_HIDE);
     GetDlgItem(IDC_FIELD5)->ShowWindow(SW_HIDE);
@@ -4636,12 +4654,15 @@ void CConfigRtkFunctions::UpdateStatus()
     GetDlgItem(IDC_STATIC7)->ShowWindow(SW_SHOW);
     GetDlgItem(IDC_BINARY_TYPE)->ShowWindow(SW_SHOW);
     GetDlgItem(IDC_STATIC5)->ShowWindow(SW_SHOW);
+    GetDlgItem(IDC_STATIC10)->ShowWindow(SW_SHOW);
 
     if(binType == 0)
     { //STQ RAW format
       //Hide Rtcm
       GetDlgItem(IDC_STATIC5)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_STATIC10)->ShowWindow(SW_HIDE);
       GetDlgItem(IDC_FIELD3)->ShowWindow(SW_HIDE);
+      GetDlgItem(IDC_MSM_TYPE)->ShowWindow(SW_HIDE);
       GetDlgItem(IDC_STATIC6)->ShowWindow(SW_HIDE);
       GetDlgItem(IDC_FIELD4)->ShowWindow(SW_HIDE);
       GetDlgItem(IDC_FIELD5)->ShowWindow(SW_HIDE);
@@ -4684,7 +4705,9 @@ void CConfigRtkFunctions::UpdateStatus()
     { //RTCM format
       //Show Rtcm
       GetDlgItem(IDC_STATIC5)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_STATIC10)->ShowWindow(SW_SHOW);
       GetDlgItem(IDC_FIELD3)->ShowWindow(SW_SHOW);
+      GetDlgItem(IDC_MSM_TYPE)->ShowWindow(SW_SHOW);
       GetDlgItem(IDC_STATIC6)->ShowWindow(SW_SHOW);
       GetDlgItem(IDC_FIELD4)->ShowWindow(SW_SHOW);
       GetDlgItem(IDC_FIELD5)->ShowWindow(SW_SHOW);
@@ -4732,6 +4755,28 @@ void CConfigRtkFunctions::UpdateStatus()
         GetDlgItem(IDC_INTERVAL3)->EnableWindow(((CButton*)GetDlgItem(IDC_FIELD13))->GetCheck());
         GetDlgItem(IDC_INTERVAL4)->EnableWindow(((CButton*)GetDlgItem(IDC_FIELD14))->GetCheck());
       }
+
+      CComboBox *pMsmType = (CComboBox*)GetDlgItem(IDC_MSM_TYPE);
+      pMsmType->EnableWindow(m_supportMSM4);
+      if(pMsmType->GetCurSel() == 0)  //0 - MSM7, 1 - MSM5
+      {
+        GetDlgItem(IDC_FIELD5)->SetWindowText("GPS MSM7 (Message Type 1077)");
+        GetDlgItem(IDC_FIELD6)->SetWindowText("GLONASS MSM7 (Message Type 1087)");
+        GetDlgItem(IDC_FIELD7)->SetWindowText("Galileo MSM7 (Message Type 1097)");
+        GetDlgItem(IDC_FIELD8)->SetWindowText("SBAS MSM7 (Message Type 1107)");
+        GetDlgItem(IDC_FIELD9)->SetWindowText("QZSS MSM7 (Message Type 1117)");
+        GetDlgItem(IDC_FIELD10)->SetWindowText("BDS MSM7 (Message Type 1127)");
+      }
+      else
+      {
+        GetDlgItem(IDC_FIELD5)->SetWindowText("GPS MSM4 (Message Type 1074)");
+        GetDlgItem(IDC_FIELD6)->SetWindowText("GLONASS MSM4 (Message Type 1084)");
+        GetDlgItem(IDC_FIELD7)->SetWindowText("Galileo MSM4 (Message Type 1094)");
+        GetDlgItem(IDC_FIELD8)->SetWindowText("SBAS MSM4 (Message Type 1104)");
+        GetDlgItem(IDC_FIELD9)->SetWindowText("QZSS MSM4 (Message Type 1114)");
+        GetDlgItem(IDC_FIELD10)->SetWindowText("BDS MSM4 (Message Type 1124)");
+      }
+
       //Show STQ Raw items
       GetDlgItem(IDC_STATIC8)->ShowWindow(SW_HIDE);
       GetDlgItem(IDC_OUTPUT_RATE)->ShowWindow(SW_HIDE);
@@ -4828,6 +4873,11 @@ void CConfigRtkFunctions::OnCbnSelChangeBinaryType()
 {
 	UpdateStatus();
 }
+void CConfigRtkFunctions::OnCbnSelChangeMsmType()
+{
+	UpdateStatus();
+}
+
 // CConfigMessageOut 
 IMPLEMENT_DYNAMIC(CConfigMessageOut, CCommonConfigDlg)
 
@@ -5605,13 +5655,6 @@ BOOL CConfigPstiInterval::OnInitDialog()
   {
     switch(m_nPstiId)
     {
-    case 4:
-    case 30:
-    case 32:
-    case 33:
-      CGPSDlg::gpsDlg->m_nPstiNo = m_nPstiId;
-	    ack = CGPSDlg::gpsDlg->QueryPsti(CGPSDlg::Return, &interval);
-      break;
     case 63:
     case 65:
     case 67:
@@ -5626,7 +5669,8 @@ BOOL CConfigPstiInterval::OnInitDialog()
       txt += txt1;
       break;
     default:
-      ASSERT(FALSE);
+      CGPSDlg::gpsDlg->m_nPstiNo = m_nPstiId;
+	    ack = CGPSDlg::gpsDlg->QueryPsti(CGPSDlg::Return, &interval);
       break;
     }
   }
@@ -6054,6 +6098,8 @@ BEGIN_MESSAGE_MAP(ConfigRtcmMeasurementDataOutDlg, CCommonConfigDlg)
 	ON_BN_CLICKED(IDC_FIELD12, &ConfigRtcmMeasurementDataOutDlg::OnBnClickedField12)
 	ON_BN_CLICKED(IDC_FIELD13, &ConfigRtcmMeasurementDataOutDlg::OnBnClickedField13)
 	ON_BN_CLICKED(IDC_FIELD14, &ConfigRtcmMeasurementDataOutDlg::OnBnClickedField14)
+  ON_CBN_SELCHANGE(IDC_MSM_TYPE, &ConfigRtcmMeasurementDataOutDlg::OnCbnSelMsm4)
+
 END_MESSAGE_MAP()
 
 // ConfigBinaryMeasurementDataOutDlg
@@ -6064,6 +6110,7 @@ BOOL ConfigRtcmMeasurementDataOutDlg::OnInitDialog()
   BinaryData ackCmd;
   this->GetWindowText(title);
   m_supportEph = TRUE;
+  m_supportMSM4 = TRUE;
   if(CGPSDlg::Ack == CGPSDlg::gpsDlg->QueryRtcmMeasurementDataOut(CGPSDlg::Return, &ackCmd))
   {
     title += " (Query successfully)";
@@ -6076,12 +6123,14 @@ BOOL ConfigRtcmMeasurementDataOutDlg::OnInitDialog()
     ((CButton*)GetDlgItem(IDC_FIELD8))->SetCheck(ackCmd[11]);
     ((CButton*)GetDlgItem(IDC_FIELD9))->SetCheck(ackCmd[12]);
     ((CButton*)GetDlgItem(IDC_FIELD10))->SetCheck(ackCmd[13]);
-     m_supportEph = (ackCmd[19] == 0) ? FALSE : TRUE;
+    m_supportEph = (ackCmd[19] == 0) ? FALSE : TRUE;
+    m_supportMSM4 = (ackCmd[19] >= 2) ? TRUE : FALSE;
 
     ((CButton*)GetDlgItem(IDC_FIELD11))->SetCheck(ackCmd[14] != 0);
     ((CButton*)GetDlgItem(IDC_FIELD12))->SetCheck(ackCmd[15] != 0);
     ((CButton*)GetDlgItem(IDC_FIELD13))->SetCheck(ackCmd[16] != 0);
     ((CButton*)GetDlgItem(IDC_FIELD14))->SetCheck(ackCmd[17] != 0);
+    ((CComboBox*)GetDlgItem(IDC_MSM_TYPE))->SetCurSel((m_supportMSM4) ? ackCmd[18] : 0);
 
     CString txt;
     txt.Format("%d", ackCmd[14]);
@@ -6112,6 +6161,7 @@ BOOL ConfigRtcmMeasurementDataOutDlg::OnInitDialog()
     ((CButton*)GetDlgItem(IDC_FIELD12))->SetCheck(0);
     ((CButton*)GetDlgItem(IDC_FIELD13))->SetCheck(0);
     ((CButton*)GetDlgItem(IDC_FIELD14))->SetCheck(0);
+    ((CComboBox*)GetDlgItem(IDC_MSM_TYPE))->SetCurSel(0);
 
     ((CComboBox*)GetDlgItem(IDC_ATTR))->SetCurSel(0);
   }
@@ -6156,6 +6206,11 @@ void ConfigRtcmMeasurementDataOutDlg::OnBnClickedField14()
 	UpdateStatus();
 }
 
+void ConfigRtcmMeasurementDataOutDlg::OnCbnSelMsm4()
+{
+	UpdateStatus();
+}
+
  void ConfigRtcmMeasurementDataOutDlg::OnBnClickedOk()
 {
 	m_field2 = ((CButton*)GetDlgItem(IDC_FIELD2))->GetCheck();
@@ -6178,6 +6233,14 @@ void ConfigRtcmMeasurementDataOutDlg::OnBnClickedField14()
 	GetDlgItem(IDC_INTERVAL4)->GetWindowText(txt);
 	m_field14 = atoi(txt);
 
+  if(!m_supportMSM4)
+  {
+    m_msmType = 0;
+  }
+  else
+  {
+    m_msmType = ((CComboBox*)GetDlgItem(IDC_MSM_TYPE))->GetCurSel();
+  }
 	if(0 == ((CButton*)GetDlgItem(IDC_FIELD11))->GetCheck())
   {
     m_field11 = 0;
@@ -6265,6 +6328,27 @@ void ConfigRtcmMeasurementDataOutDlg::UpdateStatus()
     GetDlgItem(IDC_INTERVAL3)->EnableWindow(((CButton*)GetDlgItem(IDC_FIELD13))->GetCheck());
     GetDlgItem(IDC_INTERVAL4)->EnableWindow(((CButton*)GetDlgItem(IDC_FIELD14))->GetCheck());
   }
+
+  CComboBox *pMsmType = (CComboBox*)GetDlgItem(IDC_MSM_TYPE);
+  pMsmType->EnableWindow(m_supportMSM4);
+  if(pMsmType->GetCurSel() == 0)  //0 - MSM7, 1 - MSM5
+  {
+    GetDlgItem(IDC_FIELD5)->SetWindowText("GPS MSM7 (Message Type 1077)");
+    GetDlgItem(IDC_FIELD6)->SetWindowText("GLONASS MSM7 (Message Type 1087)");
+    GetDlgItem(IDC_FIELD7)->SetWindowText("Galileo MSM7 (Message Type 1097)");
+    GetDlgItem(IDC_FIELD8)->SetWindowText("SBAS MSM7 (Message Type 1107)");
+    GetDlgItem(IDC_FIELD9)->SetWindowText("QZSS MSM7 (Message Type 1117)");
+    GetDlgItem(IDC_FIELD10)->SetWindowText("BDS MSM7 (Message Type 1127)");
+  }
+  else
+  {
+    GetDlgItem(IDC_FIELD5)->SetWindowText("GPS MSM4 (Message Type 1074)");
+    GetDlgItem(IDC_FIELD6)->SetWindowText("GLONASS MSM4 (Message Type 1084)");
+    GetDlgItem(IDC_FIELD7)->SetWindowText("Galileo MSM4 (Message Type 1094)");
+    GetDlgItem(IDC_FIELD8)->SetWindowText("SBAS MSM4 (Message Type 1104)");
+    GetDlgItem(IDC_FIELD9)->SetWindowText("QZSS MSM4 (Message Type 1114)");
+    GetDlgItem(IDC_FIELD10)->SetWindowText("BDS MSM4 (Message Type 1124)");
+  }
 }
 
 void ConfigRtcmMeasurementDataOutDlg::DoCommand()
@@ -6285,7 +6369,8 @@ void ConfigRtcmMeasurementDataOutDlg::DoCommand()
 	*cmd.GetBuffer(11) = (U08)m_field12;
 	*cmd.GetBuffer(12) = (U08)m_field13;
 	*cmd.GetBuffer(13) = (U08)m_field14;
-
+  *cmd.GetBuffer(14) = (U08)m_msmType;
+  *cmd.GetBuffer(15) = (U08)2; //Version
 	*cmd.GetBuffer(16) = (U08)m_attribute;
 
 	configCmd.SetData(cmd);

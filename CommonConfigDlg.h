@@ -844,6 +844,7 @@ public:
   afx_msg void OnBnClickedField12();
   afx_msg void OnBnClickedField13();
   afx_msg void OnBnClickedField14();
+	afx_msg void OnCbnSelChangeMsmType();
 	virtual BOOL OnInitDialog();
  	//virtual INT_PTR DoDirect(int type);
 
@@ -874,7 +875,10 @@ protected:
   U08 m_field13;
   U08 m_field14;
   U16 cnstMode;
+  U08 m_msmType;
+
   BOOL m_supportEph;
+  BOOL m_supportMSM4;
 
   //Raw
   U08 m_rate;
@@ -1209,6 +1213,7 @@ public:
   afx_msg void OnBnClickedField12();
   afx_msg void OnBnClickedField13();
   afx_msg void OnBnClickedField14();
+  afx_msg void OnCbnSelMsm4();
 	afx_msg void OnBnClickedOk();
 protected:
 	U08 m_field2;
@@ -1225,8 +1230,10 @@ protected:
   U08 m_field13;
   U08 m_field14;
 	U08 m_attribute;
+  U08 m_msmType;
   U16 cnstMode;
   BOOL m_supportEph;
+  BOOL m_supportMSM4;
   void UpdateUiByNumber(UINT txtId, UINT checkId);
 	void UpdateStatus();
 

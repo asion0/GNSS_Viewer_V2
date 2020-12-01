@@ -282,6 +282,8 @@
 #define IDD_CFG_IFREE_MODE              533
 #define IDR_TCPIP_SERVER                534
 #define IDR_COMM_DLL                    535
+#define IDR_TAG_SERVER                  536
+#define IDR_TAG_SERVER_DLL              537
 #define IDC_CONNECT                     1000
 #define IDC_CLOSE                       1001
 #define IDC_SETORIGIN                   1002
@@ -1145,6 +1147,8 @@
 #define IDC_FILENAME                    1331
 #define IDC_OVERDUE_SEC                 1331
 #define IDD_SET_UART_PASS_THROUGH       1331
+#define IDC_RTK_STATUS_CHANGED2         1331
+#define IDC_IGNORE_NMEA_ERROR           1331
 #define IDC_STOP_T                      1332
 #define IDC_LEAP_SECONDS                1332
 #define IDD_SUP800_ERASE_DATA           1332
@@ -1320,6 +1324,8 @@
 #define IDC_FIELD7                      1417
 #define IDC_BASELINE_COURSE_T           1418
 #define IDC_STATIC_DATA                 1418
+#define IDC_MSM_TYPE                    1418
+#define IDC_FIELD15                     1418
 #define IDC_UP_PROJECTION_T             1419
 #define IDC_HAS_SENSOR                  1419
 #define IDC_TIME2_T                     1420
@@ -1709,6 +1715,7 @@
 #define IDC_STATIC4                     1646
 #define IDC_STATIC5                     1647
 #define IDC_FILE_CMB                    1648
+#define IDC_STATIC10                    1648
 #define IDC_CRC32_T                     1649
 #define IDC_GNSSTYPE_T                  1650
 #define IDC_T_R_REG00                   1651
@@ -2500,6 +2507,12 @@
 #define ID_CFG_IFREE_MODE               33311
 #define ID_QRY_IFREE_MODE               33312
 #define ID_TCPIP_SERVER                 33313
+#define ID_AUTO_ACT_V9_AES_TAG          33314
+#define ID_QUERY_PSTI020                33315
+#define ID_CONFIG_PSTI020               33316
+#define ID_QUERY_PSTI060                33317
+#define ID_CONFIG_PSTI060               33318
+#define ID_AUTO_ACT_ALPHA_KEY           33319
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

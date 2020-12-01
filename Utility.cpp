@@ -311,7 +311,7 @@ DWORD Utility::ExecuteExternalFileW(LPCWSTR csCmdLine, CString& strResult)
 		res = ::ReadFile(rPipe, buf, nReadBlockSize, &reDword, 0);
 		csTemp = buf;
 		strResult += csTemp.Left(reDword);
-	}while(res);
+	} while(res);
 
 	//Get Exit Code
 	DWORD dwResult;
@@ -320,7 +320,7 @@ DWORD Utility::ExecuteExternalFileW(LPCWSTR csCmdLine, CString& strResult)
 		::GetExitCodeProcess(pInfo.hProcess, &dwResult);
 		Sleep(100);
 	}
-	while(STILL_ACTIVE==dwResult);
+	while(STILL_ACTIVE == dwResult);
 	return dwResult;
 }
 
