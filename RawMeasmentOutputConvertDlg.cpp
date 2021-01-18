@@ -158,7 +158,7 @@ void BinaryProc(U08* buffer, int len, CFile& f)
 		return;
 	}
 
-	U08 msgType = Cal_Checksum(buffer);	
+	U08 msgType = CalcStqMsgChecksum(buffer);	
 	CString strOutput;
 	switch(msgType)
 	{

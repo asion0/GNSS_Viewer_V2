@@ -9,7 +9,7 @@ class CKmlDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CKmlDlg)
 public:
-	CKmlDlg(CWnd* pParent = NULL);   
+	CKmlDlg(BOOL isJaxa, CWnd* pParent = NULL);   
 	virtual ~CKmlDlg();
 	
 	static CKmlDlg* kmlDlg;
@@ -57,13 +57,13 @@ public:
 	bool IsFlogOpen;
 	U08 NMEA_PROC(const char*,int);
 
-	//GPGLL msg_gpgll;
-    GPGSA msg_gpgsa, msg_glgsa, msg_bdgsa, msg_gagsa, msg_gigsa;
-    GPGGA msg_gpgga;
-    GPGSV msg_gpgsv, msg_glgsv, msg_bdgsv, msg_gagsv, msg_gigsv;
-    //GPZDA msg_gpzda;
-    GPRMC msg_gprmc;
-    //GPVTG msg_gpvtg;
+//GPGLL msg_gpgll;
+  GPGSA msg_gpgsa, msg_glgsa, msg_bdgsa, msg_gagsa, msg_gigsa;
+  GPGGA msg_gpgga;
+  GPGSV msg_gpgsv, msg_glgsv, msg_bdgsv, msg_gagsv, msg_gigsv;
+  //GPZDA msg_gpzda;
+  GPRMC msg_gprmc;
+  //GPVTG msg_gpvtg;
 	NMEA nmea;
 
 	CString kml_filename;
@@ -72,6 +72,7 @@ public:
 	double lon, lat;
 	bool WriteToFile(U08 type);
 	void Convert(CFile& f);
+	void ConvertJaxa(CFile& f);    //For new Convert to KML function
 	void Convert2(CFile& f);    //For new Convert to KML function
 	bool WriteToFile2(U08 type); //For new Convert to KML function
 
@@ -86,11 +87,13 @@ protected:
 		UsingGGA,
 		UsingRMC
 	};
-	UsingType ut;
+	UsingType useType;
 //	bool is_Fixed(U16 gga_indicator);
 	DECLARE_MESSAGE_MAP()
 public:
 	CProgressCtrl m_progress;
+  BOOL m_isJaxa;
+
   afx_msg void OnLbnSelchangeFileList();
   afx_msg void OnLbnChkchangeFileList();
   CCheckListBox m_fileList;

@@ -3,7 +3,6 @@
 #include "stdafx.h"
 #include "GPS.h"
 #include "GPSDlg.h"
-
 #include "LogFilterDlg.h"
 #include "KmlDlg.h"
 #include "log2nmea.h"
@@ -59,6 +58,7 @@
 #include <Dbt.h>
 #include "UISetting.h"
 #include "TcpipConnectionDlg.h"
+#include "TestNewParserDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -450,6 +450,10 @@ bool CGPSDlg::NmeaProc(const char* buffer, int offset, NmeaType& nmeaType)
 	case MSG_GGA:
 		nmea.ShowGPGGAmsg(m_gpggaMsgCopy, buffer, offset);
 		PostMessage(UWM_SHOW_TIME, 0, 0);
+    if(CNtripClientDlg::GetNtripRunning() && m_gpggaMsgCopy.GPSQualityIndicator > '0')
+    {
+      CNtripClientDlg::SetGgaString(buffer);
+    }
 		break;
 	case MSG_GNS:
 		nmea.ShowGNSmsg(m_gpggaMsgCopy, buffer, offset);
@@ -546,7 +550,7 @@ U08 CGPSDlg::BinaryProc(U08* buffer, int len, CFile* fo)
 		return BINMSG_ERROR;
 	}
 
-	U08 msgType = Cal_Checksum(buffer);
+	U08 msgType = CalcStqMsgChecksum(buffer);
 	U08 id = buffer[5];
 	U08 sid = buffer[6];
 	CString strOutput;
@@ -587,7 +591,7 @@ U08 CGPSDlg::BinaryProc(U08* buffer, int len, CFile* fo)
 		ShowSubframe(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
 #endif
 		break;
-	case 0xE5:		// EXT_RAW_MEAS Extended Raw Measurement Data v.1 (0xE5) (Periodic)
+	case 0xE5:  // EXT_RAW_MEAS Extended Raw Measurement Data v.1 (0xE5) (Periodic)
 		ExtRawMeas(buffer, !(fo == NULL), (fo == NULL) ? NULL : &strOutput);
     ShowTime();
     PostMessage(UWM_UPDATE_PSTI033, (WPARAM)&m_psti033B, 1);
@@ -1582,6 +1586,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_LOG_DECOMPRESS, OnCovDecopre)
 	//ON_COMMAND(ID_DECODE_GP_ALMANAC, OnDecodeGpsAlmanac)
 	ON_COMMAND(ID_CONVERTER_KML, OnConverterKml)
+	ON_COMMAND(ID_CONVERTER_JAXA_KML, OnConverterJaxaKml)
 	ON_COMMAND(ID_RAW_MEAS_OUT_CONVERT, OnRawMeasurementOutputConvert)
 	ON_COMMAND(ID_UBLOX_OUT_CONVERT, OnUbloxBinaryOutputConvert)
 	ON_COMMAND(ID_HOSTLOG_NMEA, OnHosLogToNmea)
@@ -1966,7 +1971,7 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_CONFIG_PSTI070, OnConfigPsti070)
 	//20160906 Added
 	ON_COMMAND(ID_QUERY_PSTI004, OnQueryPsti004)
-	ON_COMMAND(ID_CONFIG_PSTI004, OnConfigPsti004)
+	//ON_COMMAND(ID_CONFIG_PSTI004, OnConfigPsti004)
   //20160914 Added
 	ON_COMMAND(ID_RECALC_GLONASS_IFB, OnReCalcuteGlonassIfb)
 	//20180918 Added
@@ -1975,6 +1980,10 @@ BEGIN_MESSAGE_MAP(CGPSDlg, CDialog)
 	ON_COMMAND(ID_QUERY_PSTI007, OnQueryPsti007)
 	ON_COMMAND(ID_CONFIG_PSTI007, OnConfigPsti007)
   ON_CBN_SELCHANGE(IDC_COMPORT, OnCbnSelchangeComPort)
+	//2021229 Added
+	ON_COMMAND(ID_QUERY_PSTI005, OnQueryPsti005)
+	ON_COMMAND(ID_CONFIG_PSTI005, OnConfigPsti005)
+
 END_MESSAGE_MAP()
 
 // CGPSDlg message handlers
@@ -2587,7 +2596,7 @@ void CGPSDlg::ClearInformation(bool onlyQueryInfo)
 
 bool CGPSDlg::NmeaInput()
 {
-	CFileDialog fd(true, NULL, NULL, OFN_FILEMUSTEXIST| OFN_HIDEREADONLY, "All Suppored Files (*.txt;*.nmea;*.out;*.dat;*.bin)|*.txt; *.nmea; *.out; *.dat; *.bin|TEXT Files (*.txt)|*.txt|NMEA Files (*.nmea)|*.nmea|Output Files (*.out)|*.out|Binary Files (*.bin)|*.bin|Data Files (*.dat)|*.dat||");
+	CFileDialog fd(true, NULL, NULL, OFN_FILEMUSTEXIST| OFN_HIDEREADONLY, "All Suppored Files (*.txt;*.nmea;*.out;*.dat;*.rtcm;*.bin)| *.txt; *.nmea; *.out; *.dat; *.rtcm; *.bin| TEXT Files (*.txt)|*.txt| NMEA Files (*.nmea)|*.nmea| Output Files (*.out)|*.out| RTCM Files (*.rtcm)|*.rtcm| Binary Files (*.bin)|*.bin| Data Files (*.dat)|*.dat||");
 	if(fd.DoModal() != IDOK)
 	{
 		return false;
@@ -3883,23 +3892,7 @@ void CGPSDlg::OnFileSetup()
 	CSetupDialog2 setupDlg;
 #endif
 
-  CString host;
-  DWORD len = 128;
-  BOOL ret = GetComputerName(host.GetBuffer(len), &len);
-    host.ReleaseBuffer();
-CString mac = GetMACAddress();
-CString ip = GetIPAdd();
-  //"{ \"id\": \"657F5D444135825554742065\", \"data\":\"01000000000D0001\" }"
-  string strResponse;
-  CHttpClient hc;
-  int nres = hc.HttpPost(
-    "http://localhost:8000/e", 
-    "{ \"id\": \"657F5D444135825554742065\", \"data\":\"01000000000D0001\" }",
-    strResponse);
-
-
-
-	setupDlg.SetSetting(&g_setting);
+  setupDlg.SetSetting(&g_setting);
 	if(setupDlg.DoModal() == IDOK)
 	{
 		g_setting.Save();
@@ -4671,6 +4664,17 @@ bool CGPSDlg::check_gg12a_format(const char *file_path)
 
 void CGPSDlg::OnFileSaveNmea()
 {
+//Test
+#if TEST_NEW_PARSER
+  CTestNewParserDlg dlg;
+  if(dlg.DoModal()==IDOK)
+  {
+
+  }
+#endif
+
+
+//Test
 	if(m_saveNmeaDlg)
 	{
 		::AfxMessageBox("Save function has been activated!");
@@ -4857,7 +4861,13 @@ void CGPSDlg::OnFilePlayNmea()
 
 void CGPSDlg::OnConverterKml()
 {
-	CKmlDlg dlg;
+	CKmlDlg dlg(FALSE);
+	dlg.DoModal();
+}
+
+void CGPSDlg::OnConverterJaxaKml()
+{
+	CKmlDlg dlg(TRUE);
 	dlg.DoModal();
 }
 
@@ -5502,35 +5512,37 @@ void CGPSDlg::LoadMenu()
 
 	static MenuItemEntry QueryPstiInterval[] =
 	{
-		{ 1, MF_STRING, ID_QUERY_PSTI004, "Query PSTI004 Interval", NULL },
-		{ 1, MF_STRING, ID_QUERY_PSTI007, "Query PSTI007 Interval", NULL },
-		{ 1, MF_STRING, ID_QUERY_PSTI020, "Query PSTI020 Interval", NULL },
-		{ 1, MF_STRING, ID_QUERY_PSTI030, "Query PSTI030 Interval", NULL },
-		{ 1, MF_STRING, ID_QUERY_PSTI032, "Query PSTI032 Interval", NULL },
-		{ 1, MF_STRING, ID_QUERY_PSTI033, "Query PSTI033 Interval", NULL },
-		{ 1, MF_STRING, ID_QUERY_PSTI060, "Query PSTI060 Interval", NULL },
-		{ 1, MF_STRING, ID_QUERY_PSTI063, "Query PSTI063 Interval", NULL },
-		{ 1, MF_STRING, ID_QUERY_PSTI065, "Query PSTI065 Interval", NULL },
-		{ 1, MF_STRING, ID_QUERY_PSTI067, "Query PSTI067 Interval", NULL },
-		{ 1, MF_STRING, ID_QUERY_PSTI068, "Query PSTI068 Interval", NULL },
-		{ 1, MF_STRING, ID_QUERY_PSTI070, "Query PSTI070 Interval", NULL },
+		//{ 1, MF_STRING, ID_QUERY_PSTI004, "Query PSTI004 Interval", NULL }, //Pitch, Roll, Yaw for SUP800
+		{ 1, MF_STRING, ID_QUERY_PSTI005, "Query PSTI,005 Interval (TimeStamping)", NULL },
+		{ 1, MF_STRING, ID_QUERY_PSTI007, "Query PSTI,007 Interval (Geofencing)", NULL },
+		{ 1, MF_STRING, ID_QUERY_PSTI020, "Query PSTI,20 Interval (DR)", NULL },
+		{ 1, MF_STRING, ID_QUERY_PSTI030, "Query PSTI,030 Interval (RTK)", NULL },
+		{ 1, MF_STRING, ID_QUERY_PSTI032, "Query PSTI,032 Interval (RTK)", NULL },
+		{ 1, MF_STRING, ID_QUERY_PSTI033, "Query PSTI,033 Interval (RTK)", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_PSTI060, "Query PSTI,060 Interval (DR)", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_PSTI063, "Query PSTI,063 Interval (DR)", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_PSTI065, "Query PSTI,065 Interval (DR)", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_PSTI067, "Query PSTI,067 Interval (DR)", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_PSTI068, "Query PSTI,068 Interval (DR)", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_PSTI070, "Query PSTI,070 Interval (DR)", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
 
 	static MenuItemEntry ConfigPstiInterval[] =
 	{
-		{ 1, MF_STRING, ID_CONFIG_PSTI004, "Configure PSTI004 Interval", NULL },
-		{ 1, MF_STRING, ID_CONFIG_PSTI007, "Configure PSTI007 Interval", NULL },
-  	{ 1, MF_STRING, ID_CONFIG_PSTI020, "Configure PSTI020 Interval", NULL },
-  	{ 1, MF_STRING, ID_CONFIG_PSTI030, "Configure PSTI030 Interval", NULL },
-		{ 1, MF_STRING, ID_CONFIG_PSTI032, "Configure PSTI032 Interval", NULL },
-		{ 1, MF_STRING, ID_CONFIG_PSTI033, "Configure PSTI033 Interval", NULL },
-		{ 1, MF_STRING, ID_CONFIG_PSTI060, "Configure PSTI060 Interval", NULL },
-		{ 1, MF_STRING, ID_CONFIG_PSTI063, "Configure PSTI063 Interval", NULL },
-		{ 1, MF_STRING, ID_CONFIG_PSTI065, "Configure PSTI065 Interval", NULL },
-		{ 1, MF_STRING, ID_CONFIG_PSTI067, "Configure PSTI067 Interval", NULL },
-		{ 1, MF_STRING, ID_CONFIG_PSTI068, "Configure PSTI068 Interval", NULL },
-		{ 1, MF_STRING, ID_CONFIG_PSTI070, "Configure PSTI070 Interval", NULL },
+		//{ 1, MF_STRING, ID_CONFIG_PSTI004, "Configure PSTI004 Interval", NULL },
+		{ 1, MF_STRING, ID_CONFIG_PSTI005, "Configure PSTI,005 Interval (TimeStamping)", NULL },
+		{ 1, MF_STRING, ID_CONFIG_PSTI007, "Configure PSTI,007 Interval (Geofencing)", NULL },
+  	{ 1, MF_STRING, ID_CONFIG_PSTI020, "Configure PSTI,20 Interval (DR)", NULL },
+  	{ 1, MF_STRING, ID_CONFIG_PSTI030, "Configure PSTI,030 Interval (RTK)", NULL },
+		{ 1, MF_STRING, ID_CONFIG_PSTI032, "Configure PSTI,032 Interval (RTK)", NULL },
+		{ 1, MF_STRING, ID_CONFIG_PSTI033, "Configure PSTI,033 Interval (RTK)", NULL },
+		{ IS_DEBUG, MF_STRING, ID_CONFIG_PSTI060, "Configure PSTI,060 Interval (DR)", NULL },
+		{ IS_DEBUG, MF_STRING, ID_CONFIG_PSTI063, "Configure PSTI,063 Interval (DR)", NULL },
+		{ IS_DEBUG, MF_STRING, ID_CONFIG_PSTI065, "Configure PSTI,065 Interval (DR)", NULL },
+		{ IS_DEBUG, MF_STRING, ID_CONFIG_PSTI067, "Configure PSTI,067 Interval (DR)", NULL },
+		{ IS_DEBUG, MF_STRING, ID_CONFIG_PSTI068, "Configure PSTI,068 Interval (DR)", NULL },
+		{ IS_DEBUG, MF_STRING, ID_CONFIG_PSTI070, "Configure PSTI,070 Interval (DR)", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
 	};
 
@@ -5649,13 +5661,13 @@ void CGPSDlg::LoadMenu()
 	{
 		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_TAG_ADDR, "Query Phoenix Tag Address", NULL },
 		//{ IS_DEBUG, MF_STRING, ID_QUERY_V9_UNQ_ID, "Query Phoenix Unique ID", NULL },
-		{ 1, MF_STRING, ID_QUERY_V9_EXT_ID, "Query Phoenix Extended ID", NULL },
-		{ 1, MF_STRING, ID_QUERY_V9_TAG, "Query Phoenix Tag", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_EXT_ID, "Query Phoenix Extended ID", NULL },
+		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_TAG, "Query Phoenix Tag", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_PROM_AES_TAG, "Query Phoenix PROM Tag", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_EXT_AES_TAG, "Query Phoenix External Tag", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_V9_SW_FEATURE, "Query Phoenix Software Feature", NULL },
     { IS_DEBUG, MF_STRING, ID_RESET_V9_AES_TAG, "Reset Phoenix Tag", NULL },
-		{ 1, MF_STRING, ID_CFG_V9_AES_TAG, "Configure Phoenix Tag", NULL },
+		{ IS_DEBUG, MF_STRING, ID_CFG_V9_AES_TAG, "Configure Phoenix Tag", NULL },
     { IS_DEBUG && AUTO_ACTIVATE_AES_KEY, MF_STRING, ID_AUTO_ACT_V9_AES_TAG, "Auto Activating Phoenix Tag(Only in SkyTraq intranet)", NULL },
 
 		{ IS_DEBUG || DEVELOPER_VERSION, MF_SEPARATOR, 0, NULL, NULL },
@@ -5663,7 +5675,7 @@ void CGPSDlg::LoadMenu()
 		{ IS_DEBUG, MF_POPUP, 0, "Host Data Dump", HostDataDumpMenu },
 		{ IS_DEBUG || DEVELOPER_VERSION, MF_STRING, ID_QRY_IFREE_MODE, "Query Ifree Mode", NULL },
 
-    {  IS_DEBUG || DEVELOPER_VERSION, MF_SEPARATOR, 0, NULL, NULL },
+    { IS_DEBUG || DEVELOPER_VERSION, MF_SEPARATOR, 0, NULL, NULL },
 		{ IS_DEBUG, MF_STRING, ID_CFG_TM_PARAM_SETTING, "Configure Tracking Module Parameter Setting", NULL },
 		{ IS_DEBUG || DEVELOPER_VERSION, MF_STRING, ID_CFG_IFREE_MODE, "Configure Ifree Mode", NULL },
 
@@ -5715,9 +5727,9 @@ void CGPSDlg::LoadMenu()
 
   static MenuItemEntry menuItemRtk[] =
 	{
-		{ IS_DEBUG, MF_STRING, ID_RTK_RESET, "Reset RTK engine", NULL },
-		{ 1, MF_STRING, ID_RECALC_GLONASS_IFB, "Re-calculate GLONASS IFB", NULL },
-		{ 1, MF_POPUP, 0, "RTK Pass-Through", RtkPassThroughMenu },
+		//{ IS_DEBUG, MF_STRING, ID_RTK_RESET, "Reset RTK engine", NULL },
+		//{ IS_DEBUG, MF_STRING, ID_RECALC_GLONASS_IFB, "Re-calculate GLONASS IFB", NULL },
+		//{ 1, MF_POPUP, 0, "RTK Pass-Through", RtkPassThroughMenu },
 		{ IS_DEBUG || LITEON_CUSTOMIZE, MF_POPUP, 0, "RTK Debug Mode", RtkDebugModeMenu },
 
 		{ IS_DEBUG, MF_STRING, ID_RTK_ONOFF_GP_SV, "Enable/Disable GPS SV mechanism", NULL },
@@ -5725,14 +5737,14 @@ void CGPSDlg::LoadMenu()
 		{ IS_DEBUG, MF_STRING, ID_RTK_ONOFF_GL_SV, "Enable/Disable GLONASS SV mechanism", NULL },
 		{ IS_DEBUG || DEVELOPER_VERSION, MF_STRING, ID_RTK_ONOFF_BD_SV, "Enable/Disable BEIDOU2 SV mechanism", NULL },
 		{ IS_DEBUG || DEVELOPER_VERSION, MF_STRING, ID_RTK_ONOFF_GA_SV, "Enable/Disable Galileo SV mechanism", NULL },
-		{ 1, MF_STRING, ID_QUERY_RTK_REF_POSITION, "Configure RTK Reference Static Started Position", NULL },
-		{ 1, MF_STRING, ID_CLEAR_RTK_SLAVE_DATA, "Clear RTK Slave Backup Data", NULL },
+		//{ 1, MF_STRING, ID_QUERY_RTK_REF_POSITION, "Configure RTK Reference Static Started Position", NULL },
+		//{ 1, MF_STRING, ID_CLEAR_RTK_SLAVE_DATA, "Clear RTK Slave Backup Data", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CONFIG_RTK_FUNCTIONS, "Configure RTK Functions", NULL },
 		{ 1, MF_SEPARATOR, 0, NULL, NULL },
 		//{ 1, MF_STRING, ID_QUERY_RTK_MODE, "Query RTK Mode", NULL },
 		{ 1, MF_STRING, ID_QUERY_RTK_MODE2, "Query RTK Mode And Operational Function", NULL },
 		{ 1, MF_STRING, ID_QUERY_RTK_SLAVE_BAUD, "Query RTK Slave Serial Port Baud Rate", NULL },
-		{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_GL_CPIF_BIAS, "Query RTK GLONASS Carrier-Phase Inter-Frequency Bias", NULL },
+		//{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_GL_CPIF_BIAS, "Query RTK GLONASS Carrier-Phase Inter-Frequency Bias", NULL },
 		{ IS_DEBUG, MF_STRING, ID_QUERY_RTK_ELE_CNR_MSK, "Query RTK Elevation and CNR Mask", NULL },
 		{ 1, MF_STRING, ID_QRY_RTK_PKB_BAUD, "Query  RTK Precisely Kinematic Base Serial Port Baud Rate", NULL },
 
@@ -5743,7 +5755,7 @@ void CGPSDlg::LoadMenu()
 		{ 1, MF_STRING, ID_CFG_RTK_SLAVE_BAUD, "Configure RTK Slave Serial Port Baud Rate", NULL },
 		//{ IS_DEBUG, MF_STRING, ID_CONFIG_RTK_PARAM, "Configure RTK Parameters", NULL },
     //20200408 Oliver wants this function in Customer Release
-		{ 1, MF_STRING, ID_CFG_RTK_GL_CPIF_BIAS, "Configure RTK GLONASS Carrier-Phase Inter-Frequency Bias", NULL },
+		//{ 1, MF_STRING, ID_CFG_RTK_GL_CPIF_BIAS, "Configure RTK GLONASS Carrier-Phase Inter-Frequency Bias", NULL },
 		{ IS_DEBUG, MF_STRING, ID_CFG_RTK_ELE_CNR_MSK, "Configure RTK Elevation and CNR Mask", NULL },
 		{ 1, MF_STRING, ID_CFG_RTK_PKB_BAUD, "Configure RTK Precisely Kinematic Base Serial Port Baud Rate", NULL },
 		{ 0, 0, 0, NULL, NULL }	//End of table
@@ -5973,6 +5985,7 @@ void CGPSDlg::LoadMenu()
 		//{ IS_DEBUG & SOFTWARE_FUNCTION & SW_FUN_DATALOG, MF_STRING, ID_CONVERTER_COMPRESS, "Compress", NULL },
 		{ IS_DEBUG & SOFTWARE_FUNCTION & SW_FUN_DATALOG, MF_STRING, ID_LOG_DECOMPRESS, "DataLog Decompress", NULL },
 		{ 1, MF_STRING, ID_CONVERTER_KML, "KML", NULL },
+		{ JAXA_KML_CONVERTER, MF_STRING, ID_CONVERTER_JAXA_KML, "JAXA Binary to KML", NULL },
 		{ 1, MF_STRING, ID_RAW_MEAS_OUT_CONVERT, "Raw Measurement Binary Convert", NULL },
 		{ IS_DEBUG, MF_STRING, ID_UBLOX_OUT_CONVERT, "Ublox Binary Convert", NULL },
 		{ 1, MF_STRING, ID_HOSTLOG_NMEA, "HostLog Output To NMEA", NULL },
@@ -9311,6 +9324,7 @@ void CGPSDlg::GetGPSStatus()
 	QueryGnssBootStatus(NoWait, NULL);
 }
 
+#if CUSTOMER_ZENLANE_160808
 bool CGPSDlg::DoZenlandInit()
 {
 	if(!CUSTOMER_ZENLANE_160808)
@@ -9344,6 +9358,7 @@ bool CGPSDlg::DoZenlandQuery()
 	}
 	return (Ack == SendZenlandQueryCmd(NoWait, NULL));
 }
+#endif
 
 void CGPSDlg::SetConnectTitle(bool isInConnect)
 {
@@ -9460,6 +9475,7 @@ void CGPSDlg::DoFlag()
     GetGPSStatus();
     m_nDoFlag = DO_NOTHING;
     break;
+#if CUSTOMER_ZENLANE_160808
   case DO_ZENLANE_INIT:
     if(DoZenlandInit())
     {
@@ -9482,6 +9498,7 @@ void CGPSDlg::DoFlag()
       PostMessage(UWM_DO_ZENLANE_CMD, 1, 0);
     }
     break;
+#endif
   default:
     break;
   }
@@ -9603,13 +9620,15 @@ void CGPSDlg::ParsingMessage(BOOL isPlayer)
 		NmeaType nmeaType = MSG_ERROR;
 		switch(type)
 		{
+    case AllystarBinary:
+      add_msgtolist("L6_RAW : " + theApp.GetHexString(buffer, 18));
+      break;
 		case StqBinary:
 			if(ShowCommand(buffer, length))
 			{
         break;
       }
-
-      msgType = Cal_Checksum(buffer);
+      msgType = CalcStqMsgChecksum(buffer);
       if(msgType == 0xE5 && !sateShowed)
       {
           nmea.CopySatellites();

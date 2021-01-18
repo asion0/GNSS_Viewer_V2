@@ -514,7 +514,26 @@
 // .042 20201120 Support MSM Type in [Configure / Query RTCM Measurement Data Out] and [Configure RTK Functions], request from Ken
 // .042 20201120 Add [Query / Config PSTI020 / 060 interval] in Venus 8 menu, request from Roger
 // .043 20201127 Add [Automatically Activate Phoenix Tag] in Phoenix menu, request from Alex, Andrew
-// .044 20201201 Auto disable Alt switch button when no geoid data, request from Austin, Oliver
+// .044 20201201 Auto disable Altitude switch button when no geoid data, request from Austin, Oliver
+// .045 20201203 Modify [Configure Phoenix RF clock to GPIO0] and [Configure Phoenix RF clock Out], request from Ming-Jen
+// .046 20201228 Request from Andrew / forum user ESPrtk
+// .046 20201228 Add description in Venus 8 -> Query / Configure PSTI Interval UI
+// .046 20201228 Remove Psti004 from Venus 8 -> Query / Configure PSTI Interval 
+// .046 20201228 Add Psti005 from Venus 8 -> Query / Configure PSTI Interval 
+// .046 20201228 Remove Psti060 ~ 070 from Venus 8 -> Query / Configure PSTI Interval in CustomerRelease version
+// .046 20201228 Modify text "GPS/UTC" to "GNSS/UTC" in 1Pps Output Mode UI
+// .046 20201228 Remove [Query Phoenix Extended ID] in Phoenix menu
+// .046 20201228 Remove [Query Phoenix Tag] in Phoenix menu
+// .046 20201228 Remove [Configure Phoenix Tag] in Phoenix menu
+// .046 20201228 Remove [Reset RTK engine] in RTK menu
+// .046 20201228 Remove [Re-calculate GLONASS IFB] in RTK menu
+// .046 20201228 Remove [RTK Pass-Through] menu in RTK menu
+// .046 20201228 Remove [Configure RTK Reference Static Started Position] in RTK menu
+// .046 20201228 Remove [Clear RTK Slave Backup Data] in RTK menu
+// .046 20201228 Remove [Query / Configure RTK GLONASS Carrier-Phase Inter-Frequency Bias] in RTK menu
+// .047 20210106 Add Jaxa KML Converter for verify Jaxa NMEA+Raw firmware, request from Andrew and Oliver
+// .048 20210112 Add "GGA Cycle" in NTRIP, request from Ken
+// .049 20210115 Support AllyStar L6 Raw Binary message, request from Andrew
 
 #define SW_FUN_DATALOG		        0x0001
 #define SW_FUN_AGPS				        0x0002
@@ -525,7 +544,7 @@
 //title.Format("%s %s V%s for %s", APP_CAPTION, APP_TITLE, APP_VERSION, APP_MODULE);
 #define APP_CAPTION				        "GNSS Viewer"
 #define APP_TITLE				          ""              //Internal Use, Customer Release, NMEA Player...
-#define APP_VERSION				        "2.1.044"
+#define APP_VERSION				        "2.1.049"
 #define APP_MODULE				        "Phoenix"
 
 #define	Sktyraq					          0x0000
@@ -627,7 +646,7 @@
 #define NEW_SBAS2                 1   //Remove user define submask field in SBAS2 commands.
 #define _NAVIC_SUPPORT_           1   //Show NAVIC satellites in Galileo position
 #define NO_BOOST_UPDATE_RATE_CHANGE 1 //Doesn't change baudrate after update rate change
-#define PPS_MODE_SUPPORT_ALIGN_TO_NAVIC 1 //Show ALIGN_TO_NAVIC in Configure 1PPS Output Mode
+#define PPS_MODE_SUPPORT_ALIGN_TO_NAVIC 0 //Show ALIGN_TO_NAVIC in Configure 1PPS Output Mode
 #define MICROSATELLITE_PATCH      0   //For Microsatellite upgrade
 #define ENABLE_AUTO_AGPS          0   //Do autmatic AGPS when push cold start button
 #define NAVSPARK_MINI_GPIO_QUERY  0   //For a navspark-mini customer to query GPIO status
@@ -636,7 +655,9 @@
 #define NO_PHOENIX_MENU           0   //For SWID 
 #define PROUCTION_TEST_200611     0   //For Angus production test in 2020/06/11 
 #define AUTO_ACTIVATE_AES_KEY     1   //Turn On / Off Auto Activation Tag function in menu
-
+#define TEST_NEW_PARSER           0   //Turn On / Off New parser
+#define JAXA_KML_CONVERTER        1   //"JAXA Binary to KML" function in Converter menu
+#define _ALLYSTAR_BINARY          1   //"JAXA Binary to KML" function in Converter menu
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 #if defined(SWCFG_VENDOR_GNSS_GENERAL_SWID)  ////20200324 Request from Ming-Jen for SWID

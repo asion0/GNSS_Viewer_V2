@@ -212,7 +212,7 @@ void CSkyTraqKml::Finish()
 				str = pls.GetNext(p);
 				kmlFile.Write(str, (U16)str.GetLength());
 			}
-			str += "</Folder>";
+			str = "</Folder>";
 			kmlFile.Write(str, (U16)str.GetLength());
 		}
 
@@ -461,95 +461,97 @@ void CSkyTraqKml::WriteKMLPath(CFile& f, double lon, double lat, double alt, con
 
 void CSkyTraqKml::WriteKMLPath2(CFile& f, double lon, double lat, double alt, const F32* speed, const F32* degree, const CString& ts, QualityMode q)
 {
-	CString str;
+	CString str, qMode;
 	str = "      ";
 	f.Write(str, str.GetLength());
 	str.Format("%012.9lf,%012.9lf,%07.3lf\r\n", lon, lat, (convert3d) ? alt : 2.0);
 	f.Write(str, str.GetLength());
 
-	if(pointList)
+	if(!pointList)
 	{
-		CString str, qMode;
-		if(q==FixRTK)
-		{
-			qMode = "Fix RTK";
-		}
-		else if(q==FloatRTK)
-		{
-			qMode = "Float RTK";
-		}		
-		else if(q==EstimatedMode)
-		{
-			qMode.Format("Estimated Mode");
-		}
-		else if(q==PositionFix2d)
-		{
-			qMode.Format("Position Fix 2D");
-		}
-		else if(q==PositionFix3d)
-		{
-			qMode.Format("Position Fix 3D");
-		}
-		else if(q==DgpsMode)
-		{
-			qMode.Format("DGPS");
-		}
-		else
-		{
-			qMode.Format("%d", q);
-		}
+    return;
+  }
 
-		if(noPointText)
-		{
-			strPointList += "<Placemark><name></name><description><![CDATA[";
-		}
-		else
-		{
-			strPointList += "<Placemark><name>" + ts + "</name><description><![CDATA[";
-		}
-    str.Format("LON: %012.9lf <br>LAT: %012.9lf<br>ALT: %07.3lf<br>Speed: %.2f <br>Direction:%.2f <br>Time: %s<br>Fix Mode: %s<br>", 
-      lon, lat, alt, (speed) ? *speed * KNOTS2KMHR : 0, (degree) ? *degree : 0, ts, qMode);
-		strPointList += str;
-
-		if(detailInfo)
-		{
-			strPointList += GetSatelliteInfo();
-			//"<table class=\"tg\"><tr><th>PRN</th><th>Azimuth</th><th>Elevation</th><th>SNR</th><th>Used</th></tr><tr><td>5</td><td>128</td><td>45</td><td>41</td><td>O</td></tr><tr><td>6</td><td>315</td><td>89</td><td>40</td><td>X</td></tr></table>";
-		}
-		if(q==FixRTK)
-		{
-			strPointList += "]]></description><styleUrl>#PointStyle2</styleUrl><Point>";
-		}
-		else if(q==FloatRTK)
-		{
-			strPointList += "]]></description><styleUrl>#PointStyle3</styleUrl><Point>";
-		}		
-		else if(q==EstimatedMode)
-		{
-			strPointList += "]]></description><styleUrl>#PointStyle4</styleUrl><Point>";
-		}		
-		else
-		{
-			strPointList += "]]></description><styleUrl>#PointStyle</styleUrl><Point>";
-		}
-		if(convert3d)
-		{
-			strPointList += "<extrude>1</extrude><altitudeMode>absolute</altitudeMode>";
-		}
-		else
-		{
-			strPointList += "<altitudeMode>clampToGround</altitudeMode>";
-		}
-		str.Format("<coordinates>%012.9lf,%012.9lf,%07.3lf</coordinates>", lon, lat, alt);
-		strPointList += str;
-		strPointList += "</Point></Placemark>\r\n";
-	
-		if(strPointList.GetLength() > 4096)
-		{
-			pls.AddTail(strPointList);
-			strPointList.Empty();
-		}
+	if(q==FixRTK)
+	{
+		qMode = "Fix RTK";
 	}
+	else if(q==FloatRTK)
+	{
+		qMode = "Float RTK";
+	}		
+	else if(q==EstimatedMode)
+	{
+		qMode.Format("Estimated Mode");
+	}
+	else if(q==PositionFix2d)
+	{
+		qMode.Format("Position Fix 2D");
+	}
+	else if(q==PositionFix3d)
+	{
+		qMode.Format("Position Fix 3D");
+	}
+	else if(q==DgpsMode)
+	{
+		qMode.Format("DGPS");
+	}
+	else
+	{
+		qMode.Format("%d", q);
+	}
+
+	if(noPointText)
+	{
+		strPointList += "<Placemark><name></name><description><![CDATA[";
+	}
+	else
+	{
+		strPointList += "<Placemark><name>" + ts + "</name><description><![CDATA[";
+	}
+  str.Format("LON: %012.9lf <br>LAT: %012.9lf<br>ALT: %07.3lf<br>Speed: %.2f <br>Direction:%.2f <br>Time: %s<br>Fix Mode: %s<br>", 
+    lon, lat, alt, (speed) ? *speed * KNOTS2KMHR : 0, (degree) ? *degree : 0, ts, qMode);
+	strPointList += str;
+
+	if(detailInfo)
+	{
+		strPointList += GetSatelliteInfo();
+		//"<table class=\"tg\"><tr><th>PRN</th><th>Azimuth</th><th>Elevation</th><th>SNR</th><th>Used</th></tr><tr><td>5</td><td>128</td><td>45</td><td>41</td><td>O</td></tr><tr><td>6</td><td>315</td><td>89</td><td>40</td><td>X</td></tr></table>";
+	}
+	if(q==FixRTK)
+	{
+		strPointList += "]]></description><styleUrl>#PointStyle2</styleUrl><Point>";
+	}
+	else if(q==FloatRTK)
+	{
+		strPointList += "]]></description><styleUrl>#PointStyle3</styleUrl><Point>";
+	}		
+	else if(q==EstimatedMode)
+	{
+		strPointList += "]]></description><styleUrl>#PointStyle4</styleUrl><Point>";
+	}		
+	else
+	{
+		strPointList += "]]></description><styleUrl>#PointStyle</styleUrl><Point>";
+	}
+	if(convert3d)
+	{
+		strPointList += "<extrude>1</extrude><altitudeMode>absolute</altitudeMode>";
+	}
+	else
+	{
+		strPointList += "<altitudeMode>clampToGround</altitudeMode>";
+	}
+	str.Format("<coordinates>%012.9lf,%012.9lf,%07.3lf</coordinates>", lon, lat, alt);
+	strPointList += str;
+	strPointList += "</Point></Placemark>\r\n";
+
+	if(strPointList.GetLength() > 4096)
+	{
+		pls.AddTail(strPointList);
+		strPointList.Empty();
+	}
+
 }
 
 void CSkyTraqKml::WritePOIPath(CFile& f, vector<LL1> *lst)

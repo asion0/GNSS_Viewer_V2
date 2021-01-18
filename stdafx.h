@@ -53,7 +53,8 @@
 #include <afxinet.h>
 #include <afxsock.h>		// MFC socket extensions
 
-#include "StBaseType.h"
-#include "Vender_newGNSS.h"
-#include "Global.h"
-
+#if !defined(TEST_PARSER_DLG)
+ #include "Vender_newGNSS.h"
+#endif
+ #include "StBaseType.h"
+ #include "Global.h"

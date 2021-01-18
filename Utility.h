@@ -23,6 +23,7 @@ namespace Utility
 {
   //Log functions
 	void Log(const char* str1, const char* str2, int n);
+  void Log2(const char* function, int line, const char* str);
 	void LogFatal(const char* str1, const char* str2, int n);
 
   //Registry functions
@@ -71,6 +72,7 @@ namespace Utility
   CString GetFilePathName(LPCTSTR pszPathname);
   // "C:\\Abc\\Def\\ghijk.mno" -> "mno"
 	CString GetFileExt(LPCTSTR pszPathname);
+  bool WriteBufferToFileAddNew(LPCTSTR pszPathname, void* pBuf, DWORD size);
 
   //Profile ini parser
 	double GetPrivateProfileDouble(LPCSTR appName, LPCSTR keyName, LPCSTR defaultString, LPCSTR fileName);
@@ -87,6 +89,9 @@ namespace Utility
   //bool CalcFirmwareCrc(const CString& fwPath, U16& crc1, U16& crc2, U32& crc3, U08& checkSum);
   bool CalcFirmwareCrc(const CString& fwPath, int flashSize, U16& crcM, U16& crcS, U32& crc32_16m, U32& crc32_8m, U08& checkSum);
   bool CheckPromUniqueTag(const CString& imgPath, U32& tagPos, bool& emptyTag);
+  DWORD GetStqBinary(void *buffer, DWORD bufferSize, CFile& f);
+  CString Base64Encode(const CString& src);
+
 }
 
 class ScopeTimer
@@ -112,6 +117,10 @@ public:
 		return endTickCount - startTickCount;
 	}
 
+	void Reset()
+	{
+    startTickCount = ::GetTickCount();
+	}
 protected:
 	DWORD startTickCount;
 	DWORD endTickCount;
@@ -181,8 +190,10 @@ public:
 
 	BinaryData(U08 *data, int size) 
 	{ 
-		ReadFromMemory(data, size);
+		dataSize = 0; 
+		dataPtr = NULL;
 		iter = 0;
+		ReadFromMemory(data, size);
 	};
 
 	BinaryData(const BinaryData& src) 

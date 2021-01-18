@@ -1467,6 +1467,7 @@ BOOL ConfigBinaryMeasurementDataOutDlg::OnInitDialog()
       ((CButton*)GetDlgItem(IDC_GLONASS))->SetCheck((mode & 0x0002) != 0);
       ((CButton*)GetDlgItem(IDC_GALILEO))->SetCheck((mode & 0x0004) != 0);
       ((CButton*)GetDlgItem(IDC_BEIDOU))->SetCheck((mode & 0x0008) != 0);
+      ((CButton*)GetDlgItem(IDC_SBAS))->SetCheck((mode & 0x0010) != 0);
     }
     else
     {
@@ -1569,6 +1570,10 @@ void ConfigBinaryMeasurementDataOutDlg::OnBnClickedOk()
 	if(((CButton*)GetDlgItem(IDC_BEIDOU))->GetCheck())
 	{
 		m_subFrame |= 0x8;
+	}
+	if(((CButton*)GetDlgItem(IDC_SBAS))->GetCheck())
+	{
+		m_subFrame |= 0x10;
 	}
 	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
 
@@ -2594,14 +2599,22 @@ void CIqPlotDlg::DoCommand()
 // CNtripClientDlg
 IMPLEMENT_DYNAMIC(CNtripClientDlg, CDialog)
 #define UWM_NTRIP_STATUS		    (WM_USER + 0x200)
+#define UWM_NTRIP_RESTART		    (WM_USER + 0x201)
+#define TIMER_RESTART           (0x01234)
 
-CString CNtripClientDlg::m_host = "";
-int CNtripClientDlg::m_port = 0;
-CString CNtripClientDlg::m_mountpoint = "";
-CString CNtripClientDlg::m_user = "";
-CString CNtripClientDlg::m_password = "";
-BOOL CNtripClientDlg::m_stopThread = TRUE;
-CString CNtripClientDlg::m_ntripStatusMessage;
+CString CNtripClientDlg::s_hostname = "";
+int CNtripClientDlg::s_port = 0;
+CString CNtripClientDlg::s_mountpoint = "";
+CString CNtripClientDlg::s_user = "";
+CString CNtripClientDlg::s_password = "";
+BOOL CNtripClientDlg::s_stopThread = TRUE;
+CString CNtripClientDlg::s_ntripStatusMessage;
+int CNtripClientDlg::s_cycleSecs = 1;
+BOOL CNtripClientDlg::s_cycle = TRUE;
+//CString CNtripClientDlg::s_ggaString = "$GPGGA,095623,2446.80,N,12100.00,E,1,10,1,94.0,M,19.6,M,5,0*6F\r\n";
+CString CNtripClientDlg::s_ggaString;
+BOOL CNtripClientDlg::s_autoRestart = FALSE;
+
 CNtripClientDlg::CNtripClientDlg(CWnd* pParent /*=NULL*/)
 {
   CRegistry reg;
@@ -2609,25 +2622,42 @@ CNtripClientDlg::CNtripClientDlg(CWnd* pParent /*=NULL*/)
 	if(reg.SetKey(VIEWER_REG_PATH, true))
 	{
 #if(IS_DEBUG)
-    m_host = reg.ReadString("ntrip_host", "60.250.205.22");
-    m_port = reg.ReadInt("ntrip_port", 5000);
-    m_mountpoint = reg.ReadString("ntrip_mountpoint", "RSV3");
-    m_user = reg.ReadString("ntrip_userid", "rsv3");
-    m_password = reg.ReadString("ntrip_password", "1234");
+    s_hostname = reg.ReadString("ntrip_host", "60.250.205.22");
+    s_port = reg.ReadInt("ntrip_port", 5000);
+    s_mountpoint = reg.ReadString("ntrip_mountpoint", "RSV3");
+    s_user = reg.ReadString("ntrip_userid", "rsv3");
+    s_password = reg.ReadString("ntrip_password", "1234");
+    s_cycleSecs = reg.ReadInt("ntrip_cycle_seconds", 1);
+    s_cycle = reg.ReadInt("ntrip_cycle", 1);
 #else
-    m_host = reg.ReadString("ntrip_host", "");
-    m_port = reg.ReadInt("ntrip_port", 0);
-    m_mountpoint = reg.ReadString("ntrip_mountpoint", "");
-    m_user = reg.ReadString("ntrip_userid", "");
-    m_password = reg.ReadString("ntrip_password", "");
+    s_hostname = reg.ReadString("ntrip_host", "");
+    s_port = reg.ReadInt("ntrip_port", 0);
+    s_mountpoint = reg.ReadString("ntrip_mountpoint", "");
+    s_user = reg.ReadString("ntrip_userid", "");
+    s_password = reg.ReadString("ntrip_password", "");
+    s_cycleSecs = reg.ReadInt("ntrip_cycle_seconds", 1);
+    s_cycle = reg.ReadInt("ntrip_cycle", 0);
 #endif
 	}
+  timerActive = FALSE;
+}
+
+void CNtripClientDlg::SetGgaString(LPCSTR s)
+{
+  s_ggaString = s;
+}
+
+LPCSTR CNtripClientDlg::GetGgaString()
+{
+  return s_ggaString;
 }
 
 BEGIN_MESSAGE_MAP(CNtripClientDlg, CDialog)
+	ON_WM_TIMER()
 	ON_BN_CLICKED(IDOK, &CNtripClientDlg::OnBnClickedOk)
 	ON_BN_CLICKED(IDC_EXIT, &CNtripClientDlg::OnBnClickedExit)
   ON_MESSAGE(UWM_NTRIP_STATUS, OnNtripStatus)
+  ON_MESSAGE(UWM_NTRIP_RESTART, OnNtripRestart)
 END_MESSAGE_MAP()
 
 // CNtripClientDlg 
@@ -2636,12 +2666,16 @@ BOOL CNtripClientDlg::OnInitDialog()
 	CDialog::OnInitDialog();
 
   CString txt;
-	GetDlgItem(IDC_HOST)->SetWindowText(m_host);
-	txt.Format("%d", m_port);
+	GetDlgItem(IDC_HOST)->SetWindowText(s_hostname);
+	txt.Format("%d", s_port);
 	GetDlgItem(IDC_PORT)->SetWindowText(txt);
-	GetDlgItem(IDC_MOUNTPOINT)->SetWindowText(m_mountpoint);
-	GetDlgItem(IDC_USER)->SetWindowText(m_user);
-	GetDlgItem(IDC_PASSWORD)->SetWindowText(m_password);
+	GetDlgItem(IDC_MOUNTPOINT)->SetWindowText(s_mountpoint);
+	GetDlgItem(IDC_USER)->SetWindowText(s_user);
+	GetDlgItem(IDC_PASSWORD)->SetWindowText(s_password);
+
+  ((CButton*)GetDlgItem(IDC_CYCLE_CHK))->SetCheck(s_cycle);
+	txt.Format("%d", s_cycleSecs);
+  ((CButton*)GetDlgItem(IDC_CYCLE_EDT))->SetWindowText(txt);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
@@ -2673,11 +2707,11 @@ LRESULT CNtripClientDlg::OnNtripStatus(WPARAM wParam, LPARAM lParam)
   case NoMountPoint:
   case Unauthorized:
   case HostNoAck:
-    GetDlgItem(IDC_MSG)->SetWindowText(m_ntripStatusMessage);
-    m_stopThread = TRUE;
-    UpdateStarus(m_stopThread);
+    GetDlgItem(IDC_MSG)->SetWindowText(s_ntripStatusMessage);
+    s_stopThread = TRUE;
+    UpdateStatus(s_stopThread);
     break;
-  case   NtripOk:
+  case NtripOk:
     if(bytes == 0)
     {
       pos = 0;
@@ -2690,67 +2724,47 @@ LRESULT CNtripClientDlg::OnNtripStatus(WPARAM wParam, LPARAM lParam)
         pos = 0;
       }
     }
-    txt.Format("%s, %d bytes received", m_ntripStatusMessage, bytes);
+    txt.Format("%s, %d bytes received", s_ntripStatusMessage, bytes);
     GetDlgItem(IDC_MSG)->SetWindowText(txt);
     ((CProgressCtrl*)GetDlgItem(IDC_PROG))->SetPos(pos);
 
     if(!CGPSDlg::gpsDlg->m_isConnectOn)
     {
       GetDlgItem(IDC_MSG)->SetWindowText("Serial port closed!");
-      m_stopThread = TRUE;
-      UpdateStarus(m_stopThread);
+      s_stopThread = TRUE;
+      UpdateStatus(s_stopThread);
     }
     break;
   }
   return 0;
 }
 
-static U08* base64 = (U08*)"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";  
-CString Base64Encode(const CString& src)  
-{  
-  CString dstSrc = NULL;
-  int n, buflen, i, j;
-  CString buf = src;
-  buflen = n = src.GetLength();
-
-  //dst = (U08*)malloc(buflen / 3 * 4 + 3);
-  U08* dst = (U08*)dstSrc.GetBuffer(buflen / 3 * 4 + 5);
-
-  for(i = 0, j = 0; i <= buflen - 3; i += 3, j += 4) 
-  {  
-     dst[j] = (buf[i] & 0xFC) >> 2;  
-     dst[j+1] = ((buf[i] & 0x03) << 4) + ((buf[i + 1] & 0xF0) >> 4);  
-     dst[j+2] = ((buf[i+1] & 0x0F) << 2) + ((buf[i + 2] & 0xC0) >> 6);  
-     dst[j+3] = buf[i+2] & 0x3F;  
-  }  
-  if(n % 3 == 1) 
-  {  
-     dst[j] = (buf[i] & 0xFC) >> 2;  
-     dst[j + 1] = ((buf[i] & 0x03) << 4);  
-     dst[j + 2] = 64;  
-     dst[j + 3] = 64;  
-     j += 4;  
-  }  
-  else if(n % 3 == 2)
-  {  
-     dst[j] = (buf[i] & 0xFC) >> 2;  
-     dst[j + 1] = ((buf[i] & 0x03) << 4) + ((buf[i + 1] & 0xF0) >> 4);  
-     dst[j + 2] = ((buf[i+1] & 0x0F) << 2);  
-     dst[j + 3] = 64;  
-     j += 4;  
-  }  
-
-  for(i = 0; i < j; ++i) /* map 6 bit value to base64 ASCII character */  
+LRESULT CNtripClientDlg::OnNtripRestart(WPARAM wParam, LPARAM lParam)
+{
+  if(!timerActive)
   {
-     dst[i] = base64[(int)dst[i]];  
+    SetTimer(TIMER_RESTART, 2000, NULL);
   }
-  dst[j] = 0;  
+  return 0;
+}
 
-  dstSrc.ReleaseBuffer();
-  return dstSrc;  
-}  
+void CNtripClientDlg::OnTimer(UINT nIDEvent)
+{
+  if(nIDEvent == TIMER_RESTART && s_autoRestart)
+  {
+    if(CGPSDlg::gpsDlg->GetNtripRunning())
+    {
+      timerActive = FALSE;
+      KillTimer(TIMER_RESTART);
+    }
+    else
+    {
+      DoStart();
+    }
+  }
+}
 
-UINT TestWinSocket(LPVOID pParam)
+UINT CNtripClientDlg::RunWinSocket(LPVOID pParam)
 {
   CNtripClientDlg* pDlg = (CNtripClientDlg*)pParam;
   WSAData wsaData;
@@ -2759,108 +2773,128 @@ UINT TestWinSocket(LPVOID pParam)
 
   if(iResult != 0) 
   {
-    CNtripClientDlg::m_ntripStatusMessage = "Winsock initialization failed";
+    CNtripClientDlg::s_ntripStatusMessage = "Winsock initialization failed";
     pDlg->PostMessage(UWM_NTRIP_STATUS, WinSockInitError, 0);
-    CGPSDlg::gpsDlg->SetNtripRuning(FALSE);
+    CGPSDlg::gpsDlg->SetNtripRunning(FALSE);
     return 0;
   }
   SOCKET sck = INVALID_SOCKET;
   sck = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);\
   if(sck == INVALID_SOCKET) 
   {
-    CNtripClientDlg::m_ntripStatusMessage = "Socket creation failed";
+    CNtripClientDlg::s_ntripStatusMessage = "Socket creation failed";
     pDlg->PostMessage(UWM_NTRIP_STATUS, WinSockCreationError, 0);
-    CGPSDlg::gpsDlg->SetNtripRuning(FALSE);
+    CGPSDlg::gpsDlg->SetNtripRunning(FALSE);
     return 0;
   }
 
   SOCKADDR_IN addr = { 0 };
-#if(1)
-  struct hostent *host = gethostbyname(CNtripClientDlg::m_host);
+  struct hostent *host = gethostbyname(CNtripClientDlg::s_hostname);
   if(host == NULL)
   {
     //No IP or Domain name
-    CNtripClientDlg::m_ntripStatusMessage.Format("Host address error (%s)", CNtripClientDlg::m_host);
+    CNtripClientDlg::s_ntripStatusMessage.Format("Host address error (%s)", CNtripClientDlg::s_hostname);
     pDlg->PostMessage(UWM_NTRIP_STATUS, HostAddressError, 0);
-    CGPSDlg::gpsDlg->SetNtripRuning(FALSE);
+    CGPSDlg::gpsDlg->SetNtripRunning(FALSE);
     return 0;
   }
 
   char* ip = inet_ntoa(*(struct in_addr *)*host->h_addr_list);
   addr.sin_addr.s_addr = inet_addr(ip);
-#else
-  unsigned int ad = inet_addr(CNtripClientDlg::m_host);
-  host = gethostbyaddr((char *)&ad, 4, AF_INET);
-  addr.sin_addr.s_addr = inet_addr(host->h_name);
-#endif
-  // addr.sin_addr.s_addr = INADDR_ANY; // 若設定 INADDR_ANY 表示任何 IP
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(CNtripClientDlg::m_port); // 設定 port,後面解釋 htons()
+  addr.sin_port = htons(CNtripClientDlg::s_port);
 
   int r = connect(sck, (SOCKADDR*)&addr, sizeof(addr));
   if(r == SOCKET_ERROR)
   {
     //Port no response
-    CNtripClientDlg::m_ntripStatusMessage = "Host connecting failed, check the port or host name";
+    CNtripClientDlg::s_ntripStatusMessage = "Host connecting failed, check the port or host name";
     pDlg->PostMessage(UWM_NTRIP_STATUS, HostNotResponding, 0);
-    CGPSDlg::gpsDlg->SetNtripRuning(FALSE);
+    CGPSDlg::gpsDlg->SetNtripRunning(FALSE);
     return 0;
   }
-  
-  CString auth;// = ToBase64(username + ":" + password);
-  auth.Format("%s:%s", CNtripClientDlg::m_user, CNtripClientDlg::m_password);
+
+  CString auth;
+  auth.Format("%s:%s", CNtripClientDlg::s_user, CNtripClientDlg::s_password);
   
   CString msg;
-  CString authB64 = Base64Encode(auth);
+  CString authB64 = Utility::Base64Encode(auth);
   msg.Format("GET /%s HTTP/1.1\r\n" \
     "User-Agent: NTRIP iter.dk\r\n" \
     "Authorization: Basic %s\r\n" \
     "Accept: */*\r\n" \
     "Connection: close\r\n\r\n",
-    CNtripClientDlg::m_mountpoint, authB64);
-
+    CNtripClientDlg::s_mountpoint, authB64);
   send(sck, msg, msg.GetLength(), 0);
 
   U08 message[512] = { 0 };
   int len = 0, count = 0;
   len = recv(sck, (char*)message, sizeof(message), 0);
-  if(len > 0)
+  if(len <= 0)
   {
-    message[len] = 0;
-    CString s = (char*)message;
-    if(s.Find("ICY 200 OK") >= 0)
+    CNtripClientDlg::s_ntripStatusMessage = "Host not responding";
+    pDlg->PostMessage(UWM_NTRIP_STATUS, HostNoAck, 0);
+    CGPSDlg::gpsDlg->SetNtripRunning(FALSE);
+    return 0;
+  }
+
+  message[len] = 0;
+  CString s = (char*)message;
+  if(s.Find("SOURCETABLE 200 OK") >= 0)
+  {
+    CNtripClientDlg::s_ntripStatusMessage = "No mountpoint, reconnect...";
+    pDlg->PostMessage(UWM_NTRIP_STATUS, NoMountPoint, 0);
+    CGPSDlg::gpsDlg->SetNtripRunning(FALSE);
+    return 0;
+  }
+  else if(s.Find("HTTP/1.1 401 Unauthorized") >= 0)
+  {
+    CNtripClientDlg::s_ntripStatusMessage = "HTTP/1.1 401 Unauthorized";
+    pDlg->PostMessage(UWM_NTRIP_STATUS, Unauthorized, 0);
+    CGPSDlg::gpsDlg->SetNtripRunning(FALSE);
+    return 0;
+  }
+
+  if(s.Find("ICY 200 OK") >= 0)
+  {
+    CNtripClientDlg::s_ntripStatusMessage.Format("%s:%d/%s", CNtripClientDlg::s_hostname, 
+      CNtripClientDlg::s_port, CNtripClientDlg::s_mountpoint);
+    pDlg->PostMessage(UWM_NTRIP_STATUS, NtripOk, 0);
+
+    if(CNtripClientDlg::s_cycle)
     {
-      CNtripClientDlg::m_ntripStatusMessage.Format("%s:%d/%s", CNtripClientDlg::m_host, CNtripClientDlg::m_port, CNtripClientDlg::m_mountpoint);
-      pDlg->PostMessage(UWM_NTRIP_STATUS, NtripOk, 0);
-    }
-    else if(s.Find("SOURCETABLE 200 OK") >= 0)
-    {
-      CNtripClientDlg::m_ntripStatusMessage = "No mountpoint, reconnect...";
-      pDlg->PostMessage(UWM_NTRIP_STATUS, NoMountPoint, 0);
-      CGPSDlg::gpsDlg->SetNtripRuning(FALSE);
-      return 0;
-    }
-    else if(s.Find("HTTP/1.1 401 Unauthorized") >= 0)
-    {
-      CNtripClientDlg::m_ntripStatusMessage = "HTTP/1.1 401 Unauthorized";
-      pDlg->PostMessage(UWM_NTRIP_STATUS, Unauthorized, 0);
-      CGPSDlg::gpsDlg->SetNtripRuning(FALSE);
-      return 0;
+      msg = GetGgaString();
+      while(!s_stopThread && msg.GetLength() == 0)
+      {
+        Sleep(100);
+        msg = GetGgaString();
+      }
+      send(sck, msg, msg.GetLength(), 0);
     }
   }
   else
   {
-    CNtripClientDlg::m_ntripStatusMessage = "Host not responding";
-    pDlg->PostMessage(UWM_NTRIP_STATUS, HostNoAck, 0);
-    CGPSDlg::gpsDlg->SetNtripRuning(FALSE);
-    return 0;
+    ASSERT(FALSE);
   }
 
-  CGPSDlg::gpsDlg->SetNtripRuning(TRUE);
+  CGPSDlg::gpsDlg->SetNtripRunning(TRUE);
   ULONG_PTR bytes = 0;
-  while(!CNtripClientDlg::m_stopThread/*++count < 100*/)
+  MyTimer timer;
+  DWORD interval = CNtripClientDlg::s_cycleSecs * 1000;
+  if(CNtripClientDlg::s_cycle)
   {
-    //ZeroMemory(message, 256);
+    timer.Start();
+  }
+  s_autoRestart = TRUE;
+  while(!s_stopThread/*++count < 100*/)
+  {
+    if(CNtripClientDlg::s_cycle && timer.GetDuration() >= interval)
+    {
+      timer.Restart();
+      msg = GetGgaString();
+      send(sck, msg, msg.GetLength(), 0);
+    }
+
     len = recv(sck, (char*)message, sizeof(message), 0);
     if(len > 0)
     {
@@ -2868,22 +2902,22 @@ UINT TestWinSocket(LPVOID pParam)
       bytes += len;
       pDlg->PostMessage(UWM_NTRIP_STATUS, NtripOk, bytes);
     }
-    else
-    {
-      int d = 0;
-    }
   }
-  //f.Close();
   WSACleanup();
-  CGPSDlg::gpsDlg->SetNtripRuning(FALSE);
-
+  CGPSDlg::gpsDlg->SetNtripRunning(FALSE);
+  if(s_autoRestart)
+  {
+    pDlg->PostMessage(UWM_NTRIP_RESTART, 0, 0);
+  }
   return 0;
 }
 
-void CNtripClientDlg::UpdateStarus(BOOL isStop)
+void CNtripClientDlg::UpdateStatus(BOOL isStop)
 {
   if(!isStop)
   {
+  	GetDlgItem(IDC_CYCLE_CHK)->EnableWindow(FALSE);
+  	GetDlgItem(IDC_CYCLE_EDT)->EnableWindow(FALSE);
   	GetDlgItem(IDC_HOST)->EnableWindow(FALSE);
 	  GetDlgItem(IDC_PORT)->EnableWindow(FALSE);
 	  GetDlgItem(IDC_MOUNTPOINT)->EnableWindow(FALSE);
@@ -2894,51 +2928,80 @@ void CNtripClientDlg::UpdateStarus(BOOL isStop)
   }
   else
   {
+  	GetDlgItem(IDC_CYCLE_CHK)->EnableWindow(TRUE);
+    if(((CButton*)GetDlgItem(IDC_CYCLE_CHK))->GetCheck())
+    {
+  	  GetDlgItem(IDC_CYCLE_EDT)->EnableWindow(TRUE);
+    }
+    else
+    {
+  	  GetDlgItem(IDC_CYCLE_EDT)->EnableWindow(FALSE);
+    }
   	GetDlgItem(IDC_HOST)->EnableWindow(TRUE);
 	  GetDlgItem(IDC_PORT)->EnableWindow(TRUE);
 	  GetDlgItem(IDC_MOUNTPOINT)->EnableWindow(TRUE);
 	  GetDlgItem(IDC_USER)->EnableWindow(TRUE);
 	  GetDlgItem(IDC_PASSWORD)->EnableWindow(TRUE);
     GetDlgItem(IDOK)->SetWindowText("Start");
+  	((CProgressCtrl*)GetDlgItem(IDC_PROG))->SetPos(0);
   }
 }
-void CNtripClientDlg::OnBnClickedOk()
-{	
-  if(m_stopThread)
+
+void CNtripClientDlg::DoStart()
+{
+  if(s_stopThread)
   {
 	  CString txt;
-	  GetDlgItem(IDC_HOST)->GetWindowText(m_host);
+	  GetDlgItem(IDC_HOST)->GetWindowText(s_hostname);
 	  GetDlgItem(IDC_PORT)->GetWindowText(txt);
-	  m_port = atoi(txt);
-	  GetDlgItem(IDC_MOUNTPOINT)->GetWindowText(m_mountpoint);
-	  GetDlgItem(IDC_USER)->GetWindowText(m_user);
-	  GetDlgItem(IDC_PASSWORD)->GetWindowText(m_password);
+	  s_port = atoi(txt);
+	  GetDlgItem(IDC_MOUNTPOINT)->GetWindowText(s_mountpoint);
+	  GetDlgItem(IDC_USER)->GetWindowText(s_user);
+	  GetDlgItem(IDC_PASSWORD)->GetWindowText(s_password);
 
-    m_stopThread = FALSE;
-    ::AfxBeginThread(TestWinSocket, this);
-    UpdateStarus(m_stopThread);
+	  s_cycle = ((CButton*)GetDlgItem(IDC_CYCLE_CHK))->GetCheck();
+	  GetDlgItem(IDC_CYCLE_EDT)->GetWindowText(txt);
+	  s_cycleSecs = atoi(txt);
+
+    s_stopThread = FALSE;
+    ::AfxBeginThread(RunWinSocket, this);
+    UpdateStatus(s_stopThread);
 
     CRegistry reg;
 	  reg.SetRootKey(HKEY_CURRENT_USER);
 	  if(reg.SetKey(VIEWER_REG_PATH, false))
 	  {
-      reg.WriteString("ntrip_host", m_host);
-      reg.WriteInt("ntrip_port", m_port);
-      reg.WriteString("ntrip_mountpoint", m_mountpoint);
-      reg.WriteString("ntrip_userid", m_user);
-      reg.WriteString("ntrip_password", m_password);
+      reg.WriteString("ntrip_host", s_hostname);
+      reg.WriteInt("ntrip_port", s_port);
+      reg.WriteString("ntrip_mountpoint", s_mountpoint);
+      reg.WriteString("ntrip_userid", s_user);
+      reg.WriteString("ntrip_password", s_password);
+      reg.WriteInt("ntrip_cycle_seconds", s_cycleSecs);
+      reg.WriteInt("ntrip_cycle", s_cycle);
     }
   }
   else
   {
-    m_stopThread = TRUE;
-    UpdateStarus(m_stopThread);
+    s_autoRestart = FALSE;
+    s_stopThread = TRUE;
+    UpdateStatus(s_stopThread);
   }
+}
+
+void CNtripClientDlg::OnBnClickedOk()
+{	
+  if(s_autoRestart)
+  {
+      KillTimer(TIMER_RESTART);
+      s_autoRestart = FALSE;
+  }
+  DoStart();
 }
 
 void CNtripClientDlg::OnBnClickedExit()
 {	
-  m_stopThread = TRUE;
+  s_stopThread = TRUE;
+  s_autoRestart = FALSE;
 	OnOK();
 }
 /*
@@ -4156,6 +4219,7 @@ int a = ((CComboBox*)GetDlgItem(IDC_MSM_TYPE))->GetCurSel();
     ((CButton*)GetDlgItem(IDC_GLONASS))->SetCheck((mode & 0x0002) != 0);
     ((CButton*)GetDlgItem(IDC_GALILEO))->SetCheck((mode & 0x0004) != 0);
     ((CButton*)GetDlgItem(IDC_BEIDOU))->SetCheck((mode & 0x0008) != 0);
+    //((CButton*)GetDlgItem(IDC_SBAS))->SetCheck((mode & 0x0010) != 0);
   } //if(CGPSDlg::Ack == err)
   else
   { //Default value
@@ -4320,6 +4384,10 @@ void CConfigRtkFunctions::OnBnClickedOk()
 	{
 		m_subFrame |= 0x8;
 	}
+	//if(((CButton*)GetDlgItem(IDC_SBAS))->GetCheck())
+	//{
+	//	m_subFrame |= 0x10;
+	//}
 
 	m_attribute = ((CComboBox*)GetDlgItem(IDC_ATTR))->GetCurSel();
 	OnOK();
@@ -4613,7 +4681,6 @@ void CConfigRtkFunctions::UpdateStatus()
     GetDlgItem(IDC_GLONASS)->ShowWindow(SW_HIDE);
     GetDlgItem(IDC_BEIDOU)->ShowWindow(SW_HIDE);
     GetDlgItem(IDC_GALILEO)->ShowWindow(SW_HIDE);
-
 		return;
 	}
 	else if(rtkMode == 1) //RTK Base mode

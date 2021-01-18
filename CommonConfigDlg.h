@@ -651,29 +651,41 @@ public:
 	CNtripClientDlg(CWnd* pParent = NULL);   
 	virtual ~CNtripClientDlg() {};
 
-	//virtual void DoCommand();
+  static void SetGgaString(LPCSTR s);
+  static BOOL GetNtripRunning() { return !s_stopThread; };
+
+
+protected:
+  static CString s_hostname;
+	static int s_port;
+	static CString s_mountpoint;
+	static CString s_user;
+	static CString s_password;
+	static BOOL s_stopThread;
+  static CString s_ntripStatusMessage;
+	static int s_cycleSecs;
+	static BOOL s_cycle;
+	static CString s_ggaString;
+	static BOOL s_autoRestart;
+
+  static UINT RunWinSocket(LPVOID pParam);
+  static LPCSTR GetGgaString();
+	
+  BOOL timerActive;
+
+  virtual BOOL OnInitDialog();
+
+  void UpdateStatus(BOOL isStop);
+  void SetComboFromGnssTypeAndChannel(bool setType, bool setChannel);
+  void DoStart();
+  
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedExit();
 	afx_msg LRESULT OnNtripStatus(WPARAM wParam, LPARAM lParam);
-
-	//afx_msg void OnCbnSelChangeGnssType();
-  void UpdateStarus(BOOL isStop);
-
-	virtual BOOL OnInitDialog();
-
-	static CString m_host;
-	static int m_port;
-	static CString m_mountpoint;
-	static CString m_user;
-	static CString m_password;
-	static BOOL m_stopThread;
-  static CString m_ntripStatusMessage;
-
-protected:
-
+	afx_msg LRESULT OnNtripRestart(WPARAM wParam, LPARAM lParam);
   afx_msg void GetGnssTypeAndChannelFromCombo();
   afx_msg void OnCbnSelChangeGnssChannel();
-  void SetComboFromGnssTypeAndChannel(bool setType, bool setChannel);
+  afx_msg void OnTimer(UINT nIDEvent);
 
 	DECLARE_MESSAGE_MAP()
 };

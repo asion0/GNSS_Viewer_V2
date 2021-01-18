@@ -54,6 +54,11 @@ enum ParsingState {
   HostLogHeaderS,
   HostLogHeaderT,
 
+  AllystarHeaderF1,
+  AllystarHeaderD9,
+  AllystarHeader02,
+  AllystarHeader10,
+
   ParsingDone,
 };
 
@@ -74,6 +79,11 @@ static ParsingState CheckHeader(U08 c)
   case 0xB5:
     ps = UbloxHeaderB5;
     break;
+#if (_ALLYSTAR_BINARY)
+  case 0xF1:
+    ps = AllystarHeaderF1;
+    break;
+#endif
   case 0x0D:
     ps = UnknownMessage0D;
     break;
@@ -198,6 +208,65 @@ MessageType MessageParser::GetParsingData(void *buffer, DWORD bufferSize, DWORD*
         messageStart = *totalSize - 1;
       }
     }
+#if(_ALLYSTAR_BINARY)
+    else if(AllystarHeaderF1 == ps)
+    {
+      if(*bufferIter == 0xD9)
+      {
+        ps = AllystarHeaderD9;
+      }
+      else
+      {
+        ps = CheckHeader(*bufferIter);
+        if(ps != NoComing)
+        {
+          messageStart = *totalSize - 1;
+        }
+      }
+    }
+    else if(AllystarHeaderD9 == ps)
+    {
+      if(*bufferIter == 0x02)
+      {
+        ps = AllystarHeader02;
+      }
+      else
+      {
+        ps = CheckHeader(*bufferIter);
+        if(ps != NoComing)
+        {
+          messageStart = *totalSize - 1;
+        }
+      }
+    }
+    else if(AllystarHeader02 == ps)
+    {
+      if(*bufferIter == 0x10)
+      {
+        ps = AllystarHeader10;
+      }
+      else
+      {
+        ps = CheckHeader(*bufferIter);
+        if(ps != NoComing)
+        {
+          messageStart = *totalSize - 1;
+        }
+      }
+    }
+    else if(AllystarHeader10 == ps)
+    {
+      if(messageLength < 267)
+      {
+        ++messageLength;
+      }
+      else
+      {
+        type = AllystarBinary;
+        ps = ParsingDone;
+      }
+    }
+#endif
     else if(StqHeaderA0 == ps)
     {
       switch(*bufferIter)
@@ -322,7 +391,7 @@ MessageType MessageParser::GetParsingData(void *buffer, DWORD bufferSize, DWORD*
       {
         ps = NoComing;
       }
-    }     
+    }
     else if(StqHeaderS1 == ps)
     {
         messageSize |= *bufferIter;

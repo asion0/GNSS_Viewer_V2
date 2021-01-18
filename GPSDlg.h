@@ -536,7 +536,7 @@ protected:
   CNtripClientDlg* m_ntripClientDlg;
 
 public:
-  void SetNtripRuning(BOOL b) { m_ntripRunning = b; }
+  void SetNtripRunning(BOOL b) { m_ntripRunning = b; }
   BOOL GetNtripRunning() { return m_ntripRunning; }
   BOOL HasNtripData() { return (m_ntripData.GetCount() > 0); }
   U08* GetNtripData() { return m_ntripData.GetHead().GetBuffer(); }
@@ -1079,6 +1079,7 @@ protected:
 	afx_msg void OnVerifyFirmware();
 	afx_msg void OnFilePlayNmea();
 	afx_msg void OnConverterKml();
+	afx_msg void OnConverterJaxaKml();
 	afx_msg void OnRawMeasurementOutputConvert();
 	afx_msg void OnUbloxBinaryOutputConvert();
 	afx_msg void OnHosLogToNmea();
@@ -1305,7 +1306,8 @@ protected:
 	afx_msg void OnConfigPsti067();
 	afx_msg void OnConfigPsti068();
 	afx_msg void OnConfigPsti070();
-	afx_msg void OnConfigPsti004();
+	//afx_msg void OnConfigPsti004();
+	afx_msg void OnConfigPsti005();
 	afx_msg void OnConfigPsti007();
 	afx_msg void OnConfigNavicMessageInterval();
 
@@ -1575,6 +1577,8 @@ protected:
 	{ GenericQuery(&CGPSDlg::QueryPsti); }
   afx_msg void OnQueryPsti004()
 	{ m_nPstiNo = 4; GenericQuery(&CGPSDlg::QueryPsti); }
+  afx_msg void OnQueryPsti005()
+	{ m_nPstiNo = 5; GenericQuery(&CGPSDlg::QueryPsti); }
   afx_msg void OnQueryPsti007()
 	{ m_nPstiNo = 7; GenericQuery(&CGPSDlg::QueryPsti); }
 	afx_msg void OnReCalcuteGlonassIfb()

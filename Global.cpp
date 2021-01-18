@@ -8,7 +8,11 @@
 
 const double R2D = 57.2957795131;
 const COLORREF g_panelBkColor = RGB(250, 250, 250);
-Setting g_setting;
+#if !defined(TEST_PARSER_DLG)
+Setting g_setting(IS_DEBUG);
+#else
+Setting g_setting(0);
+#endif
 
 HANDLE g_connectEvent = NULL;
 HANDLE g_closeEvent = NULL;
@@ -523,7 +527,7 @@ U08 GetCheckSum(const U08* pt, int len)
   return checkSum;
 }
 
-U08 Cal_Checksum(U08* pt)
+U08 CalcStqMsgChecksum(const U08* pt)
 {
 	WORD len = MAKEWORD(pt[3], pt[2]);
 	U08 id = pt[4];
@@ -797,6 +801,7 @@ S64 ConvertLeonS64(const U08* ptr)
 
 WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)
 {
+#if !defined(TEST_PARSER_DLG)
 	typedef struct _WlfEntry
 	{
 		WlfResult result;
@@ -878,6 +883,9 @@ WlfResult WaitingLoaderFeedback(CSerial* serial, int TimeoutLimit, CWnd* msgWnd)
 	}
 	Utility::Log(__FUNCTION__, "return", (int)nReturn);
 	return nReturn;
+#else
+  return wlf_timeout;
+#endif
 }
  
 bool PreprocessInputLine(U08 *buf, int& bufLen)

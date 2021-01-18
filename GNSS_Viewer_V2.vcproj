@@ -2326,6 +2326,7 @@
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="1"
 			CharacterSet="2"
+			ManagedExtensions="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -2348,15 +2349,15 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_GNSS_INTERNALUSE_NEW"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
+				MinimalRebuild="false"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
 				TreatWChar_tAsBuiltInType="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="StdAfx.h"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
-				DebugInformationFormat="4"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -2377,6 +2378,7 @@
 				GenerateManifest="false"
 				EnableUAC="false"
 				GenerateDebugInformation="true"
+				AssemblyDebug="1"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -2434,7 +2436,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_GNSS_GENERAL_NAVSPARK_MINI_GPIO"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;SWCFG_VENDOR_GNSS_GENERAL_NEW"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -3648,6 +3650,50 @@
 			</File>
 			<File
 				RelativePath=".\UISetting.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="0_NewParser"
+			>
+			<File
+				RelativePath=".\GnssBuffer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\GnssBuffer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GnssStatus.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\GnssStatus.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Parser.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Parser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Reader.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Reader.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TestNewParserDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TestNewParserDlg.h"
 				>
 			</File>
 		</Filter>

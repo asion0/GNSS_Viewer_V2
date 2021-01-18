@@ -12,6 +12,7 @@
 #define IDS_ROMWRITINGOK_MSG            103
 #define IDR_HTML_CON1PPS_NMEA_DELAY     104
 #define IDS_FLASHWRITINGOK_MSG          104
+#define IDR_MAINFRAME                   128
 #define IDB_EARTH                       133
 #define IDR_MAINMENU                    138
 #define IDB_MESSAGE                     140
@@ -233,6 +234,7 @@
 #define IDD_TCPIP_CONNECT               486
 #define IDB_BASELINE_LENGTH             487
 #define IDB_NORTH_PROJECTION            488
+#define IDD_TEST_NEW_PARSER             488
 #define IDB_BASELINE_COURSE             489
 #define IDB_UP_PROJECTION               490
 #define IDB_TIME2                       491
@@ -876,10 +878,12 @@
 #define IDC_ENABLE_CORRECTION           1227
 #define IDC_HAVE_GPS_TIME               1227
 #define IDC_CHECK244                    1227
+#define IDC_START_PARSING               1227
 #define IDC_ENABLE_WAAS                 1228
 #define IDC_RADIO_PPS_OUTPUT_ALIGN      1228
 #define IDC_OUTPUT_ALIGN                1228
 #define IDC_CHECK245                    1228
+#define IDC_START_LOGGER                1228
 #define IDC_1PPS_MODE_ATTR              1229
 #define IDC_NUMBER_CHANNEL              1229
 #define IDC_CHECK246                    1229
@@ -1064,9 +1068,12 @@
 #define IDC_CONTINUE                    1305
 #define IDC_MEAS_TIME                   1305
 #define IDC_GLONASS2                    1305
+#define IDC_STOP_PARSING                1305
 #define IDC_SLIDER4                     1306
 #define IDC_FILESIZE                    1306
 #define IDC_RAW_MEAS                    1306
+#define IDC_STOP_PARSING2               1306
+#define IDC_STOP_LOGGER                 1306
 #define IDC_SLIDER5                     1307
 #define IDC_SV_CH                       1307
 #define IDC_FILESIZE2                   1307
@@ -1081,6 +1088,8 @@
 #define IDC_SLIDER8                     1310
 #define IDC_PLAY_INV_SL                 1310
 #define IDC_FIELD2                      1310
+#define IDC_BEIDOU2                     1310
+#define IDC_SBAS                        1310
 #define IDC_SLIDER9                     1311
 #define IDC_PLAY_INV                    1311
 #define IDC_EXT_RAW_MEAS2               1311
@@ -1744,6 +1753,21 @@
 #define IDC_PROG                        1672
 #define IDC_WORK_TYPE                   1674
 #define IDC_DIV                         1675
+#define IDC_OPEN                        1676
+#define IDC_COM                         1677
+#define IDC_BAUD                        1678
+#define IDC_READ_PROG                   1679
+#define IDC_PARSING_PROG                1680
+#define IDC_LOGGER_PROG                 1681
+#define IDC_WRITE_PROG                  1682
+#define IDC_READ_STS                    1683
+#define IDC_PARSING_STS                 1684
+#define IDC_CYCLE                       1684
+#define IDC_CYCLE_EDT                   1684
+#define IDC_LOGGER_STS                  1685
+#define IDC_CYCLE_CHK                   1685
+#define IDC_LOGGER_STS2                 1686
+#define IDC_WRITE_STS                   1686
 #define IDC_CHECK_M3_00                 1710
 #define IDC_CHECK_M3_01                 1711
 #define IDC_CHECK_M3_02                 1712
@@ -2513,13 +2537,17 @@
 #define ID_QUERY_PSTI060                33317
 #define ID_CONFIG_PSTI060               33318
 #define ID_AUTO_ACT_ALPHA_KEY           33319
+#define ID_QUERY_PSTI005                33320
+#define ID_CONFIG_PSTI005               33321
+#define ID_CONVERTER_JAXA_KML           33322
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        488
+#define _APS_NEXT_RESOURCE_VALUE        489
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1676
+#define _APS_NEXT_CONTROL_VALUE         1686
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
 #endif

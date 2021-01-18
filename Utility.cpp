@@ -8,6 +8,13 @@ void Utility::Log(const char* str1, const char* str2, int n)
 	strLog.Format("%s, %s(%d)", str1, str2, n);
 	::OutputDebugString(strLog);
 }
+
+void Utility::Log2(const char* function, int line, const char* str)
+{
+	CString strLog; 
+	strLog.Format("%s(%d)-%s", function, line, str);
+	::OutputDebugString(strLog);
+}
 //
 //void Utility::LogDword(const char* str1, DWORD d, int n)
 //{
@@ -651,6 +658,19 @@ CString Utility::GetFileExt(LPCTSTR pszPathname)
 	return strRet;
 }
 
+bool Utility::WriteBufferToFileAddNew(LPCTSTR filePath, void* pBuf, DWORD size)
+{
+  CFile file;
+  if(!file.Open(filePath, CFile::modeReadWrite | CFile::shareDenyWrite))
+  {
+    return false;
+  }
+	file.SeekToEnd();
+  file.Write(pBuf, size);
+  file.Close();
+  return true;
+}
+
 CString Utility::GetFilePathName(LPCTSTR pszPathname)
 {
 	CString strRet(pszPathname);
@@ -1132,3 +1152,132 @@ bool Utility::CheckPromUniqueTag(const CString& imgPath, U32& tagPos, bool& empt
   }
   return false;
 }
+
+DWORD Utility::GetStqBinary(void *buffer, DWORD bufferSize, CFile& f)
+{	
+	U08* bufferIter = (U08*)buffer;
+	DWORD totalSize = 0;
+	DWORD failCount = 10;
+  bool hasHeader = false;
+  bool hasSize = false;
+  U16 headerSize = 0;
+	while(totalSize < bufferSize - 1)
+	{ 
+		DWORD dwBytesDoRead = 0;
+		DWORD dwErrorFlags = 0;
+
+		DWORD bytesinbuff = (DWORD)(f.GetLength() - f.GetPosition());
+		while(bytesinbuff)
+		{
+			BOOL bb = ReadFile(f.m_hFile, bufferIter, 1, &dwBytesDoRead, 0);
+			if(dwBytesDoRead <= 0)
+			{	//Read fail.
+				DWORD dwErr = ::GetLastError();
+				break;
+			}
+
+			if(totalSize > 0)
+			{	//not first char.
+				if(!hasHeader && *bufferIter == 0xa1 && *(bufferIter - 1) == 0xa0)
+				{
+					bufferIter -= totalSize;
+					*bufferIter = 0xa0; 
+					++bufferIter;
+					*bufferIter = 0xa1; 
+					++bufferIter;
+					totalSize = 2;
+          hasHeader = true;
+					continue;
+				}
+				else if(hasHeader && hasSize & (totalSize > headerSize + 3U) && 
+          *bufferIter == 0x0a && *(bufferIter - 1) == 0x0d)
+				{
+					unsigned char *chk_ptr = bufferIter - totalSize;
+					
+					if (*chk_ptr == 0xa0)
+					{
+						int tmp_len = *(chk_ptr + 2);
+						tmp_len = tmp_len << 8 | *(chk_ptr+3);
+						if (totalSize == tmp_len + 6) 
+						{
+							*(bufferIter+1) = 0;
+							return totalSize + 1;
+						}
+					}
+					else
+					{
+						return totalSize;
+					}
+				}
+        else if(totalSize == 2)
+        {
+          headerSize = *bufferIter << 8;
+        }
+        else if(totalSize == 3)
+        {
+          headerSize |= *bufferIter;
+          hasSize = true;
+        }
+			} //if(totalSize > 0)
+			++totalSize;
+			if (totalSize >=  bufferSize - 1)
+			{	//Check 
+				*(bufferIter+1) = 0;
+				break;
+			}
+				
+			++bufferIter;
+			--bytesinbuff;
+		} //while(bytesinbuff)
+		if(bytesinbuff==0)
+		{
+			return totalSize;
+		}
+	} //while(total < size - 1)
+	return totalSize;
+}
+
+CString Utility::Base64Encode(const CString& src)  
+{  
+  static U08* base64 = (U08*)"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";  
+  CString dstSrc = NULL;
+  int n, buflen, i, j;
+  CString buf = src;
+  buflen = n = src.GetLength();
+
+  //dst = (U08*)malloc(buflen / 3 * 4 + 3);
+  U08* dst = (U08*)dstSrc.GetBuffer(buflen / 3 * 4 + 5);
+
+  for(i = 0, j = 0; i <= buflen - 3; i += 3, j += 4) 
+  {  
+     dst[j] = (buf[i] & 0xFC) >> 2;  
+     dst[j+1] = ((buf[i] & 0x03) << 4) + ((buf[i + 1] & 0xF0) >> 4);  
+     dst[j+2] = ((buf[i+1] & 0x0F) << 2) + ((buf[i + 2] & 0xC0) >> 6);  
+     dst[j+3] = buf[i+2] & 0x3F;  
+  }  
+  if(n % 3 == 1) 
+  {  
+     dst[j] = (buf[i] & 0xFC) >> 2;  
+     dst[j + 1] = ((buf[i] & 0x03) << 4);  
+     dst[j + 2] = 64;  
+     dst[j + 3] = 64;  
+     j += 4;  
+  }  
+  else if(n % 3 == 2)
+  {  
+     dst[j] = (buf[i] & 0xFC) >> 2;  
+     dst[j + 1] = ((buf[i] & 0x03) << 4) + ((buf[i + 1] & 0xF0) >> 4);  
+     dst[j + 2] = ((buf[i+1] & 0x0F) << 2);  
+     dst[j + 3] = 64;  
+     j += 4;  
+  }  
+
+  for(i = 0; i < j; ++i) /* map 6 bit value to base64 ASCII character */  
+  {
+     dst[i] = base64[(int)dst[i]];  
+  }
+  dst[j] = 0;  
+
+  dstSrc.ReleaseBuffer();
+  return dstSrc;  
+}  

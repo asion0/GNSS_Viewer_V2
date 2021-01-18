@@ -9,6 +9,7 @@ enum MessageType {
   RtcmMessage,
   UbloxMessage,
   StqSpecialDrBinary,
+  AllystarBinary
 };
 
 //If the function succeeds, the return value is 1.

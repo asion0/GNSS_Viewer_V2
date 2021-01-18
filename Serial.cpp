@@ -14,7 +14,7 @@ bool CSerial::debugModeOn = false;
 CString CSerial::debugName("CSerial.log");
 DWORD CSerial::readCount = 0;
 bool CSerial::m_cancelTransmission = false;
-
+/*
 inline void CSerial::AddDebugString(const char* dbg)
 {
 	if(!debugModeOn)
@@ -52,7 +52,7 @@ void CSerial::SaveDebugString(bool backup)
 	f.Write(debugBuffer, strlen(debugBuffer));
 	f.Close();
 }
-
+*/
 CSerial::CSerial()
 {
 	memset(&m_OverlappedRead, 0, sizeof(OVERLAPPED));
@@ -336,7 +336,7 @@ bool CSerial::WriteCommBytes(char* buffer, int bufferSize)
 
 bool CSerial::ResetPortNoDelay(int b)
 {
-	DCB dcb = {0};
+	DCB dcb = { 0 };
 	if(!GetCommState(m_comDeviceHandle, &dcb))
 	{
 		DWORD error = ::GetLastError();
@@ -608,7 +608,7 @@ DWORD CSerial::GetBinary(void *buffer, DWORD bufferSize, DWORD timeout)
 	} //while(total < size - 1)
 	return totalSize;
 }
-
+/*
 enum ParsingState {
   NoComing,
   StqHeaderA0,
@@ -654,6 +654,8 @@ ParsingState CheckHeader(U08 c)
   }
   return ps;    
 }
+*/
+
 #if CUSTOMER_ZENLANE_160808
 DWORD CSerial::GetZenlaneMessage(void *buffer, DWORD bufferSize, DWORD timeout)
 {	
@@ -770,7 +772,6 @@ DWORD CSerial::GetZenlaneMessage(void *buffer, DWORD bufferSize, DWORD timeout)
 	} //while(total < size - 1)
 	return totalSize;
 }
-#endif
 
 DWORD CSerial::GetZenlaneResponse1(void *buffer, DWORD bufferSize, DWORD timeout)
 {	
@@ -873,6 +874,7 @@ DWORD CSerial::GetZenlaneResponse1(void *buffer, DWORD bufferSize, DWORD timeout
 	} //while(total < size - 1)
 	return totalSize;
 }
+#endif
 
 DWORD CSerial::GetBinaryAck(void *buffer, DWORD bufferSize, DWORD timeout)
 {	
@@ -1115,7 +1117,7 @@ DWORD CSerial::GetBinaryBlock(void* buffer, DWORD bufferSize, DWORD blockSize)
 	} while(totalSize < bufferSize);
 	return totalSize;
 }
-
+/*
 DWORD CSerial::GetBinaryBlockInSize(void* buffer, DWORD bufferSize, DWORD blockSize)
 {	
 	U08* bufferIter = (U08*)buffer;
@@ -1142,7 +1144,7 @@ DWORD CSerial::GetBinaryBlockInSize(void* buffer, DWORD bufferSize, DWORD blockS
 	} while(totalSize < bufferSize);
 	return totalSize;
 }
-
+*/
 bool CSerial::OpenTcp(int type, LPCSTR host, int port)
 {
   if(m_psocket == NULL)

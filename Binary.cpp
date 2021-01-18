@@ -390,7 +390,7 @@ enum SqBinaryCmd
 
 bool CGPSDlg::SaveEphemeris(U08* buff, U08 id)
 {	
-	if(Cal_Checksum(buff) == id)
+	if(CalcStqMsgChecksum(buff) == id)
 	{
 		int len = buff[3] - 1;
 		m_ephmsFile.Write(&buff[5], len);     
@@ -2335,7 +2335,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U
 			continue;
 		}
 
-		if(alreadyAck && Cal_Checksum((*ackCmd).GetBuffer()) && (*ackCmd)[4]==cAck && cAckSub==0x00)
+		if(alreadyAck && CalcStqMsgChecksum((*ackCmd).GetBuffer()) && (*ackCmd)[4]==cAck && cAckSub==0x00)
 		{
 			if(m_bShowBinaryCmdData)
 			{
@@ -2343,7 +2343,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::GetBinaryResponse(BinaryData* ackCmd, U08 cAck, U
 			}
 			return Ack;
 		}
-		if(alreadyAck && Cal_Checksum((*ackCmd).GetBuffer()) && (*ackCmd)[4]==cAck && (*ackCmd)[5]==cAckSub)
+		if(alreadyAck && CalcStqMsgChecksum((*ackCmd).GetBuffer()) && (*ackCmd)[4]==cAck && (*ackCmd)[5]==cAckSub)
 		{
 			if(m_bShowBinaryCmdData)
 			{
@@ -2861,6 +2861,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryVersionExtension(CmdExeMode nMode, void* out
 	return Timeout;
 }
 
+#if CUSTOMER_ZENLANE_160808
 CGPSDlg::CmdErrorCode CGPSDlg::SendZenlandInitCmd(CmdExeMode nMode, void* outputData)
 {
   //0xF2 0x0E 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x66 0x77 0x01 0x86 0x72 0x06 0x00 0x00
@@ -2912,6 +2913,7 @@ CGPSDlg::CmdErrorCode CGPSDlg::SendZenlandQueryCmd(CmdExeMode nMode, void* outpu
     //}
 		return Ack;
 }
+#endif 
 
 CGPSDlg::CmdErrorCode CGPSDlg::QuerySoftwareVersionSystemCode(CmdExeMode nMode, void* outputData)
 {
@@ -8377,17 +8379,24 @@ void CGPSDlg::OnConfigPsti070()
 	DoCommonConfig(&dlg);
 }
 
-void CGPSDlg::OnConfigPsti004()
-{
-	CConfigPstiInterval dlg;
-  dlg.SetPsti(04);
-	DoCommonConfig(&dlg);
-}
+//void CGPSDlg::OnConfigPsti004()
+//{
+//	CConfigPstiInterval dlg;
+//  dlg.SetPsti(04);
+//	DoCommonConfig(&dlg);
+//}
 
 void CGPSDlg::OnConfigPsti007()
 {
 	CConfigPstiInterval dlg;
   dlg.SetPsti(07);
+	DoCommonConfig(&dlg);
+}
+
+void CGPSDlg::OnConfigPsti005()
+{
+	CConfigPstiInterval dlg;
+  dlg.SetPsti(05);
 	DoCommonConfig(&dlg);
 }
 
@@ -8632,11 +8641,32 @@ void CGPSDlg::OnConfigV9PowerSaveByRtc120()
 
 void CGPSDlg::ConfigV9ClockToGpio0(bool on)
 {  
-  const U32 miscRegAddr = 0x2000F014;
+  U32 miscRegAddr;
   U32 regData = 0;
   CString msg;
+  CmdErrorCode err;
 
-  CmdErrorCode err = CGPSDlg::gpsDlg->QueryRegisterx(CGPSDlg::Return, miscRegAddr, &regData);
+  if(on)
+  { //GPIO0 must be output for Clock out in GPIO0
+    miscRegAddr = 0x2000100C;
+    err = CGPSDlg::gpsDlg->QueryRegisterx(CGPSDlg::Return, miscRegAddr, &regData);
+	  if(Ack != err)
+    {
+	    msg.Format("Configure Phoenix RF clock to GPIO0 %s failed", (on) ? "on" : "off");  
+      add_msgtolist(msg);
+      return;
+    }
+    regData = regData & (~0x00000001);
+	  if(!DoCConfigRegisterDirect(miscRegAddr, regData))
+    {
+	    msg.Format("Configure Phoenix RF clock to GPIO0 %s failed", (on) ? "on" : "off");  
+      add_msgtolist(msg);
+      return;
+    }
+  }
+  
+  miscRegAddr = 0x2000F014;
+  err = CGPSDlg::gpsDlg->QueryRegisterx(CGPSDlg::Return, miscRegAddr, &regData);
 	if(Ack != err)
   {
 	  msg.Format("Configure Phoenix RF clock to GPIO0 %s failed", (on) ? "on" : "off");  
@@ -8710,11 +8740,11 @@ void CGPSDlg::ConfigV9ClockOut(bool on)
 
   if(on)
   {
-    regData = regData | 0x00080000;
+    regData = regData | 0x00020000;
   }
   else
   {
-    regData = regData & (~0x00080000);
+    regData = regData & (~0x00020000);
   }
 
 	if(DoCConfigRegisterDirect(miscRegAddr, regData))
@@ -10433,16 +10463,16 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPpsOutputMode(CmdExeMode nMode, void* output
   }
 	else if(ackCmd[5] == 1)
   {
-		CGPSDlg::gpsDlg->add_msgtolist("PPS Output if GPS/UTC time is available");
+		CGPSDlg::gpsDlg->add_msgtolist("PPS Output if GNSS time is available");
   }
 	else if(ackCmd[5] == 2)
 	{
-		CGPSDlg::gpsDlg->add_msgtolist("PPS Output always and align to GPS/UTC time");
+		CGPSDlg::gpsDlg->add_msgtolist("PPS Output always and align to GNSS time");
 	}
 
   if(ackCmd[6] == 0)
   {
-		CGPSDlg::gpsDlg->add_msgtolist("Align to GPS time");
+		CGPSDlg::gpsDlg->add_msgtolist("Align to GNSS time");
   }
 	else if(ackCmd[6] == 1)
   {
@@ -10452,7 +10482,6 @@ CGPSDlg::CmdErrorCode CGPSDlg::QueryPpsOutputMode(CmdExeMode nMode, void* output
   {
 		CGPSDlg::gpsDlg->add_msgtolist("Align to NavIC");
   }
-
   return err;
 }
 

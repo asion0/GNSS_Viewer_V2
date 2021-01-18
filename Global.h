@@ -86,8 +86,9 @@ typedef matrix<float> Matrix;
 
 struct Setting
 {
-	Setting()
+	Setting(BOOL isDebug)
 	{
+    this->isDebugVersion = isDebug;
 		Load();
 	}
 
@@ -115,7 +116,7 @@ struct Setting
       }
 		}
 
-		if(IS_DEBUG && reg.SetKey(VIEWER_REG_PATH, false))
+		if(isDebugVersion && reg.SetKey(VIEWER_REG_PATH, false))
 		{
 			reg.WriteInt("setting_delayBeforeBinsize", delayBeforeBinsize);
 			reg.WriteInt("setting_boostBaudrateIndex", boostBaudIndex);
@@ -153,13 +154,14 @@ struct Setting
 
 	void Load()
 	{
+#if !defined(TEST_PARSER_DLG)
 		CRegistry reg;
 		reg.SetRootKey(HKEY_CURRENT_USER);
 		const double defaultCenterLon = 121.008756203;
 		const double defaultCenterLat = 24.784893606;
 		const double defaultCenterAlt = 100.0;
 
-		if(IS_DEBUG && reg.SetKey(VIEWER_REG_PATH, true))
+		if(isDebugVersion && reg.SetKey(VIEWER_REG_PATH, true))
 		{
 			delayBeforeBinsize = reg.ReadInt("setting_delayBeforeBinsize", 0);
 			boostBaudIndex = reg.ReadInt("setting_boostBaudrateIndex", BAUDRATE_DEFAULT);
@@ -266,6 +268,7 @@ struct Setting
 		{
 			scatterCount = MAX_SCATTER_COUNT;
 		}
+#endif
 	}
 
 	void AddRecentScatterCenter(LPCSTR r)
@@ -346,6 +349,7 @@ protected:
   int tcpType;
   CString tcpHost;
   int tcpPort;
+  BOOL isDebugVersion;
 };
 
 typedef struct UTC_TIME_T {
@@ -458,7 +462,7 @@ extern const char* DatumList[];
 extern const int DatumListSize;
 
 U08 GetCheckSum(const U08* pt, int len);
-U08 Cal_Checksum(U08* pt);
+U08 CalcStqMsgChecksum(const U08* pt);
 UINT16 CalCheckSum2(U08* pt);
 void UtcConvertGpsToUtcTime(S16 wn, D64 tow, UtcTime *utc_time_p);
 void UtcConvertUtcToGpsTime(const UtcTime *utc_time_p, S16 *wn_p, D64 *tow_p);

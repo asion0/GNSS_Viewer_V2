@@ -29,9 +29,9 @@ public:
 	bool IsOpened() { return m_isOpened; }
 	int GetComPort() { return m_comPort; }
 	int GetBaudRate() { return m_baudRate; }
-	HANDLE GetHandle() { return m_comDeviceHandle; };
-	void SetSentUnit(DWORD s) { m_sendUnit = s; };
-	void SetLogStatus(DWORD s) { m_logStatus = s; };
+	//HANDLE GetHandle() { return m_comDeviceHandle; };
+	//void SetSentUnit(DWORD s) { m_sendUnit = s; };
+	//void SetLogStatus(DWORD s) { m_logStatus = s; };
 
 	//Flow control
   bool OpenTcp(int type, LPCSTR host, int port);
@@ -44,7 +44,7 @@ public:
 #endif
 	void Close();
 	void CancelTransmission() { m_cancelTransmission = true; }
-	void ResetTransmission() { m_cancelTransmission = false; }
+	//void ResetTransmission() { m_cancelTransmission = false; }
 	bool GetCancelTransmission() { return m_cancelTransmission; }
 	bool* GetCancelTransmissionPtr() { return &m_cancelTransmission; }
 	bool ResetPort(int baudIndex);
@@ -55,7 +55,7 @@ public:
 	// If once is false, it'll check com port empty again after read data.
 	DWORD ReadData(void* buffer, DWORD bufferSize, bool once = false);
 	DWORD GetString(void* buffer, DWORD bufferSize, DWORD timeOut);
-  DWORD CSerial::GetOneLine(void* buffer, DWORD bufferSize, DWORD timeOut);
+  DWORD GetOneLine(void* buffer, DWORD bufferSize, DWORD timeOut);
   BOOL GetOneChar(U08 *c, DWORD* dwBytesDoRead, DWORD timeout);
 	DWORD GetBinary(void* buffer, DWORD bufferSize, DWORD timeout = 2000);
 	//DWORD GetParsingData(void* buffer, DWORD bufferSize, DWORD timeout = 2000);
@@ -63,18 +63,18 @@ public:
 
 #if CUSTOMER_ZENLANE_160808
 	DWORD GetZenlaneMessage(void* buffer, DWORD bufferSize, DWORD timeout = 2000);
-#endif
 	DWORD GetZenlaneResponse1(void* buffer, DWORD bufferSize, DWORD timeout = 2000);
+#endif
 	DWORD GetBinaryAck(void* buffer, DWORD bufferSize, DWORD timeout = 2000);
 	DWORD GetBinaryBlock(void* buffer, DWORD bufferSize, DWORD blockSize);
-	DWORD GetBinaryBlockInSize(void* buffer, DWORD bufferSize, DWORD blockSize);
+	//DWORD GetBinaryBlockInSize(void* buffer, DWORD bufferSize, DWORD blockSize);
 
 	DWORD SendData(const void* buffer, DWORD bufferSize, bool blockTransfer = false, int delayDuration = 0);
 	//DWORD GetBinaryBlockInTime(void* buffer, DWORD bufferSize, DWORD timeout);
-	static inline void AddDebugString(const char* dbg);
-	static void SaveDebugString(bool backup = false);
-	static void SetDebugModeOn(bool on = true) { debugModeOn = on; };
-	static void SetDebugName(LPCSTR name) { debugName = name; };
+	//static inline void AddDebugString(const char* dbg);
+	//static void SaveDebugString(bool backup = false);
+	//static void SetDebugModeOn(bool on = true) { debugModeOn = on; };
+	//static void SetDebugName(LPCSTR name) { debugName = name; };
 	static DWORD readCount;
 	DWORD errorCode;
 
@@ -97,11 +97,10 @@ protected:
 	DWORD m_logStatus;
 	CMySocket* m_psocket;
 
-
 	int ComInitial();
+	bool ResetPortNoDelay(int baud);
 	int WaitingDataIn();
 	bool WriteCommBytes(char* buffer, int bufferSize);
-	bool ResetPortNoDelay(int baud);
 public:
   static DWORD GetComBinaryAck(HANDLE com, void *buffer, DWORD bufferSize, DWORD timeout);
 
